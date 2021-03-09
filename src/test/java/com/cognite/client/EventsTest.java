@@ -43,7 +43,7 @@ class EventsTest {
 
         try {
             LOG.info(loggingPrefix + "Start upserting events.");
-            List<Event> upsertEventsList = DataGenerator.generateEvents(11800);
+            List<Event> upsertEventsList = DataGenerator.generateEvents(13800);
             client.events().upsert(upsertEventsList);
             LOG.info(loggingPrefix + "Finished upserting events. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
