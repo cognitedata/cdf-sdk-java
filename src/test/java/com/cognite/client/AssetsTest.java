@@ -50,7 +50,7 @@ class AssetsTest {
             client.assets()
                     .list(Request.create()
                             .withFilterParameter("source", DataGenerator.sourceValue))
-                    .forEachRemaining(events -> listAssetsResults.addAll(events));
+                    .forEachRemaining(assets -> listAssetsResults.addAll(assets));
             LOG.info(loggingPrefix + "Finished reading assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
