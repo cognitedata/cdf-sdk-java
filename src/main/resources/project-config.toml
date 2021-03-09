@@ -1,0 +1,3 @@
+[project]
+host = "https://api.cognitedata.com"
+api_key = "my-key"

@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package com.cognite.beam.proto;
+
+import "google/protobuf/wrappers.proto";
+
+option java_package = "com.cognite.client.dto";
+option java_multiple_files = true;
+
+message SecurityCategory {
+  google.protobuf.Int64Value id = 1;
+  string name = 2;
+}

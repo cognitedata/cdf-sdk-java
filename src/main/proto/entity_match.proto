@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package com.cognite.beam.proto;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/wrappers.proto";
+
+option java_package = "com.cognite.client.dto";
+option java_multiple_files = true;
+
+/*
+A potential match (match to object) together with the associated confidence score of the match.
+ */
+message EntityMatch {
+    google.protobuf.DoubleValue score = 1;
+    google.protobuf.Struct target = 2;
+}
+
+/*
+An entity match result. The result contains the source (match from object) with a set of
+potential matches along with a confidence score.
+ */
+message EntityMatchResult {
+    google.protobuf.Struct source = 1;
+    repeated EntityMatch matches = 2;
+}
+
+message MatchField {
+    string source = 1;
+    string target = 2;
+}
+
+/*
+An entity match model. Represents a matching model along with its configuration and meta data.
+ */
+message EntityMatchModel {
+    google.protobuf.Int64Value id = 1;
+    google.protobuf.StringValue external_id = 2;
+    google.protobuf.StringValue status = 3;
+    google.protobuf.Int64Value created_time = 4;
+    google.protobuf.Int64Value start_time = 5;
+    google.protobuf.Int64Value status_time = 6;
+    google.protobuf.StringValue name = 7;
+    google.protobuf.StringValue description = 8;
+    google.protobuf.StringValue feature_type = 9;
+    repeated MatchField match_fields = 10;
+    google.protobuf.BoolValue ignore_missing_fields = 11;
+    google.protobuf.StringValue classifier = 12;
+    google.protobuf.StringValue original_id = 13;
+}

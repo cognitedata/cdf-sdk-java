@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package com.cognite.beam.proto;
+
+import "google/protobuf/wrappers.proto";
+
+option java_package = "com.cognite.client.dto";
+option java_multiple_files = true;
+
+/*
+Represents an identifiable data item independent of resource type (asset, event, time series, etc.).
+
+The item is identified via externalId (primarily) or id (secondarily).
+
+For time series data points there are two extra attributes, inclusiveBegin and exclusiveEnd, that pinpoints the
+referenced time window.
+ */
+message Item {
+
+    /*
+    The id of the item.
+     */
+    oneof idType {
+        int64 id = 1;
+        string external_id = 2;
+        string legacy_name = 3;
+    }
+
+    // Start of time window for a time series data point.
+    google.protobuf.Int64Value inclusive_begin = 4;
+
+    // End of time window for a time series data point.
+    google.protobuf.Int64Value exclusive_end = 5;
+}
+

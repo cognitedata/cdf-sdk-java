@@ -1,0 +1,4 @@
+header-a;header-b;header-c
+a;nice;story for all
+b;nicer;2 all
+;second, cause no first field;third row
