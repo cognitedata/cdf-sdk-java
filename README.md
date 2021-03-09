@@ -35,7 +35,7 @@ client.events()
 ````xml
 <dependency>    
     <groupId>com.cognite</groupId>
-    <artifactId>beam-connector-java</artifactId>
+    <artifactId>cdf-sdk-java</artifactId>
     <version>0.9.0-SNAPSHOT</version>
 </dependency>
 ````
