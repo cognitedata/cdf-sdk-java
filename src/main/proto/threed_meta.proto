@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package com.cognite.beam.proto;
+
+import "google/protobuf/wrappers.proto";
+
+option java_package = "com.cognite.client.dto";
+option java_multiple_files = true;
+
+message ThreedMetadata {
+    google.protobuf.Int64Value model_id = 1;
+    string model_name = 2;
+    google.protobuf.Int64Value model_created_time = 3;
+    google.protobuf.BoolValue published = 4;
+    repeated google.protobuf.DoubleValue rotation = 5;
+    repeated google.protobuf.DoubleValue camera_target = 6;
+    repeated google.protobuf.DoubleValue camera_position = 7;
+    google.protobuf.Int64Value revision_id = 8;
+    google.protobuf.Int64Value file_id = 9;
+    google.protobuf.StringValue status = 10;
+    google.protobuf.Int64Value thumbnail_threed_file_id = 11;
+    google.protobuf.StringValue thumbnail_url = 12;
+    google.protobuf.Int64Value scene_threed_file_id = 13;
+    repeated ThreedVersionedFile scene_threed_files = 14;
+    google.protobuf.Int64Value asset_mapping_count = 15;
+    google.protobuf.Int64Value revision_created_time = 16;
+}
+
+message ThreedVersionedFile {
+    google.protobuf.Int64Value version = 1;
+    google.protobuf.Int64Value file_id = 2;
+}

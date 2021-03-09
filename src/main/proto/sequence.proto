@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package com.cognite.beam.proto;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/wrappers.proto";
+
+option java_package = "com.cognite.client.dto";
+option java_multiple_files = true;
+
+message SequenceColumn {
+    enum ValueType {
+        DOUBLE = 0;
+        STRING = 1;
+        LONG = 2;
+    }
+
+    string external_id = 1;
+    google.protobuf.StringValue name = 2;
+    google.protobuf.StringValue description = 3;
+    ValueType value_type = 4;
+    map<string, string> metadata = 5;
+    google.protobuf.Int64Value created_time = 6;
+    google.protobuf.Int64Value last_updated_time = 7;
+}
+
+message SequenceRow {
+    int64 row_number = 1;
+    repeated google.protobuf.Value values = 2;
+}
+
+message SequenceMetadata {
+    google.protobuf.StringValue external_id = 1;
+    google.protobuf.Int64Value id = 2;
+    google.protobuf.StringValue name = 3;
+    google.protobuf.StringValue description = 4;
+    google.protobuf.Int64Value asset_id = 5;
+    map<string, string> metadata = 6;
+    repeated SequenceColumn columns = 7;
+    google.protobuf.Int64Value created_time = 8;
+    google.protobuf.Int64Value last_updated_time = 9;
+    google.protobuf.Int64Value data_set_id = 10;
+}
+
+message SequenceBody {
+    google.protobuf.StringValue external_id = 1;
+    google.protobuf.Int64Value id = 2;
+    repeated SequenceColumn columns = 3;
+    repeated SequenceRow rows = 4;
+}

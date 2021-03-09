@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package com.cognite.beam.proto;
+
+import "google/protobuf/wrappers.proto";
+
+option java_package = "com.cognite.client.dto";
+option java_multiple_files = true;
+
+message FileContainer {
+    FileMetadata file_metadata = 1;
+    FileBinary file_binary = 2;
+}
+
+message FileMetadata {
+    google.protobuf.StringValue external_id = 1;
+    google.protobuf.StringValue name = 2;
+    google.protobuf.StringValue directory = 3;
+    google.protobuf.StringValue source = 4;
+    google.protobuf.StringValue mime_type = 5;
+    map<string, string> metadata = 6;
+    repeated int64 asset_ids = 7;
+    google.protobuf.Int64Value id = 8;
+    bool uploaded = 9;
+    google.protobuf.Int64Value uploaded_time = 10;
+    google.protobuf.Int64Value created_time = 11;
+    google.protobuf.Int64Value last_updated_time = 12;
+    google.protobuf.Int64Value source_created_time = 13;
+    google.protobuf.Int64Value source_modified_time = 14;
+    google.protobuf.Int64Value data_set_id = 15;
+    repeated int64 security_categories = 16;
+    repeated string labels = 17;
+}
+
+message FileBinary {
+    oneof idType {
+        int64 id = 1;
+        string external_id = 2;
+    }
+
+    oneof binaryType {
+        bytes binary = 3;
+        string binary_uri = 4;
+    }
+    int64 content_length = 5;
+}
