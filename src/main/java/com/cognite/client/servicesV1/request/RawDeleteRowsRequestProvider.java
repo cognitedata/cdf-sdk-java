@@ -23,8 +23,6 @@ import com.google.common.base.Preconditions;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
-import org.apache.beam.sdk.coders.AvroCoder;
-import org.apache.beam.sdk.coders.DefaultCoder;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -34,7 +32,6 @@ import java.util.Optional;
  * Deletes rows from a CFD.Raw table.
  */
 @AutoValue
-@DefaultCoder(AvroCoder.class)
 public abstract class RawDeleteRowsRequestProvider extends GenericRequestProvider{
 
     public static Builder builder() {
