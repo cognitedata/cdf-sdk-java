@@ -324,34 +324,45 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <minimizeJar>false</minimizeJar>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <artifactSet>
+                                <includes>
+                                    <include>com.squareup.okhttp3:okhttp</include>
+                                </includes>
+                            </artifactSet>
+                            <!--
                             <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                            <relocations>
-                                <relocation>
-                                    <pattern>com.squareup.okhttp3</pattern>
-                                    <shadedPattern>com.cognitedata.shaded.com.squareup.okhttp3</shadedPattern>
-                                </relocation>
-                            </relocations>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven-surefire-plugin.version}</version>
-                <configuration>
-                    <skipTests>true</skipTests>
-                    <!--<excludedGroups>RemoteCDP, RemoteCDF</excludedGroups>-->
+                            <filter>
+                                <artifact>*:*</artifact>
+                                <includes>shaded/okhttp3/**</includes>
+                                <includes>com/cognite/client/**</includes>
+                                <includes>com/google/protobuf/**</includes>
+                                <excludes>
+                                    <exclude>META-INF/*.SF</exclude>
+                                    <exclude>META-INF/*.DSA</exclude>
+                                    <exclude>META-INF/*.RSA</exclude>
+                                </excludes>
+                            </filter>
+                        </filters>
+                        -->
+                        <relocations>
+                            <relocation>
+                                <pattern>okhttp3</pattern>
+                                <shadedPattern>shaded.okhttp3</shadedPattern>
+                            </relocation>
+                        </relocations>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${maven-surefire-plugin.version}</version>
+            <configuration>
+                <skipTests>true</skipTests>
+                <!--<excludedGroups>RemoteCDP, RemoteCDF</excludedGroups>-->
                 </configuration>
             </plugin>
             <plugin>
