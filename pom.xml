@@ -101,10 +101,6 @@
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
-            <artifactId>google-cloud-secretmanager</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
         </dependency>
         <dependency>
