@@ -327,21 +327,6 @@
                                     <include>com.squareup.okhttp3:okhttp</include>
                                 </includes>
                             </artifactSet>
-                            <!--
-                            <filters>
-                            <filter>
-                                <artifact>*:*</artifact>
-                                <includes>shaded/okhttp3/**</includes>
-                                <includes>com/cognite/client/**</includes>
-                                <includes>com/google/protobuf/**</includes>
-                                <excludes>
-                                    <exclude>META-INF/*.SF</exclude>
-                                    <exclude>META-INF/*.DSA</exclude>
-                                    <exclude>META-INF/*.RSA</exclude>
-                                </excludes>
-                            </filter>
-                        </filters>
-                        -->
                         <relocations>
                             <relocation>
                                 <pattern>okhttp3</pattern>
