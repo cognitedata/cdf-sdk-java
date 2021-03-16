@@ -325,12 +325,18 @@
                             <artifactSet>
                                 <includes>
                                     <include>com.squareup.okhttp3:okhttp</include>
+                                    <include>org.jetbrains.kotlin:kotlin-stdlib</include>
+                                    <include>com.squareup.okio:okio</include>
                                 </includes>
                             </artifactSet>
                         <relocations>
                             <relocation>
                                 <pattern>okhttp3</pattern>
                                 <shadedPattern>shaded.okhttp3</shadedPattern>
+                            </relocation>
+                            <relocation>
+                                <pattern>okio</pattern>
+                                <shadedPattern>shaded.okio</shadedPattern>
                             </relocation>
                         </relocations>
                     </configuration>
