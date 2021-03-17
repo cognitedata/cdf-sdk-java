@@ -440,7 +440,7 @@ public abstract class RawRows extends ApiBase {
         if (upsertBatches.isEmpty()) {
             LOG.info(loggingPrefix + "Successfully upserted {} rows across {} batches within a duration of {}.",
                     rows.size(),
-                    upsertBatches.size(),
+                    completedBatches.size(),
                     Duration.between(startInstant, Instant.now()).toString());
         } else {
             LOG.error(loggingPrefix + "Failed to upsert rows. {} batches remaining. {} batches completed upsert."
