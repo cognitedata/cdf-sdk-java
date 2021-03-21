@@ -68,8 +68,6 @@ class RawTest {
                     Duration.between(startInstant, Instant.now()));
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-            Thread.sleep(10000); // wait for eventual consistency
-
             LOG.info(loggingPrefix + "Start reading raw databases.");
             List<String> listDatabaseResults = new ArrayList<>();
             client.raw().databases()
@@ -95,7 +93,7 @@ class RawTest {
             LOG.info(loggingPrefix + "Start listing raw rows.");
             List<RawRow> listRowsResults = new ArrayList<>();
             client.raw().rows().list(rowDbName, rowTableName)
-                    .forEachRemaining(results -> listRowsResults.addAll(results));
+                    .forEachRemaining(results -> results.stream().forEach(row -> listRowsResults.add(row)));
             LOG.info(loggingPrefix + "Finished listing raw rows. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");

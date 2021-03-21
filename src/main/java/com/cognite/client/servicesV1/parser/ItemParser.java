@@ -140,9 +140,9 @@ public class ItemParser {
             }
         } catch (Exception e) {
             LOG.warn(logPrefix + parseErrorDefaultPrefix, e);
-        } finally {
-            return returnObject;
         }
+
+        return returnObject;
     }
 
     /**
@@ -174,8 +174,8 @@ public class ItemParser {
             }
         } catch (Exception e) {
             LOG.warn(logPrefix + parseErrorDefaultPrefix, e);
-        } finally {
-            return returnObject;
         }
+
+        return returnObject;
     }
 }
