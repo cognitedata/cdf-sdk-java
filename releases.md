@@ -21,6 +21,10 @@ Changes are grouped as follows:
 
 ## [0.9.1-SNAPSHOT]
 
+## Fixed
+
+- Error when iterating over Raw rows with streams.
+
 
 ## [0.9.0]
 
