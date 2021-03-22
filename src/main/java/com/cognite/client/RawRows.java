@@ -24,7 +24,6 @@ import com.cognite.client.servicesV1.ItemReader;
 import com.cognite.client.servicesV1.ResponseItems;
 import com.cognite.client.servicesV1.parser.RawParser;
 import com.google.auto.value.AutoValue;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -36,6 +35,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
