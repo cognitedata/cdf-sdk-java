@@ -36,7 +36,7 @@ client.events()
 <dependency>    
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>0.9.0</version>
+    <version>0.9.1</version>
 </dependency>
 ````
     

@@ -19,7 +19,7 @@ Changes are grouped as follows:
 
 - To be added.
 
-## [0.9.1-SNAPSHOT]
+## [0.9.1]
 
 ## Fixed
 
