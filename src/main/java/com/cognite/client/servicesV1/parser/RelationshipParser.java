@@ -169,38 +169,43 @@ public class RelationshipParser {
     public static Map<String, Object> toRequestUpdateItem(Relationship element) {
         Preconditions.checkNotNull(element, "Input cannot be null.");
 
+        ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
+        ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
+
+        // Add id reference
+        mapBuilder.put("externalId", element.getExternalId());
+
         // Add all the mandatory attributes
-        ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.<String, Object>builder()
-                .put("externalId", element.getExternalId())
-                .put("sourceExternalId", element.getSourceExternalId())
-                .put("sourceType", resourceTypeMap.inverse().get(element.getSourceType()))
-                .put("targetExternalId", element.getTargetExternalId())
-                .put("targetType", resourceTypeMap.inverse().get(element.getTargetType()));
+        updateNodeBuilder
+                .put("sourceExternalId", ImmutableMap.of("set", element.getSourceExternalId()))
+                .put("sourceType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getSourceType())))
+                .put("targetExternalId", ImmutableMap.of("set", element.getTargetExternalId()))
+                .put("targetType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getTargetType())));
 
         // Add optional attributes
         if (element.hasStartTime()) {
-            mapBuilder.put("startTime", element.getStartTime().getValue());
+            updateNodeBuilder.put("startTime", ImmutableMap.of("set", element.getStartTime().getValue()));
         }
         if (element.hasEndTime()) {
-            mapBuilder.put("endTime", element.getEndTime().getValue());
+            updateNodeBuilder.put("endTime", ImmutableMap.of("set", element.getEndTime().getValue()));
         }
         if (element.hasConfidence()) {
-            mapBuilder.put("confidence", element.getConfidence().getValue());
+            updateNodeBuilder.put("confidence", ImmutableMap.of("set", element.getConfidence().getValue()));
         }
         if (element.hasDataSetId()) {
-            mapBuilder.put("dataSetId", element.getDataSetId().getValue());
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
         }
         if (element.hasDataSetId()) {
-            mapBuilder.put("dataSetId", element.getDataSetId().getValue());
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
         }
         if (element.getLabelsCount() > 0) {
             List<Map<String, String>> labels = new ArrayList<>();
             for (String label : element.getLabelsList()) {
                 labels.add(ImmutableMap.of("externalId", label));
             }
-            mapBuilder.put("labels", labels);
+            updateNodeBuilder.put("labels", ImmutableMap.of("add", labels));
         }
-
+        mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();
     }
 
