@@ -17,13 +17,18 @@ Changes are grouped as follows:
 
 ### Short term
 
-- To be added.
+- Native token authentication (OpenID Connect).
+- Geo location attribute and resource type.
 
 ## [0.9.2-SNAPSHOT]
 
+### Added
+
+- Added support for updating / patching `relationship`.
+
 ## [0.9.1]
 
-## Fixed
+### Fixed
 
 - Error when iterating over Raw rows with streams.
 

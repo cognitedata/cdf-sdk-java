@@ -1228,6 +1228,26 @@ public abstract class ConnectorServiceV1 implements Serializable {
     }
 
     /**
+     * Update relationships to Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @return
+     */
+    public ItemWriter updateRelationships() {
+        LOG.debug(loggingPrefix + "Initiating update relationships service.");
+
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("relationships/update")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
      * Delete relationships in Cognite.
      *
      * Calling this method will return an <code>ItemWriter</code>

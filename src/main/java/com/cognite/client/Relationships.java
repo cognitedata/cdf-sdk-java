@@ -17,6 +17,7 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
+import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Item;
 import com.cognite.client.dto.Relationship;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
@@ -134,15 +135,25 @@ public abstract class Relationships extends ApiBase {
     public List<Relationship> upsert(List<Relationship> relationships) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter createItemWriter = connector.writeRelationships();
+        ConnectorServiceV1.ItemWriter updateItemWriter = connector.updateRelationships();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteRelationships();
 
         UpsertItems<Relationship> upsertItems = UpsertItems.of(createItemWriter, this::toRequestInsertItem, getClient().buildAuthConfig())
                 .withDeleteItemWriter(deleteItemWriter)
+                .withUpdateItemWriter(updateItemWriter)
+                .withUpdateMappingFunction(this::toRequestUpdateItem)
                 .addDeleteParameter("ignoreUnknownIds", true)
                 .withItemMappingFunction(this::toItem)
                 .withIdFunction(this::getRelationshipId);
 
-        return upsertItems.upsertViaDeleteAndCreate(relationships).stream()
+        if (getClient().getClientConfig().getUpsertMode() == UpsertMode.REPLACE) {
+            // Just delete and re-create the relationship since there is no internal id to take into account.
+            return upsertItems.upsertViaDeleteAndCreate(relationships).stream()
+                    .map(this::parseRelationship)
+                    .collect(Collectors.toList());
+        }
+
+        return upsertItems.upsertViaCreateAndUpdate(relationships).stream()
                 .map(this::parseRelationship)
                 .collect(Collectors.toList());
     }
@@ -186,6 +197,18 @@ public abstract class Relationships extends ApiBase {
     private Map<String, Object> toRequestInsertItem(Relationship item) {
         try {
             return RelationshipParser.toRequestInsertItem(item);
+        } catch (Exception e)  {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /*
+    Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
+    deal very well with exceptions.
+     */
+    private Map<String, Object> toRequestUpdateItem(Relationship item) {
+        try {
+            return RelationshipParser.toRequestUpdateItem(item);
         } catch (Exception e)  {
             throw new RuntimeException(e);
         }
