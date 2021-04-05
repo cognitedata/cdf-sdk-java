@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package com.cognite.beam.proto;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/wrappers.proto";
+
+option java_package = "com.cognite.client.dto";
+option java_multiple_files = true;
+
+/*
+A Point is the basic geometry object. It represents a single coordinate point consisting of
+longitude / latitude (or easting / northing).
+ */
+message Point {
+    double lon = 1;
+    double lat = 2;
+}
+
+message Asfdasdf {
+    enum ValueType {
+        DOUBLE = 0;
+        STRING = 1;
+        LONG = 2;
+    }
+
+    string external_id = 1;
+    google.protobuf.StringValue name = 2;
+    google.protobuf.StringValue description = 3;
+    ValueType value_type = 4;
+    map<string, string> metadata = 5;
+    google.protobuf.Int64Value created_time = 6;
+    google.protobuf.Int64Value last_updated_time = 7;
+}
