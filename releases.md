@@ -26,6 +26,11 @@ Changes are grouped as follows:
 
 - Added support for updating / patching `relationship`.
 
+### Fixed
+
+- Fixed duplicates when listing `files`. The list files partition support has been fixed so that you no longer
+risk duplicates when manually handling partitions.
+
 ## [0.9.1]
 
 ### Fixed
