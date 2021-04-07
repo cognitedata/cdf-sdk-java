@@ -20,7 +20,9 @@ Changes are grouped as follows:
 - Native token authentication (OpenID Connect).
 - Geo location attribute and resource type.
 
-## [0.9.2-SNAPSHOT]
+## [0.9.3-SNAPSHOT]
+
+## 0.9.2
 
 ### Added
 
