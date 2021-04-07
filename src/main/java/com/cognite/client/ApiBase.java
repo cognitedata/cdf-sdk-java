@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
  */
 abstract class ApiBase {
     private static final ImmutableList<ResourceType> resourcesSupportingPartitions =
-            ImmutableList.of(ResourceType.ASSET, ResourceType.EVENT, ResourceType.FILE, ResourceType.TIMESERIES_HEADER,
+            ImmutableList.of(ResourceType.ASSET, ResourceType.EVENT, ResourceType.FILE_HEADER, ResourceType.TIMESERIES_HEADER,
                     ResourceType.RAW_ROW);
 
     protected static final Logger LOG = LoggerFactory.getLogger(ApiBase.class);
