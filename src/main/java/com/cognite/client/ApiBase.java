@@ -992,15 +992,19 @@ abstract class ApiBase {
                             LOG.debug(batchLogPrefix + "Number of missing entries reported by CDF: {}", missing.size());
 
                             // Move missing items from update to the create request
+                            // Must check for null since missing items may refer to parent asset references.
                             Map<String, T> itemsMap = mapToId(updateResponseMap.get(response));
                             for (Item value : missing) {
-                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
+                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID
+                                        && itemsMap.containsKey(value.getExternalId())) {
                                     elementListCreate.add(itemsMap.get(value.getExternalId()));
                                     itemsMap.remove(value.getExternalId());
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
+                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID
+                                        && itemsMap.containsKey(value.getId())) {
                                     elementListCreate.add(itemsMap.get(value.getId()));
                                     itemsMap.remove(value.getId());
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME) {
+                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME
+                                        && itemsMap.containsKey(value.getLegacyName())) {
                                     // Special case for v1 TS headers.
                                     elementListCreate.add(itemsMap.get(value.getLegacyName()));
                                     itemsMap.remove(value.getLegacyName());
@@ -1120,15 +1124,19 @@ abstract class ApiBase {
                             LOG.debug(batchLogPrefix + "Number of missing entries reported by CDF: {}", missing.size());
 
                             // Move missing items from update to the create request
+                            // Must check for null since missing items may refer to parent asset references.
                             Map<String, T> itemsMap = mapToId(updateResponseMap.get(response));
                             for (Item value : missing) {
-                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
+                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID
+                                        && itemsMap.containsKey(value.getExternalId())) {
                                     elementListCreate.add(itemsMap.get(value.getExternalId()));
                                     itemsMap.remove(value.getExternalId());
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
+                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID
+                                        && itemsMap.containsKey(value.getId())) {
                                     elementListCreate.add(itemsMap.get(value.getId()));
                                     itemsMap.remove(value.getId());
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME) {
+                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME
+                                        && itemsMap.containsKey(value.getLegacyName())) {
                                     // Special case for v1 TS headers.
                                     elementListCreate.add(itemsMap.get(value.getLegacyName()));
                                     itemsMap.remove(value.getLegacyName());
