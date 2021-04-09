@@ -9,7 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -27,11 +29,17 @@ class FilesTest {
     @Tag("remoteCDP")
     void writeReadAndDeleteFiles() {
         Instant startInstant = Instant.now();
+        Path fileAOriginal = Paths.get("./src/test/resources/csv-data.txt");
+        Path fileATemp = Paths.get("./tempA.tmp");
+        Path fileB = Paths.get("./src/test/resources/csv-data-bom.txt");
         byte[] fileByteA = new byte[0];
         byte[] fileByteB = new byte[0];
         try {
-            fileByteA = java.nio.file.Files.readAllBytes(Paths.get("./src/test/resources/csv-data.txt"));
-            fileByteB = java.nio.file.Files.readAllBytes(Paths.get("./src/test/resources/csv-data-bom.txt"));
+            // copy into temp path
+            java.nio.file.Files.copy(fileAOriginal, fileATemp, StandardCopyOption.REPLACE_EXISTING);
+            //
+            fileByteA = java.nio.file.Files.readAllBytes(fileAOriginal);
+            fileByteB = java.nio.file.Files.readAllBytes(fileB);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -45,6 +53,15 @@ class FilesTest {
                     .build();
             fileContainerInput.add(fileContainer);
         }
+
+        // add a file binary based on a URI
+        FileContainer fileContainer = FileContainer.newBuilder()
+                .setFileMetadata(DataGenerator.generateFileHeaderObjects(1).get(0))
+                .setFileBinary(FileBinary.newBuilder()
+                        .setBinaryUri(fileATemp.toUri().toString())
+                        )
+                .build();
+        fileContainerInput.add(fileContainer);
 
         ClientConfig config = ClientConfig.create()
                 .withNoWorkers(1)
