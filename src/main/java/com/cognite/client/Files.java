@@ -409,6 +409,7 @@ public abstract class Files extends ApiBase {
                     throw new Exception(message);
                 }
             }
+            elementListUpdate.clear(); // elementListUpdate.isEmpty() is success criteria
         }
 
         // Check if all elements completed the upsert requests
