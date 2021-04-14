@@ -43,7 +43,7 @@ class FilesTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        List<FileMetadata> fileMetadataList = DataGenerator.generateFileHeaderObjects(11);
+        List<FileMetadata> fileMetadataList = DataGenerator.generateFileHeaderObjects(2);
         List<FileContainer> fileContainerInput = new ArrayList<>();
         for (FileMetadata fileMetadata:  fileMetadataList) {
             FileContainer fileContainer = FileContainer.newBuilder()
