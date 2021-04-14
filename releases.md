@@ -22,6 +22,10 @@ Changes are grouped as follows:
 
 ## [0.9.3-SNAPSHOT]
 
+### Fixed
+
+- Error when trying to download a file binary that only has a file header object in CDF.
+
 ## 0.9.2
 
 ### Added

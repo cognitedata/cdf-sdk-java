@@ -18,7 +18,6 @@
         </encoder>
     </appender>
 
-    <logger name="com.cognite.beam.io" level="INFO"/>
     <logger name="com.cognite.client" level="INFO"/>
     <logger name="com.cognite.client.ApiBase" level="INFO"/>
     <logger name="com.cognite.client.RawRows" level="INFO"/>

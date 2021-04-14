@@ -21,6 +21,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -38,12 +39,12 @@ public abstract class JsonStringAttributeResponseParser extends DefaultResponseP
 
     public static JsonStringAttributeResponseParser create() {
         return JsonStringAttributeResponseParser.builder()
-                .setAttributePath(DEFAULT_ATTRIBUTE_PATH)
+                .setAttributePath(List.of(DEFAULT_ATTRIBUTE_PATH))
                 .build();
     }
 
-    public abstract JsonStringAttributeResponseParser.Builder toBuilder();
-    public abstract String getAttributePath();
+    abstract JsonStringAttributeResponseParser.Builder toBuilder();
+    public abstract List<String> getAttributePath();
 
     /**
      * Sets the path to the attribute to extract.
@@ -52,7 +53,10 @@ public abstract class JsonStringAttributeResponseParser extends DefaultResponseP
      * @return
      */
     public JsonStringAttributeResponseParser withAttributePath(String path) {
-        return toBuilder().setAttributePath(path).build();
+        String[] pathSegments = path.split("\\.");
+        List<String> segmentList = List.of(pathSegments);
+
+        return toBuilder().setAttributePath(segmentList).build();
     }
 
     /**
@@ -77,7 +81,10 @@ public abstract class JsonStringAttributeResponseParser extends DefaultResponseP
     public ImmutableList<String> extractItems(String json) throws Exception {
         String loggingPrefix = "extractItems - " + instanceId + " - ";
         // Check if the input string is valid json. Will throw an exception if it cannot be parsed.
-        JsonNode node = objectMapper.readTree(json).path(getAttributePath());
+        JsonNode node = objectMapper.readTree(json);
+        for (String path : getAttributePath()) {
+            node = node.path(path);
+        }
 
         if (node.isMissingNode()) {
             LOG.warn(loggingPrefix + "Cannot find any attribute at path [{}]", getAttributePath());
@@ -93,7 +100,7 @@ public abstract class JsonStringAttributeResponseParser extends DefaultResponseP
 
     @AutoValue.Builder
     public abstract static class Builder {
-        public abstract Builder setAttributePath(String value);
+        abstract Builder setAttributePath(List<String> value);
 
         public abstract JsonStringAttributeResponseParser build();
     }
