@@ -25,6 +25,7 @@ Changes are grouped as follows:
 ### Fixed
 
 - Error when trying to download a file binary that only has a file header object in CDF.
+- Error when creating new `relationship` objects into data sets.
 
 ## 0.9.2
 
