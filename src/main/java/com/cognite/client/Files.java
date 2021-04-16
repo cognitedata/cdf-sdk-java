@@ -336,6 +336,8 @@ public abstract class Files extends ApiBase {
          */
         Map<Long, FileMetadata> internalIdTempMap = new HashMap<>(internalIdAssetsMap.size());
         Map<String, FileMetadata> externalIdTempMap = new HashMap<>(externalIdAssetsMap.size());
+        // elementListUpdate is reused in the update assets loop, we clear before entering
+        if (internalIdAssetsMap.size() > 0 || externalIdAssetsMap.size() > 0) elementListUpdate.clear();
         while (internalIdAssetsMap.size() > 0 || externalIdAssetsMap.size() > 0) {
             LOG.info(loggingPrefix + "Some files have very high assetId cardinality (+1k). Adding assetId to "
                     + (internalIdAssetsMap.size() + externalIdAssetsMap.size())
@@ -387,7 +389,6 @@ public abstract class Files extends ApiBase {
             // prepare the update and send request
             LOG.info(loggingPrefix + "Building update request to add assetIds for {} files.",
                     internalIdUpdateMap.size() + externalIdUpdateMap.size());
-            elementListUpdate.clear();
             elementListUpdate.addAll(externalIdUpdateMap.values());
             elementListUpdate.addAll(internalIdUpdateMap.values());
 
@@ -409,7 +410,7 @@ public abstract class Files extends ApiBase {
                     throw new Exception(message);
                 }
             }
-            elementListUpdate.clear(); // elementListUpdate.isEmpty() is success criteria
+            elementListUpdate.clear();
         }
 
         // Check if all elements completed the upsert requests
