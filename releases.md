@@ -26,6 +26,7 @@ Changes are grouped as follows:
 
 - Error when trying to download a file binary that only has a file header object in CDF.
 - Error when creating new `relationship` objects into data sets.
+- Error when uploading file binaries with >1k asset links.
 
 ## 0.9.2
 
