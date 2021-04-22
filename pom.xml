@@ -40,7 +40,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <auto.version>1.7.4</auto.version>
+        <auto.version>1.8.1</auto.version>
         <jgrapht.version>1.4.0</jgrapht.version> <!-- Upgrade to 1.5.0++ when Java 11 is available -->
         <okhttp3.version>4.9.1</okhttp3.version>
         <jackson.version>2.12.3</jackson.version>
