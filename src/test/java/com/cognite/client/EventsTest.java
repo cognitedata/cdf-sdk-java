@@ -49,7 +49,7 @@ class EventsTest {
                     Duration.between(startInstant, Instant.now()));
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-            Thread.sleep(15000); // wait for eventual consistency
+            Thread.sleep(20000); // wait for eventual consistency
 
             LOG.info(loggingPrefix + "Start reading events.");
             List<Event> listEventsResults = new ArrayList<>();

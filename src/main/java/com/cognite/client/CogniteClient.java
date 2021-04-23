@@ -27,11 +27,14 @@ public abstract class CogniteClient implements Serializable {
     private final static String DEFAULT_BASE_URL = "https://api.cognitedata.com";
     private final static String API_ENV_VAR = "COGNITE_API_KEY";
 
+    /*
     private final static OkHttpClient httpClient = new OkHttpClient.Builder()
             .connectTimeout(90, TimeUnit.SECONDS)
             .readTimeout(90, TimeUnit.SECONDS)
             .writeTimeout(90, TimeUnit.SECONDS)
             .build();
+
+     */
 
     private static final int DEFAULT_CPU_MULTIPLIER = 8;
     private final static int DEFAULT_MAX_WORKER_THREADS = 8;
@@ -51,6 +54,11 @@ public abstract class CogniteClient implements Serializable {
 
     private static Builder builder() {
         return new AutoValue_CogniteClient.Builder()
+                .setHttpClient(new OkHttpClient.Builder()
+                        .connectTimeout(90, TimeUnit.SECONDS)
+                        .readTimeout(90, TimeUnit.SECONDS)
+                        .writeTimeout(90, TimeUnit.SECONDS)
+                        .build())
                 .setClientConfig(ClientConfig.create())
                 .setBaseUrl(DEFAULT_BASE_URL);
     }
@@ -86,10 +94,8 @@ public abstract class CogniteClient implements Serializable {
     protected abstract String getProject();
     protected abstract String getBaseUrl();
     public abstract ClientConfig getClientConfig();
+    public abstract OkHttpClient getHttpClient();
 
-    public OkHttpClient getHttpClient() {
-        return httpClient;
-    }
     public ForkJoinPool getExecutorService() {
         return executorService;
     }
@@ -303,6 +309,7 @@ public abstract class CogniteClient implements Serializable {
         abstract Builder setProject(String value);
         abstract Builder setBaseUrl(String value);
         abstract Builder setClientConfig(ClientConfig value);
+        abstract Builder setHttpClient(OkHttpClient value);
 
         abstract CogniteClient build();
     }
