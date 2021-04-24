@@ -17,10 +17,13 @@ Changes are grouped as follows:
 
 ### Short term
 
-- Native token authentication (OpenID Connect).
 - Geo location attribute and resource type.
 
 ## [0.9.3-SNAPSHOT]
+
+### Added
+
+- Support for native token authentication (OpenID Connect).
 
 ### Fixed
 
