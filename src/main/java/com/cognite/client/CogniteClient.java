@@ -6,11 +6,15 @@ import com.cognite.client.config.ClientConfig;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
+import okhttp3.Response;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
@@ -26,15 +30,6 @@ import java.util.concurrent.TimeUnit;
 public abstract class CogniteClient implements Serializable {
     private final static String DEFAULT_BASE_URL = "https://api.cognitedata.com";
     private final static String API_ENV_VAR = "COGNITE_API_KEY";
-
-    /*
-    private final static OkHttpClient httpClient = new OkHttpClient.Builder()
-            .connectTimeout(90, TimeUnit.SECONDS)
-            .readTimeout(90, TimeUnit.SECONDS)
-            .writeTimeout(90, TimeUnit.SECONDS)
-            .build();
-
-     */
 
     private static final int DEFAULT_CPU_MULTIPLIER = 8;
     private final static int DEFAULT_MAX_WORKER_THREADS = 8;
@@ -54,11 +49,6 @@ public abstract class CogniteClient implements Serializable {
 
     private static Builder builder() {
         return new AutoValue_CogniteClient.Builder()
-                .setHttpClient(new OkHttpClient.Builder()
-                        .connectTimeout(90, TimeUnit.SECONDS)
-                        .readTimeout(90, TimeUnit.SECONDS)
-                        .writeTimeout(90, TimeUnit.SECONDS)
-                        .build())
                 .setClientConfig(ClientConfig.create())
                 .setBaseUrl(DEFAULT_BASE_URL);
     }
@@ -84,12 +74,16 @@ public abstract class CogniteClient implements Serializable {
         Preconditions.checkArgument(null != apiKey && !apiKey.isEmpty(),
                 "The api key cannot be empty.");
         return CogniteClient.builder()
-                .setApiKey(apiKey)
+                .setHttpClient(new OkHttpClient.Builder()
+                        .connectTimeout(90, TimeUnit.SECONDS)
+                        .readTimeout(90, TimeUnit.SECONDS)
+                        .writeTimeout(90, TimeUnit.SECONDS)
+                        .addInterceptor(new ApiKeyInterceptor(apiKey))
+                        .build())
                 .build();
     }
 
     protected abstract Builder toBuilder();
-    protected abstract String getApiKey();
     @Nullable
     protected abstract String getProject();
     protected abstract String getBaseUrl();
@@ -98,18 +92,6 @@ public abstract class CogniteClient implements Serializable {
 
     public ForkJoinPool getExecutorService() {
         return executorService;
-    }
-
-    /**
-     * Returns a {@link CogniteClient} using the specified api key.
-     *
-     * @param key The api key to use for interacting with Cognite Data Fusion.
-     * @return the client object with the api key set.
-     */
-    public CogniteClient withApiKey(String key) {
-        Preconditions.checkArgument(null != key && !key.isEmpty(),
-                "The api key cannot be empty.");
-        return toBuilder().setApiKey(key).build();
     }
 
     /**
@@ -285,9 +267,9 @@ public abstract class CogniteClient implements Serializable {
             // The project info is cached
             cdfProject = cdfProjectCache;
         } else {
-            // Have to get the project via the api key
+            // Have to get the project via the auth credentials
             LoginStatus loginStatus = getConnectorService()
-                    .readLoginStatusByApiKey(getBaseUrl(), getApiKey());
+                    .readLoginStatusByApiKey(getBaseUrl());
 
             if (loginStatus.getProject().isEmpty()) {
                 throw new Exception("Could not find the CDF project for the api key.");
@@ -299,13 +281,34 @@ public abstract class CogniteClient implements Serializable {
 
         return AuthConfig.create()
                 .withHost(getBaseUrl())
-                .withApiKey(getApiKey())
                 .withProject(cdfProject);
+    }
+
+    /*
+    Interceptor that will add the api key to each request.
+     */
+    private static class ApiKeyInterceptor implements Interceptor {
+        private final String apiKey;
+
+        public ApiKeyInterceptor(String apiKey) {
+            Preconditions.checkArgument(null != apiKey && !apiKey.isEmpty(),
+                    "The api key cannot be empty.");
+            this.apiKey = apiKey;
+        }
+
+        @NotNull
+        @Override
+        public Response intercept(@NotNull Chain chain) throws IOException {
+            okhttp3.Request authRequest = chain.request().newBuilder()
+                    .header("api-key", apiKey)
+                    .build();
+
+            return chain.proceed(authRequest);
+        }
     }
 
     @AutoValue.Builder
     abstract static class Builder {
-        abstract Builder setApiKey(String value);
         abstract Builder setProject(String value);
         abstract Builder setBaseUrl(String value);
         abstract Builder setClientConfig(ClientConfig value);

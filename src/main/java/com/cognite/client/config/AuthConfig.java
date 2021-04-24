@@ -35,7 +35,6 @@ public abstract class AuthConfig implements Serializable {
   }
 
   @Nullable public abstract String getProject();
-  @Nullable public abstract String getApiKey();
   public abstract String getHost();
 
   public abstract AuthConfig.Builder toBuilder();
@@ -57,19 +56,10 @@ public abstract class AuthConfig implements Serializable {
     return toBuilder().setProject(value).build();
   }
 
-  /**
-   * Returns a new {@link AuthConfig} that represents the specified api key.
-   * @param value The project id interact with.
-   */
-  public AuthConfig withApiKey(String value) {
-    return toBuilder().setApiKey(value).build();
-  }
-
   @Override
   public final String toString() {
     return "AuthConfig{"
             + "project=" + getProject() + ", "
-            + "apiKey=" + "*********" + ", "
             + "host=" + getHost() + ", "
             + "}";
   }
@@ -77,7 +67,6 @@ public abstract class AuthConfig implements Serializable {
   @AutoValue.Builder public abstract static class Builder {
     abstract Builder setProject(String value);
     abstract Builder setHost(String value);
-    abstract Builder setApiKey(String value);
 
     public abstract AuthConfig build();
   }

@@ -70,7 +70,6 @@ public abstract class GetLoginRequestProvider extends GenericRequestProvider{
         // build standard part of the request.
         return new okhttp3.Request.Builder()
                 .header("Accept", "application/json")
-                .header("api-key", this.getRequest().getAuthConfig().getApiKey())
                 .header("x-cdp-sdk", this.getSdkIdentifier())
                 .header("x-cdp-app", this.getAppIdentifier())
                 .header("x-cdp-clienttag", this.getSessionIdentifier())
