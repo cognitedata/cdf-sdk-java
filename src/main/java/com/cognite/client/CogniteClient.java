@@ -9,13 +9,13 @@ import com.google.common.base.Preconditions;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URL;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
@@ -30,6 +30,11 @@ import java.util.concurrent.TimeUnit;
 public abstract class CogniteClient implements Serializable {
     private final static String DEFAULT_BASE_URL = "https://api.cognitedata.com";
     private final static String API_ENV_VAR = "COGNITE_API_KEY";
+
+    private final static OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder()
+            .connectTimeout(90, TimeUnit.SECONDS)
+            .readTimeout(90, TimeUnit.SECONDS)
+            .writeTimeout(90, TimeUnit.SECONDS);
 
     private static final int DEFAULT_CPU_MULTIPLIER = 8;
     private final static int DEFAULT_MAX_WORKER_THREADS = 8;
@@ -79,12 +84,61 @@ public abstract class CogniteClient implements Serializable {
     public static CogniteClient ofKey(String apiKey) {
         Preconditions.checkArgument(null != apiKey && !apiKey.isEmpty(),
                 "The api key cannot be empty.");
+
         return CogniteClient.builder()
-                .setHttpClient(new OkHttpClient.Builder()
-                        .connectTimeout(90, TimeUnit.SECONDS)
-                        .readTimeout(90, TimeUnit.SECONDS)
-                        .writeTimeout(90, TimeUnit.SECONDS)
+                .setHttpClient(httpClientBuilder
                         .addInterceptor(new ApiKeyInterceptor(apiKey))
+                        .build())
+                .build();
+    }
+
+    /**
+     * Returns a {@link CogniteClient} using the provided bearer token for authorization.
+     *
+     * If your application handles the authentication flow itself, you can pass the resulting access token
+     * to this constructor. The token will be added as a bearer token to all requests.
+     *
+     * When the token expires you need to create a new client with the refreshed token.
+     *
+     * @param token The Cognite Data Fusion API key to use for authentication.
+     * @return the client object with default configuration.
+     */
+    public static CogniteClient ofToken(String token) {
+        Preconditions.checkArgument(null != token && !token.isEmpty(),
+                "The api key cannot be empty.");
+
+        return CogniteClient.builder()
+                .setHttpClient(httpClientBuilder
+                        .addInterceptor(new TokenInterceptor(token))
+                        .build())
+                .build();
+    }
+
+    /**
+     * Returns a {@link CogniteClient} using client credentials for authentication.
+     *
+     * Client credentials is the preferred authentication pattern for services /
+     * machine to machine communication for Openid Connect (and Oauth) compatible identity providers.
+     *
+     * @param clientId The client id to use for authentication.
+     * @param clientSecret The client secret to use for authentication.
+     * @param tokenUrl The URL to call for obtaining the access token.
+     * @return the client object with default configuration.
+     */
+    public static CogniteClient ofClientCredentials(String clientId,
+                                                    String clientSecret,
+                                                    URL tokenUrl) {
+        Preconditions.checkArgument(null != clientId && !clientId.isEmpty(),
+                "The clientId cannot be empty.");
+        Preconditions.checkArgument(null != clientSecret && !clientSecret.isEmpty(),
+                "The secret cannot be empty.");
+
+        return CogniteClient.builder()
+                .setClientId(clientId)
+                .setClientSecret(clientSecret)
+                .setTokenUrl(tokenUrl)
+                .setHttpClient(httpClientBuilder
+                        .addInterceptor(new ClientCredentialsInterceptor(clientId, clientSecret, tokenUrl))
                         .build())
                 .build();
     }
@@ -92,6 +146,13 @@ public abstract class CogniteClient implements Serializable {
     protected abstract Builder toBuilder();
     @Nullable
     protected abstract String getProject();
+    @Nullable
+    protected abstract String getClientId();
+    @Nullable
+    protected abstract String getClientSecret();
+    @Nullable
+    protected abstract URL getTokenUrl();
+
     protected abstract String getBaseUrl();
     public abstract ClientConfig getClientConfig();
     public abstract OkHttpClient getHttpClient();
@@ -302,11 +363,65 @@ public abstract class CogniteClient implements Serializable {
             this.apiKey = apiKey;
         }
 
-        @NotNull
         @Override
-        public Response intercept(@NotNull Chain chain) throws IOException {
+        public Response intercept(Chain chain) throws IOException {
             okhttp3.Request authRequest = chain.request().newBuilder()
                     .header("api-key", apiKey)
+                    .build();
+
+            return chain.proceed(authRequest);
+        }
+    }
+
+    /*
+    Interceptor that will add a bearer token to each request.
+     */
+    private static class TokenInterceptor implements Interceptor {
+        private final String token;
+
+        public TokenInterceptor(String token) {
+            Preconditions.checkArgument(null != token && !token.isEmpty(),
+                    "The token cannot be empty.");
+            this.token = token;
+        }
+
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            okhttp3.Request authRequest = chain.request().newBuilder()
+                    .header("Authorization", "Bearer " + token)
+                    .build();
+
+            return chain.proceed(authRequest);
+        }
+    }
+
+    /*
+    Interceptor that will add a bearer token to each request based on a client credentials
+    authentication flow.
+     */
+    private static class ClientCredentialsInterceptor implements Interceptor {
+        private final String clientId;
+        private final String clientSecret;
+        private final URL tokenUrl;
+
+        private String token = null;
+
+        public ClientCredentialsInterceptor(String clientId,
+                                            String clientSecret,
+                                            URL tokenUrl) {
+            Preconditions.checkArgument(null != clientId && !clientId.isEmpty(),
+                    "The clientId cannot be empty.");
+            Preconditions.checkArgument(null != clientSecret && !clientSecret.isEmpty(),
+                    "The clientSecret cannot be empty.");
+            this.clientId = clientId;
+            this.clientSecret = clientSecret;
+            this.tokenUrl = tokenUrl;
+        }
+
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            okhttp3.Request authRequest = chain.request().newBuilder()
+                    .header("Authorization", "Bearer " + token)
                     .build();
 
             return chain.proceed(authRequest);
@@ -319,6 +434,9 @@ public abstract class CogniteClient implements Serializable {
         abstract Builder setBaseUrl(String value);
         abstract Builder setClientConfig(ClientConfig value);
         abstract Builder setHttpClient(OkHttpClient value);
+        abstract Builder setClientId(String value);
+        abstract Builder setClientSecret(String value);
+        abstract Builder setTokenUrl(URL value);
 
         abstract CogniteClient build();
     }
