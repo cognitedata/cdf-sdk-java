@@ -31,11 +31,6 @@ public abstract class CogniteClient implements Serializable {
     private final static String DEFAULT_BASE_URL = "https://api.cognitedata.com";
     private final static String API_ENV_VAR = "COGNITE_API_KEY";
 
-    private final static OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder()
-            .connectTimeout(90, TimeUnit.SECONDS)
-            .readTimeout(90, TimeUnit.SECONDS)
-            .writeTimeout(90, TimeUnit.SECONDS);
-
     private static final int DEFAULT_CPU_MULTIPLIER = 8;
     private final static int DEFAULT_MAX_WORKER_THREADS = 8;
     private static ForkJoinPool executorService = new ForkJoinPool(Math.min(
@@ -56,6 +51,17 @@ public abstract class CogniteClient implements Serializable {
         return new AutoValue_CogniteClient.Builder()
                 .setClientConfig(ClientConfig.create())
                 .setBaseUrl(DEFAULT_BASE_URL);
+    }
+
+    /*
+    Gather the common config of the http client here. We cannot use a single config entry since we need
+    to add specific interceptor depending on the auth method used.
+     */
+    private static OkHttpClient.Builder getHttpClientBuilder() {
+        return new OkHttpClient.Builder()
+                .connectTimeout(90, TimeUnit.SECONDS)
+                .readTimeout(90, TimeUnit.SECONDS)
+                .writeTimeout(90, TimeUnit.SECONDS);
     }
 
     /**
@@ -86,7 +92,7 @@ public abstract class CogniteClient implements Serializable {
                 "The api key cannot be empty.");
 
         return CogniteClient.builder()
-                .setHttpClient(httpClientBuilder
+                .setHttpClient(CogniteClient.getHttpClientBuilder()
                         .addInterceptor(new ApiKeyInterceptor(apiKey))
                         .build())
                 .build();
@@ -108,7 +114,7 @@ public abstract class CogniteClient implements Serializable {
                 "The api key cannot be empty.");
 
         return CogniteClient.builder()
-                .setHttpClient(httpClientBuilder
+                .setHttpClient(CogniteClient.getHttpClientBuilder()
                         .addInterceptor(new TokenInterceptor(token))
                         .build())
                 .build();
@@ -137,7 +143,7 @@ public abstract class CogniteClient implements Serializable {
                 .setClientId(clientId)
                 .setClientSecret(clientSecret)
                 .setTokenUrl(tokenUrl)
-                .setHttpClient(httpClientBuilder
+                .setHttpClient(CogniteClient.getHttpClientBuilder()
                         .addInterceptor(new ClientCredentialsInterceptor(clientId, clientSecret, tokenUrl))
                         .build())
                 .build();
@@ -339,7 +345,7 @@ public abstract class CogniteClient implements Serializable {
                     .readLoginStatusByApiKey(getBaseUrl());
 
             if (loginStatus.getProject().isEmpty()) {
-                throw new Exception("Could not find the CDF project for the api key.");
+                throw new Exception("Could not find the CDF project for the user principal.");
             }
             LOG.debug("CDF project identified for the api key. Project: {}", loginStatus.getProject());
             cdfProjectCache = loginStatus.getProject(); // Cache the result

@@ -28,7 +28,7 @@ import java.net.URISyntaxException;
 import java.util.Optional;
 
 @AutoValue
-public abstract class GetLoginRequestProvider extends GenericRequestProvider{
+public abstract class GetLoginRequestProvider extends GenericRequestProvider {
     private static final String DEFAULT_API_ENDPOINT = "status";
 
     public static Builder builder() {
@@ -50,9 +50,7 @@ public abstract class GetLoginRequestProvider extends GenericRequestProvider{
 
     public okhttp3.Request buildRequest(Optional<String> cursor) throws IOException, URISyntaxException {
         okhttp3.Request.Builder requestBuilder = buildGenericRequest();
-        //HttpUrl.Builder urlBuilder = buildGenericUrl();
 
-        //return requestBuilder.url(urlBuilder.build()).build();
         return requestBuilder.build();
     }
 
