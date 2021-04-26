@@ -6,15 +6,22 @@ import com.cognite.client.config.ClientConfig;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
+import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
+import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
+import com.nimbusds.oauth2.sdk.auth.Secret;
+import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.token.AccessToken;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.nimbusds.oauth2.sdk.*;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URI;
 import java.net.URL;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
@@ -144,7 +151,7 @@ public abstract class CogniteClient implements Serializable {
                 .setClientSecret(clientSecret)
                 .setTokenUrl(tokenUrl)
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
-                        .addInterceptor(new ClientCredentialsInterceptor(clientId, clientSecret, tokenUrl))
+                        .addInterceptor(new ClientCredentialsInterceptor(clientId, clientSecret, tokenUrl, DEFAULT_BASE_URL + "/.default"))
                         .build())
                 .build();
     }
@@ -409,28 +416,73 @@ public abstract class CogniteClient implements Serializable {
         private final String clientId;
         private final String clientSecret;
         private final URL tokenUrl;
+        private final String scope;
 
         private String token = null;
 
         public ClientCredentialsInterceptor(String clientId,
                                             String clientSecret,
-                                            URL tokenUrl) {
+                                            URL tokenUrl,
+                                            String scope) {
             Preconditions.checkArgument(null != clientId && !clientId.isEmpty(),
                     "The clientId cannot be empty.");
             Preconditions.checkArgument(null != clientSecret && !clientSecret.isEmpty(),
                     "The clientSecret cannot be empty.");
+            Preconditions.checkArgument(null != scope && !scope.isEmpty(),
+                    "The scope cannot be empty.");
             this.clientId = clientId;
             this.clientSecret = clientSecret;
             this.tokenUrl = tokenUrl;
+            this.scope = scope;
         }
 
         @Override
         public Response intercept(Chain chain) throws IOException {
             okhttp3.Request authRequest = chain.request().newBuilder()
-                    .header("Authorization", "Bearer " + token)
+                    .header("Authorization", "Bearer " + getToken())
                     .build();
 
             return chain.proceed(authRequest);
+        }
+
+        /*
+        Get the access token. If we don't have an access token or if the current token has expired
+        we'll have to reach out to the token provider for a new token.
+         */
+        private String getToken() throws IOException {
+
+            return "";
+        }
+
+        /*
+        Call the token provider and obtain a new access token.
+         */
+        private void refreshToken() throws Exception {
+            // Construct the client credentials grant
+            AuthorizationGrant clientGrant = new ClientCredentialsGrant();
+
+            // The credentials to authenticate the client at the token endpoint
+            ClientID clientID = new ClientID(clientId);
+            Secret secret = new Secret(clientSecret);
+            ClientAuthentication clientAuth = new ClientSecretBasic(clientID, secret);
+            Scope tokenScope = new Scope(scope);
+
+            URI tokenEndpoint = tokenUrl.toURI();
+
+            // Make the token request
+            TokenRequest request = new TokenRequest(tokenEndpoint, clientAuth, clientGrant, tokenScope);
+
+            TokenResponse response = TokenResponse.parse(request.toHTTPRequest().send());
+
+            if (! response.indicatesSuccess()) {
+                // We got an error response...
+                TokenErrorResponse errorResponse = response.toErrorResponse();
+            }
+
+            AccessTokenResponse successResponse = response.toSuccessResponse();
+
+            // Get the access token
+            AccessToken accessToken = successResponse.getTokens().getAccessToken();
         }
     }
 
