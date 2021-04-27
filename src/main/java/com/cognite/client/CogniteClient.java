@@ -23,8 +23,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URL;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * This class represents the main entry point for interacting with this SDK (and Cognite Data Fusion).
@@ -106,23 +109,23 @@ public abstract class CogniteClient implements Serializable {
     }
 
     /**
-     * Returns a {@link CogniteClient} using the provided bearer token for authorization.
+     * Returns a {@link CogniteClient} using the provided supplier (function) to provide
+     * a bearer token for authorization.
      *
-     * If your application handles the authentication flow itself, you can pass the resulting access token
-     * to this constructor. The token will be added as a bearer token to all requests.
+     * If your application handles the authentication flow itself, you can pass a
+     * {@link Supplier} to this constructor. The supplier will be called for each api request
+     * and the provided token will be added as a bearer token to the request header.
      *
-     * When the token expires you need to create a new client with the refreshed token.
-     *
-     * @param token The Cognite Data Fusion API key to use for authentication.
+     * @param tokenSupplier A Supplier (functional interface) producing a valid access token when called.
      * @return the client object with default configuration.
      */
-    public static CogniteClient ofToken(String token) {
-        Preconditions.checkArgument(null != token && !token.isEmpty(),
-                "The api key cannot be empty.");
+    public static CogniteClient ofToken(Supplier<String> tokenSupplier) {
+        Preconditions.checkNotNull(tokenSupplier,
+                "The token supplier cannot be empty.");
 
         return CogniteClient.builder()
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
-                        .addInterceptor(new TokenInterceptor(token))
+                        .addInterceptor(new TokenInterceptor(tokenSupplier))
                         .build())
                 .build();
     }
@@ -151,7 +154,8 @@ public abstract class CogniteClient implements Serializable {
                 .setClientSecret(clientSecret)
                 .setTokenUrl(tokenUrl)
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
-                        .addInterceptor(new ClientCredentialsInterceptor(clientId, clientSecret, tokenUrl, DEFAULT_BASE_URL + "/.default"))
+                        .addInterceptor(new ClientCredentialsInterceptor(clientId,
+                                clientSecret, tokenUrl, DEFAULT_BASE_URL + "/.default"))
                         .build())
                 .build();
     }
@@ -196,7 +200,14 @@ public abstract class CogniteClient implements Serializable {
     public CogniteClient withBaseUrl(String baseUrl) {
         Preconditions.checkArgument(null != baseUrl && !baseUrl.isEmpty(),
                 "The base URL cannot be empty.");
-        return toBuilder().setBaseUrl(baseUrl).build();
+
+        return toBuilder()
+                .setBaseUrl(baseUrl)
+                .setHttpClient(CogniteClient.getHttpClientBuilder()
+                        .addInterceptor(new ClientCredentialsInterceptor(getClientId(),
+                                getClientSecret(), getTokenUrl(), baseUrl + "/.default"))
+                        .build())
+                .build();
     }
 
     /**
@@ -387,19 +398,22 @@ public abstract class CogniteClient implements Serializable {
     }
 
     /*
-    Interceptor that will add a bearer token to each request.
+    Interceptor that will add a bearer token to each request. The token is produced by a supplier
+    function (functional interface / lambda)
      */
     private static class TokenInterceptor implements Interceptor {
-        private final String token;
+        private final Supplier<String> tokenSupplier;
 
-        public TokenInterceptor(String token) {
-            Preconditions.checkArgument(null != token && !token.isEmpty(),
-                    "The token cannot be empty.");
-            this.token = token;
+        public TokenInterceptor(Supplier<String> tokenSupplier) {
+            Preconditions.checkNotNull(tokenSupplier,
+                    "The token supplier cannot be empty.");
+            this.tokenSupplier = tokenSupplier;
         }
 
         @Override
         public Response intercept(Chain chain) throws IOException {
+            String token = tokenSupplier.get();
+
             okhttp3.Request authRequest = chain.request().newBuilder()
                     .header("Authorization", "Bearer " + token)
                     .build();
@@ -413,12 +427,20 @@ public abstract class CogniteClient implements Serializable {
     authentication flow.
      */
     private static class ClientCredentialsInterceptor implements Interceptor {
+        private final static String loggingPrefix = "Authentication - ";
+        // Refresh the access token 30 secs before it expires
+        private final static Duration tokenRefreshGraceDuration = Duration.ofSeconds(30);
+
+        // The credentials used for acquiring access tokens
         private final String clientId;
         private final String clientSecret;
         private final URL tokenUrl;
         private final String scope;
 
+        // The access token--fetched from the token provider
         private String token = null;
+        private long tokenLifetime = 0;  // lifetime in seconds
+        private Instant tokenInstant = null;
 
         public ClientCredentialsInterceptor(String clientId,
                                             String clientSecret,
@@ -450,14 +472,30 @@ public abstract class CogniteClient implements Serializable {
         we'll have to reach out to the token provider for a new token.
          */
         private String getToken() throws IOException {
+            if (null == token
+                    || (tokenLifetime > 0 && tokenInstant.plusSeconds(tokenLifetime)
+                            .minus(tokenRefreshGraceDuration)
+                            .isBefore(Instant.now()))) {
+                // The token does not exist or it is too old.
+                try {
+                    refreshToken();
+                } catch (Exception e) {
+                    LOG.warn(loggingPrefix + "Refreshing the access token failed: {}",
+                            e.toString());
+                    throw new IOException(e);
+                }
+            }
 
-            return "";
+            return token;
         }
 
         /*
         Call the token provider and obtain a new access token.
          */
-        private void refreshToken() throws Exception {
+        private synchronized void refreshToken() throws Exception {
+            Instant startInstant = Instant.now();
+            LOG.debug(loggingPrefix + "start access token refresh.");
+
             // Construct the client credentials grant
             AuthorizationGrant clientGrant = new ClientCredentialsGrant();
 
@@ -471,18 +509,25 @@ public abstract class CogniteClient implements Serializable {
 
             // Make the token request
             TokenRequest request = new TokenRequest(tokenEndpoint, clientAuth, clientGrant, tokenScope);
-
             TokenResponse response = TokenResponse.parse(request.toHTTPRequest().send());
 
             if (! response.indicatesSuccess()) {
                 // We got an error response...
                 TokenErrorResponse errorResponse = response.toErrorResponse();
+                LOG.warn(loggingPrefix + "Unable to get a new access token from the identity provider: {}",
+                        errorResponse.toJSONObject().toJSONString());
             }
 
             AccessTokenResponse successResponse = response.toSuccessResponse();
 
             // Get the access token
             AccessToken accessToken = successResponse.getTokens().getAccessToken();
+            token = accessToken.toAuthorizationHeader();
+            tokenInstant = Instant.now();
+            tokenLifetime = accessToken.getLifetime();
+
+            LOG.debug(loggingPrefix + "finished access token refresh within duration: {}.",
+                    Duration.between(startInstant, Instant.now()).toString());
         }
     }
 
