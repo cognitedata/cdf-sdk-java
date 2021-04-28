@@ -366,8 +366,7 @@ abstract class ApiBase {
     protected Request addAuthInfo(Request request) throws Exception {
         // Check if there already is auth info.
         if (null != request.getAuthConfig()
-                && null != request.getAuthConfig().getProject()
-                && null != request.getAuthConfig().getApiKey()) {
+                && null != request.getAuthConfig().getProject()) {
             return request;
         }
 

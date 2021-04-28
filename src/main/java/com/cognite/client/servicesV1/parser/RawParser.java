@@ -107,10 +107,7 @@ public class RawParser {
     private static Map<String, Object> parseStructToMap(Struct input) {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         for (Map.Entry<String, Value> entry : input.getFieldsMap().entrySet()) {
-            if (entry.getValue().getKindCase() != Value.KindCase.NULL_VALUE) {
-                // Nulls are skipped.
                 mapBuilder.put(entry.getKey(), RawParser.parseValueToObject(entry.getValue()));
-            }
         }
         return mapBuilder.build();
     }

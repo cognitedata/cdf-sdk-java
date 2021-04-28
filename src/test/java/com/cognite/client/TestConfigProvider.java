@@ -27,6 +27,33 @@ public class TestConfigProvider {
         return apiKey;
     }
 
+    public static String getClientId() {
+        String clientId = System.getenv("TEST_CLIENT_ID");
+
+        if (Strings.isNullOrEmpty(clientId)) {
+            clientId = "default";
+        }
+        return clientId;
+    }
+
+    public static String getClientSecret() {
+        String clientSecret = System.getenv("TEST_CLIENT_SECRET");
+
+        if (Strings.isNullOrEmpty(clientSecret)) {
+            clientSecret = "default";
+        }
+        return clientSecret;
+    }
+
+    public static String getTenantId() {
+        String tenantId = System.getenv("TEST_TENANT_ID");
+
+        if (Strings.isNullOrEmpty(tenantId)) {
+            tenantId = "default";
+        }
+        return tenantId;
+    }
+
     public static String getHost() {
         String host = System.getenv("TEST_HOST");
 
