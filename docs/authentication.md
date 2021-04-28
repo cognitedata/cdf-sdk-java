@@ -2,7 +2,7 @@
 
 There are two authentication options:
 - OpenID Connect.
-- API-keys.
+- API keys.
 
 ### OpenID Connect
 
@@ -30,4 +30,13 @@ support for these. Instead you can extend the SDK by handling these other flows 
 ```java
 CogniteClient client = CogniteClient.ofToken(Supplier<String> tokenSupplier);
 ```
-The `tokenSupplier` is a functional interface so you can pass in a lambda function. The 
+The `tokenSupplier` is a functional interface, so you can pass in a lambda function. The `tokenSupplier`
+will be called for each api request and expects a valid token in return.
+
+### API keys
+
+Authentication via API key is the legacy method of authenticating services towards Cognite Data Fusion.
+You simply supply the API key when creating the client:
+```java
+CogniteClient client = CogniteClient.ofKey(<apiKey>);
+```
