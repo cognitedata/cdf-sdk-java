@@ -461,7 +461,7 @@ public abstract class CogniteClient implements Serializable {
         @Override
         public Response intercept(Chain chain) throws IOException {
             okhttp3.Request authRequest = chain.request().newBuilder()
-                    .header("Authorization", "Bearer " + getToken())
+                    .header("Authorization", getToken())
                     .build();
 
             return chain.proceed(authRequest);

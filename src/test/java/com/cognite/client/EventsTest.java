@@ -1,5 +1,7 @@
 package com.cognite.client;
 
+import ch.qos.logback.core.subst.Token;
+import com.cognite.client.config.TokenUrl;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.Event;
@@ -33,15 +35,24 @@ class EventsTest {
                 .withNoListPartitions(1);
         String loggingPrefix = "UnitTest - writeReadAndDeleteEvents() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+
+
+        try {
+            /*
         CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
                 .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
-        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
-                Duration.between(startInstant, Instant.now()));
-        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+         */
+            CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withBaseUrl(TestConfigProvider.getHost());
+            LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-        try {
             LOG.info(loggingPrefix + "Start upserting events.");
             List<Event> upsertEventsList = DataGenerator.generateEvents(13800);
             client.events().upsert(upsertEventsList);
