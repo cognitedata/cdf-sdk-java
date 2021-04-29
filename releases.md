@@ -19,7 +19,7 @@ Changes are grouped as follows:
 
 - Geo location attribute and resource type.
 
-## [0.9.3-SNAPSHOT]
+## [0.9.3]
 
 ### Added
 
@@ -31,7 +31,7 @@ Changes are grouped as follows:
 - Error when creating new `relationship` objects into data sets.
 - Error when uploading file binaries with >1k asset links.
 
-## 0.9.2
+## [0.9.2]
 
 ### Added
 
