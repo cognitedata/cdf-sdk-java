@@ -39,13 +39,13 @@ client.events()
     
 ### Installing the sdk
 
-````xml
+```xml
 <dependency>    
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>0.9.2</version>
+    <version>0.9.3</version>
 </dependency>
-````
+```
     
 ### Features
 #### Core resource types
