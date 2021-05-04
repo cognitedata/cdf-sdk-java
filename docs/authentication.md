@@ -31,7 +31,10 @@ support for these. Instead you can extend the SDK by handling these other flows 
 CogniteClient client = CogniteClient.ofToken(Supplier<String> tokenSupplier);
 ```
 The `tokenSupplier` is a functional interface, so you can pass in a lambda function. The `tokenSupplier`
-will be called for each api request and expects a valid token in return.
+will be called for each api request and expects a valid token in return. The token is added to
+the `Authorization` header in each request. Your supplier needs to produce the entire value for 
+the header, including the `Bearer` prefix. That is, your supplier should produce a String
+of the following pattern: `Bearer <your-access-token>`.
 
 ### API keys
 

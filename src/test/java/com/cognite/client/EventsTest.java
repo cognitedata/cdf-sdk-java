@@ -1,6 +1,5 @@
 package com.cognite.client;
 
-import ch.qos.logback.core.subst.Token;
 import com.cognite.client.config.TokenUrl;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Aggregate;

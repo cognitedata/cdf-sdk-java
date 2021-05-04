@@ -19,6 +19,12 @@ Changes are grouped as follows:
 
 - Geo location attribute and resource type.
 
+## [0.9.4]
+
+### Fixed
+
+- Error when using api key auth in combination with custom host.
+
 ## [0.9.3]
 
 ### Added
