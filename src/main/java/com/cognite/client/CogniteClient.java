@@ -102,6 +102,7 @@ public abstract class CogniteClient implements Serializable {
                 "The api key cannot be empty.");
 
         return CogniteClient.builder()
+                .setApiKey(apiKey)
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
                         .addInterceptor(new ApiKeyInterceptor(apiKey))
                         .build())
@@ -169,6 +170,8 @@ public abstract class CogniteClient implements Serializable {
     protected abstract String getClientSecret();
     @Nullable
     protected abstract URL getTokenUrl();
+    @Nullable
+    protected abstract String getApiKey();
 
     protected abstract String getBaseUrl();
     public abstract ClientConfig getClientConfig();
@@ -200,6 +203,16 @@ public abstract class CogniteClient implements Serializable {
     public CogniteClient withBaseUrl(String baseUrl) {
         Preconditions.checkArgument(null != baseUrl && !baseUrl.isEmpty(),
                 "The base URL cannot be empty.");
+
+        if (null != getApiKey()) {
+            // the client is configured with api key auth
+            return toBuilder()
+                    .setBaseUrl(baseUrl)
+                    .setHttpClient(CogniteClient.getHttpClientBuilder()
+                            .addInterceptor(new ApiKeyInterceptor(getApiKey()))
+                            .build())
+                    .build();
+        }
 
         return toBuilder()
                 .setBaseUrl(baseUrl)
@@ -415,7 +428,7 @@ public abstract class CogniteClient implements Serializable {
             String token = tokenSupplier.get();
 
             okhttp3.Request authRequest = chain.request().newBuilder()
-                    .header("Authorization", "Bearer " + token)
+                    .header("Authorization", token)
                     .build();
 
             return chain.proceed(authRequest);
@@ -540,6 +553,7 @@ public abstract class CogniteClient implements Serializable {
         abstract Builder setClientId(String value);
         abstract Builder setClientSecret(String value);
         abstract Builder setTokenUrl(URL value);
+        abstract Builder setApiKey(String value);
 
         abstract CogniteClient build();
     }
