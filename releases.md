@@ -19,6 +19,12 @@ Changes are grouped as follows:
 
 - Geo location attribute and resource type.
 
+## [0.9.5-SNAPSHOT]
+
+### Fixed
+
+- Populate auth headers for custom CDF hosts.
+
 ## [0.9.4]
 
 ### Fixed
