@@ -11,6 +11,7 @@ import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
+import okhttp3.ConnectionSpec;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
@@ -25,6 +26,7 @@ import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -69,6 +71,7 @@ public abstract class CogniteClient implements Serializable {
      */
     private static OkHttpClient.Builder getHttpClientBuilder() {
         return new OkHttpClient.Builder()
+                .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS))
                 .connectTimeout(90, TimeUnit.SECONDS)
                 .readTimeout(90, TimeUnit.SECONDS)
                 .writeTimeout(90, TimeUnit.SECONDS);
@@ -100,11 +103,17 @@ public abstract class CogniteClient implements Serializable {
     public static CogniteClient ofKey(String apiKey) {
         Preconditions.checkArgument(null != apiKey && !apiKey.isEmpty(),
                 "The api key cannot be empty.");
+        String host = "";
+        try {
+            host = new URL(DEFAULT_BASE_URL).getHost();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         return CogniteClient.builder()
                 .setApiKey(apiKey)
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
-                        .addInterceptor(new ApiKeyInterceptor(apiKey))
+                        .addInterceptor(new ApiKeyInterceptor(host, apiKey))
                         .build())
                 .build();
     }
@@ -123,10 +132,16 @@ public abstract class CogniteClient implements Serializable {
     public static CogniteClient ofToken(Supplier<String> tokenSupplier) {
         Preconditions.checkNotNull(tokenSupplier,
                 "The token supplier cannot be empty.");
+        String host = "";
+        try {
+            host = new URL(DEFAULT_BASE_URL).getHost();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         return CogniteClient.builder()
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
-                        .addInterceptor(new TokenInterceptor(tokenSupplier))
+                        .addInterceptor(new TokenInterceptor(host, tokenSupplier))
                         .build())
                 .build();
     }
@@ -150,12 +165,19 @@ public abstract class CogniteClient implements Serializable {
         Preconditions.checkArgument(null != clientSecret && !clientSecret.isEmpty(),
                 "The secret cannot be empty.");
 
+        String host = "";
+        try {
+            host = new URL(DEFAULT_BASE_URL).getHost();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
         return CogniteClient.builder()
                 .setClientId(clientId)
                 .setClientSecret(clientSecret)
                 .setTokenUrl(tokenUrl)
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
-                        .addInterceptor(new ClientCredentialsInterceptor(clientId,
+                        .addInterceptor(new ClientCredentialsInterceptor(host, clientId,
                                 clientSecret, tokenUrl, DEFAULT_BASE_URL + "/.default"))
                         .build())
                 .build();
@@ -203,13 +225,19 @@ public abstract class CogniteClient implements Serializable {
     public CogniteClient withBaseUrl(String baseUrl) {
         Preconditions.checkArgument(null != baseUrl && !baseUrl.isEmpty(),
                 "The base URL cannot be empty.");
+        String host = "";
+        try {
+            host = new URL(baseUrl).getHost();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
 
         if (null != getApiKey()) {
             // the client is configured with api key auth
             return toBuilder()
                     .setBaseUrl(baseUrl)
                     .setHttpClient(CogniteClient.getHttpClientBuilder()
-                            .addInterceptor(new ApiKeyInterceptor(getApiKey()))
+                            .addInterceptor(new ApiKeyInterceptor(host, getApiKey()))
                             .build())
                     .build();
         }
@@ -217,7 +245,7 @@ public abstract class CogniteClient implements Serializable {
         return toBuilder()
                 .setBaseUrl(baseUrl)
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
-                        .addInterceptor(new ClientCredentialsInterceptor(getClientId(),
+                        .addInterceptor(new ClientCredentialsInterceptor(host, getClientId(),
                                 getClientSecret(), getTokenUrl(), baseUrl + "/.default"))
                         .build())
                 .build();
@@ -393,20 +421,28 @@ public abstract class CogniteClient implements Serializable {
      */
     private static class ApiKeyInterceptor implements Interceptor {
         private final String apiKey;
+        private final String apiHost;
 
-        public ApiKeyInterceptor(String apiKey) {
+        public ApiKeyInterceptor(String host, String apiKey) {
             Preconditions.checkArgument(null != apiKey && !apiKey.isEmpty(),
                     "The api key cannot be empty.");
+            this.apiHost = host;
             this.apiKey = apiKey;
         }
 
         @Override
         public Response intercept(Chain chain) throws IOException {
-            okhttp3.Request authRequest = chain.request().newBuilder()
-                    .header("api-key", apiKey)
-                    .build();
+            if (chain.request().url().host().equalsIgnoreCase(apiHost)) {
+                // Only add auth info to requests towards the cognite api host.
 
-            return chain.proceed(authRequest);
+                okhttp3.Request authRequest = chain.request().newBuilder()
+                        .header("api-key", apiKey)
+                        .build();
+
+                return chain.proceed(authRequest);
+            } else {
+                return chain.proceed(chain.request());
+            }
         }
     }
 
@@ -416,22 +452,29 @@ public abstract class CogniteClient implements Serializable {
      */
     private static class TokenInterceptor implements Interceptor {
         private final Supplier<String> tokenSupplier;
+        private final String apiHost;
 
-        public TokenInterceptor(Supplier<String> tokenSupplier) {
+        public TokenInterceptor(String host, Supplier<String> tokenSupplier) {
             Preconditions.checkNotNull(tokenSupplier,
                     "The token supplier cannot be empty.");
+            this.apiHost = host;
             this.tokenSupplier = tokenSupplier;
         }
 
         @Override
         public Response intercept(Chain chain) throws IOException {
-            String token = tokenSupplier.get();
+            if (chain.request().url().host().equalsIgnoreCase(apiHost)) {
+                // Only add auth info to requests towards the cognite api host.
+                String token = tokenSupplier.get();
 
-            okhttp3.Request authRequest = chain.request().newBuilder()
-                    .header("Authorization", token)
-                    .build();
+                okhttp3.Request authRequest = chain.request().newBuilder()
+                        .header("Authorization", token)
+                        .build();
 
-            return chain.proceed(authRequest);
+                return chain.proceed(authRequest);
+            } else {
+                return chain.proceed(chain.request());
+            }
         }
     }
 
@@ -444,6 +487,8 @@ public abstract class CogniteClient implements Serializable {
         // Refresh the access token 30 secs before it expires
         private final static Duration tokenRefreshGraceDuration = Duration.ofSeconds(30);
 
+        private final String apiHost;
+
         // The credentials used for acquiring access tokens
         private final String clientId;
         private final String clientSecret;
@@ -455,7 +500,8 @@ public abstract class CogniteClient implements Serializable {
         private long tokenLifetime = 0;  // lifetime in seconds
         private Instant tokenInstant = null;
 
-        public ClientCredentialsInterceptor(String clientId,
+        public ClientCredentialsInterceptor(String host,
+                                            String clientId,
                                             String clientSecret,
                                             URL tokenUrl,
                                             String scope) {
@@ -465,6 +511,7 @@ public abstract class CogniteClient implements Serializable {
                     "The clientSecret cannot be empty.");
             Preconditions.checkArgument(null != scope && !scope.isEmpty(),
                     "The scope cannot be empty.");
+            this.apiHost = host;
             this.clientId = clientId;
             this.clientSecret = clientSecret;
             this.tokenUrl = tokenUrl;
@@ -473,11 +520,17 @@ public abstract class CogniteClient implements Serializable {
 
         @Override
         public Response intercept(Chain chain) throws IOException {
-            okhttp3.Request authRequest = chain.request().newBuilder()
-                    .header("Authorization", getToken())
-                    .build();
+            if (chain.request().url().host().equalsIgnoreCase(apiHost)) {
+                // Only add auth info to requests towards the cognite api host.
 
-            return chain.proceed(authRequest);
+                okhttp3.Request authRequest = chain.request().newBuilder()
+                        .header("Authorization", getToken())
+                        .build();
+
+                return chain.proceed(authRequest);
+            } else {
+                return chain.proceed(chain.request());
+            }
         }
 
         /*
