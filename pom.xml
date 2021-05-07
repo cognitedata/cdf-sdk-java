@@ -41,6 +41,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <auto.version>1.8.1</auto.version>
+
         <nimbusds.version>9.4</nimbusds.version>
         <jgrapht.version>1.4.0</jgrapht.version> <!-- Upgrade to 1.5.0++ when Java 11 is available -->
         <okhttp3.version>4.9.1</okhttp3.version>
@@ -93,12 +94,6 @@
             <groupId>com.google.auto.value</groupId>
             <artifactId>auto-value-annotations</artifactId>
             <version>${auto.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.auto.value</groupId>
-            <artifactId>auto-value</artifactId>
-            <version>${auto.version}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.nimbusds</groupId>
@@ -296,6 +291,13 @@
                     <showWarnings>true</showWarnings>
                     <!-- Another temp override, to be set to true in due course. -->
                     <showDeprecation>false</showDeprecation>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>com.google.auto.value</groupId>
+                            <artifactId>auto-value</artifactId>
+                            <version>${auto.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
                 <executions>
                     <execution>
