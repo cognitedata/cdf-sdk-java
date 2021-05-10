@@ -27,6 +27,7 @@ import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
 import com.google.protobuf.util.JsonFormat;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.cognite.client.servicesV1.ConnectorConstants.MAX_LOG_ELEMENT_LENGTH;
@@ -105,11 +106,11 @@ public class RawParser {
      * Parses the main proto Struct (Json object equivalent) into a POJO representation.
      */
     private static Map<String, Object> parseStructToMap(Struct input) {
-        ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
+        Map<String, Object> map = new HashMap<>();
         for (Map.Entry<String, Value> entry : input.getFieldsMap().entrySet()) {
-                mapBuilder.put(entry.getKey(), RawParser.parseValueToObject(entry.getValue()));
+            map.put(entry.getKey(), RawParser.parseValueToObject(entry.getValue()));
         }
-        return mapBuilder.build();
+        return map;
     }
 
     /**

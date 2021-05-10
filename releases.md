@@ -24,6 +24,7 @@ Changes are grouped as follows:
 ### Fixed
 
 - Populate auth headers for custom CDF hosts.
+- Null values in raw row should not raise exceptions. 
 
 ## [0.9.4]
 
