@@ -6,7 +6,7 @@
 
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>0.9.5-SNAPSHOT</version>
+    <version>0.9.5</version>
     <licenses>
         <license>
             <name>Apache 2</name>
@@ -36,6 +36,7 @@
     </scm>
 
     <properties>
+        <java.version>11</java.version>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -51,7 +52,6 @@
         <commons.lang.version>3.12.0</commons.lang.version>
         <junit.version>5.7.1</junit.version>
 
-        <java.version>11</java.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-exec-plugin.version>3.0.0</maven-exec-plugin.version>
         <compiler.error.flag>-Werror</compiler.error.flag>

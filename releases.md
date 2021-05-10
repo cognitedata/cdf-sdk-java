@@ -19,7 +19,7 @@ Changes are grouped as follows:
 
 - Geo location attribute and resource type.
 
-## [0.9.5-SNAPSHOT]
+## [0.9.5]
 
 ### Fixed
 
