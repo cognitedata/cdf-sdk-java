@@ -41,8 +41,7 @@ public class PnIDResponseParser {
     public static PnIDResponse ParsePnIDAnnotationResponse(String json) throws Exception {
         JsonNode root = objectMapper.readTree(json);
         PnIDResponse.Builder pnIDBuilder = PnIDResponse.newBuilder();
-        BoundingBox.Builder boundingBoxBuilder = BoundingBox.newBuilder();
-        Annotation.Builder annotationBuilder = Annotation.newBuilder();
+
 
         if (root.path("fileId").isIntegralNumber()) {
             pnIDBuilder.setFileId(Int64Value.of(root.get("fileId").longValue()));
@@ -53,7 +52,9 @@ public class PnIDResponseParser {
 
         if (root.path("items").isArray()) {
             for (JsonNode node : root.path("items")) {
+                Annotation.Builder annotationBuilder = Annotation.newBuilder();
                 if (node.path("boundingBox").isObject()) {
+                    BoundingBox.Builder boundingBoxBuilder = BoundingBox.newBuilder();
                     if (node.path("boundingBox").path("xMax").isFloatingPointNumber()) {
                         boundingBoxBuilder.setXMax(node.path("boundingBox").path("xMax").doubleValue());
                     } else {
