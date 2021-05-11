@@ -17,14 +17,20 @@ Changes are grouped as follows:
 
 ### Short term
 
-- Geo location attribute and resource type.
+- Geo-location attribute and resource type.
+
+## [0.9.6]
+
+### Fixed
+
+- Repeated annotations when generating interactive P&IDs.
 
 ## [0.9.5]
 
 ### Fixed
 
 - Populate auth headers for custom CDF hosts.
-- Null values in raw row should not raise exceptions. 
+- Null values in raw rows should not raise exceptions. 
 
 ## [0.9.4]
 
