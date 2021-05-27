@@ -21,10 +21,18 @@ The interactive P&ID service performs two main tasks:
 1. Detect annotations.
 2. Convert P&ID to an "interactive" SVG version
 
-Annotations can be detected via text matching. The  
+Annotations can be detected via text matching. You specify a set of `entities`to use as the basis for the matching. 
+An entity can be specified as follows:
+```java
+Struct entity = Struct.newBuilder()
+        .putFields("name", Values.of("1N914"))
+        .putFields("resourceType", Values.of("Asset"))
+        .putFields("externalId", Values.of("my-external-id-1"))
+        .putFields("id", Values.of(146379580567867L))
+        .build();
+```
 
-Authentication via API key is the legacy method of authenticating services towards Cognite Data Fusion.
-You simply supply the API key when creating the client:
+
 ```java
 CogniteClient client = CogniteClient.ofKey(<apiKey>);
 ```
