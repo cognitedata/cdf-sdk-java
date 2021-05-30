@@ -73,8 +73,8 @@ public abstract class PnID extends ApiBase {
      * The detection will perform complete matches (i.e. partial matches are not accepted).
      *
      * @param files The P&IDs to process.
-     * @param entities The P&IDs to process.
-     * @param searchField The P&IDs to process
+     * @param entities The entities to use for matching.
+     * @param searchField The entity attribute to use for string matching.
      * @param convertToInteractive If set to {@code true} then an interactive P&ID (SVG) will be included in the results.
      * @return The results from the detect annotations job(s).
      * @throws Exception
@@ -91,10 +91,10 @@ public abstract class PnID extends ApiBase {
      * The P&ID must be a single-page PDF file or an image with JPEG, PNG or TIFF format.
      *
      * @param files The P&IDs to process.
-     * @param entities The P&IDs to process.
-     * @param searchField The P&IDs to process
-     * @param partialMatch The P&IDs to process
-     * @param minTokens The P&IDs to process
+     * @param entities The entities to use for matching.
+     * @param searchField The entity attribute to use for string matching.
+     * @param partialMatch If set to {@code true}, use partial matching
+     * @param minTokens The minimum number of tokens (consecutive letters/numbers) required for a match.
      * @param convertToInteractive If set to {@code true} then an interactive P&ID (SVG) will be included in the results.
      * @return The results from the detect annotations job(s).
      * @throws Exception
