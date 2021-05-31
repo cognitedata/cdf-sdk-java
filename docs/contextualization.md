@@ -6,6 +6,8 @@ the following contextualization services:
 - Entity matching.
 - Interactive P&IDs.
 
+Example of an interactive P&ID pipeline: https://github.com/cognitedata/cdf-sdk-java-examples/tree/main/interactive-pnid-batch-job
+
 ### Entity matching
 
 TBD
