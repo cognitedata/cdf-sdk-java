@@ -293,8 +293,7 @@ public class AssetParser {
             for (String label : element.getLabelsList()) {
                 labels.add(ImmutableMap.of("externalId", label));
             }
-            // TODO change to "set" when the api has been updated to support the operation
-            updateNodeBuilder.put("labels", ImmutableMap.of("add", labels));
+            updateNodeBuilder.put("labels", ImmutableMap.of("set", labels));
         }
 
         mapBuilder.put("update", updateNodeBuilder.build());
