@@ -19,6 +19,12 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [0.9.7-SNAPSHOT]
+
+### Added
+
+- Labels are properly replaced when running upsert replace for `assets` and `files`.
+
 ## [0.9.6]
 
 ### Fixed
