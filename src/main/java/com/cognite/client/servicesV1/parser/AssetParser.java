@@ -288,13 +288,11 @@ public class AssetParser {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("setNull", true));
         }
 
-        if (element.getLabelsCount() > 0) {
-            List<Map<String, String>> labels = new ArrayList<>();
-            for (String label : element.getLabelsList()) {
-                labels.add(ImmutableMap.of("externalId", label));
-            }
-            updateNodeBuilder.put("labels", ImmutableMap.of("set", labels));
+        List<Map<String, String>> labels = new ArrayList<>();
+        for (String label : element.getLabelsList()) {
+            labels.add(ImmutableMap.of("externalId", label));
         }
+        updateNodeBuilder.put("labels", ImmutableMap.of("set", labels));
 
         mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();
