@@ -226,19 +226,38 @@ public abstract class Assets extends ApiBase {
     /**
      * Deletes a set of assets.
      *
-     * The events to delete are identified via their {@code externalId / id} by submitting a list of
+     * The assets to delete are identified via their {@code externalId / id} by submitting a list of
      * {@link Item}.
+     *
+     * This method will not delete assets recursively. Please use {@code delete(List<Item> items, boolean recursive)}
+     * for recursive deletes.
      *
      * @param items a list of {@link Item} representing the assets (externalId / id) to be deleted
      * @return The deleted events via {@link Item}
      * @throws Exception
      */
     public List<Item> delete(List<Item> items) throws Exception {
+        return delete(items, false);
+    }
+
+    /**
+     * Deletes a set of assets.
+     *
+     * The assets to delete are identified via their {@code externalId / id} by submitting a list of
+     * {@link Item}.
+     *
+     * @param items a list of {@link Item} representing the assets (externalId / id) to be deleted
+     * @param recursive Set to {@code true} to recursively delete all subtrees under the specified items.
+     * @return The deleted events via {@link Item}
+     * @throws Exception
+     */
+    public List<Item> delete(List<Item> items, boolean recursive) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteAssets();
 
         DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig())
-                .addParameter("ignoreUnknownIds", true);
+                .addParameter("ignoreUnknownIds", true)
+                .addParameter("recursive", recursive);
 
         return deleteItems.deleteItems(items);
     }

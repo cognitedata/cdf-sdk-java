@@ -222,7 +222,7 @@ class AssetsTest {
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
-            List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput, true);
             LOG.info(loggingPrefix + "Finished deleting assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 

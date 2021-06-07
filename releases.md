@@ -24,6 +24,7 @@ Changes are grouped as follows:
 ### Added
 
 - Labels are properly replaced when running upsert replace for `assets` and `files`.
+- Support for recursive delete for `assets`.
 
 ## [0.9.6]
 
