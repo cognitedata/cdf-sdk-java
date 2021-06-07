@@ -143,9 +143,6 @@ public class RelationshipParser {
         if (element.hasDataSetId()) {
             mapBuilder.put("dataSetId", element.getDataSetId().getValue());
         }
-        if (element.hasDataSetId()) {
-            mapBuilder.put("dataSetId", element.getDataSetId().getValue());
-        }
         if (element.getLabelsCount() > 0) {
             List<Map<String, String>> labels = new ArrayList<>();
             for (String label : element.getLabelsList()) {

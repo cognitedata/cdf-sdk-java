@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
  */
 abstract class ApiBase {
     private static final ImmutableList<ResourceType> resourcesSupportingPartitions =
-            ImmutableList.of(ResourceType.ASSET, ResourceType.EVENT, ResourceType.FILE, ResourceType.TIMESERIES_HEADER,
+            ImmutableList.of(ResourceType.ASSET, ResourceType.EVENT, ResourceType.FILE_HEADER, ResourceType.TIMESERIES_HEADER,
                     ResourceType.RAW_ROW);
 
     protected static final Logger LOG = LoggerFactory.getLogger(ApiBase.class);
@@ -366,8 +366,7 @@ abstract class ApiBase {
     protected Request addAuthInfo(Request request) throws Exception {
         // Check if there already is auth info.
         if (null != request.getAuthConfig()
-                && null != request.getAuthConfig().getProject()
-                && null != request.getAuthConfig().getApiKey()) {
+                && null != request.getAuthConfig().getProject()) {
             return request;
         }
 
@@ -992,15 +991,19 @@ abstract class ApiBase {
                             LOG.debug(batchLogPrefix + "Number of missing entries reported by CDF: {}", missing.size());
 
                             // Move missing items from update to the create request
+                            // Must check for null since missing items may refer to parent asset references.
                             Map<String, T> itemsMap = mapToId(updateResponseMap.get(response));
                             for (Item value : missing) {
-                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
+                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID
+                                        && itemsMap.containsKey(value.getExternalId())) {
                                     elementListCreate.add(itemsMap.get(value.getExternalId()));
                                     itemsMap.remove(value.getExternalId());
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
+                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID
+                                        && itemsMap.containsKey(value.getId())) {
                                     elementListCreate.add(itemsMap.get(value.getId()));
                                     itemsMap.remove(value.getId());
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME) {
+                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME
+                                        && itemsMap.containsKey(value.getLegacyName())) {
                                     // Special case for v1 TS headers.
                                     elementListCreate.add(itemsMap.get(value.getLegacyName()));
                                     itemsMap.remove(value.getLegacyName());
@@ -1120,15 +1123,19 @@ abstract class ApiBase {
                             LOG.debug(batchLogPrefix + "Number of missing entries reported by CDF: {}", missing.size());
 
                             // Move missing items from update to the create request
+                            // Must check for null since missing items may refer to parent asset references.
                             Map<String, T> itemsMap = mapToId(updateResponseMap.get(response));
                             for (Item value : missing) {
-                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
+                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID
+                                        && itemsMap.containsKey(value.getExternalId())) {
                                     elementListCreate.add(itemsMap.get(value.getExternalId()));
                                     itemsMap.remove(value.getExternalId());
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
+                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID
+                                        && itemsMap.containsKey(value.getId())) {
                                     elementListCreate.add(itemsMap.get(value.getId()));
                                     itemsMap.remove(value.getId());
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME) {
+                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME
+                                        && itemsMap.containsKey(value.getLegacyName())) {
                                     // Special case for v1 TS headers.
                                     elementListCreate.add(itemsMap.get(value.getLegacyName()));
                                     itemsMap.remove(value.getLegacyName());

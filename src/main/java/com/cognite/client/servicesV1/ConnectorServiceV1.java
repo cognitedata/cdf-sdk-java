@@ -1132,10 +1132,9 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * Get the login status from Cognite.
      *
      * @param host
-     * @param apiKey
      * @return
      */
-    public LoginStatus readLoginStatusByApiKey(String host, String apiKey) throws Exception {
+    public LoginStatus readLoginStatusByApiKey(String host) throws Exception {
         LOG.debug(loggingPrefix + "Getting login status for host [{}].", host);
 
         GetLoginRequestProvider requestProvider = GetLoginRequestProvider.builder()
@@ -1153,8 +1152,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
         // Send the request to the Cognite api
         ResponseItems<String> responseItems = itemReader.getItems(Request.create()
                 .withAuthConfig(AuthConfig.create()
-                        .withHost(host)
-                        .withApiKey(apiKey)));
+                        .withHost(host)));
 
         // Check the response
         if (!responseItems.getResponseBinary().getResponse().isSuccessful()

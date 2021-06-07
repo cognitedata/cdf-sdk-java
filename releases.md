@@ -17,14 +17,56 @@ Changes are grouped as follows:
 
 ### Short term
 
-- Native token authentication (OpenID Connect).
-- Geo location attribute and resource type.
+- Geo-location attribute and resource type.
 
-## [0.9.2-SNAPSHOT]
+## [0.9.7-SNAPSHOT]
+
+### Added
+
+- Labels are properly replaced when running upsert replace for `assets` and `files`.
+- Support for recursive delete for `assets`.
+
+## [0.9.6]
+
+### Fixed
+
+- Repeated annotations when generating interactive P&IDs.
+
+## [0.9.5]
+
+### Fixed
+
+- Populate auth headers for custom CDF hosts.
+- Null values in raw rows should not raise exceptions. 
+
+## [0.9.4]
+
+### Fixed
+
+- Error when using api key auth in combination with custom host.
+
+## [0.9.3]
+
+### Added
+
+- Support for native token authentication (OpenID Connect).
+
+### Fixed
+
+- Error when trying to download a file binary that only has a file header object in CDF.
+- Error when creating new `relationship` objects into data sets.
+- Error when uploading file binaries with >1k asset links.
+
+## [0.9.2]
 
 ### Added
 
 - Added support for updating / patching `relationship`.
+
+### Fixed
+
+- Fixed duplicates when listing `files`. The list files partition support has been fixed so that you no longer
+risk duplicates when manually handling partitions.
 
 ## [0.9.1]
 

@@ -334,8 +334,9 @@ public abstract class Files extends ApiBase {
         file create/update (all the code above) and subsequent update requests which add the remaining
         assetIds (code below).
          */
-        Map<Long, FileMetadata> internalIdTempMap = new HashMap<>(internalIdAssetsMap.size());
-        Map<String, FileMetadata> externalIdTempMap = new HashMap<>(externalIdAssetsMap.size());
+        Map<Long, FileMetadata> internalIdTempMap = new HashMap<>();
+        Map<String, FileMetadata> externalIdTempMap = new HashMap<>();
+        List<FileMetadata> elementListAssetUpdate = new ArrayList<>();
         while (internalIdAssetsMap.size() > 0 || externalIdAssetsMap.size() > 0) {
             LOG.info(loggingPrefix + "Some files have very high assetId cardinality (+1k). Adding assetId to "
                     + (internalIdAssetsMap.size() + externalIdAssetsMap.size())
@@ -387,19 +388,19 @@ public abstract class Files extends ApiBase {
             // prepare the update and send request
             LOG.info(loggingPrefix + "Building update request to add assetIds for {} files.",
                     internalIdUpdateMap.size() + externalIdUpdateMap.size());
-            elementListUpdate.clear();
-            elementListUpdate.addAll(externalIdUpdateMap.values());
-            elementListUpdate.addAll(internalIdUpdateMap.values());
+            elementListAssetUpdate.clear();
+            elementListAssetUpdate.addAll(externalIdUpdateMap.values());
+            elementListAssetUpdate.addAll(internalIdUpdateMap.values());
 
             // should not happen, but need to check
-            if (elementListUpdate.isEmpty()) {
+            if (elementListAssetUpdate.isEmpty()) {
                 String message = loggingPrefix + "Internal error. Not able to send assetId update. The payload is empty.";
                 LOG.error(message);
                 throw new Exception(message);
             }
 
             Map<ResponseItems<String>, List<FileMetadata>> responseItemsAssets =
-                    splitAndAddAssets(elementListUpdate, updateWriter);
+                    splitAndAddAssets(elementListAssetUpdate, updateWriter);
             for (ResponseItems<String> responseItems : responseItemsAssets.keySet()) {
                 if (!responseItems.isSuccessful()) {
                     String message = loggingPrefix
@@ -773,9 +774,35 @@ public abstract class Files extends ApiBase {
                     }
                     LOG.debug(loggingPrefix + "Removing duplicates and missing items and retrying the request");
                     List<Item> duplicates = ItemParser.parseItems(responseBatch.get(0).getDuplicateItems());
-                    List<Item> missing = ItemParser.parseItems(responseBatch.get(0).getMissingItems());
+                    List<Item> missing = new ArrayList(); // Must define this as an explicit List for it to be mutable
+                    missing.addAll(ItemParser.parseItems(responseBatch.get(0).getMissingItems()));
                     LOG.debug(loggingPrefix + "No of duplicates reported: {}", duplicates.size());
                     LOG.debug(loggingPrefix + "No of missing items reported: {}", missing.size());
+
+                    // Check for the special case of missing file binaries
+                    if (responseBatch.size() > 0 && !responseBatch.get(0).isSuccessful()
+                            && responseBatch.get(0).getResponseBinary().getResponse().code() == 400
+                            && responseBatch.get(0).getErrorMessage().size() > 0
+                            && responseBatch.get(0).getErrorMessage().get(0).startsWith("Files not uploaded,")) {
+                        // There is a file binary that hasn't been uploaded, but the file header exists.
+                        // Add the items to the "missing" list so they get removed from the download list.
+                        LOG.debug(loggingPrefix + "Missing file binaries reported: {}", responseBatch.get(0).getErrorMessage().get(0));
+                        if (responseBatch.get(0).getErrorMessage().get(0).startsWith("Files not uploaded, ids:")) {
+                            String[] missingIds = responseBatch.get(0).getErrorMessage().get(0).substring(24).split(",");
+                            for (String stringId : missingIds) {
+                                missing.add(Item.newBuilder()
+                                        .setId(Long.parseLong(stringId.trim()))
+                                        .build());
+                            }
+                        } else if (responseBatch.get(0).getErrorMessage().get(0).startsWith("Files not uploaded, externalIds:")) {
+                            String[] missingExternalIds = responseBatch.get(0).getErrorMessage().get(0).substring(32).split(",");
+                            for (String externalId : missingExternalIds) {
+                                missing.add(Item.newBuilder()
+                                        .setExternalId(externalId.trim())
+                                        .build());
+                            }
+                        }
+                    }
 
                     // Remove missing items from the download request
                     Map<String, Item> itemsMap = mapItemToId(downloadResponseMap.get(responseBatch));

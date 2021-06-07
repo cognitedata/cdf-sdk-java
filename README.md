@@ -10,9 +10,16 @@
 Java SDK for reading and writing from/to CDF resources.
 
 ```java
-// Create the Cognite client
+// Create the Cognite client using API key as the authentication method
 CogniteClient client = CogniteClient.ofKey(<yourApiKey>)
         .withBaseUrl("https://yourBaseURL.cognitedata.com");  //optional parameter
+        
+// ... or use client credentials (OpenID Connect)
+CogniteClient client = CogniteClient.ofClientCredentials(
+        <clientId>,
+        <clientSecret>,
+        TokenUrl.generateAzureAdURL(<azureAdTenantId>))
+        .withBaseUrl("https://yourBaseURL.cognitedata.com"); //optional parameter     
         
 // List all assets
 List<Asset> listAssetsResults = new ArrayList<>();
@@ -32,13 +39,13 @@ client.events()
     
 ### Installing the sdk
 
-````xml
+```xml
 <dependency>    
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>0.9.1</version>
+    <version>0.9.6</version>
 </dependency>
-````
+```
     
 ### Features
 #### Core resource types
