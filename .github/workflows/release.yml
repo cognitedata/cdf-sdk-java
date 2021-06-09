@@ -36,7 +36,7 @@ jobs:
               -Dexec.args='${project.version}' \
               --non-recursive \
               exec:exec)
-          ALREADY_DEPLOYED=$(curl -s "http://search.maven.org/solrsearch/select?q=g:"com.cognite"+AND+a:"cdf-sdk-java"+AND+v:"$MVN_VERSION"" | jq .response.numFound)
+          ALREADY_DEPLOYED=$(curl -s "http://search.maven.org/solrsearch/select?q=g:"com.cognite"+AND+a:"cdf-sdk-java"+AND+v:"$MVN_VERSION"" | ./jq .response.numFound)
           echo "::set-output name=central_version::$CENTRAL_VERSION"
           echo "::set-output name=maven_version::$MVN_VERSION"
           echo "::set-output name=already_available::$ALREADY_DEPLOYED"
