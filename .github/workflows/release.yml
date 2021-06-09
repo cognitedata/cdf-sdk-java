@@ -36,11 +36,13 @@ jobs:
               -Dexec.args='${project.version}' \
               --non-recursive \
               exec:exec)
+          ALREADY_DEPLOYED=$(curl -s "http://search.maven.org/solrsearch/select?q=g:"com.cognite"+AND+a:"cdf-sdk-java"+AND+v:"$MVN_VERSION"" | jq .response.numFound)
           echo "::set-output name=central_version::$CENTRAL_VERSION"
           echo "::set-output name=maven_version::$MVN_VERSION"
+          echo "::set-output name=already_available::$ALREADY_DEPLOYED"
 
       - name: Publish to Apache Maven Central
-        if: !contains(steps.detect.outputs.maven_version, "SNAPSHOT") && steps.detect.outputs.maven_version != steps.detect.outputs.central_version
+        if: !contains(steps.detect.outputs.maven_version, "SNAPSHOT") && steps.detect.outputs.maven_version != steps.detect.outputs.central_version && steps.detect.outputs.already_available == "0"
         run: |
           mvn -B clean verify deploy
         env:
