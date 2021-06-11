@@ -42,7 +42,7 @@ jobs:
           echo "::set-output name=already_available::$ALREADY_DEPLOYED"
 
       - name: Publish to Apache Maven Central
-        if: !endsWith(steps.detect.outputs.maven_version, 'SNAPSHOT') && steps.detect.outputs.maven_version != steps.detect.outputs.central_version && steps.detect.outputs.already_available == '0'
+        if: ${{ !endsWith(steps.detect.outputs.maven_version, 'SNAPSHOT') && steps.detect.outputs.maven_version != steps.detect.outputs.central_version && steps.detect.outputs.already_available == '0' }}
         run: |
           mvn -B clean verify deploy
         env:
