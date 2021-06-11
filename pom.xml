@@ -44,7 +44,7 @@
         <auto.version>1.8.1</auto.version>
 
         <nimbusds.version>9.4</nimbusds.version>
-        <jgrapht.version>1.4.0</jgrapht.version> <!-- Upgrade to 1.5.0++ when Java 11 is available -->
+        <jgrapht.version>1.5.1</jgrapht.version> <!-- Upgrade to 1.5.0++ when Java 11 is available -->
         <okhttp3.version>4.9.1</okhttp3.version>
         <jackson.version>2.12.3</jackson.version>
         <slf4j.version>1.7.30</slf4j.version>
@@ -82,7 +82,7 @@
             <dependency>
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
-                <version>20.1.0</version>
+                <version>20.6.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
