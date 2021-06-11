@@ -40,7 +40,6 @@ jobs:
           echo "MVN_VERSION=$MVN_VERSION"
           echo "::set-output name=central_version::$CENTRAL_VERSION"
           echo "::set-output name=maven_version::$MVN_VERSION"
-          echo "::set-output name=already_available::$ALREADY_DEPLOYED"
 
       - name: Publish to Apache Maven Central
         if: ${{ !endsWith(steps.detect.outputs.maven_version, 'SNAPSHOT') && steps.detect.outputs.maven_version != steps.detect.outputs.central_version }}
