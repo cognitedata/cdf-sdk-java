@@ -19,6 +19,13 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [0.9.8]
+
+### Fixed
+
+- Increased dependencies versions to support Java 11
+- Fully automated CD pipeline
+
 ## [0.9.7-SNAPSHOT]
 
 ### Added
