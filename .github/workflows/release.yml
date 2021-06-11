@@ -30,7 +30,7 @@ jobs:
       - name: Detect version change
         id: detect
         run: |
-          CENTRAL_VERSION=$(curl -s "http://search.maven.org/solrsearch/select?q=g:"com.cognite"+AND+a:"cdf-sdk-java"" | ./jq ".response.docs[0].latestVersion")
+          CENTRAL_VERSION=$(curl -s "http://search.maven.org/solrsearch/select?q=g:"com.cognite"+AND+a:"cdf-sdk-java"" | ./jq .response.docs[0].latestVersion)
           MVN_VERSION=$(mvn -q \
               -Dexec.executable=echo \
               -Dexec.args='${project.version}' \
