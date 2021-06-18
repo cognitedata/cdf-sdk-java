@@ -6,7 +6,7 @@
 
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>0.9.8</version>
+    <version>0.9.9-SNAPSHOT</version>
     <licenses>
         <license>
             <name>Apache 2</name>
@@ -44,7 +44,7 @@
         <auto.version>1.8.1</auto.version>
 
         <nimbusds.version>9.4</nimbusds.version>
-        <jgrapht.version>1.5.1</jgrapht.version> <!-- Upgrade to 1.5.0++ when Java 11 is available -->
+        <jgrapht.version>1.5.1</jgrapht.version>
         <okhttp3.version>4.9.1</okhttp3.version>
         <jackson.version>2.12.3</jackson.version>
         <slf4j.version>1.7.30</slf4j.version>
