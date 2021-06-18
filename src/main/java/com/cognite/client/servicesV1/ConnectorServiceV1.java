@@ -42,6 +42,7 @@ import com.cognite.v1.timeseries.proto.DataPointListItem;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import okhttp3.ConnectionSpec;
 import okhttp3.HttpUrl;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
@@ -2746,8 +2747,9 @@ public abstract class ConnectorServiceV1 implements Serializable {
         final static Logger LOG = LoggerFactory.getLogger(DownloadFileBinary.class);
         final static String loggingPrefix = "DownloadFileBinary() - ";
         final static OkHttpClient client = new OkHttpClient.Builder()
+                .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS))
                 .connectTimeout(90, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.MINUTES)
+                .readTimeout(90, TimeUnit.SECONDS)
                 .build();
 
         public static CompletableFuture<FileBinary> downloadFileBinaryFromURL(String downloadUrl) {
