@@ -2749,7 +2749,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
         final static OkHttpClient client = new OkHttpClient.Builder()
                 .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS))
                 .connectTimeout(90, TimeUnit.SECONDS)
-                .readTimeout(180, TimeUnit.MINUTES)
+                .readTimeout(90, TimeUnit.SECONDS)
                 .build();
 
         public static CompletableFuture<FileBinary> downloadFileBinaryFromURL(String downloadUrl) {
