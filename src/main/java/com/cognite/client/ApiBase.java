@@ -948,8 +948,8 @@ abstract class ApiBase {
                                     elementListUpdate.add(itemsMap.get(value.getExternalId()));
                                     itemsMap.remove(value.getExternalId());
                                 } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
-                                    elementListUpdate.add(itemsMap.get(value.getId()));
-                                    itemsMap.remove(value.getId());
+                                    elementListUpdate.add(itemsMap.get(String.valueOf(value.getId())));
+                                    itemsMap.remove(String.valueOf(value.getId()));
                                 } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME) {
                                     // Special case for v1 TS headers.
                                     elementListUpdate.add(itemsMap.get(value.getLegacyName()));
@@ -999,9 +999,9 @@ abstract class ApiBase {
                                     elementListCreate.add(itemsMap.get(value.getExternalId()));
                                     itemsMap.remove(value.getExternalId());
                                 } else if (value.getIdTypeCase() == Item.IdTypeCase.ID
-                                        && itemsMap.containsKey(value.getId())) {
-                                    elementListCreate.add(itemsMap.get(value.getId()));
-                                    itemsMap.remove(value.getId());
+                                        && itemsMap.containsKey(String.valueOf(value.getId()))) {
+                                    elementListCreate.add(itemsMap.get(String.valueOf(value.getId())));
+                                    itemsMap.remove(String.valueOf(value.getId()));
                                 } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME
                                         && itemsMap.containsKey(value.getLegacyName())) {
                                     // Special case for v1 TS headers.
@@ -1131,9 +1131,9 @@ abstract class ApiBase {
                                     elementListCreate.add(itemsMap.get(value.getExternalId()));
                                     itemsMap.remove(value.getExternalId());
                                 } else if (value.getIdTypeCase() == Item.IdTypeCase.ID
-                                        && itemsMap.containsKey(value.getId())) {
-                                    elementListCreate.add(itemsMap.get(value.getId()));
-                                    itemsMap.remove(value.getId());
+                                        && itemsMap.containsKey(String.valueOf(value.getId()))) {
+                                    elementListCreate.add(itemsMap.get(String.valueOf(value.getId())));
+                                    itemsMap.remove(String.valueOf(value.getId()));
                                 } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME
                                         && itemsMap.containsKey(value.getLegacyName())) {
                                     // Special case for v1 TS headers.
@@ -1182,8 +1182,8 @@ abstract class ApiBase {
                                     elementListUpdate.add(itemsMap.get(value.getExternalId()));
                                     itemsMap.remove(value.getExternalId());
                                 } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
-                                    elementListUpdate.add(itemsMap.get(value.getId()));
-                                    itemsMap.remove(value.getId());
+                                    elementListUpdate.add(itemsMap.get(String.valueOf(value.getId())));
+                                    itemsMap.remove(String.valueOf(value.getId()));
                                 } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME) {
                                     // Special case for v1 TS headers.
                                     elementListUpdate.add(itemsMap.get(value.getLegacyName()));
@@ -1329,7 +1329,7 @@ abstract class ApiBase {
                                 if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
                                     elementListDelete.add(itemsMap.get(value.getExternalId()));
                                 } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
-                                    elementListDelete.add(itemsMap.get(value.getId()));
+                                    elementListDelete.add(itemsMap.get(String.valueOf(value.getId())));
                                 } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME) {
                                     // Special case for v1 TS headers.
                                     elementListDelete.add(itemsMap.get(value.getLegacyName()));
@@ -1572,7 +1572,7 @@ abstract class ApiBase {
                                 if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
                                     elementListDelete.add(itemsMap.get(value.getExternalId()));
                                 } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
-                                    elementListDelete.add(itemsMap.get(value.getId()));
+                                    elementListDelete.add(itemsMap.get(String.valueOf(value.getId())));
                                 } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME) {
                                     // Special case for v1 TS headers.
                                     elementListDelete.add(itemsMap.get(value.getLegacyName()));

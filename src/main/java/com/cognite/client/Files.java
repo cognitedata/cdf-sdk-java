@@ -272,8 +272,8 @@ public abstract class Files extends ApiBase {
                                 elementListCreate.add(itemsMap.get(value.getExternalId()));
                                 itemsMap.remove(value.getExternalId());
                             } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
-                                elementListCreate.add(itemsMap.get(value.getId()));
-                                itemsMap.remove(value.getId());
+                                elementListCreate.add(itemsMap.get(String.valueOf(value.getId())));
+                                itemsMap.remove(String.valueOf(value.getId()));
                             }
                         }
                         elementListUpdate.addAll(itemsMap.values()); // Add remaining items to be re-updated
@@ -318,8 +318,8 @@ public abstract class Files extends ApiBase {
                                 elementListUpdate.add(itemsMap.get(value.getExternalId()));
                                 itemsMap.remove(value.getExternalId());
                             } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
-                                elementListUpdate.add(itemsMap.get(value.getId()));
-                                itemsMap.remove(value.getId());
+                                elementListUpdate.add(itemsMap.get(String.valueOf(value.getId())));
+                                itemsMap.remove(String.valueOf(value.getId()));
                             }
                         }
                         elementListCreate.addAll(itemsMap.values()); // Add remaining items to be re-inserted
