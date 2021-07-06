@@ -136,7 +136,33 @@ public abstract class Assets extends ApiBase {
         return aggregate(ResourceType.ASSET, requestParameters);
     }
 
-    // todo make sync assets methods.
+    /**
+     * Synchronizes the input collection of {@link Asset} (representing a single, complete asset hierarchy)
+     * with an existing asset hierarchy in CDF. The input asset collection represents the target state.
+     * New asset nodes will be added, changed asset nodes will be updated
+     * and deleted asset nodes will be removed (from CDF).
+     *
+     * Algorithm:
+     * - Verify that the input collection satisfies the hierarchy constraints:
+     *      - All assets must specify an {@code externalId}.
+     *      - No duplicates (based on {@code externalId}.
+     *      - The collection must contain one and only one asset object with no parent reference (representing the root node)
+     *      - All other assets must contain a valid {@code parentExternalId} reference (no self-references).
+     *      - No circular references.
+     * - Read the CDF asset hierarchy based on the supplied root external id.
+     * - Compare the input collection with the existing CDF hierarchy. Identify creates, updates and deletes.
+     * - Write creates and updates in topological order.
+     * - Write deletes in reverse topological order.
+     *
+     * @param assetHierarchy The input asset hierarchy--this represents the target state of the synchronization.
+     * @param rootExternalId The {@code externalId} of the root node of the CDF asset hierarchy--the current state.
+     * @return the synchronized assets.
+     * @throws Exception
+     */
+    public List<Asset> synchronizeHierarchy(Collection<Asset> assetHierarchy, String rootExternalId) throws Exception {
+
+        return Collections.emptyList();
+    }
 
     /**
      * Creates or updates a set of {@link Asset} objects.
