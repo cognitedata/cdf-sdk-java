@@ -27,6 +27,7 @@ import com.cognite.client.util.Partition;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.checkerframework.checker.units.qual.A;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.cycle.CycleDetector;
 import org.jgrapht.graph.DefaultEdge;
@@ -37,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -155,11 +157,113 @@ public abstract class Assets extends ApiBase {
      * - Write deletes in reverse topological order.
      *
      * @param assetHierarchy The input asset hierarchy--this represents the target state of the synchronization.
-     * @param rootExternalId The {@code externalId} of the root node of the CDF asset hierarchy--the current state.
      * @return the synchronized assets.
      * @throws Exception
      */
-    public List<Asset> synchronizeHierarchy(Collection<Asset> assetHierarchy, String rootExternalId) throws Exception {
+    public List<Asset> synchronizeHierarchy(Collection<Asset> assetHierarchy) throws Exception {
+        String loggingPrefix = "synchronizeHierarchy() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        Instant startInstant = Instant.now();
+
+        LOG.debug(loggingPrefix + "Check input collection data integrity.");
+        if (!verifyAssetHierarchyIntegrity(assetHierarchy)) {
+            String message = loggingPrefix + "The input asset collection does not satisfy the integrity constraints.";
+            LOG.error(message);
+            throw new Exception(message);
+        }
+        LOG.debug(loggingPrefix + "Input collection data integrity is validated. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+
+        LOG.debug(loggingPrefix + "Identify root node.");
+        List<Asset> rootNodes = identifyRootNodes(assetHierarchy);
+        if (rootNodes.size() != 1) {
+            String message = String.format("%s Error, found %d root nodes. Expected to find one.",
+                    loggingPrefix,
+                    rootNodes.size());
+            LOG.error(message);
+            throw new Exception(message);
+        }
+        String rootExternalId = rootNodes.get(0).getExternalId().getValue();
+        LOG.debug(loggingPrefix + "Identified root node with external id [{}]. Duration: {}",
+                rootExternalId,
+                Duration.between(startInstant, Instant.now()));
+
+        LOG.debug(loggingPrefix + "Start downloading the existing asset hierarchy for root [{}]",
+                rootExternalId);
+        // Use the subtree query. Must check the constraints (max 100k)
+        Map<String, Asset> cdfAssets = new HashMap<>();
+        Request assetRequest = Request.create()
+                .withFilterParameter("assetSubtreeIds", List.of(Map.of("externalId", rootExternalId)));
+        getClient().assets().list(assetRequest)
+                .forEachRemaining(assetBatch -> {
+                    Map<String, Asset> batchMap = assetBatch.stream()
+                            .collect(Collectors.toMap(asset -> asset.getExternalId().getValue(), Function.identity()));
+                    cdfAssets.putAll(batchMap);
+                });
+
+        LOG.debug(loggingPrefix + "Finished downloading the existing asset hierarchy for root [{}]. "
+                + "No assets: {}. Duration {}",
+                rootExternalId,
+                cdfAssets.size(),
+                Duration.between(startInstant, Instant.now()));
+
+        // Identify upserts and deletes
+        List<Asset> upsertList = new ArrayList<>();
+        List<Item> deleteList = new ArrayList<>();
+        int changedAssetCounter = 0;
+        int noChangeCounter = 0;
+        int newAssetCounter = 0;
+        for (Asset inputAsset : assetHierarchy) {
+            if (cdfAssets.containsKey(inputAsset.getExternalId().getValue())) {
+                // The asset exists from before. Check if it has changed.
+                if (!isEqual(inputAsset, cdfAssets.get(inputAsset.getExternalId().getValue()))) {
+                    upsertList.add(inputAsset);
+                    changedAssetCounter++;
+                } else {
+                    // Just add a counter for safekeeping
+                    noChangeCounter++;
+                }
+                cdfAssets.remove(inputAsset.getExternalId().getValue());
+            } else {
+                // A new asset, add it to the upserts list
+                upsertList.add(inputAsset);
+                newAssetCounter++;
+            }
+        }
+
+        // Check for leftover CDF assets. These should be deleted
+        if (!cdfAssets.isEmpty()) {
+            deleteList = cdfAssets.values().stream()
+                    .map(asset ->
+                        Item.newBuilder()
+                            .setExternalId(asset.getExternalId().getValue())
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
+        LOG.debug(loggingPrefix + "Change detection complete. New assets: {}, changed assets: {}, deleted assets: {}, "
+                        + "assets with no change: {}. Duration {}",
+                newAssetCounter,
+                changedAssetCounter,
+                deleteList.size(),
+                noChangeCounter,
+                Duration.between(startInstant, Instant.now()));
+
+        // Write the changes to CDF
+        // The upserts must be written with REPLACE mode
+        getClient()
+                .withClientConfig(getClient().getClientConfig()
+                        .withUpsertMode(UpsertMode.REPLACE))
+                .assets()
+                .upsert(upsertList);
+
+        getClient().assets().delete(deleteList);
+        LOG.info(loggingPrefix + "Finished synchronizing hierarchy. Root asset external id: [{}]. "
+                + "Total no assets: {}. Upserted assets: {}. Deleted assets: {}. Duration: {}",
+                rootExternalId,
+                assetHierarchy.size(),
+                upsertList.size(),
+                deleteList.size(),
+                Duration.between(startInstant, Instant.now()));
 
         return Collections.emptyList();
     }
@@ -286,6 +390,78 @@ public abstract class Assets extends ApiBase {
                 .addParameter("recursive", recursive);
 
         return deleteItems.deleteItems(items);
+    }
+
+    /**
+     * Find and return the root nodes (if any) in the assets collection. A root node is an asset that doesn't
+     * specify a parent external id reference.
+     *
+     * @param assets The assets to search for root nodes.
+     * @return a list of asset root nodes.
+     */
+    private List<Asset> identifyRootNodes(Collection<Asset> assets) {
+        String loggingPrefix = "identifyRootNodes() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        LOG.debug(loggingPrefix + "Start identifying root nodes.");
+        List<Asset> rootNodeList = assets.stream()
+                .filter(asset -> asset.getParentExternalId().getValue().isBlank())
+                .collect(Collectors.toList());
+
+        LOG.debug(loggingPrefix + "Found {} root nodes.",
+                rootNodeList.size());
+
+        return rootNodeList;
+    }
+
+    /**
+     * Check if two asset objects are equal in terms of their main payload. Internal attributes like ids and
+     * internal timestamps are ignored.
+     *
+     * @param one The first asset to compare.
+     * @param other The second asset to compare.
+     * @return true if the assets carry an equal payload, false if not.
+     */
+    private boolean isEqual(Asset one, Asset other) {
+        boolean result = true;
+
+        result = result && (one.hasExternalId() == other.hasExternalId());
+        if (one.hasExternalId()) {
+            result = result && one.getExternalId()
+                    .equals(other.getExternalId());
+        }
+
+        result = result && one.getName()
+                .equals(other.getName());
+
+        result = result && (one.hasParentExternalId() == other.hasParentExternalId());
+        if (one.hasParentExternalId()) {
+            result = result && one.getParentExternalId()
+                    .equals(other.getParentExternalId());
+        }
+
+        result = result && (one.hasDescription() == other.hasDescription());
+        if (one.hasDescription()) {
+            result = result && one.getDescription()
+                    .equals(other.getDescription());
+        }
+
+        result = result && one.getMetadataMap().equals(
+                other.getMetadataMap());
+
+        result = result && (one.hasSource() == other.hasSource());
+        if (one.hasSource()) {
+            result = result && one.getSource()
+                    .equals(other.getSource());
+        }
+
+        result = result && (one.hasDataSetId() == other.hasDataSetId());
+        if (one.hasDataSetId()) {
+            result = result && one.getDataSetId()
+                    .equals(other.getDataSetId());
+        }
+
+        result = result && (one.getLabelsList().equals(other.getLabelsList()));
+
+        return result;
     }
 
     /**
@@ -551,7 +727,7 @@ public abstract class Assets extends ApiBase {
 
         LOG.debug(loggingPrefix + "Checking asset input table for integrity.");
         for (Asset element : assets) {
-            if (element.getParentExternalId().getValue().isEmpty()) {
+            if (element.getParentExternalId().getValue().isBlank()) {
                 rootNodeList.add(element);
             }
             inputMap.put(element.getExternalId().getValue(), element);
