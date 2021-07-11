@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BooleanSupplier;
@@ -39,8 +40,8 @@ class AssetsTest {
 
         try {
             LOG.info(loggingPrefix + "Start upserting assets.");
-            List<Asset> upsertAssetsList = DataGenerator.generateAssetHierarchy(500);
-            upsertAssetsList.addAll(DataGenerator.generateAssetHierarchy(500));
+            List<Asset> upsertAssetsList = DataGenerator.generateAssetHierarchy(1100);
+            upsertAssetsList.addAll(DataGenerator.generateAssetHierarchy(1100));
             client.assets().upsert(upsertAssetsList);
             LOG.info(loggingPrefix + "Finished upserting assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
@@ -64,7 +65,7 @@ class AssetsTest {
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
-            List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput, true);
             LOG.info(loggingPrefix + "Finished deleting assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
@@ -90,15 +91,15 @@ class AssetsTest {
 
         try {
             LOG.info(loggingPrefix + "Start first synch assets.");
-            List<Asset> originalAssetList = DataGenerator.generateAssetHierarchy(500);
+            List<Asset> originalAssetList = DataGenerator.generateAssetHierarchy(50);
             List<Asset> upsertedAssets = client.assets().synchronizeHierarchy(originalAssetList);
-            LOG.info(loggingPrefix + "Finished first synch assets. Duration: {}",
+            LOG.info(loggingPrefix + "Finished first sync assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
             Thread.sleep(2000); // wait for eventual consistency
 
-            LOG.info(loggingPrefix + "Start second synch assets.");
-            List<Asset> editedAssetsInput = upsertedAssets.stream()
+            LOG.info(loggingPrefix + "Start second sync assets.");
+            List<Asset> editedAssetsInput = originalAssetList.stream()
                     .map(asset -> {
                         if (ThreadLocalRandom.current().nextBoolean()) {
                             return asset.toBuilder()
@@ -110,15 +111,19 @@ class AssetsTest {
                     })
                     .collect(Collectors.toList());
 
-            //List<Asset> assetUpdateResults = client.assets().upsert(editedAssetsInput);
-            LOG.info(loggingPrefix + "Finished second synch assets. Duration: {}",
+            List<Asset> assetsToRemove = identifyLeafAssets(editedAssetsInput).stream()
+                    .limit(10)
+                    .collect(Collectors.toList());
+
+            editedAssetsInput.removeAll(assetsToRemove);
+            client.assets().synchronizeHierarchy(editedAssetsInput);
+
+            LOG.info(loggingPrefix + "Finished second sync assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
-
-
 
             Thread.sleep(2000); // wait for eventual consistency
 
-            LOG.info(loggingPrefix + "Start deleting events.");
+            LOG.info(loggingPrefix + "Start deleting assets.");
             List<Asset> listAssetsResults = new ArrayList<>();
             client.assets()
                     .list(Request.create()
@@ -131,39 +136,11 @@ class AssetsTest {
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
-            List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput, true);
             LOG.info(loggingPrefix + "Finished deleting assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
-            BooleanSupplier updateCondition = () -> {
-                for (Asset asset : assetUpdateResults)  {
-                    if (asset.hasDescription()
-                            && asset.containsMetadata("new-key")
-                            && asset.containsMetadata(DataGenerator.sourceKey)) {
-                        // all good
-                    } else {
-                        return false;
-                    }
-                }
-                return true;
-            };
-
-            BooleanSupplier replaceCondition = () -> {
-                for (Asset asset : assetReplaceResults)  {
-                    if (!asset.hasDescription()
-                            && asset.containsMetadata("new-key")
-                            && !asset.containsMetadata(DataGenerator.sourceKey)) {
-                        // all good
-                    } else {
-                        return false;
-                    }
-                }
-                return true;
-            };
-
-            assertTrue(updateCondition, "Asset update not correct");
-            assertTrue(replaceCondition, "Asset replace not correct");
-            assertEquals(originalAssetList.size(), listAssetsResults.size());
+            assertEquals(editedAssetsInput.size(), listAssetsResults.size());
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
@@ -370,7 +347,7 @@ class AssetsTest {
             LOG.info(loggingPrefix + "Finished listing assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
-            LOG.info(loggingPrefix + "Start deleting events.");
+            LOG.info(loggingPrefix + "Start deleting assets.");
             List<Item> deleteItemsInput = new ArrayList<>();
             listAssetsResults.stream()
                     .map(event -> Item.newBuilder()
@@ -378,7 +355,7 @@ class AssetsTest {
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
-            List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput, true);
             LOG.info(loggingPrefix + "Finished deleting assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
@@ -388,5 +365,21 @@ class AssetsTest {
             LOG.error(e.toString());
             e.printStackTrace();
         }
+    }
+
+    /*
+    Return the leaf asset nodes of an asset collection.
+     */
+    private List<Asset> identifyLeafAssets(Collection<Asset> assetCollection) {
+        List<String> parentRefs = assetCollection.stream()
+                .filter(Asset::hasParentExternalId)
+                .map(asset -> asset.getParentExternalId().getValue())
+                .collect(Collectors.toList());
+
+        List<Asset> leafNodes = assetCollection.stream()
+                .filter(asset -> !parentRefs.contains(asset.getExternalId().getValue()))
+                .collect(Collectors.toList());
+
+        return leafNodes;
     }
 }
