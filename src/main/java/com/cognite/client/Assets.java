@@ -40,6 +40,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * This class represents the Cognite assets api endpoint.
@@ -208,6 +209,7 @@ public abstract class Assets extends ApiBase {
 
         // Identify upserts and deletes
         List<Asset> upsertList = new ArrayList<>();
+        List<Asset> noChangeList = new ArrayList<>();
         List<Item> deleteList = new ArrayList<>();
         int changedAssetCounter = 0;
         int noChangeCounter = 0;
@@ -219,7 +221,7 @@ public abstract class Assets extends ApiBase {
                     upsertList.add(inputAsset);
                     changedAssetCounter++;
                 } else {
-                    // Just add a counter for safekeeping
+                    noChangeList.add(cdfAssets.get(inputAsset.getExternalId().getValue())); // Add from CDF to get id fields++
                     noChangeCounter++;
                 }
                 cdfAssets.remove(inputAsset.getExternalId().getValue());
@@ -250,7 +252,7 @@ public abstract class Assets extends ApiBase {
 
         // Write the changes to CDF
         // The upserts must be written with REPLACE mode
-        getClient()
+        List<Asset> upsertedAssets = getClient()
                 .withClientConfig(getClient().getClientConfig()
                         .withUpsertMode(UpsertMode.REPLACE))
                 .assets()
@@ -265,7 +267,8 @@ public abstract class Assets extends ApiBase {
                 deleteList.size(),
                 Duration.between(startInstant, Instant.now()));
 
-        return Collections.emptyList();
+        return Stream.concat(noChangeList.stream(), upsertedAssets.stream())
+                .collect(Collectors.toList());
     }
 
     /**
