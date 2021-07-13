@@ -27,7 +27,6 @@ import com.cognite.client.util.Partition;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.checkerframework.checker.units.qual.A;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.cycle.CycleDetector;
 import org.jgrapht.graph.DefaultEdge;
@@ -165,6 +164,8 @@ public abstract class Assets extends ApiBase {
         String loggingPrefix = "synchronizeHierarchy() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         Instant startInstant = Instant.now();
 
+        LOG.info(loggingPrefix + "Start hierarchy synchronization. Received {} assets in the input collection",
+                assetHierarchy.size());
         LOG.debug(loggingPrefix + "Check input collection data integrity.");
         if (!verifyAssetHierarchyIntegrity(assetHierarchy)) {
             String message = loggingPrefix + "The input asset collection does not satisfy the integrity constraints.";
@@ -234,7 +235,9 @@ public abstract class Assets extends ApiBase {
 
         // Check for leftover CDF assets. These should be deleted
         if (!cdfAssets.isEmpty()) {
-            deleteList = cdfAssets.values().stream()
+            List<Asset> sortedAssets = topologicalSort(cdfAssets.values());
+            Collections.reverse(sortedAssets); // Should delete assets in reverse topological order
+            deleteList = sortedAssets.stream()
                     .map(asset ->
                         Item.newBuilder()
                             .setExternalId(asset.getExternalId().getValue())
@@ -242,7 +245,7 @@ public abstract class Assets extends ApiBase {
                     .collect(Collectors.toList());
         }
 
-        LOG.debug(loggingPrefix + "Change detection complete. New assets: {}, changed assets: {}, deleted assets: {}, "
+        LOG.info(loggingPrefix + "Change detection complete. New assets: {}, changed assets: {}, deleted assets: {}, "
                         + "assets with no change: {}. Duration {}",
                 newAssetCounter,
                 changedAssetCounter,
@@ -296,7 +299,7 @@ public abstract class Assets extends ApiBase {
         String loggingPrefix = "upsert() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         Instant startInstant = Instant.now();
         // Check integrity and sort assets topologically
-        List<Asset> sortedAssets = sortAssetsForUpsert(assets);
+        List<Asset> sortedAssets = topologicalSort(assets);
 
         // Setup writers and upsert manager
         ConnectorServiceV1 connector = getClient().getConnectorService();
@@ -495,7 +498,7 @@ public abstract class Assets extends ApiBase {
      * @return The sorted assets collection.
      * @throws Exception if one (or more) of the constraints are not fulfilled.
      */
-    private List<Asset> sortAssetsForUpsert(Collection<Asset> assets) throws Exception {
+    private List<Asset> topologicalSort(Collection<Asset> assets) throws Exception {
         Instant startInstant = Instant.now();
         String loggingPrefix = "sortAssetsForUpsert - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         Preconditions.checkArgument(checkExternalId(assets),
@@ -508,10 +511,10 @@ public abstract class Assets extends ApiBase {
                 "Circular reference detected. Please check the log for more information.");
 
         LOG.debug(loggingPrefix + "Constraints check passed. Starting sort.");
-        Map<String, Asset> inputMap = new HashMap<>((int) (assets.size() * 1.35));
+        Map<String, Asset> inputMap = assets.stream()
+                .collect(Collectors.toMap(asset -> asset.getExternalId().getValue(), Function.identity()));
         List<Asset> sortedAssets = new ArrayList<>();
-        assets.stream()
-                .forEach(asset -> inputMap.put(asset.getExternalId().getValue(), asset));
+
 
         while (!inputMap.isEmpty()) {
             int startInputMapSize = inputMap.size();
