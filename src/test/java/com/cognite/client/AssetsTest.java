@@ -96,7 +96,7 @@ class AssetsTest {
             LOG.info(loggingPrefix + "Finished first sync assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
-            Thread.sleep(2000); // wait for eventual consistency
+            Thread.sleep(5000); // wait for eventual consistency
 
             LOG.info(loggingPrefix + "Start second sync assets.");
             List<Asset> editedAssetsInput = originalAssetList.stream()
@@ -121,7 +121,7 @@ class AssetsTest {
             LOG.info(loggingPrefix + "Finished second sync assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
-            Thread.sleep(2000); // wait for eventual consistency
+            Thread.sleep(5000); // wait for eventual consistency
 
             LOG.info(loggingPrefix + "Start deleting assets.");
             List<Asset> listAssetsResults = new ArrayList<>();
