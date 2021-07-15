@@ -147,7 +147,7 @@ public abstract class Assets extends ApiBase {
      * Algorithm:
      * - Verify that the input collection satisfies the hierarchy constraints:
      *      - All assets must specify an {@code externalId}.
-     *      - No duplicates (based on {@code externalId}.
+     *      - No duplicates (based on {@code externalId}).
      *      - The collection must contain one and only one asset object with no parent reference (representing the root node)
      *      - All other assets must contain a valid {@code parentExternalId} reference (no self-references).
      *      - No circular references.
