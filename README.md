@@ -6,7 +6,6 @@
 
 # Java sdk for CDF
 
-
 Java SDK for reading and writing from/to CDF resources.
 
 ```java
