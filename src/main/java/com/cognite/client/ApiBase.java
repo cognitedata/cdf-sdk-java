@@ -330,35 +330,6 @@ abstract class ApiBase {
      *
      * When using an api key, this service will look up the corresponding project/tenant to issue requests to.
      *
-     * @param requestParameters The request to enrich with auth information.
-     * @return The request parameters with auth info added to it.
-     * @throws Exception
-     */
-    /*
-    protected RequestParameters addAuthInfo(RequestParameters requestParameters) throws Exception {
-        // Check if there already is auth info.
-        if (null != requestParameters.getProjectConfig().getProject()
-                && null != requestParameters.getProjectConfig().getHost()
-                && null != requestParameters.getProjectConfig().getApiKey()) {
-            return requestParameters;
-        }
-
-        return requestParameters
-                .withProjectConfig(getClient().buildProjectConfig())
-                .withRequest(addAuthInfo(requestParameters.getRequest()));
-    }
-
-     */
-
-    /**
-     * Adds the required authentication information into the request object. If the request object already have
-     * complete auth info nothing will be added.
-     *
-     * The following authentication schemes are supported:
-     * 1) API key.
-     *
-     * When using an api key, this service will look up the corresponding project/tenant to issue requests to.
-     *
      * @param request The request to enrich with auth information.
      * @return The request parameters with auth info added to it.
      * @throws Exception

@@ -201,7 +201,7 @@ public class DataGenerator {
         List<Asset> children = new ArrayList<>();
         currentLevel.add(root);
         hierarchy.add(root);
-        for (int i = 0; i <= NO_HIERARCHY_LEVELS; i++) {
+        for (int i = 0; i < NO_HIERARCHY_LEVELS && hierarchy.size() < noObjects; i++) {
             children.clear();
             for (Asset asset : currentLevel) {
                 children.addAll(generateChildAssets(assetsPerParent, asset));
@@ -222,7 +222,7 @@ public class DataGenerator {
                     .setParentExternalId(parent.getExternalId())
                     .build());
         }
-        return objects;
+        return resultObjects;
     }
 
     public static List<Asset> generateAssets(int noObjects) {
@@ -231,7 +231,7 @@ public class DataGenerator {
             objects.add(Asset.newBuilder()
                     .setExternalId(StringValue.of(RandomStringUtils.randomAlphanumeric(10)))
                     .setName("generated_asset_" + RandomStringUtils.randomAlphanumeric(5))
-                    .setDescription(StringValue.of("generated_asset_description" + RandomStringUtils.randomAlphanumeric(50)))
+                    .setDescription(StringValue.of("generated_asset_description_" + RandomStringUtils.randomAlphanumeric(50)))
                     .setSource(StringValue.of(sourceValue))
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)

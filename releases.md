@@ -19,6 +19,12 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [0.9.9-SNAPSHOT]
+
+### Added
+
+- Synchronize asset-hierarchy capability. 
+
 ## [0.9.8]
 
 ### Fixed
@@ -26,7 +32,7 @@ Changes are grouped as follows:
 - Increased dependencies versions to support Java 11
 - Fully automated CD pipeline
 
-## [0.9.7-SNAPSHOT]
+## [0.9.7]
 
 ### Added
 
