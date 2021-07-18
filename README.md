@@ -67,7 +67,7 @@ client.assets()
         .forEachRemaining(assetBatch -> listAssetsResults.addAll(assetBatch));        //results are read in batches
 
 // List all events
-List<Events> listEventsResults = new ArrayList<>();
+List<Event> listEventsResults = new ArrayList<>();
 client.events()
         .list(Request.create()
                 .withFilterParameter("key", "value"))       //optionally add filter parameters
