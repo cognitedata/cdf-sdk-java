@@ -142,14 +142,14 @@ public class DataGenerator {
         List<Event> objects = new ArrayList<>(noObjects);
         for (int i = 0; i < noObjects; i++) {
             objects.add(Event.newBuilder()
-                    .setExternalId(StringValue.of(RandomStringUtils.randomAlphanumeric(10)))
-                    .setStartTime(Int64Value.of(1552566113 + ThreadLocalRandom.current().nextInt(10000)))
-                    .setEndTime(Int64Value.of(1553566113 + ThreadLocalRandom.current().nextInt(10000)))
-                    .setDescription(StringValue.of("generated_event_" + RandomStringUtils.randomAlphanumeric(50)))
-                    .setType(StringValue.of("generated_event"))
-                    .setSubtype(StringValue.of(
-                            ThreadLocalRandom.current().nextInt(0,2) == 0 ? "event_sub_type" : "event_sub_type_2"))
-                    .setSource(StringValue.of(sourceValue))
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(10))
+                    .setStartTime(1552566113 + ThreadLocalRandom.current().nextInt(10000))
+                    .setEndTime(1553566113 + ThreadLocalRandom.current().nextInt(10000))
+                    .setDescription("generated_event_" + RandomStringUtils.randomAlphanumeric(50))
+                    .setType("generated_event")
+                    .setSubtype(
+                            ThreadLocalRandom.current().nextInt(0,2) == 0 ? "event_sub_type" : "event_sub_type_2")
+                    .setSource(sourceValue)
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)
                     .build());

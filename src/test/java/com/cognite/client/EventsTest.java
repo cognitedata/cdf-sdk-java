@@ -7,7 +7,6 @@ import com.cognite.client.dto.Event;
 import com.cognite.client.dto.Item;
 import com.cognite.client.config.ClientConfig;
 import com.cognite.client.util.DataGenerator;
-import com.google.protobuf.StringValue;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -75,7 +74,7 @@ class EventsTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listEventsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -122,7 +121,7 @@ class EventsTest {
             LOG.info(loggingPrefix + "Start updating events.");
             List<Event> editedEventsInput = upsertedEvents.stream()
                     .map(event -> event.toBuilder()
-                            .setDescription(StringValue.of("new-value"))
+                            .setDescription("new-value")
                             .clearSubtype()
                             .clearMetadata()
                             .putMetadata("new-key", "new-value")
@@ -160,7 +159,7 @@ class EventsTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listEventsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -171,7 +170,7 @@ class EventsTest {
 
             BooleanSupplier updateCondition = () -> {
                 for (Event event : eventUpdateResults)  {
-                    if (event.getDescription().getValue().equals("new-value")
+                    if (event.getDescription().equals("new-value")
                             && event.hasSubtype()
                             && event.containsMetadata("new-key")
                             && event.containsMetadata(DataGenerator.sourceKey)) {
@@ -185,7 +184,7 @@ class EventsTest {
 
             BooleanSupplier replaceCondition = () -> {
                 for (Event event : eventReplaceResults)  {
-                    if (event.getDescription().getValue().equals("new-value")
+                    if (event.getDescription().equals("new-value")
                             && !event.hasSubtype()
                             && event.containsMetadata("new-key")
                             && !event.containsMetadata(DataGenerator.sourceKey)) {
@@ -243,7 +242,7 @@ class EventsTest {
             List<Item> eventItems = new ArrayList<>();
             listEventsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> eventItems.add(item));
 
@@ -255,7 +254,7 @@ class EventsTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             retrievedEvents.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -316,7 +315,7 @@ class EventsTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listEventsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
