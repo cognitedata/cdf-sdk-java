@@ -56,7 +56,7 @@ public class AggregateParser {
                 }
 
                 if (node.path("value").isTextual()) {
-                    recordBuilder.setValue(StringValue.of(node.path("value").textValue()));
+                    recordBuilder.setValue(node.path("value").textValue());
                 }
 
                 aggregateBuilder.addAggregates(recordBuilder);

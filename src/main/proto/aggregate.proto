@@ -11,7 +11,7 @@ message Aggregate {
     repeated Record aggregates = 1;
 
     message Record {
-        google.protobuf.StringValue value = 1;
+        optional string value = 1;
         int64 count = 2;
     }
 }
