@@ -229,10 +229,10 @@ public class DataGenerator {
         List<Asset> objects = new ArrayList<>(noObjects);
         for (int i = 0; i < noObjects; i++) {
             objects.add(Asset.newBuilder()
-                    .setExternalId(StringValue.of(RandomStringUtils.randomAlphanumeric(10)))
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(10))
                     .setName("generated_asset_" + RandomStringUtils.randomAlphanumeric(5))
-                    .setDescription(StringValue.of("generated_asset_description_" + RandomStringUtils.randomAlphanumeric(50)))
-                    .setSource(StringValue.of(sourceValue))
+                    .setDescription("generated_asset_description_" + RandomStringUtils.randomAlphanumeric(50))
+                    .setSource(sourceValue)
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)
                     .build());

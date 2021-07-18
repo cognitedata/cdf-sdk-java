@@ -53,7 +53,7 @@ public class AssetParser {
 
         // An asset must contain a name and id.
         if (root.path("id").isIntegralNumber()) {
-            assetBuilder.setId(Int64Value.of(root.get("id").longValue()));
+            assetBuilder.setId(root.get("id").longValue());
         } else {
             throw new Exception(logPrefix + "Unable to parse attribute: id. Item exerpt: "
                     + json
@@ -68,31 +68,31 @@ public class AssetParser {
 
         // The rest of the attributes are optional.
         if (root.path("externalId").isTextual()) {
-            assetBuilder.setExternalId(StringValue.of(root.get("externalId").textValue()));
+            assetBuilder.setExternalId(root.get("externalId").textValue());
         }
         if (root.path("rootId").isIntegralNumber()) {
-            assetBuilder.setRootId(Int64Value.of(root.get("rootId").longValue()));
+            assetBuilder.setRootId(root.get("rootId").longValue());
         }
         if (root.path("parentId").isIntegralNumber()) {
-            assetBuilder.setParentId(Int64Value.of(root.get("parentId").longValue()));
+            assetBuilder.setParentId(root.get("parentId").longValue());
         }
         if (root.path("parentExternalId").isTextual()) {
-            assetBuilder.setParentExternalId(StringValue.of(root.get("parentExternalId").textValue()));
+            assetBuilder.setParentExternalId(root.get("parentExternalId").textValue());
         }
         if (root.path("description").isTextual()) {
-            assetBuilder.setDescription(StringValue.of(root.get("description").textValue()));
+            assetBuilder.setDescription(root.get("description").textValue());
         }
         if (root.path("source").isTextual()) {
-            assetBuilder.setSource(StringValue.of(root.get("source").textValue()));
+            assetBuilder.setSource(root.get("source").textValue());
         }
         if (root.path("createdTime").isIntegralNumber()) {
-            assetBuilder.setCreatedTime(Int64Value.of(root.get("createdTime").longValue()));
+            assetBuilder.setCreatedTime(root.get("createdTime").longValue());
         }
         if (root.path("lastUpdatedTime").isIntegralNumber()) {
-            assetBuilder.setLastUpdatedTime(Int64Value.of(root.get("lastUpdatedTime").longValue()));
+            assetBuilder.setLastUpdatedTime(root.get("lastUpdatedTime").longValue());
         }
         if (root.path("dataSetId").isIntegralNumber()) {
-            assetBuilder.setDataSetId(Int64Value.of(root.get("dataSetId").longValue()));
+            assetBuilder.setDataSetId(root.get("dataSetId").longValue());
         }
 
         if (root.path("metadata").isObject()) {
@@ -119,10 +119,10 @@ public class AssetParser {
             JsonNode aggregates = root.get("aggregates");
 
             if (aggregates.path("childCount").isIntegralNumber()) {
-                aggregatesBuilder.setChildCount(Int32Value.of(aggregates.get("childCount").intValue()));
+                aggregatesBuilder.setChildCount(aggregates.get("childCount").intValue());
             }
             if (aggregates.path("depth").isIntegralNumber()) {
-                aggregatesBuilder.setDepth(Int32Value.of(aggregates.get("depth").intValue()));
+                aggregatesBuilder.setDepth(aggregates.get("depth").intValue());
             }
             if (aggregates.path("path").isArray()) {
                 for (JsonNode node : aggregates.get("path")) {
@@ -133,8 +133,6 @@ public class AssetParser {
             }
             assetBuilder.setAggregates(aggregatesBuilder.build());
         }
-
-        //TODO add support for data types
 
         return assetBuilder.build();
     }
@@ -153,25 +151,25 @@ public class AssetParser {
                 .put("name", element.getName());
 
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         }
 
         if (element.hasDescription()) {
-            mapBuilder.put("description", element.getDescription().getValue());
+            mapBuilder.put("description", element.getDescription());
         }
         if (element.hasParentExternalId()) {
-            mapBuilder.put("parentExternalId", element.getParentExternalId().getValue());
+            mapBuilder.put("parentExternalId", element.getParentExternalId());
         } else if (element.hasParentId()) {
-            mapBuilder.put("parentId", element.getParentId().getValue());
+            mapBuilder.put("parentId", element.getParentId());
         }
         if (element.getMetadataCount() > 0) {
             mapBuilder.put("metadata", element.getMetadataMap());
         }
         if (element.hasSource()) {
-            mapBuilder.put("source", element.getSource().getValue());
+            mapBuilder.put("source", element.getSource());
         }
         if (element.hasDataSetId()) {
-            mapBuilder.put("dataSetId", element.getDataSetId().getValue());
+            mapBuilder.put("dataSetId", element.getDataSetId());
         }
         if (element.getLabelsCount() > 0) {
             List<Map<String, String>> labels = new ArrayList<>();
@@ -200,30 +198,30 @@ public class AssetParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            mapBuilder.put("id", element.getId().getValue());
+            mapBuilder.put("id", element.getId());
         }
 
         updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
 
         if (element.hasDescription()) {
-            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription().getValue()));
+            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
         }
         if (element.hasParentExternalId()) {
-            updateNodeBuilder.put("parentExternalId", ImmutableMap.of("set", element.getParentExternalId().getValue()));
+            updateNodeBuilder.put("parentExternalId", ImmutableMap.of("set", element.getParentExternalId()));
         } else if (element.hasParentId()) {
-            updateNodeBuilder.put("parentId", ImmutableMap.of("set", element.getParentId().getValue()));
+            updateNodeBuilder.put("parentId", ImmutableMap.of("set", element.getParentId()));
         }
 
         if (element.getMetadataCount() > 0) {
             updateNodeBuilder.put("metadata", ImmutableMap.of("add", element.getMetadataMap()));
         }
         if (element.hasSource()) {
-            updateNodeBuilder.put("source", ImmutableMap.of("set", element.getSource().getValue()));
+            updateNodeBuilder.put("source", ImmutableMap.of("set", element.getSource()));
         }
         if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
         if (element.getLabelsCount() > 0) {
             List<Map<String, String>> labels = new ArrayList<>();
@@ -251,23 +249,23 @@ public class AssetParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            mapBuilder.put("id", element.getId().getValue());
+            mapBuilder.put("id", element.getId());
         }
 
         updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
 
         if (element.hasDescription()) {
-            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription().getValue()));
+            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
         } else {
             updateNodeBuilder.put("description", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasParentExternalId()) {
-            updateNodeBuilder.put("parentExternalId", ImmutableMap.of("set", element.getParentExternalId().getValue()));
+            updateNodeBuilder.put("parentExternalId", ImmutableMap.of("set", element.getParentExternalId()));
         } else if (element.hasParentId()) {
-            updateNodeBuilder.put("parentId", ImmutableMap.of("set", element.getParentId().getValue()));
+            updateNodeBuilder.put("parentId", ImmutableMap.of("set", element.getParentId()));
         }
 
         if (element.getMetadataCount() > 0) {
@@ -277,13 +275,13 @@ public class AssetParser {
         }
 
         if (element.hasSource()) {
-            updateNodeBuilder.put("source", ImmutableMap.of("set", element.getSource().getValue()));
+            updateNodeBuilder.put("source", ImmutableMap.of("set", element.getSource()));
         } else {
             updateNodeBuilder.put("source", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         } else {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("setNull", true));
         }

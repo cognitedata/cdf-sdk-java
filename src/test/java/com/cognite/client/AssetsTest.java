@@ -61,7 +61,7 @@ class AssetsTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listAssetsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -132,7 +132,7 @@ class AssetsTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listAssetsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -202,7 +202,7 @@ class AssetsTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listAssetsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -280,7 +280,7 @@ class AssetsTest {
             List<Item> assetItems = new ArrayList<>();
             listAssetsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> assetItems.add(item));
 
@@ -292,7 +292,7 @@ class AssetsTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listAssetsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -351,7 +351,7 @@ class AssetsTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listAssetsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -373,11 +373,11 @@ class AssetsTest {
     private List<Asset> identifyLeafAssets(Collection<Asset> assetCollection) {
         List<String> parentRefs = assetCollection.stream()
                 .filter(Asset::hasParentExternalId)
-                .map(asset -> asset.getParentExternalId().getValue())
+                .map(asset -> asset.getParentExternalId())
                 .collect(Collectors.toList());
 
         List<Asset> leafNodes = assetCollection.stream()
-                .filter(asset -> !parentRefs.contains(asset.getExternalId().getValue()))
+                .filter(asset -> !parentRefs.contains(asset.getExternalId()))
                 .collect(Collectors.toList());
 
         return leafNodes;
