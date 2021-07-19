@@ -46,7 +46,7 @@ class AssetsTest {
             LOG.info(loggingPrefix + "Finished upserting assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
-            Thread.sleep(15000); // wait for eventual consistency
+            Thread.sleep(20000); // wait for eventual consistency
 
             LOG.info(loggingPrefix + "Start reading assets.");
             List<Asset> listAssetsResults = new ArrayList<>();

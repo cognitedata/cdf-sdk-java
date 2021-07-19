@@ -21,9 +21,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.Int32Value;
-import com.google.protobuf.Int64Value;
-import com.google.protobuf.StringValue;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -146,6 +143,8 @@ public class AssetParser {
      * @return
      */
     public static Map<String, Object> toRequestInsertItem(Asset element) {
+        Preconditions.checkArgument(element.hasName(),
+                "The asset must have a name in order to be created");
         // Note that "id" cannot be a part of an insert request.
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.<String, Object>builder()
                 .put("name", element.getName());
@@ -203,7 +202,9 @@ public class AssetParser {
             mapBuilder.put("id", element.getId());
         }
 
-        updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
+        if (element.hasName()) {
+            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
+        }
 
         if (element.hasDescription()) {
             updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
@@ -235,7 +236,7 @@ public class AssetParser {
     }
 
     /**
-     * Builds a request insert item object from <code>Asset</code>.
+     * Builds a request replace item object from <code>Asset</code>.
      *
      * A replace item object replaces an existing event object with new values for all provided fields.
      * Fields that are not in the update object are set to null.
@@ -244,7 +245,9 @@ public class AssetParser {
      */
     public static Map<String, Object> toRequestReplaceItem(Asset element) {
         Preconditions.checkArgument(element.hasExternalId() || element.hasId(),
-                "Element must have externalId or Id in order to be written as an update");
+                "Element must have externalId or Id in order to be written as an update.");
+        Preconditions.checkArgument(element.hasName(),
+                "The asset must have a name in order to be written as an update replace.");
 
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
