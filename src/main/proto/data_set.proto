@@ -8,12 +8,12 @@ option java_package = "com.cognite.client.dto";
 option java_multiple_files = true;
 
 message DataSet {
-    google.protobuf.Int64Value id = 1;
-    google.protobuf.StringValue external_id = 2;
-    google.protobuf.StringValue name = 3;
-    google.protobuf.StringValue description = 4;
-    google.protobuf.BoolValue write_protected = 5;
-    google.protobuf.Int64Value created_time = 6;
-    google.protobuf.Int64Value last_updated_time = 7;
+    optional int64 id = 1;
+    optional string external_id = 2;
+    optional string name = 3;
+    optional string description = 4;
+    optional bool write_protected = 5;
+    optional int64 created_time = 6;
+    optional int64 last_updated_time = 7;
     map<string, string> metadata = 8;
 }

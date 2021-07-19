@@ -51,7 +51,7 @@ public class DataSetParser {
 
         // An event must contain an id.
         if (root.path("id").isIntegralNumber()) {
-            dataSetBuilder.setId(Int64Value.of(root.get("id").longValue()));
+            dataSetBuilder.setId(root.get("id").longValue());
         } else {
             String message = logPrefix + "Unable to parse attribute: id. Item exerpt: "
                     + json.substring(0, Math.min(json.length() - 1, MAX_LOG_ELEMENT_LENGTH));
@@ -60,25 +60,22 @@ public class DataSetParser {
 
         // The rest of the attributes are optional.
         if (root.path("externalId").isTextual()) {
-            dataSetBuilder.setExternalId(StringValue.of(root.get("externalId").textValue()));
+            dataSetBuilder.setExternalId(root.get("externalId").textValue());
         }
         if (root.path("name").isTextual()) {
-            dataSetBuilder.setName(
-                    StringValue.of(root.get("name").textValue()));
+            dataSetBuilder.setName(root.get("name").textValue());
         }
         if (root.path("description").isTextual()) {
-            dataSetBuilder.setDescription(
-                    StringValue.of(root.get("description").textValue()));
+            dataSetBuilder.setDescription(root.get("description").textValue());
         }
         if (root.path("writeProtected").isBoolean()) {
-            dataSetBuilder.setWriteProtected(
-                    BoolValue.of(root.get("writeProtected").booleanValue()));
+            dataSetBuilder.setWriteProtected(root.get("writeProtected").booleanValue());
         }
         if (root.path("createdTime").isIntegralNumber()) {
-            dataSetBuilder.setCreatedTime(Int64Value.of(root.get("createdTime").longValue()));
+            dataSetBuilder.setCreatedTime(root.get("createdTime").longValue());
         }
         if (root.path("lastUpdatedTime").isIntegralNumber()) {
-            dataSetBuilder.setLastUpdatedTime(Int64Value.of(root.get("lastUpdatedTime").longValue()));
+            dataSetBuilder.setLastUpdatedTime(root.get("lastUpdatedTime").longValue());
         }
 
         if (root.path("metadata").isObject()) {
@@ -110,18 +107,20 @@ public class DataSetParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
 
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         }
 
         if (element.hasName()) {
-            mapBuilder.put("name", element.getName().getValue());
+            mapBuilder.put("name", element.getName());
         }
         if (element.hasDescription()) {
-            mapBuilder.put("description", element.getDescription().getValue());
+            mapBuilder.put("description", element.getDescription());
         }
+
         if (element.hasWriteProtected()) {
-            mapBuilder.put("writeProtected", element.getWriteProtected().getValue());
+            mapBuilder.put("writeProtected", element.getWriteProtected());
         }
+
         if (element.getMetadataCount() > 0) {
             mapBuilder.put("metadata", element.getMetadataMap());
         }
@@ -145,20 +144,22 @@ public class DataSetParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            mapBuilder.put("id", element.getId().getValue());
+            mapBuilder.put("id", element.getId());
         }
 
         if (element.hasName()) {
-            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName().getValue()));
+            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
         }
         if (element.hasDescription()) {
-            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription().getValue()));
+            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
         }
+
         if (element.hasWriteProtected()) {
-            updateNodeBuilder.put("writeProtected", ImmutableMap.of("set", element.getWriteProtected().getValue()));
+            updateNodeBuilder.put("writeProtected", ImmutableMap.of("set", element.getWriteProtected()));
         }
+
         if (element.getMetadataCount() > 0) {
             updateNodeBuilder.put("metadata", ImmutableMap.of("add", element.getMetadataMap()));
         }
@@ -182,27 +183,27 @@ public class DataSetParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            mapBuilder.put("id", element.getId().getValue());
+            mapBuilder.put("id", element.getId());
         }
 
         if (element.hasName()) {
-            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName().getValue()));
+            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
         } else {
             updateNodeBuilder.put("name", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasDescription()) {
-            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription().getValue()));
+            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
         } else {
             updateNodeBuilder.put("description", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasWriteProtected()) {
-            updateNodeBuilder.put("writeProtected", ImmutableMap.of("set", element.getWriteProtected().getValue()));
+            updateNodeBuilder.put("writeProtected", ImmutableMap.of("set", element.getWriteProtected()));
         } else {
-            updateNodeBuilder.put("writeProtected", ImmutableMap.of("setNull", true));
+            updateNodeBuilder.put("writeProtected", ImmutableMap.of("set", false));
         }
 
 
