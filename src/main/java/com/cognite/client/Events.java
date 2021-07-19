@@ -60,6 +60,15 @@ public abstract class Events extends ApiBase {
     }
 
     /**
+     * Returns all {@link Event} objects.
+     *
+     * @see #list(Request)
+     */
+    public Iterator<List<Event>> list() throws Exception {
+        return this.list(Request.create());
+    }
+
+    /**
      * Returns all {@link Event} objects that matches the filters set in the {@link Request}.
      *
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in

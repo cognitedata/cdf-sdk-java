@@ -20,6 +20,7 @@ import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.Asset;
 import com.cognite.client.config.ResourceType;
+import com.cognite.client.dto.Event;
 import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.AssetParser;
@@ -69,6 +70,15 @@ public abstract class Assets extends ApiBase {
         return Assets.builder()
                 .setClient(client)
                 .build();
+    }
+
+    /**
+     * Returns all {@link Asset} objects.
+     *
+     * @see #list(Request)
+     */
+    public Iterator<List<Asset>> list() throws Exception {
+        return this.list(Request.create());
     }
 
     /**

@@ -24,6 +24,8 @@ Changes are grouped as follows:
 ### Added
 
 - Synchronize asset-hierarchy capability. 
+- `list()` convenience method that returns all objects for a given resource type.
+- User documentation.
 
 ## [0.9.8]
 

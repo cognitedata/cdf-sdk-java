@@ -75,6 +75,15 @@ public abstract class Files extends ApiBase {
     }
 
     /**
+     * Returns all {@link FileMetadata} objects.
+     *
+     * @see #list(Request)
+     */
+    public Iterator<List<FileMetadata>> list() throws Exception {
+        return this.list(Request.create());
+    }
+
+    /**
      * Returns all {@link FileMetadata} objects that matches the filters set in the {@link Request}.
      *
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in

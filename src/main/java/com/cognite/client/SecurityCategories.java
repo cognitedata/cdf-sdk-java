@@ -17,6 +17,7 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
+import com.cognite.client.dto.Event;
 import com.cognite.client.dto.SecurityCategory;
 import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
@@ -55,6 +56,15 @@ public abstract class SecurityCategories extends ApiBase {
         return SecurityCategories.builder()
                 .setClient(client)
                 .build();
+    }
+
+    /**
+     * Returns all {@link SecurityCategory} objects.
+     *
+     * @see #list(Request)
+     */
+    public Iterator<List<SecurityCategory>> list() throws Exception {
+        return this.list(Request.create());
     }
 
     /**

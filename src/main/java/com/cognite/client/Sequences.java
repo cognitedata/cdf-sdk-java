@@ -19,6 +19,7 @@ package com.cognite.client;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Aggregate;
+import com.cognite.client.dto.Event;
 import com.cognite.client.dto.SequenceMetadata;
 import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
@@ -69,6 +70,15 @@ public abstract class Sequences extends ApiBase {
      */
     public SequenceRows rows() {
         return SequenceRows.of(getClient());
+    }
+
+    /**
+     * Returns all {@link SequenceMetadata} objects.
+     *
+     * @see #list(Request)
+     */
+    public Iterator<List<SequenceMetadata>> list() throws Exception {
+        return this.list(Request.create());
     }
 
     /**
