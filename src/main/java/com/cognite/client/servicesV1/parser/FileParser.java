@@ -53,19 +53,19 @@ public class FileParser {
 
         // A file must contain id, name, isUploaded, created and updatedTime.
         if (root.path("id").isIntegralNumber()) {
-            fileMetaBuilder.setId(Int64Value.of(root.get("id").longValue()));
+            fileMetaBuilder.setId(root.get("id").longValue());
         } else {
             throw new Exception(FileParser.buildErrorMessage("id", json));
         }
 
         if (root.path("name").isTextual()) {
-            fileMetaBuilder.setName(StringValue.of(root.get("name").textValue()));
+            fileMetaBuilder.setName(root.get("name").textValue());
         } else {
             throw new Exception(FileParser.buildErrorMessage("name", json));
         }
 
         if (root.path("directory").isTextual()) {
-            fileMetaBuilder.setDirectory(StringValue.of(root.get("directory").textValue()));
+            fileMetaBuilder.setDirectory(root.get("directory").textValue());
         }
 
         if (root.path("uploaded").isBoolean()) {
@@ -75,38 +75,38 @@ public class FileParser {
         }
 
         if (root.path("createdTime").isIntegralNumber()) {
-            fileMetaBuilder.setCreatedTime(Int64Value.of(root.get("createdTime").longValue()));
+            fileMetaBuilder.setCreatedTime(root.get("createdTime").longValue());
         } else {
             throw new Exception(FileParser.buildErrorMessage("createdTime", json));
         }
 
         if (root.path("lastUpdatedTime").isIntegralNumber()) {
-            fileMetaBuilder.setLastUpdatedTime(Int64Value.of(root.get("lastUpdatedTime").longValue()));
+            fileMetaBuilder.setLastUpdatedTime(root.get("lastUpdatedTime").longValue());
         } else {
             throw new Exception(FileParser.buildErrorMessage("lastUpdatedTime", json));
         }
 
         // The rest of the attributes are optional.
         if (root.path("externalId").isTextual()) {
-            fileMetaBuilder.setExternalId(StringValue.of(root.get("externalId").textValue()));
+            fileMetaBuilder.setExternalId(root.get("externalId").textValue());
         }
         if (root.path("uploadedTime").isIntegralNumber()) {
-            fileMetaBuilder.setUploadedTime(Int64Value.of(root.get("uploadedTime").longValue()));
+            fileMetaBuilder.setUploadedTime(root.get("uploadedTime").longValue());
         }
         if (root.path("source").isTextual()) {
-            fileMetaBuilder.setSource(StringValue.of(root.get("source").textValue()));
+            fileMetaBuilder.setSource(root.get("source").textValue());
         }
         if (root.path("mimeType").isTextual()) {
-            fileMetaBuilder.setMimeType(StringValue.of(root.get("mimeType").textValue()));
+            fileMetaBuilder.setMimeType(root.get("mimeType").textValue());
         }
         if (root.path("sourceCreatedTime").isIntegralNumber()) {
-            fileMetaBuilder.setSourceCreatedTime(Int64Value.of(root.get("sourceCreatedTime").longValue()));
+            fileMetaBuilder.setSourceCreatedTime(root.get("sourceCreatedTime").longValue());
         }
         if (root.path("sourceModifiedTime").isIntegralNumber()) {
-            fileMetaBuilder.setSourceModifiedTime(Int64Value.of(root.get("sourceModifiedTime").longValue()));
+            fileMetaBuilder.setSourceModifiedTime(root.get("sourceModifiedTime").longValue());
         }
         if (root.path("dataSetId").isIntegralNumber()) {
-            fileMetaBuilder.setDataSetId(Int64Value.of(root.get("dataSetId").longValue()));
+            fileMetaBuilder.setDataSetId(root.get("dataSetId").longValue());
         }
 
         if (root.path("securityCategories").isArray()) {
@@ -163,32 +163,32 @@ public class FileParser {
 
         // Required fields
         if (element.hasName()) {
-            mapBuilder.put("name", element.getName().getValue());
+            mapBuilder.put("name", element.getName());
         } else {
             throw new Exception("Unable to find attribute [name] in the file metadata/header object. "
-                    + "externalId: [" + element.getExternalId().getValue() + "].");
+                    + "externalId: [" + element.getExternalId() + "].");
         }
 
         // Optional fields
         if (element.hasDirectory()) {
-            mapBuilder.put("directory", element.getDirectory().getValue());
+            mapBuilder.put("directory", element.getDirectory());
         }
 
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         }
 
         if (element.hasSource()) {
-            mapBuilder.put("source", element.getSource().getValue());
+            mapBuilder.put("source", element.getSource());
         }
         if (element.hasMimeType()) {
-            mapBuilder.put("mimeType", element.getMimeType().getValue());
+            mapBuilder.put("mimeType", element.getMimeType());
         }
         if (element.hasSourceCreatedTime()) {
-            mapBuilder.put("sourceCreatedTime", element.getSourceCreatedTime().getValue());
+            mapBuilder.put("sourceCreatedTime", element.getSourceCreatedTime());
         }
         if (element.hasSourceModifiedTime()) {
-            mapBuilder.put("sourceModifiedTime", element.getSourceModifiedTime().getValue());
+            mapBuilder.put("sourceModifiedTime", element.getSourceModifiedTime());
         }
         if (element.getAssetIdsCount() > 0) {
             mapBuilder.put("assetIds", element.getAssetIdsList());
@@ -197,7 +197,7 @@ public class FileParser {
             mapBuilder.put("metadata", element.getMetadataMap());
         }
         if (element.hasDataSetId()) {
-            mapBuilder.put("dataSetId", element.getDataSetId().getValue());
+            mapBuilder.put("dataSetId", element.getDataSetId());
         }
         if (element.getLabelsCount() > 0) {
             List<Map<String, String>> labels = new ArrayList<>();
@@ -228,26 +228,26 @@ public class FileParser {
 
 
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            mapBuilder.put("id", element.getId().getValue());
+            mapBuilder.put("id", element.getId());
         }
 
         // the parameter "name" cannot be updated.
         if (element.hasDirectory()) {
-            updateNodeBuilder.put("directory", ImmutableMap.of("set", element.getDirectory().getValue()));
+            updateNodeBuilder.put("directory", ImmutableMap.of("set", element.getDirectory()));
         }
         if (element.hasMimeType()) {
-            updateNodeBuilder.put("mimeType", ImmutableMap.of("set", element.getMimeType().getValue()));
+            updateNodeBuilder.put("mimeType", ImmutableMap.of("set", element.getMimeType()));
         }
         if (element.hasSource()) {
-            updateNodeBuilder.put("source", ImmutableMap.of("set", element.getSource().getValue()));
+            updateNodeBuilder.put("source", ImmutableMap.of("set", element.getSource()));
         }
         if (element.hasSourceCreatedTime()) {
-            updateNodeBuilder.put("sourceCreatedTime", ImmutableMap.of("set", element.getSourceCreatedTime().getValue()));
+            updateNodeBuilder.put("sourceCreatedTime", ImmutableMap.of("set", element.getSourceCreatedTime()));
         }
         if (element.hasSourceModifiedTime()) {
-            updateNodeBuilder.put("sourceModifiedTime", ImmutableMap.of("set", element.getSourceModifiedTime().getValue()));
+            updateNodeBuilder.put("sourceModifiedTime", ImmutableMap.of("set", element.getSourceModifiedTime()));
         }
         if (element.getAssetIdsCount() > 0) {
             updateNodeBuilder.put("assetIds", ImmutableMap.of("set", element.getAssetIdsList()));
@@ -256,7 +256,7 @@ public class FileParser {
             updateNodeBuilder.put("metadata", ImmutableMap.of("add", element.getMetadataMap()));
         }
         if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
         if (element.getLabelsCount() > 0) {
             List<Map<String, String>> labels = new ArrayList<>();
@@ -285,38 +285,38 @@ public class FileParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            mapBuilder.put("id", element.getId().getValue());
+            mapBuilder.put("id", element.getId());
         }
 
         // the parameter "name" cannot be updated.
         if (element.hasDirectory()) {
-            updateNodeBuilder.put("directory", ImmutableMap.of("set", element.getDirectory().getValue()));
+            updateNodeBuilder.put("directory", ImmutableMap.of("set", element.getDirectory()));
         } else {
             updateNodeBuilder.put("directory", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasMimeType()) {
-            updateNodeBuilder.put("mimeType", ImmutableMap.of("set", element.getMimeType().getValue()));
+            updateNodeBuilder.put("mimeType", ImmutableMap.of("set", element.getMimeType()));
         } else {
             updateNodeBuilder.put("mimeType", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasSource()) {
-            updateNodeBuilder.put("source", ImmutableMap.of("set", element.getSource().getValue()));
+            updateNodeBuilder.put("source", ImmutableMap.of("set", element.getSource()));
         } else {
             updateNodeBuilder.put("source", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasSourceCreatedTime()) {
-            updateNodeBuilder.put("sourceCreatedTime", ImmutableMap.of("set", element.getSourceCreatedTime().getValue()));
+            updateNodeBuilder.put("sourceCreatedTime", ImmutableMap.of("set", element.getSourceCreatedTime()));
         } else {
             updateNodeBuilder.put("sourceCreatedTime", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasSourceModifiedTime()) {
-            updateNodeBuilder.put("sourceModifiedTime", ImmutableMap.of("set", element.getSourceModifiedTime().getValue()));
+            updateNodeBuilder.put("sourceModifiedTime", ImmutableMap.of("set", element.getSourceModifiedTime()));
         } else {
             updateNodeBuilder.put("sourceModifiedTime", ImmutableMap.of("setNull", true));
         }
@@ -334,7 +334,7 @@ public class FileParser {
         }
 
         if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         } else {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("setNull", true));
         }
@@ -368,9 +368,9 @@ public class FileParser {
 
 
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            mapBuilder.put("id", element.getId().getValue());
+            mapBuilder.put("id", element.getId());
         }
 
         if (element.getAssetIdsCount() > 0) {

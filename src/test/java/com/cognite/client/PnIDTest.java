@@ -68,21 +68,21 @@ class PnIDTest {
                     .setExternalId(fileExtIdC)
                     .build();
             final FileMetadata fileMetadataA = FileMetadata.newBuilder()
-                    .setExternalId(StringValue.of(fileExtIdA))
-                    .setName(StringValue.of("Test_file_pnid"))
-                    .setMimeType(StringValue.of("application/pdf"))
+                    .setExternalId(fileExtIdA)
+                    .setName("Test_file_pnid")
+                    .setMimeType("application/pdf")
                     .putMetadata(metaKey, metaValue)
                     .build();
             final FileMetadata fileMetadataB = FileMetadata.newBuilder()
-                    .setExternalId(StringValue.of(fileExtIdB))
-                    .setName(StringValue.of("Test_file_pnid_2"))
-                    .setMimeType(StringValue.of("application/pdf"))
+                    .setExternalId(fileExtIdB)
+                    .setName("Test_file_pnid_2")
+                    .setMimeType("application/pdf")
                     .putMetadata(metaKey, metaValue)
                     .build();
             final FileMetadata fileMetadataC = FileMetadata.newBuilder()
-                    .setExternalId(StringValue.of(fileExtIdC))
-                    .setName(StringValue.of("Test_file_pnid_3"))
-                    .setMimeType(StringValue.of("application/pdf"))
+                    .setExternalId(fileExtIdC)
+                    .setName("Test_file_pnid_3")
+                    .setMimeType("application/pdf")
                     .putMetadata(metaKey, metaValue)
                     .build();
 
@@ -137,7 +137,7 @@ class PnIDTest {
 
             final List<Item> fileItems = uploadFilesResult.stream()
                     .map(metadata -> Item.newBuilder()
-                            .setExternalId(metadata.getExternalId().getValue())
+                            .setExternalId(metadata.getExternalId())
                             .build())
                     .collect(Collectors.toList());
 

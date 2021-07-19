@@ -121,7 +121,7 @@ class FilesTest {
             List<FileContainer> downloadFilesResults = new ArrayList<>();
             List<Item> downloadFilesItems = listFilesResults.stream()
                     .map(fileMetadata -> Item.newBuilder()
-                            .setId(fileMetadata.getId().getValue())
+                            .setId(fileMetadata.getId())
                             .build())
                     .collect(Collectors.toList());
             downloadFilesResults = client.files().downloadToPath(downloadFilesItems, Paths.get(""));
