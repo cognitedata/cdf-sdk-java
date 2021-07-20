@@ -19,7 +19,6 @@ package com.cognite.client.servicesV1.parser;
 import com.cognite.client.dto.Aggregate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.protobuf.StringValue;
 
 import static com.cognite.client.servicesV1.ConnectorConstants.MAX_LOG_ELEMENT_LENGTH;
 

@@ -28,10 +28,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.BoolValue;
-import com.google.protobuf.DoubleValue;
-import com.google.protobuf.Int64Value;
-import com.google.protobuf.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -21,9 +21,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.BoolValue;
-import com.google.protobuf.Int64Value;
-import com.google.protobuf.StringValue;
 
 import java.util.Iterator;
 import java.util.Map;
