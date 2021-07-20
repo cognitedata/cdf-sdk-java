@@ -39,12 +39,12 @@ public class DataGenerator {
         List<TimeseriesMetadata> objects = new ArrayList<>(noObjects);
         for (int i = 0; i < noObjects; i++) {
             objects.add(TimeseriesMetadata.newBuilder()
-                    .setExternalId(StringValue.of(RandomStringUtils.randomAlphanumeric(10)))
-                    .setName(StringValue.of("test_ts_" + RandomStringUtils.randomAlphanumeric(5)))
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(10))
+                    .setName("test_ts_" + RandomStringUtils.randomAlphanumeric(5))
                     .setIsString(false)
                     .setIsStep(false)
-                    .setDescription(StringValue.of(RandomStringUtils.randomAlphanumeric(50)))
-                    .setUnit(StringValue.of("TestUnits"))
+                    .setDescription(RandomStringUtils.randomAlphanumeric(50))
+                    .setUnit("TestUnits")
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)
                     .build());

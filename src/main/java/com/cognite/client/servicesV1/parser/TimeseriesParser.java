@@ -79,9 +79,9 @@ public class TimeseriesParser {
                 TimeseriesPoint.Builder outputPointBuilder = TimeseriesPoint.newBuilder();
                 outputPointBuilder.setId(id);
                 if (externalId.isPresent()) {
-                    outputPointBuilder.setExternalId(StringValue.of(externalId.get()));
+                    outputPointBuilder.setExternalId(externalId.get());
                 }
-                outputPointBuilder.setIsStep(BoolValue.of(isStep));
+                outputPointBuilder.setIsStep(isStep);
                 outputPointBuilder.setTimestamp(numPoint.getTimestamp());
                 outputPointBuilder.setValueNum(numPoint.getValue());
                 outputList.add(outputPointBuilder.build());
@@ -92,9 +92,9 @@ public class TimeseriesParser {
                 TimeseriesPoint.Builder outputPointBuilder = TimeseriesPoint.newBuilder();
                 outputPointBuilder.setId(id);
                 if (externalId.isPresent()) {
-                    outputPointBuilder.setExternalId(StringValue.of(externalId.get()));
+                    outputPointBuilder.setExternalId(externalId.get());
                 }
-                outputPointBuilder.setIsStep(BoolValue.of(isStep));
+                outputPointBuilder.setIsStep(isStep);
                 outputPointBuilder.setTimestamp(stringPoint.getTimestamp());
                 outputPointBuilder.setValueString(stringPoint.getValue());
                 outputList.add(outputPointBuilder.build());
@@ -104,22 +104,22 @@ public class TimeseriesParser {
                 TimeseriesPoint.Builder outputPointBuilder = TimeseriesPoint.newBuilder();
                 outputPointBuilder.setId(id);
                 if (externalId.isPresent()) {
-                    outputPointBuilder.setExternalId(StringValue.of(externalId.get()));
+                    outputPointBuilder.setExternalId(externalId.get());
                 }
-                outputPointBuilder.setIsStep(BoolValue.of(isStep));
+                outputPointBuilder.setIsStep(isStep);
                 outputPointBuilder.setTimestamp(aggPoint.getTimestamp());
 
                 TimeseriesPoint.Aggregates.Builder aggBuilder = TimeseriesPoint.Aggregates.newBuilder();
-                aggBuilder.setAverage(DoubleValue.of(aggPoint.getAverage()))
-                        .setMax(DoubleValue.of(aggPoint.getMax()))
-                        .setMin(DoubleValue.of(aggPoint.getMin()))
-                        .setCount(Int64Value.of(Math.round(aggPoint.getCount())))
-                        .setSum(DoubleValue.of(aggPoint.getSum()))
-                        .setInterpolation(DoubleValue.of(aggPoint.getInterpolation()))
-                        .setStepInterpolation(DoubleValue.of(aggPoint.getStepInterpolation()))
-                        .setContinuousVariance(DoubleValue.of(aggPoint.getContinuousVariance()))
-                        .setDiscreteVariance(DoubleValue.of(aggPoint.getDiscreteVariance()))
-                        .setTotalVariation(DoubleValue.of(aggPoint.getTotalVariation()))
+                aggBuilder.setAverage(aggPoint.getAverage())
+                        .setMax(aggPoint.getMax())
+                        .setMin(aggPoint.getMin())
+                        .setCount(Math.round(aggPoint.getCount()))
+                        .setSum(aggPoint.getSum())
+                        .setInterpolation(aggPoint.getInterpolation())
+                        .setStepInterpolation(aggPoint.getStepInterpolation())
+                        .setContinuousVariance(aggPoint.getContinuousVariance())
+                        .setDiscreteVariance(aggPoint.getDiscreteVariance())
+                        .setTotalVariation(aggPoint.getTotalVariation())
                         .build();
 
                 outputPointBuilder.setValueAggregates(aggBuilder.build());
@@ -174,12 +174,8 @@ public class TimeseriesParser {
                 }
                 // all constraints are satisfied, add outer fields
                 tsPointBuilder.setId(id);
-                if (externalId.isPresent()) {
-                    tsPointBuilder.setExternalId(StringValue.of(externalId.get()));
-                }
-                if (isStep.isPresent()) {
-                    tsPointBuilder.setIsStep(BoolValue.of(isStep.get()));
-                }
+                externalId.ifPresent(tsPointBuilder::setExternalId);
+                isStep.ifPresent(tsPointBuilder::setIsStep);
 
                 // other values are optional, add inner fields.
                 // Can be one of three states: 1) numeric, 2) string and 3) aggregate
@@ -194,34 +190,34 @@ public class TimeseriesParser {
                 } else {
                     TimeseriesPoint.Aggregates.Builder aggBuilder = TimeseriesPoint.Aggregates.newBuilder();
                     if (node.path("average").isNumber()) {
-                        aggBuilder.setAverage(DoubleValue.of(node.path("average").doubleValue()));
+                        aggBuilder.setAverage(node.path("average").doubleValue());
                     }
                     if (node.path("max").isNumber()) {
-                        aggBuilder.setMax(DoubleValue.of(node.path("max").doubleValue()));
+                        aggBuilder.setMax(node.path("max").doubleValue());
                     }
                     if (node.path("min").isNumber()) {
-                        aggBuilder.setMin(DoubleValue.of(node.path("min").doubleValue()));
+                        aggBuilder.setMin(node.path("min").doubleValue());
                     }
                     if (node.path("count").isIntegralNumber()) {
-                        aggBuilder.setCount(Int64Value.of(node.path("count").longValue()));
+                        aggBuilder.setCount(node.path("count").longValue());
                     }
                     if (node.path("sum").isNumber()) {
-                        aggBuilder.setSum(DoubleValue.of(node.path("sum").doubleValue()));
+                        aggBuilder.setSum(node.path("sum").doubleValue());
                     }
                     if (node.path("interpolation").isNumber()) {
-                        aggBuilder.setInterpolation(DoubleValue.of(node.path("interpolation").doubleValue()));
+                        aggBuilder.setInterpolation(node.path("interpolation").doubleValue());
                     }
                     if (node.path("stepInterpolation").isNumber()) {
-                        aggBuilder.setStepInterpolation(DoubleValue.of(node.path("stepInterpolation").doubleValue()));
+                        aggBuilder.setStepInterpolation(node.path("stepInterpolation").doubleValue());
                     }
                     if (node.path("continuousVariance").isNumber()) {
-                        aggBuilder.setContinuousVariance(DoubleValue.of(node.path("continuousVariance").doubleValue()));
+                        aggBuilder.setContinuousVariance(node.path("continuousVariance").doubleValue());
                     }
                     if (node.path("discreteVariance").isNumber()) {
-                        aggBuilder.setDiscreteVariance(DoubleValue.of(node.path("discreteVariance").doubleValue()));
+                        aggBuilder.setDiscreteVariance(node.path("discreteVariance").doubleValue());
                     }
                     if (node.path("totalVariation").isNumber()) {
-                        aggBuilder.setTotalVariation(DoubleValue.of(node.path("totalVariation").doubleValue()));
+                        aggBuilder.setTotalVariation(node.path("totalVariation").doubleValue());
                     }
 
                     tsPointBuilder.setValueAggregates(aggBuilder.build());
@@ -246,7 +242,7 @@ public class TimeseriesParser {
 
         // A TS metadata object must contain an id, isStep and isString.
         if (root.path("id").isIntegralNumber()) {
-            builder.setId(Int64Value.of(root.get("id").longValue()));
+            builder.setId(root.get("id").longValue());
         } else {
             throw new Exception("Unable to parse attribute: id. Item exerpt: " + itemExerpt);
         }
@@ -269,28 +265,28 @@ public class TimeseriesParser {
 
         // The rest of the attributes are optional.
         if (root.path("externalId").isTextual()) {
-            builder.setExternalId(StringValue.of(root.get("externalId").textValue()));
+            builder.setExternalId(root.get("externalId").textValue());
         }
         if (root.path("name").isTextual()) {
-            builder.setName(StringValue.of(root.get("name").textValue()));
+            builder.setName(root.get("name").textValue());
         }
         if (root.path("description").isTextual()) {
-            builder.setDescription(StringValue.of(root.get("description").textValue()));
+            builder.setDescription(root.get("description").textValue());
         }
         if (root.path("unit").isTextual()) {
-            builder.setUnit(StringValue.of(root.get("unit").textValue()));
+            builder.setUnit(root.get("unit").textValue());
         }
         if (root.path("assetId").isIntegralNumber()) {
-            builder.setAssetId(Int64Value.of(root.get("assetId").longValue()));
+            builder.setAssetId(root.get("assetId").longValue());
         }
         if (root.path("createdTime").isIntegralNumber()) {
-            builder.setCreatedTime(Int64Value.of(root.get("createdTime").longValue()));
+            builder.setCreatedTime(root.get("createdTime").longValue());
         }
         if (root.path("lastUpdatedTime").isIntegralNumber()) {
-            builder.setLastUpdatedTime(Int64Value.of(root.get("lastUpdatedTime").longValue()));
+            builder.setLastUpdatedTime(root.get("lastUpdatedTime").longValue());
         }
         if (root.path("dataSetId").isIntegralNumber()) {
-            builder.setDataSetId(Int64Value.of(root.get("dataSetId").longValue()));
+            builder.setDataSetId(root.get("dataSetId").longValue());
         }
 
         if (root.path("securityCategories").isArray()) {
@@ -329,7 +325,7 @@ public class TimeseriesParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
 
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
             LOG.warn(logPrefix
                     + "The time series data object does not contain an externalId. Therefore legacyName cannot be"
@@ -337,18 +333,18 @@ public class TimeseriesParser {
         }
 
         if (element.hasName()) {
-            mapBuilder.put("name", element.getName().getValue());
+            mapBuilder.put("name", element.getName());
         }
         mapBuilder.put("isString", element.getIsString());
         mapBuilder.put("isStep", element.getIsStep());
         if (element.hasDescription()) {
-            mapBuilder.put("description", element.getDescription().getValue());
+            mapBuilder.put("description", element.getDescription());
         }
         if (element.hasUnit()) {
-            mapBuilder.put("unit", element.getUnit().getValue());
+            mapBuilder.put("unit", element.getUnit());
         }
         if (element.hasAssetId()) {
-            mapBuilder.put("assetId", element.getAssetId().getValue());
+            mapBuilder.put("assetId", element.getAssetId());
         }
         if (element.getSecurityCategoriesCount() > 0) {
             mapBuilder.put("securityCategories", element.getSecurityCategoriesList());
@@ -357,7 +353,7 @@ public class TimeseriesParser {
             mapBuilder.put("metadata", element.getMetadataMap());
         }
         if (element.hasDataSetId()) {
-            mapBuilder.put("dataSetId", element.getDataSetId().getValue());
+            mapBuilder.put("dataSetId", element.getDataSetId());
         }
 
         return mapBuilder.build();
@@ -381,22 +377,22 @@ public class TimeseriesParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            mapBuilder.put("id", element.getId().getValue());
+            mapBuilder.put("id", element.getId());
         }
 
         if (element.hasName()) {
-            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName().getValue()));
+            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
         }
         if (element.hasDescription()) {
-            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription().getValue()));
+            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
         }
         if (element.hasUnit()) {
-            updateNodeBuilder.put("unit", ImmutableMap.of("set", element.getUnit().getValue()));
+            updateNodeBuilder.put("unit", ImmutableMap.of("set", element.getUnit()));
         }
         if (element.hasAssetId()) {
-            updateNodeBuilder.put("assetId", ImmutableMap.of("set", element.getAssetId().getValue()));
+            updateNodeBuilder.put("assetId", ImmutableMap.of("set", element.getAssetId()));
         }
         if (element.getSecurityCategoriesCount() > 0) {
             updateNodeBuilder.put("securityCategories", ImmutableMap.of("set", element.getSecurityCategoriesList()));
@@ -405,7 +401,7 @@ public class TimeseriesParser {
             updateNodeBuilder.put("metadata", ImmutableMap.of("add", element.getMetadataMap()));
         }
         if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
         mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();
@@ -428,30 +424,30 @@ public class TimeseriesParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            mapBuilder.put("id", element.getId().getValue());
+            mapBuilder.put("id", element.getId());
         }
 
         if (element.hasName()) {
-            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName().getValue()));
+            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
         } else {
             updateNodeBuilder.put("name", ImmutableMap.of("setNull", true));
         }
         if (element.hasDescription()) {
-            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription().getValue()));
+            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
         } else {
             updateNodeBuilder.put("description", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasUnit()) {
-            updateNodeBuilder.put("unit", ImmutableMap.of("set", element.getUnit().getValue()));
+            updateNodeBuilder.put("unit", ImmutableMap.of("set", element.getUnit()));
         } else {
             updateNodeBuilder.put("unit", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasAssetId()) {
-            updateNodeBuilder.put("assetId", ImmutableMap.of("set", element.getAssetId().getValue()));
+            updateNodeBuilder.put("assetId", ImmutableMap.of("set", element.getAssetId()));
         } else {
             updateNodeBuilder.put("assetId", ImmutableMap.of("setNull", true));
         }
@@ -469,7 +465,7 @@ public class TimeseriesParser {
         }
 
         if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         } else {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("setNull", true));
         }

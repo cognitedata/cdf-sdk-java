@@ -4,7 +4,6 @@ import com.cognite.client.config.ClientConfig;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.*;
 import com.cognite.client.util.DataGenerator;
-import com.google.protobuf.StringValue;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -41,7 +40,7 @@ class TimeseriesTest {
 
         try {
             LOG.info(loggingPrefix + "Start upserting timeseries.");
-            List<TimeseriesMetadata> upsertTimeseriesList = DataGenerator.generateTsHeaderObjects(12800);
+            List<TimeseriesMetadata> upsertTimeseriesList = DataGenerator.generateTsHeaderObjects(9800);
             client.timeseries().upsert(upsertTimeseriesList);
             LOG.info(loggingPrefix + "Finished upserting timeseries. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
@@ -61,7 +60,7 @@ class TimeseriesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listTimeseriesResults.stream()
                     .map(timeseries -> Item.newBuilder()
-                            .setExternalId(timeseries.getExternalId().getValue())
+                            .setExternalId(timeseries.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -112,7 +111,7 @@ class TimeseriesTest {
                     noTsPoints,
                     tsPointsFrequency,
                     upsertTimeseriesList.stream()
-                            .map(header -> header.getExternalId().getValue())
+                            .map(header -> header.getExternalId())
                             .collect(Collectors.toList()));
             client.timeseries().dataPoints().upsert(upsertDataPointsList);
             LOG.info(loggingPrefix + "Finished upserting data points. Duration: {}",
@@ -134,7 +133,7 @@ class TimeseriesTest {
             LOG.info(loggingPrefix + "Start reading data points.");
             List<Item> listDataPointsItems = upsertTimeseriesList.stream()
                     .map(header -> Item.newBuilder()
-                            .setExternalId(header.getExternalId().getValue())
+                            .setExternalId(header.getExternalId())
                             .build())
                     .collect(Collectors.toList());
             List<TimeseriesPoint> readDataPointsResults = new ArrayList<>();
@@ -148,7 +147,7 @@ class TimeseriesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listTimeseriesResults.stream()
                     .map(timeseries -> Item.newBuilder()
-                            .setExternalId(timeseries.getExternalId().getValue())
+                            .setExternalId(timeseries.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -191,7 +190,7 @@ class TimeseriesTest {
             LOG.info(loggingPrefix + "Start updating timeseries.");
             List<TimeseriesMetadata> editedTimeseriesInput = upsertedTimeseries.stream()
                     .map(timeseries -> timeseries.toBuilder()
-                            .setDescription(StringValue.of("new-value"))
+                            .setDescription("new-value")
                             .clearMetadata()
                             .putMetadata("new-key", "new-value")
                             .build())
@@ -225,7 +224,7 @@ class TimeseriesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listTimeseriesResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -235,7 +234,7 @@ class TimeseriesTest {
 
             BooleanSupplier updateCondition = () -> {
                 for (TimeseriesMetadata timeseries : timeseriesUpdateResults)  {
-                    if (timeseries.getDescription().getValue().equals("new-value")
+                    if (timeseries.getDescription().equals("new-value")
                             && timeseries.containsMetadata("new-key")
                             && timeseries.containsMetadata(DataGenerator.sourceKey)) {
                         // all good
@@ -248,7 +247,7 @@ class TimeseriesTest {
 
             BooleanSupplier replaceCondition = () -> {
                 for (TimeseriesMetadata timeseries : timeseriesReplaceResults)  {
-                    if (timeseries.getDescription().getValue().equals("new-value")
+                    if (timeseries.getDescription().equals("new-value")
                             && timeseries.containsMetadata("new-key")
                             && !timeseries.containsMetadata(DataGenerator.sourceKey)) {
                         // all good
@@ -305,7 +304,7 @@ class TimeseriesTest {
             List<Item> timeseriesItems = new ArrayList<>();
             listTimeseriesResults.stream()
                     .map(timeseries -> Item.newBuilder()
-                            .setExternalId(timeseries.getExternalId().getValue())
+                            .setExternalId(timeseries.getExternalId())
                             .build())
                     .forEach(item -> timeseriesItems.add(item));
 
@@ -317,7 +316,7 @@ class TimeseriesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             retrievedTimeseries.stream()
                     .map(timeseries -> Item.newBuilder()
-                            .setExternalId(timeseries.getExternalId().getValue())
+                            .setExternalId(timeseries.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -378,7 +377,7 @@ class TimeseriesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listTimeseriesResults.stream()
                     .map(timeseries -> Item.newBuilder()
-                            .setExternalId(timeseries.getExternalId().getValue())
+                            .setExternalId(timeseries.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 

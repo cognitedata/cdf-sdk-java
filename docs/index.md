@@ -17,7 +17,8 @@ map directly to the API's definitions.
 
 ### Table of contents
 
-- [Configure the client](clientSetup.md)
-- [Reading and writing data](readAndWriteData.md)
-- [The Asset resource type](assets.md)
+- [Client configuration. How to setup authentication.](clientSetup.md)
+- [Reading and writing data. All the basics of how to use the SDK](readAndWriteData.md)
+- [The Asset resource type. The secret sauce for handling the asset-hierarchy](assets.md)
+- [Time series--TBD]
 - [Contextualization](contextualization.md)

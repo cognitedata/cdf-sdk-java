@@ -238,15 +238,15 @@ public abstract class Timeseries extends ApiBase {
     }
 
     /*
-    Returns the id of an event. It will first check for an externalId, second it will check for id.
+    Returns the id of a time series. It will first check for an externalId, second it will check for id.
 
     If no id is found, it returns an empty Optional.
      */
     private Optional<String> getTimeseriesId(TimeseriesMetadata item) {
         if (item.hasExternalId()) {
-          return Optional.of(item.getExternalId().getValue());
+          return Optional.of(item.getExternalId());
         } else if (item.hasId()) {
-            return Optional.of(String.valueOf(item.getId().getValue()));
+            return Optional.of(String.valueOf(item.getId()));
         } else {
             return Optional.<String>empty();
         }

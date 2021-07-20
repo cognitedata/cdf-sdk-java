@@ -50,6 +50,7 @@ information ([https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.m
 ```java
 // Create the Cognite client using API key as the authentication method
 CogniteClient client = CogniteClient.ofKey(<yourApiKey>)
+        .withProject("myCdfProject")
         .withBaseUrl("https://yourBaseURL.cognitedata.com");  //optional parameter
         
 // ... or use client credentials (OpenID Connect)
@@ -57,6 +58,7 @@ CogniteClient client = CogniteClient.ofClientCredentials(
         <clientId>,
         <clientSecret>,
         TokenUrl.generateAzureAdURL(<azureAdTenantId>))
+        .withProject("myCdfProject")
         .withBaseUrl("https://yourBaseURL.cognitedata.com"); //optional parameter     
         
 // List all assets

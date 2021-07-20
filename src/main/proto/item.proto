@@ -27,9 +27,9 @@ message Item {
     }
 
     // Start of time window for a time series data point.
-    google.protobuf.Int64Value inclusive_begin = 4;
+    optional int64 inclusive_begin = 4;
 
     // End of time window for a time series data point.
-    google.protobuf.Int64Value exclusive_end = 5;
+    optional int64 exclusive_end = 5;
 }
 

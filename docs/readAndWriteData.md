@@ -33,6 +33,7 @@ CogniteClient client = CogniteClient.ofClientCredentials(
         <clientId>,
         <clientSecret>,
         TokenUrl.generateAzureAdURL(<azureAdTenantId>))
+        .withProject("myCdfProject")
         .withBaseUrl("https://yourBaseURL.cognitedata.com"); //optional parameter
 
 // List events from a given source (filter by the event.source attribute)
@@ -62,6 +63,7 @@ CogniteClient client = CogniteClient.ofClientCredentials(
         <clientId>,
         <clientSecret>,
         TokenUrl.generateAzureAdURL(<azureAdTenantId>))
+        .withProject("myCdfProject")
         .withBaseUrl("https://yourBaseURL.cognitedata.com"); //optional parameter
 
 // Retrieve assets by externalId
@@ -89,6 +91,7 @@ CogniteClient client = CogniteClient.ofClientCredentials(
         <clientId>,
         <clientSecret>,
         TokenUrl.generateAzureAdURL(<azureAdTenantId>))
+        .withProject("myCdfProject")
         .withBaseUrl("https://yourBaseURL.cognitedata.com"); //optional parameter
 
 // Count events from a given source (filter by the event.source attribute)
@@ -121,6 +124,7 @@ CogniteClient client = CogniteClient.ofClientCredentials(
         <clientId>,
         <clientSecret>,
         TokenUrl.generateAzureAdURL(<azureAdTenantId>))
+        .withProject("myCdfProject")
         .withBaseUrl("https://yourBaseURL.cognitedata.com"); //optional parameter
 
 // Define the events (or other resource type) to write to CDF
