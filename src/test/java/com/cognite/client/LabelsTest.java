@@ -106,7 +106,7 @@ class LabelsTest {
             LOG.info(loggingPrefix + "Start updating labels.");
             List<Label> editedLabelsInput = upsertedLabels.stream()
                     .map(labels -> labels.toBuilder()
-                            .setDescription(StringValue.of("new-value"))
+                            .setDescription("new-value")
                             .build())
                     .collect(Collectors.toList());
 
@@ -147,7 +147,7 @@ class LabelsTest {
 
             BooleanSupplier updateCondition = () -> {
                 for (Label label : labelsUpdateResults)  {
-                    if (label.getDescription().getValue().equals("new-value")) {
+                    if (label.getDescription().equals("new-value")) {
                         // all good
                     } else {
                         return false;
@@ -158,7 +158,7 @@ class LabelsTest {
 
             BooleanSupplier replaceCondition = () -> {
                 for (Label label : labelsReplaceResults)  {
-                    if (label.getDescription().getValue().equals("new-value")) {
+                    if (label.getDescription().equals("new-value")) {
                         // all good
                     } else {
                         return false;

@@ -161,9 +161,9 @@ public class DataGenerator {
         List<Label> objects = new ArrayList<>(noObjects);
         for (int i = 0; i < noObjects; i++) {
             objects.add(Label.newBuilder()
-                    .setExternalId(DataGenerator.sourceValue + StringValue.of(RandomStringUtils.randomAlphanumeric(10)).getValue())
-                    .setName(StringValue.of(RandomStringUtils.randomAlphanumeric(10)).getValue())
-                    .setDescription(StringValue.of("generated_event_" + RandomStringUtils.randomAlphanumeric(50)))
+                    .setExternalId(DataGenerator.sourceValue + RandomStringUtils.randomAlphanumeric(10))
+                    .setName(RandomStringUtils.randomAlphanumeric(10))
+                    .setDescription("generated_event_" + RandomStringUtils.randomAlphanumeric(50))
                     .build());
         }
 
