@@ -151,7 +151,7 @@ public abstract class SecurityCategories extends ApiBase {
                     throw new Exception(String.format(loggingPrefix + "Security category must contain an id: %s",
                             item));
                 }
-                items.add(item.getId().getValue());
+                items.add(item.getId());
             }
             Request request = addAuthInfo(Request.create()
                     .withRootParameter("items", items));
