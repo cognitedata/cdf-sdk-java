@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package com.cognite.beam.proto;
 
-import "google/protobuf/wrappers.proto";
-
 option java_package = "com.cognite.client.dto";
 option java_multiple_files = true;
 
@@ -17,15 +15,15 @@ message Relationship {
     }
 
     string external_id = 1;
-    string source_external_id = 2;
+    optional string source_external_id = 2;
     ResourceType source_type = 3;
-    string target_external_id = 4;
+    optional string target_external_id = 4;
     ResourceType target_type = 5;
-    google.protobuf.Int64Value start_time = 6;
-    google.protobuf.Int64Value end_time = 7;
-    google.protobuf.FloatValue confidence = 8;
-    google.protobuf.Int64Value data_set_id = 9;
+    optional int64 start_time = 6;
+    optional int64 end_time = 7;
+    optional float confidence = 8;
+    optional int64 data_set_id = 9;
     repeated string labels = 10;
-    google.protobuf.Int64Value created_time = 11;
-    google.protobuf.Int64Value last_updated_time = 12;
+    optional int64 created_time = 11;
+    optional int64 last_updated_time = 12;
 }

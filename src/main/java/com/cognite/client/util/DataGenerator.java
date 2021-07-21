@@ -175,15 +175,15 @@ public class DataGenerator {
         for (int i = 0; i < noObjects; i++) {
             objects.add(Relationship.newBuilder()
                     .setExternalId(RandomStringUtils.randomAlphanumeric(10))
-                    .setStartTime(Int64Value.of(1552566113 + ThreadLocalRandom.current().nextInt(10000)))
-                    .setEndTime(Int64Value.of(1553566113 + ThreadLocalRandom.current().nextInt(10000)))
+                    .setStartTime(1552566113 + ThreadLocalRandom.current().nextInt(10000))
+                    .setEndTime(1553566113 + ThreadLocalRandom.current().nextInt(10000))
                     .setSourceExternalId("extId_A")
                     .setSourceType(ThreadLocalRandom.current().nextInt(0,2) == 0 ?
                             Relationship.ResourceType.ASSET : Relationship.ResourceType.EVENT)
                     .setTargetExternalId("extId_B")
                     .setTargetType(ThreadLocalRandom.current().nextInt(0,2) == 0 ?
                             Relationship.ResourceType.ASSET : Relationship.ResourceType.EVENT)
-                    .setConfidence(FloatValue.of(ThreadLocalRandom.current().nextFloat()))
+                    .setConfidence(ThreadLocalRandom.current().nextFloat())
                     .build());
         }
         return objects;
