@@ -244,10 +244,10 @@ public abstract class PnID extends ApiBase {
 
             if (annotations.hasFileExternalId()) {
                 interactiveFilesRequest = interactiveFilesRequest
-                        .withRootParameter("fileExternalId", annotations.getFileExternalId().getValue());
+                        .withRootParameter("fileExternalId", annotations.getFileExternalId());
             } else {
                 interactiveFilesRequest = interactiveFilesRequest
-                        .withRootParameter("fileId", annotations.getFileId().getValue());
+                        .withRootParameter("fileId", annotations.getFileId());
             }
 
             CompletableFuture<PnIDResponse> future = convertReader.getItemsAsync(addAuthInfo(interactiveFilesRequest))
@@ -269,22 +269,22 @@ public abstract class PnID extends ApiBase {
                             CompletableFuture<FileBinary> pngResponse = null;
                             if (convertResponse.hasSvgUrl()) {
                                 svgResponse = ConnectorServiceV1.DownloadFileBinary
-                                        .downloadFileBinaryFromURL(convertResponse.getSvgUrl().getValue());
+                                        .downloadFileBinaryFromURL(convertResponse.getSvgUrl());
                             }
                             if (convertResponse.hasPngUrl()) {
                                 pngResponse = ConnectorServiceV1.DownloadFileBinary
-                                        .downloadFileBinaryFromURL(convertResponse.getPngUrl().getValue());
+                                        .downloadFileBinaryFromURL(convertResponse.getPngUrl());
                             }
 
                             // add the binaries to a response object
                             PnIDResponse.Builder responseBuilder = PnIDResponse.newBuilder();
                             if (null != svgResponse) {
                                 LOG.debug(loggingPrefix + "Found SVG. Adding to response object");
-                                responseBuilder.setSvgBinary(BytesValue.of(svgResponse.join().getBinary()));
+                                responseBuilder.setSvgBinary(svgResponse.join().getBinary());
                             }
                             if (null != pngResponse) {
                                 LOG.debug(loggingPrefix + "Found PNG. Adding to response object");
-                                responseBuilder.setPngBinary(BytesValue.of(pngResponse.join().getBinary()));
+                                responseBuilder.setPngBinary(pngResponse.join().getBinary());
                             }
 
                             return responseBuilder.build();

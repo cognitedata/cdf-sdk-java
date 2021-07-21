@@ -5,9 +5,7 @@ import com.cognite.client.dto.*;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ListValue;
-import com.google.protobuf.StringValue;
 import com.google.protobuf.Struct;
-import com.google.protobuf.util.Structs;
 import com.google.protobuf.util.Values;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Tag;
@@ -155,12 +153,12 @@ class PnIDTest {
                 if (response.hasSvgBinary()) {
                     java.nio.file.Files.write(
                             baseFilePath.resolve("test-svg-" + RandomStringUtils.randomAlphanumeric(2) + ".svg"),
-                            response.getSvgBinary().getValue().toByteArray());
+                            response.getSvgBinary().toByteArray());
                 }
                 if (response.hasPngBinary()) {
                     java.nio.file.Files.write(
                             baseFilePath.resolve("test-png-" + RandomStringUtils.randomAlphanumeric(2) + ".png"),
-                            response.getPngBinary().getValue().toByteArray());
+                            response.getPngBinary().toByteArray());
                 }
             }
 

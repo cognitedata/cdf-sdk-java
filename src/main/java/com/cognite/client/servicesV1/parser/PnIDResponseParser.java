@@ -44,10 +44,10 @@ public class PnIDResponseParser {
 
 
         if (root.path("fileId").isIntegralNumber()) {
-            pnIDBuilder.setFileId(Int64Value.of(root.get("fileId").longValue()));
+            pnIDBuilder.setFileId(root.get("fileId").longValue());
         }
         if (root.path("fileExternalId").isTextual()) {
-            pnIDBuilder.setFileExternalId(StringValue.of(root.get("fileExternalId").textValue()));
+            pnIDBuilder.setFileExternalId(root.get("fileExternalId").textValue());
         }
 
         if (root.path("items").isArray()) {
@@ -83,7 +83,7 @@ public class PnIDResponseParser {
                 }
 
                 if (node.path("text").isTextual()) {
-                    annotationBuilder.setText(StringValue.of(node.get("text").textValue()));
+                    annotationBuilder.setText(node.get("text").textValue());
                 }
                 if (node.path("entities").isArray()) {
                     for (JsonNode entity : node.path("entities")) {
@@ -95,10 +95,10 @@ public class PnIDResponseParser {
                     }
                 }
                 if (node.path("confidence").isFloatingPointNumber()) {
-                    annotationBuilder.setConfidence(DoubleValue.of(node.get("confidence").doubleValue()));
+                    annotationBuilder.setConfidence(node.get("confidence").doubleValue());
                 }
                 if (node.path("type").isTextual()) {
-                    annotationBuilder.setType(StringValue.of(node.get("type").textValue()));
+                    annotationBuilder.setType(node.get("type").textValue());
                 }
 
                 pnIDBuilder.addItems(annotationBuilder);
@@ -122,20 +122,20 @@ public class PnIDResponseParser {
         ConvertResponse.Builder convertBuilder = ConvertResponse.newBuilder();
 
         if (root.path("svgUrl").isTextual()) {
-            convertBuilder.setSvgUrl(StringValue.of(root.get("svgUrl").textValue()));
+            convertBuilder.setSvgUrl(root.get("svgUrl").textValue());
         } else {
             throw new Exception(PnIDResponseParser.buildErrorMessage("svgURL", json));
         }
 
         if (root.path("pngUrl").isTextual()) {
-            convertBuilder.setPngUrl(StringValue.of(root.get("pngUrl").textValue()));
+            convertBuilder.setPngUrl(root.get("pngUrl").textValue());
         }
 
         if (root.path("fileId").isIntegralNumber()) {
-            convertBuilder.setFileId(Int64Value.of(root.get("fileId").longValue()));
+            convertBuilder.setFileId(root.get("fileId").longValue());
         }
         if (root.path("fileExternalId").isTextual()) {
-            convertBuilder.setFileExternalId(StringValue.of(root.get("fileExternalId").textValue()));
+            convertBuilder.setFileExternalId(root.get("fileExternalId").textValue());
         }
 
         return convertBuilder.build();
