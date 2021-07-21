@@ -84,16 +84,16 @@ public class DataGenerator {
             for (int j = 0; j < noColumns; j++) {
                 columns.add(SequenceColumn.newBuilder()
                         .setExternalId(RandomStringUtils.randomAlphanumeric(20))
-                        .setName(StringValue.of("test_column_" + RandomStringUtils.randomAlphanumeric(5)))
-                        .setDescription(StringValue.of(RandomStringUtils.randomAlphanumeric(50)))
+                        .setName("test_column_" + RandomStringUtils.randomAlphanumeric(5))
+                        .setDescription(RandomStringUtils.randomAlphanumeric(50))
                         .setValueTypeValue(ThreadLocalRandom.current().nextInt(0,2))
                         .build());
             }
 
             objects.add(SequenceMetadata.newBuilder()
-                    .setExternalId(StringValue.of(RandomStringUtils.randomAlphanumeric(10)))
-                    .setName(StringValue.of("test_sequence_" + RandomStringUtils.randomAlphanumeric(5)))
-                    .setDescription(StringValue.of(RandomStringUtils.randomAlphanumeric(50)))
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(10))
+                    .setName("test_sequence_" + RandomStringUtils.randomAlphanumeric(5))
+                    .setDescription(RandomStringUtils.randomAlphanumeric(50))
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)
                     .addAllColumns(columns)

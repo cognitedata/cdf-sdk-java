@@ -60,7 +60,7 @@ public class SequenceParser {
 
         // A Sequence metadata object must contain an id and columns.
         if (root.path("id").isIntegralNumber()) {
-            builder.setId(Int64Value.of(root.get("id").longValue()));
+            builder.setId(root.get("id").longValue());
         } else {
             throw new Exception(logPrefix + "Unable to parse attribute: id. Item excerpt: " + itemExcerpt);
         }
@@ -80,25 +80,25 @@ public class SequenceParser {
 
         // The rest of the attributes are optional.
         if (root.path("externalId").isTextual()) {
-            builder.setExternalId(StringValue.of(root.get("externalId").textValue()));
+            builder.setExternalId(root.get("externalId").textValue());
         }
         if (root.path("name").isTextual()) {
-            builder.setName(StringValue.of(root.get("name").textValue()));
+            builder.setName(root.get("name").textValue());
         }
         if (root.path("description").isTextual()) {
-            builder.setDescription(StringValue.of(root.get("description").textValue()));
+            builder.setDescription(root.get("description").textValue());
         }
         if (root.path("assetId").isIntegralNumber()) {
-            builder.setAssetId(Int64Value.of(root.get("assetId").longValue()));
+            builder.setAssetId(root.get("assetId").longValue());
         }
         if (root.path("createdTime").isIntegralNumber()) {
-            builder.setCreatedTime(Int64Value.of(root.get("createdTime").longValue()));
+            builder.setCreatedTime(root.get("createdTime").longValue());
         }
         if (root.path("lastUpdatedTime").isIntegralNumber()) {
-            builder.setLastUpdatedTime(Int64Value.of(root.get("lastUpdatedTime").longValue()));
+            builder.setLastUpdatedTime(root.get("lastUpdatedTime").longValue());
         }
         if (root.path("dataSetId").isIntegralNumber()) {
-            builder.setDataSetId(Int64Value.of(root.get("dataSetId").longValue()));
+            builder.setDataSetId(root.get("dataSetId").longValue());
         }
 
         if (root.path("metadata").isObject()) {
@@ -128,7 +128,7 @@ public class SequenceParser {
 
         // A Sequence metadata object must contain an id and columns.
         if (root.path("id").isIntegralNumber()) {
-            builder.setId(Int64Value.of(root.get("id").longValue()));
+            builder.setId(root.get("id").longValue());
         } else {
             throw new Exception(logPrefix + "Unable to parse attribute: id. Item excerpt: " + itemExcerpt);
         }
@@ -161,7 +161,7 @@ public class SequenceParser {
 
         // The rest of the attributes are optional.
         if (root.path("externalId").isTextual()) {
-            builder.setExternalId(StringValue.of(root.get("externalId").textValue()));
+            builder.setExternalId(root.get("externalId").textValue());
         }
 
         return builder.build();
@@ -188,10 +188,10 @@ public class SequenceParser {
 
         // The rest of the attributes are optional.
         if (root.path("name").isTextual()) {
-            builder.setName(StringValue.of(root.get("name").textValue()));
+            builder.setName(root.get("name").textValue());
         }
         if (root.path("description").isTextual()) {
-            builder.setDescription(StringValue.of(root.get("description").textValue()));
+            builder.setDescription(root.get("description").textValue());
         }
         if (root.path("valueType").isTextual()) {
             Optional<SequenceColumn.ValueType> valueType = SequenceParser.parseValueType(root.get("valueType").textValue());
@@ -202,10 +202,10 @@ public class SequenceParser {
             }
         }
         if (root.path("createdTime").isIntegralNumber()) {
-            builder.setCreatedTime(Int64Value.of(root.get("createdTime").longValue()));
+            builder.setCreatedTime(root.get("createdTime").longValue());
         }
         if (root.path("lastUpdatedTime").isIntegralNumber()) {
-            builder.setLastUpdatedTime(Int64Value.of(root.get("lastUpdatedTime").longValue()));
+            builder.setLastUpdatedTime(root.get("lastUpdatedTime").longValue());
         }
 
         if (root.path("metadata").isObject()) {
@@ -271,16 +271,16 @@ public class SequenceParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
 
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         }
         if (element.hasName()) {
-            mapBuilder.put("name", element.getName().getValue());
+            mapBuilder.put("name", element.getName());
         }
         if (element.hasDescription()) {
-            mapBuilder.put("description", element.getDescription().getValue());
+            mapBuilder.put("description", element.getDescription());
         }
         if (element.hasAssetId()) {
-            mapBuilder.put("assetId", element.getAssetId().getValue());
+            mapBuilder.put("assetId", element.getAssetId());
         }
         if (element.getMetadataCount() > 0) {
             mapBuilder.put("metadata", element.getMetadataMap());
@@ -293,7 +293,7 @@ public class SequenceParser {
             mapBuilder.put("columns", columnList);
         }
         if (element.hasDataSetId()) {
-            mapBuilder.put("dataSetId", element.getDataSetId().getValue());
+            mapBuilder.put("dataSetId", element.getDataSetId());
         }
 
         return mapBuilder.build();
@@ -319,9 +319,9 @@ public class SequenceParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
 
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            mapBuilder.put("id", element.getId().getValue());
+            mapBuilder.put("id", element.getId());
         }
 
         if (element.getColumnsCount() > 0) {
@@ -340,7 +340,7 @@ public class SequenceParser {
                 if (row.getValuesList().isEmpty()) {
                     // Empty row values is not allowed
                     throw new Exception(logPrefix + String.format("Row has no values. ExternalId: %s, row number: %d",
-                            element.getExternalId().getValue(),
+                            element.getExternalId(),
                             row.getRowNumber()));
                 }
                 for (Value value : row.getValuesList()) {
@@ -381,10 +381,10 @@ public class SequenceParser {
         mapBuilder.put("valueType", SequenceParser.toString(element.getValueType()));
 
         if (element.hasName()) {
-            mapBuilder.put("name", element.getName().getValue());
+            mapBuilder.put("name", element.getName());
         }
         if (element.hasDescription()) {
-            mapBuilder.put("description", element.getDescription().getValue());
+            mapBuilder.put("description", element.getDescription());
         }
         if (element.getMetadataCount() > 0) {
             mapBuilder.put("metadata", element.getMetadataMap());
@@ -409,25 +409,25 @@ public class SequenceParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            mapBuilder.put("id", element.getId().getValue());
+            mapBuilder.put("id", element.getId());
         }
 
         if (element.hasName()) {
-            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName().getValue()));
+            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
         }
         if (element.hasDescription()) {
-            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription().getValue()));
+            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
         }
         if (element.hasAssetId()) {
-            updateNodeBuilder.put("assetId", ImmutableMap.of("set", element.getAssetId().getValue()));
+            updateNodeBuilder.put("assetId", ImmutableMap.of("set", element.getAssetId()));
         }
         if (element.getMetadataCount() > 0) {
             updateNodeBuilder.put("metadata", ImmutableMap.of("add", element.getMetadataMap()));
         }
         if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
         mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();
@@ -448,25 +448,25 @@ public class SequenceParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            mapBuilder.put("id", element.getId().getValue());
+            mapBuilder.put("id", element.getId());
         }
 
         if (element.hasName()) {
-            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName().getValue()));
+            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
         } else {
             updateNodeBuilder.put("name", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasDescription()) {
-            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription().getValue()));
+            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
         } else {
             updateNodeBuilder.put("description", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasAssetId()) {
-            updateNodeBuilder.put("assetId", ImmutableMap.of("set", element.getAssetId().getValue()));
+            updateNodeBuilder.put("assetId", ImmutableMap.of("set", element.getAssetId()));
         } else {
             updateNodeBuilder.put("assetId", ImmutableMap.of("setNull", true));
         }
@@ -478,7 +478,7 @@ public class SequenceParser {
         }
 
         if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         } else {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("setNull", true));
         }
@@ -504,9 +504,9 @@ public class SequenceParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
 
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            mapBuilder.put("id", element.getId().getValue());
+            mapBuilder.put("id", element.getId());
         }
 
         if (element.getRowsCount() > 0) {

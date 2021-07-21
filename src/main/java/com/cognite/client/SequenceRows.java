@@ -48,9 +48,9 @@ import static com.cognite.client.servicesV1.ConnectorConstants.*;
 @AutoValue
 public abstract class SequenceRows extends ApiBase {
     private static final SequenceMetadata DEFAULT_SEQ_METADATA = SequenceMetadata.newBuilder()
-            .setExternalId(StringValue.of("SDK_default"))
-            .setName(StringValue.of("SDK_default"))
-            .setDescription(StringValue.of("Default Sequence metadata created by the Java SDK."))
+            .setExternalId("SDK_default")
+            .setName("SDK_default")
+            .setDescription("Default Sequence metadata created by the Java SDK.")
             .build();
 
     private static Builder builder() {
@@ -258,7 +258,7 @@ public abstract class SequenceRows extends ApiBase {
                 }
                 // add the corresponding sequence body to a list for later processing
                 sequenceBodies.stream()
-                        .filter(sequence -> sequence.getExternalId().getValue().equals(item.getExternalId()))
+                        .filter(sequence -> sequence.getExternalId().equals(item.getExternalId()))
                         .forEach(missingSequences::add);
             }
             LOG.debug(batchLogPrefix + "All missing items are based on externalId");
@@ -803,9 +803,9 @@ public abstract class SequenceRows extends ApiBase {
         Map<String, SequenceBody> resultMap = new HashMap<>((int) (items.size() * 1.35));
         for (SequenceBody item : items) {
             if (item.hasExternalId()) {
-                resultMap.put(item.getExternalId().getValue(), item);
+                resultMap.put(item.getExternalId(), item);
             } else if (item.hasId()) {
-                resultMap.put(String.valueOf(item.getId().getValue()), item);
+                resultMap.put(String.valueOf(item.getId()), item);
             } else {
                 resultMap.put("", item);
             }
@@ -869,9 +869,9 @@ public abstract class SequenceRows extends ApiBase {
      */
     private Optional<String> getSequenceId(SequenceBody item) {
         if (item.hasExternalId()) {
-            return Optional.of(item.getExternalId().getValue());
+            return Optional.of(item.getExternalId());
         } else if (item.hasId()) {
-            return Optional.of(String.valueOf(item.getId().getValue()));
+            return Optional.of(String.valueOf(item.getId()));
         } else {
             return Optional.<String>empty();
         }

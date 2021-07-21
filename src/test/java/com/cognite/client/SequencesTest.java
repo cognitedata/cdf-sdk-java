@@ -7,7 +7,6 @@ import com.cognite.client.dto.Item;
 import com.cognite.client.dto.SequenceBody;
 import com.cognite.client.dto.SequenceMetadata;
 import com.cognite.client.util.DataGenerator;
-import com.google.protobuf.StringValue;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -64,7 +63,7 @@ class SequencesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listSequencesResults.stream()
                     .map(sequences -> Item.newBuilder()
-                            .setExternalId(sequences.getExternalId().getValue())
+                            .setExternalId(sequences.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -133,7 +132,7 @@ class SequencesTest {
             LOG.info(loggingPrefix + "Start reading sequences rows.");
             List<SequenceBody> listSequencesRowsResults = new ArrayList<>();
             List<Item> sequenceBodyRequestItems = listSequencesResults.stream()
-                    .map(sequenceMetadata -> Item.newBuilder().setId(sequenceMetadata.getId().getValue()).build())
+                    .map(sequenceMetadata -> Item.newBuilder().setId(sequenceMetadata.getId()).build())
                     .collect(Collectors.toList());
             client.sequences().rows()
                     .retrieveComplete(sequenceBodyRequestItems)
@@ -155,7 +154,7 @@ class SequencesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listSequencesResults.stream()
                     .map(sequences -> Item.newBuilder()
-                            .setExternalId(sequences.getExternalId().getValue())
+                            .setExternalId(sequences.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -200,7 +199,7 @@ class SequencesTest {
             LOG.info(loggingPrefix + "Start updating sequences.");
             List<SequenceMetadata> editedSequencesInput = upsertedTimeseries.stream()
                     .map(sequences -> sequences.toBuilder()
-                            .setDescription(StringValue.of("new-value"))
+                            .setDescription("new-value")
                             .clearMetadata()
                             .putMetadata("new-key", "new-value")
                             .build())
@@ -234,7 +233,7 @@ class SequencesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listSequencesResults.stream()
                     .map(sequences -> Item.newBuilder()
-                            .setExternalId(sequences.getExternalId().getValue())
+                            .setExternalId(sequences.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -244,7 +243,7 @@ class SequencesTest {
 
             BooleanSupplier updateCondition = () -> {
                 for (SequenceMetadata sequences : sequencesUpdateResults)  {
-                    if (sequences.getDescription().getValue().equals("new-value")
+                    if (sequences.getDescription().equals("new-value")
                             && sequences.containsMetadata("new-key")
                             && sequences.containsMetadata(DataGenerator.sourceKey)) {
                         // all good
@@ -257,7 +256,7 @@ class SequencesTest {
 
             BooleanSupplier replaceCondition = () -> {
                 for (SequenceMetadata sequences : sequencesReplaceResults)  {
-                    if (sequences.getDescription().getValue().equals("new-value")
+                    if (sequences.getDescription().equals("new-value")
                             && sequences.containsMetadata("new-key")
                             && !sequences.containsMetadata(DataGenerator.sourceKey)) {
                         // all good
@@ -314,7 +313,7 @@ class SequencesTest {
             List<Item> sequencesItems = new ArrayList<>();
             listSequencesResults.stream()
                     .map(aequences -> Item.newBuilder()
-                            .setExternalId(aequences.getExternalId().getValue())
+                            .setExternalId(aequences.getExternalId())
                             .build())
                     .forEach(item -> sequencesItems.add(item));
 
@@ -326,7 +325,7 @@ class SequencesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             retrievedSequences.stream()
                     .map(sequences -> Item.newBuilder()
-                            .setExternalId(sequences.getExternalId().getValue())
+                            .setExternalId(sequences.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -387,7 +386,7 @@ class SequencesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listSequencesResults.stream()
                     .map(sequences -> Item.newBuilder()
-                            .setExternalId(sequences.getExternalId().getValue())
+                            .setExternalId(sequences.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
