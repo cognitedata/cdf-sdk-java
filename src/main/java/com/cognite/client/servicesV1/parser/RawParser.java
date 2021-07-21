@@ -66,7 +66,7 @@ public class RawParser {
                     + logItemExerpt);
         }
         if (root.path("lastUpdatedTime").isIntegralNumber()) {
-            rowBuilder.setLastUpdatedTime(Int64Value.of(root.get("lastUpdatedTime").longValue()));
+            rowBuilder.setLastUpdatedTime(root.get("lastUpdatedTime").longValue());
         } else {
             throw new Exception(logPrefix
                     + "Unable to parse attribute: lastUpdatedTime. Item exerpt: "
