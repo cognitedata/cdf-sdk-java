@@ -116,6 +116,9 @@ controls how that object is updated. In mode `UPDATE` (the default mode) the SDK
 attributes--other previous attributes will remain unchanged. In mode `REPLACE`, all previous object attribute values will be 
 removed and the provided attributes will be set.
 
+`Upsert` uses the data objects' `externalId` to choose between a create and update operation. Therefore, we strongly 
+recommend that you make it a practice to always populate the `externalId` attribute of all your data objects.
+
 The SDK will automatically batch and parallelize the upsert operation for maximum performance.
 
 ```java
@@ -172,9 +175,79 @@ client.events()
         .upsert(List.of(newEventB));
 ```
 
+#### Delete
+
+The `delete` operation will remove data objects from CDF based on their `externalId` or `id`. You specify which CDF 
+objects to remove via the generic `Item` object (which encapsulates `externalId`/`id`).
+
+```java
+// Build the client using OpenID Connect client credentials (or API key)
+CogniteClient client = CogniteClient.ofClientCredentials(
+        <clientId>,
+        <clientSecret>,
+        TokenUrl.generateAzureAdURL(<azureAdTenantId>))
+        .withProject("myCdfProject")
+        .withBaseUrl("https://yourBaseURL.cognitedata.com"); //optional parameter
+
+// Delete assets by externalId
+Item assetA = Item.newBuilder()
+        .setExternalId("assetAExternalId")
+        .build();
+
+Item assetB = Item.newBuilder()
+        .setExternalId("assetBExternalId")
+        .build();
+
+client.assets()
+        .delete(List.of(assetA, assetB));
+```
+
 ### The request object
 
-adfgadfg
+The `Request` object is a core object used throughout the SDK to encapsulate a (CDF) request payload. You use 
+`Request` to specify the request payload for operations that accepts complex input, such as `list` and `aggregate`. 
+These operations allow complex filter expressions (please refer to 
+[the API documentation](https://docs.cognite.com/api/v1/) for reference). 
+
+You have several options for how to configure a `Request`:
+- Use the convenience methods `withRootParameter(String, Object)`, `withFilterParameter(String, Object)`, 
+  `withFilterMetadataParameter(String, String)`, etc. This is the most common pattern as it allows you to easily 
+  specify individual request parameters without having to know the internal structure of the request body.
+- Use `withRequestParameters(Map<String, Object>)` to specify the entire request body using Java objects. In this case you use Java objects 
+to represent a Json request body. The mapping is fairly straight forward with `Map<String, Object>` -> `Json object`, 
+  `List<T>` -> `Json array`, and `Java litterals` -> `Json litterals`.
+- Use `withRequestJson(String)` to specify the entire request body using a valid Json string.
+
+```java
+// Build a request for listing events using the convenience methods
+Request myRequest = Request.create()
+        .withFilterParameter("type", "notification")
+        .withMetadataFilterParameter("myMetadataField", "myMetadataValue");
+
+// Some more advanced examples. First, a complex query for assets
+Request myRequest = Request.create()
+    .withRootParameter("aggregatedProperties", List.of("path", "depth"))        // Json array is represented by List
+    .withFilterParameter("source", "mySourceSystem")
+    .withFilterParameter("labels", Map.of("containsAny", List.of(               // Json object with an array of objects
+            Map.of("externalId", "labelA"),                                     // becomes a Java Map with a List
+            Map.of("externalId", "labelB")                                      // of Maps
+        )))
+    .withMetadataFilterParameter("myMetadataField", "myMetadataValue");
+
+
+// A request for time series data points, specifying aggregates and filters
+Request myRequest = Request.create()
+        .withItems(List.of(                                                     // The "items" payload node 
+                Map.of("externalId", "timeSeriesA"),                            // Json array of objects becomes a
+                Map.of("externalId", "timeSeriesB")                             // Java List of Maps.
+        ))
+        .withRootParameter("start", "2w-ago")
+        .withRootParameter("end", Instant.now().toEpochMilli())
+        .withRootParameter("aggregatedProperties", List.of("path", "depth"))        // Json array is represented by List
+        .withRootParameter("granularity", "h")
+        ;
+
+```
 
 ### Data transfer objects (resource types)
 
