@@ -15,6 +15,9 @@ Some of the SDK's capabilities:
 - _Retries with backoff_. Transient failures will automatically be retried.
 - _Performance optimization_. The SDK will handle batching and parallelization of requests.
 
+Requirements:
+- Java 11
+
 Please refer to [the documentation](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.md) for more
 information ([https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.md](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.md)).
     

@@ -34,6 +34,10 @@ refer to the [documentation](https://github.com/cognitedata/cdf-sdk-java/blob/ma
   for more information.
 - Improved handling of updates for `Relationships`.
 
+### Fixed
+
+- Logback config conflict (issue #37).
+
 ## [0.9.8]
 
 ### Fixed
