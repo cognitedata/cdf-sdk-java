@@ -40,7 +40,7 @@ public class SecurityCategoryParser {
 
         // A security category must contain an id and name.
         if (root.path("id").isIntegralNumber()) {
-            securityCategoryBuilder.setId(Int64Value.of(root.get("id").longValue()));
+            securityCategoryBuilder.setId(root.get("id").longValue());
         } else {
             throw new Exception(logPrefix + "Unable to parse attribute: id. Item excerpt: "
                     + json

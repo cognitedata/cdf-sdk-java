@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package com.cognite.beam.proto;
+
+option java_package = "com.cognite.client.dto";
+option java_multiple_files = true;
+
+/*
+The time series header.
+ */
+message TimeseriesMetadata {
+    optional int64 id = 1;
+    optional string external_id = 2;
+    optional string name = 3;
+    optional string description = 4;
+    bool is_string = 5;
+    bool is_step = 6;
+    optional string unit = 7;
+    optional int64 asset_id = 8;
+    repeated int64 security_categories = 9;
+    optional int64 created_time = 10;
+    optional int64 last_updated_time = 11;
+    map<string, string> metadata = 12;
+    optional int64 data_set_id = 13;
+}
+
+/*
+The time series data point. This is the read-version of the data point which includes aggregate information.
+ */
+message TimeseriesPoint {
+    int64 id = 1;
+    optional string external_id = 2;
+    optional bool is_step = 3;
+
+    int64 timestamp = 4;
+    oneof datapointType {
+        double value_num = 5;
+        string value_string = 6;
+        Aggregates value_aggregates = 7;
+    }
+
+    message Aggregates {
+        optional double average = 1;
+        optional double max = 2;
+        optional double min = 3;
+        optional int64 count = 4;
+        optional double sum = 5;
+        optional double interpolation = 6;
+        optional double step_interpolation = 7;
+        optional double continuous_variance = 8;
+        optional double discrete_variance = 9;
+        optional double total_variation = 10;
+    }
+}
+
+/*
+The time series data point, write-version. This is a write-optimized version of the TS data point that is only used
+when writing data points to CDF.
+ */
+message TimeseriesPointPost {
+    oneof idType {
+        int64 id = 1;
+        string external_id = 2;
+    }
+
+    int64 timestamp = 3;
+    oneof valueType {
+        double value_num = 4;
+        string value_string = 5;
+    }
+
+    bool isStep = 6;
+}

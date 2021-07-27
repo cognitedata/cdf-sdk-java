@@ -2577,14 +2577,14 @@ public abstract class ConnectorServiceV1 implements Serializable {
             Preconditions.checkArgument(fileContainerRequest.getProtoRequestBody() instanceof FileContainer,
                     "The protobuf request body is not of type FileContainer");
             Preconditions.checkArgument(!((FileContainer) fileContainerRequest.getProtoRequestBody())
-                    .getFileMetadata().getName().getValue().isEmpty(),
+                    .getFileMetadata().getName().isEmpty(),
                     "The request body must contain a file name in the file header section.");
             FileContainer fileContainer = (FileContainer) fileContainerRequest.getProtoRequestBody();
             boolean hasExtraAssetIds = false;
 
             LOG.info(loggingPrefix + "Received file container to write. Name: {}, Binary type: {}, Binary Size: {}MB, "
                     + "Binary URI: {}, Content lenght: {}, Number of asset links: {}, Number of metadata fields: {}",
-                    fileContainer.getFileMetadata().getName().getValue(),
+                    fileContainer.getFileMetadata().getName(),
                     fileContainer.getFileBinary().getBinaryTypeCase().toString(),
                     String.format("%.3f", fileContainer.getFileBinary().getBinary().size() / (1024d * 1024d)),
                     fileContainer.getFileBinary().getBinaryUri(),
@@ -2638,12 +2638,12 @@ public abstract class ConnectorServiceV1 implements Serializable {
             Map<String, Object> fileUploadResponseItem = objectMapper
                     .readValue(jsonResponsePayload, new TypeReference<Map<String, Object>>(){});
             LOG.info(loggingPrefix + "Posted file metadata for [{}]. Received file upload URL response.",
-                    fileContainer.getFileMetadata().getName().getValue());
+                    fileContainer.getFileMetadata().getName());
 
             Preconditions.checkState(fileUploadResponseItem.containsKey(uploadUrlKey),
                     "Unable to retrieve upload URL from the CogniteAPI: " + fileUploadResponseItem.toString());
             LOG.debug(loggingPrefix + "[{}] upload URL: {}",
-                    fileContainer.getFileMetadata().getName().getValue(),
+                    fileContainer.getFileMetadata().getName(),
                     fileUploadResponseItem.getOrDefault(uploadUrlKey, "No upload URL"));
 
             // Start upload of the file binaries on a separate thread
@@ -2653,8 +2653,8 @@ public abstract class ConnectorServiceV1 implements Serializable {
             if (fileContainer.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY
                     && fileContainer.getFileBinary().getBinary().isEmpty()) {
                 LOG.warn(loggingPrefix + "Binary is empty for file {}. File externalId = [{}]. Will skip upload.",
-                        fileContainer.getFileMetadata().getName().getValue(),
-                        fileContainer.getFileMetadata().getExternalId().getValue());
+                        fileContainer.getFileMetadata().getName(),
+                        fileContainer.getFileMetadata().getExternalId());
 
                 future = CompletableFuture.completedFuture(
                         ResponseItems.of(JsonResponseParser.create(), fileUploadResponse));
@@ -2665,7 +2665,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                         .thenApply(responseBinary -> {
                             long requestDuration = System.currentTimeMillis() - responseBinary.getResponse().sentRequestAtMillis();
                             LOG.info(loggingPrefix + "Upload complete for file [{}], size {}MB in {}s at {}mb/s",
-                                    fileContainer.getFileMetadata().getName().getValue(),
+                                    fileContainer.getFileMetadata().getName(),
                                     String.format("%.2f", fileContainer.getFileBinary().getBinary().size() / (1024d * 1024d)),
                                     String.format("%.2f", requestDuration / 1000d),
                                     String.format("%.2f",

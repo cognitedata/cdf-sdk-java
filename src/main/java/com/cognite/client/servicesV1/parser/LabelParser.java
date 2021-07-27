@@ -20,8 +20,6 @@ import com.cognite.client.dto.Label;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.Int64Value;
-import com.google.protobuf.StringValue;
 
 import java.util.Map;
 
@@ -63,11 +61,11 @@ public class LabelParser {
 
         // The rest of the attributes are optional.
         if (root.path("description").isTextual()) {
-            labelBuilder.setDescription(StringValue.of(root.get("description").textValue()));
+            labelBuilder.setDescription(root.get("description").textValue());
         }
 
         if (root.path("createdTime").isIntegralNumber()) {
-            labelBuilder.setCreatedTime(Int64Value.of(root.get("createdTime").longValue()));
+            labelBuilder.setCreatedTime(root.get("createdTime").longValue());
         }
 
         return labelBuilder.build();
@@ -88,7 +86,7 @@ public class LabelParser {
                 .put("name", element.getName());
 
         if (element.hasDescription()) {
-            mapBuilder.put("description", element.getDescription().getValue());
+            mapBuilder.put("description", element.getDescription());
         }
 
         return mapBuilder.build();

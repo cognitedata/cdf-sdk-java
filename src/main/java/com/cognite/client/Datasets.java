@@ -18,9 +18,7 @@ package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
-import com.cognite.client.dto.Aggregate;
-import com.cognite.client.dto.DataSet;
-import com.cognite.client.dto.Item;
+import com.cognite.client.dto.*;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.DataSetParser;
 import com.google.auto.value.AutoValue;
@@ -60,6 +58,15 @@ public abstract class Datasets extends ApiBase {
         return Datasets.builder()
                 .setClient(client)
                 .build();
+    }
+
+    /**
+     * Returns all {@link DataSet} objects.
+     *
+     * @see #list(Request)
+     */
+    public Iterator<List<DataSet>> list() throws Exception {
+        return this.list(Request.create());
     }
 
     /**
@@ -214,9 +221,9 @@ public abstract class Datasets extends ApiBase {
      */
     private Optional<String> getDatasetId(DataSet item) {
         if (item.hasExternalId()) {
-            return Optional.of(item.getExternalId().getValue());
+            return Optional.of(item.getExternalId());
         } else if (item.hasId()) {
-            return Optional.of(String.valueOf(item.getId().getValue()));
+            return Optional.of(String.valueOf(item.getId()));
         } else {
             return Optional.<String>empty();
         }

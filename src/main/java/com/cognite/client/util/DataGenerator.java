@@ -25,9 +25,9 @@ public class DataGenerator {
         List<FileMetadata> objects = new ArrayList<>(noObjects);
         for (int i = 0; i < noObjects; i++) {
             objects.add(FileMetadata.newBuilder()
-                    .setExternalId(StringValue.of(RandomStringUtils.randomAlphanumeric(10)))
-                    .setName(StringValue.of("test_file_" + RandomStringUtils.randomAlphanumeric(5) + ".test"))
-                    .setSource(StringValue.of(sourceValue))
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(10))
+                    .setName("test_file_" + RandomStringUtils.randomAlphanumeric(5) + ".test")
+                    .setSource(sourceValue)
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)
                     .build());
@@ -39,12 +39,12 @@ public class DataGenerator {
         List<TimeseriesMetadata> objects = new ArrayList<>(noObjects);
         for (int i = 0; i < noObjects; i++) {
             objects.add(TimeseriesMetadata.newBuilder()
-                    .setExternalId(StringValue.of(RandomStringUtils.randomAlphanumeric(10)))
-                    .setName(StringValue.of("test_ts_" + RandomStringUtils.randomAlphanumeric(5)))
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(10))
+                    .setName("test_ts_" + RandomStringUtils.randomAlphanumeric(5))
                     .setIsString(false)
                     .setIsStep(false)
-                    .setDescription(StringValue.of(RandomStringUtils.randomAlphanumeric(50)))
-                    .setUnit(StringValue.of("TestUnits"))
+                    .setDescription(RandomStringUtils.randomAlphanumeric(50))
+                    .setUnit("TestUnits")
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)
                     .build());
@@ -84,16 +84,16 @@ public class DataGenerator {
             for (int j = 0; j < noColumns; j++) {
                 columns.add(SequenceColumn.newBuilder()
                         .setExternalId(RandomStringUtils.randomAlphanumeric(20))
-                        .setName(StringValue.of("test_column_" + RandomStringUtils.randomAlphanumeric(5)))
-                        .setDescription(StringValue.of(RandomStringUtils.randomAlphanumeric(50)))
+                        .setName("test_column_" + RandomStringUtils.randomAlphanumeric(5))
+                        .setDescription(RandomStringUtils.randomAlphanumeric(50))
                         .setValueTypeValue(ThreadLocalRandom.current().nextInt(0,2))
                         .build());
             }
 
             objects.add(SequenceMetadata.newBuilder()
-                    .setExternalId(StringValue.of(RandomStringUtils.randomAlphanumeric(10)))
-                    .setName(StringValue.of("test_sequence_" + RandomStringUtils.randomAlphanumeric(5)))
-                    .setDescription(StringValue.of(RandomStringUtils.randomAlphanumeric(50)))
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(10))
+                    .setName("test_sequence_" + RandomStringUtils.randomAlphanumeric(5))
+                    .setDescription(RandomStringUtils.randomAlphanumeric(50))
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)
                     .addAllColumns(columns)
@@ -142,14 +142,14 @@ public class DataGenerator {
         List<Event> objects = new ArrayList<>(noObjects);
         for (int i = 0; i < noObjects; i++) {
             objects.add(Event.newBuilder()
-                    .setExternalId(StringValue.of(RandomStringUtils.randomAlphanumeric(10)))
-                    .setStartTime(Int64Value.of(1552566113 + ThreadLocalRandom.current().nextInt(10000)))
-                    .setEndTime(Int64Value.of(1553566113 + ThreadLocalRandom.current().nextInt(10000)))
-                    .setDescription(StringValue.of("generated_event_" + RandomStringUtils.randomAlphanumeric(50)))
-                    .setType(StringValue.of("generated_event"))
-                    .setSubtype(StringValue.of(
-                            ThreadLocalRandom.current().nextInt(0,2) == 0 ? "event_sub_type" : "event_sub_type_2"))
-                    .setSource(StringValue.of(sourceValue))
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(10))
+                    .setStartTime(1552566113 + ThreadLocalRandom.current().nextInt(10000))
+                    .setEndTime(1553566113 + ThreadLocalRandom.current().nextInt(10000))
+                    .setDescription("generated_event_" + RandomStringUtils.randomAlphanumeric(50))
+                    .setType("generated_event")
+                    .setSubtype(
+                            ThreadLocalRandom.current().nextInt(0,2) == 0 ? "event_sub_type" : "event_sub_type_2")
+                    .setSource(sourceValue)
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)
                     .build());
@@ -161,9 +161,9 @@ public class DataGenerator {
         List<Label> objects = new ArrayList<>(noObjects);
         for (int i = 0; i < noObjects; i++) {
             objects.add(Label.newBuilder()
-                    .setExternalId(DataGenerator.sourceValue + StringValue.of(RandomStringUtils.randomAlphanumeric(10)).getValue())
-                    .setName(StringValue.of(RandomStringUtils.randomAlphanumeric(10)).getValue())
-                    .setDescription(StringValue.of("generated_event_" + RandomStringUtils.randomAlphanumeric(50)))
+                    .setExternalId(DataGenerator.sourceValue + RandomStringUtils.randomAlphanumeric(10))
+                    .setName(RandomStringUtils.randomAlphanumeric(10))
+                    .setDescription("generated_event_" + RandomStringUtils.randomAlphanumeric(50))
                     .build());
         }
 
@@ -175,15 +175,15 @@ public class DataGenerator {
         for (int i = 0; i < noObjects; i++) {
             objects.add(Relationship.newBuilder()
                     .setExternalId(RandomStringUtils.randomAlphanumeric(10))
-                    .setStartTime(Int64Value.of(1552566113 + ThreadLocalRandom.current().nextInt(10000)))
-                    .setEndTime(Int64Value.of(1553566113 + ThreadLocalRandom.current().nextInt(10000)))
+                    .setStartTime(1552566113 + ThreadLocalRandom.current().nextInt(10000))
+                    .setEndTime(1553566113 + ThreadLocalRandom.current().nextInt(10000))
                     .setSourceExternalId("extId_A")
                     .setSourceType(ThreadLocalRandom.current().nextInt(0,2) == 0 ?
                             Relationship.ResourceType.ASSET : Relationship.ResourceType.EVENT)
                     .setTargetExternalId("extId_B")
                     .setTargetType(ThreadLocalRandom.current().nextInt(0,2) == 0 ?
                             Relationship.ResourceType.ASSET : Relationship.ResourceType.EVENT)
-                    .setConfidence(FloatValue.of(ThreadLocalRandom.current().nextFloat()))
+                    .setConfidence(ThreadLocalRandom.current().nextFloat())
                     .build());
         }
         return objects;
@@ -229,10 +229,10 @@ public class DataGenerator {
         List<Asset> objects = new ArrayList<>(noObjects);
         for (int i = 0; i < noObjects; i++) {
             objects.add(Asset.newBuilder()
-                    .setExternalId(StringValue.of(RandomStringUtils.randomAlphanumeric(10)))
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(10))
                     .setName("generated_asset_" + RandomStringUtils.randomAlphanumeric(5))
-                    .setDescription(StringValue.of("generated_asset_description_" + RandomStringUtils.randomAlphanumeric(50)))
-                    .setSource(StringValue.of(sourceValue))
+                    .setDescription("generated_asset_description_" + RandomStringUtils.randomAlphanumeric(50))
+                    .setSource(sourceValue)
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)
                     .build());

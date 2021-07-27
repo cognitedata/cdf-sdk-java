@@ -75,6 +75,15 @@ public abstract class Files extends ApiBase {
     }
 
     /**
+     * Returns all {@link FileMetadata} objects.
+     *
+     * @see #list(Request)
+     */
+    public Iterator<List<FileMetadata>> list() throws Exception {
+        return this.list(Request.create());
+    }
+
+    /**
      * Returns all {@link FileMetadata} objects that matches the filters set in the {@link Request}.
      *
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
@@ -172,9 +181,9 @@ public abstract class Files extends ApiBase {
         Map<String, FileMetadata> externalIdAssetsMap = new HashMap<>(50);
         for (FileMetadata value : fileMetadataList) {
             if (value.hasExternalId()) {
-                externalIdUpdateMap.put(value.getExternalId().getValue(), value);
+                externalIdUpdateMap.put(value.getExternalId(), value);
             } else if (value.hasId()) {
-                internalIdUpdateMap.put(value.getId().getValue(), value);
+                internalIdUpdateMap.put(value.getId(), value);
             } else {
                 throw new Exception("File metadata item does not contain id nor externalId: " + value.toString());
             }
@@ -482,9 +491,9 @@ public abstract class Files extends ApiBase {
         Map<String, FileContainer> externalIdMap = new HashMap<>();
         for (FileContainer item : files) {
             if (item.getFileMetadata().hasExternalId()) {
-                externalIdMap.put(item.getFileMetadata().getExternalId().getValue(), item);
+                externalIdMap.put(item.getFileMetadata().getExternalId(), item);
             } else if (item.getFileMetadata().hasId()) {
-                internalIdMap.put(item.getFileMetadata().getId().getValue(), item);
+                internalIdMap.put(item.getFileMetadata().getId(), item);
             } else {
                 String message = loggingPrefix + "File item does not contain id nor externalId: " + item.toString();
                 LOG.error(message);
@@ -596,7 +605,7 @@ public abstract class Files extends ApiBase {
                 if (container.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY_URI
                         && container.hasFileMetadata()) {
                     // Get the temp file name
-                    String fileNameBase = container.getFileMetadata().getName().getValue();
+                    String fileNameBase = container.getFileMetadata().getName();
                     String fileSuffix = "";
                     if (fileNameBase.lastIndexOf(".") != -1) {
                         // The file name has a suffix. Let's break it out.
@@ -1113,9 +1122,9 @@ public abstract class Files extends ApiBase {
         Map<String, FileMetadata> idMap = new HashMap<>();
         for (FileMetadata fileMetadata : fileMetadataList) {
             if (fileMetadata.hasExternalId()) {
-                idMap.put(fileMetadata.getExternalId().getValue(), fileMetadata);
+                idMap.put(fileMetadata.getExternalId(), fileMetadata);
             } else if (fileMetadata.hasId()) {
-                idMap.put(String.valueOf(fileMetadata.getId().getValue()), fileMetadata);
+                idMap.put(String.valueOf(fileMetadata.getId()), fileMetadata);
             } else {
                 idMap.put("", fileMetadata);
             }
@@ -1189,9 +1198,9 @@ public abstract class Files extends ApiBase {
      */
     private Optional<String> getFileId(FileMetadata item) {
         if (item.hasExternalId()) {
-            return Optional.of(item.getExternalId().getValue());
+            return Optional.of(item.getExternalId());
         } else if (item.hasId()) {
-            return Optional.of(String.valueOf(item.getId().getValue()));
+            return Optional.of(String.valueOf(item.getId()));
         } else {
             return Optional.<String>empty();
         }
@@ -1217,7 +1226,7 @@ public abstract class Files extends ApiBase {
     private Optional<FileMetadata> getByExternalId(Collection<FileMetadata> itemsToSearch, String externalId) {
         Optional<FileMetadata> returnObject = Optional.empty();
         for (FileMetadata item : itemsToSearch) {
-            if (item.getExternalId().getValue().equals(externalId)) {
+            if (item.getExternalId().equals(externalId)) {
                 return Optional.of(item);
             }
         }
@@ -1230,7 +1239,7 @@ public abstract class Files extends ApiBase {
     private Optional<FileMetadata> getById(Collection<FileMetadata> itemsToSearch, long id) {
         Optional<FileMetadata> returnObject = Optional.empty();
         for (FileMetadata item : itemsToSearch) {
-            if (item.getId().getValue() == id) {
+            if (item.getId() == id) {
                 return Optional.of(item);
             }
         }

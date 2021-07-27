@@ -4,7 +4,6 @@ import com.cognite.client.config.ClientConfig;
 import com.cognite.client.dto.Item;
 import com.cognite.client.dto.Relationship;
 import com.cognite.client.util.DataGenerator;
-import com.google.protobuf.FloatValue;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -101,7 +100,7 @@ class RelationshipsTest {
             List<Relationship> updatedRelationshipsInput = upsertedRelationships.stream()
                     .map(relationship ->
                         relationship.toBuilder()
-                                .setConfidence(FloatValue.of(1f))
+                                .setConfidence(1f)
                                 .build())
                     .collect(Collectors.toList());
             List<Relationship> updatedRelationshipsResult = client.relationships().upsert(updatedRelationshipsInput);
@@ -130,7 +129,7 @@ class RelationshipsTest {
 
             BooleanSupplier updateCondition = () -> {
                 for (Relationship relationship : updatedRelationshipsResult)  {
-                    if (relationship.getConfidence().getValue() > 0.99f) {
+                    if (relationship.getConfidence() > 0.99f) {
                         // all good
                     } else {
                         return false;

@@ -3,11 +3,13 @@ syntax = "proto3";
 package com.cognite.beam.proto;
 
 import "google/protobuf/struct.proto";
-import "google/protobuf/wrappers.proto";
 
 option java_package = "com.cognite.client.dto";
 option java_multiple_files = true;
 
+/*
+A SequenceColumn describes the data that is contained in the sequence rows.
+ */
 message SequenceColumn {
     enum ValueType {
         DOUBLE = 0;
@@ -16,35 +18,44 @@ message SequenceColumn {
     }
 
     string external_id = 1;
-    google.protobuf.StringValue name = 2;
-    google.protobuf.StringValue description = 3;
+    optional string name = 2;
+    optional string description = 3;
     ValueType value_type = 4;
     map<string, string> metadata = 5;
-    google.protobuf.Int64Value created_time = 6;
-    google.protobuf.Int64Value last_updated_time = 7;
+    optional int64 created_time = 6;
+    optional int64 last_updated_time = 7;
 }
 
+/*
+The SequenceRow host all the data for a single row in a sequence.
+ */
 message SequenceRow {
     int64 row_number = 1;
     repeated google.protobuf.Value values = 2;
 }
 
+/*
+The sequence header. The header contains common metadata for all rows (SequenceBody) in a sequence.
+ */
 message SequenceMetadata {
-    google.protobuf.StringValue external_id = 1;
-    google.protobuf.Int64Value id = 2;
-    google.protobuf.StringValue name = 3;
-    google.protobuf.StringValue description = 4;
-    google.protobuf.Int64Value asset_id = 5;
+    optional string external_id = 1;
+    optional int64 id = 2;
+    optional string name = 3;
+    optional string description = 4;
+    optional int64 asset_id = 5;
     map<string, string> metadata = 6;
     repeated SequenceColumn columns = 7;
-    google.protobuf.Int64Value created_time = 8;
-    google.protobuf.Int64Value last_updated_time = 9;
-    google.protobuf.Int64Value data_set_id = 10;
+    optional int64 created_time = 8;
+    optional int64 last_updated_time = 9;
+    optional int64 data_set_id = 10;
 }
 
+/*
+SequenceBody encapsulates the main data payload (the rows and columns) of a sequence.
+ */
 message SequenceBody {
-    google.protobuf.StringValue external_id = 1;
-    google.protobuf.Int64Value id = 2;
+    optional string external_id = 1;
+    optional int64 id = 2;
     repeated SequenceColumn columns = 3;
     repeated SequenceRow rows = 4;
 }

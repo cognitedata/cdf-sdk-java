@@ -90,22 +90,22 @@ public class RelationshipParser {
 
         // The rest of the attributes are optional.
         if (root.path("startTime").isIntegralNumber()) {
-            relationshipBuilder.setStartTime(Int64Value.of(root.get("startTime").longValue()));
+            relationshipBuilder.setStartTime(root.get("startTime").longValue());
         }
         if (root.path("endTime").isIntegralNumber()) {
-            relationshipBuilder.setEndTime(Int64Value.of(root.get("endTime").longValue()));
+            relationshipBuilder.setEndTime(root.get("endTime").longValue());
         }
         if (root.path("confidence").isFloatingPointNumber()) {
-            relationshipBuilder.setConfidence(FloatValue.of(root.get("confidence").floatValue()));
+            relationshipBuilder.setConfidence(root.get("confidence").floatValue());
         }
         if (root.path("dataSetId").isIntegralNumber()) {
-            relationshipBuilder.setDataSetId(Int64Value.of(root.get("dataSetId").longValue()));
+            relationshipBuilder.setDataSetId(root.get("dataSetId").longValue());
         }
         if (root.path("createdTime").isIntegralNumber()) {
-            relationshipBuilder.setCreatedTime(Int64Value.of(root.get("createdTime").longValue()));
+            relationshipBuilder.setCreatedTime(root.get("createdTime").longValue());
         }
         if (root.path("lastUpdatedTime").isIntegralNumber()) {
-            relationshipBuilder.setLastUpdatedTime(Int64Value.of(root.get("lastUpdatedTime").longValue()));
+            relationshipBuilder.setLastUpdatedTime(root.get("lastUpdatedTime").longValue());
         }
 
         return relationshipBuilder.build();
@@ -132,16 +132,16 @@ public class RelationshipParser {
 
         // Add optional attributes
         if (element.hasStartTime()) {
-            mapBuilder.put("startTime", element.getStartTime().getValue());
+            mapBuilder.put("startTime", element.getStartTime());
         }
         if (element.hasEndTime()) {
-            mapBuilder.put("endTime", element.getEndTime().getValue());
+            mapBuilder.put("endTime", element.getEndTime());
         }
         if (element.hasConfidence()) {
-            mapBuilder.put("confidence", element.getConfidence().getValue());
+            mapBuilder.put("confidence", element.getConfidence());
         }
         if (element.hasDataSetId()) {
-            mapBuilder.put("dataSetId", element.getDataSetId().getValue());
+            mapBuilder.put("dataSetId", element.getDataSetId());
         }
         if (element.getLabelsCount() > 0) {
             List<Map<String, String>> labels = new ArrayList<>();
@@ -181,19 +181,19 @@ public class RelationshipParser {
 
         // Add optional attributes
         if (element.hasStartTime()) {
-            updateNodeBuilder.put("startTime", ImmutableMap.of("set", element.getStartTime().getValue()));
+            updateNodeBuilder.put("startTime", ImmutableMap.of("set", element.getStartTime()));
         }
         if (element.hasEndTime()) {
-            updateNodeBuilder.put("endTime", ImmutableMap.of("set", element.getEndTime().getValue()));
+            updateNodeBuilder.put("endTime", ImmutableMap.of("set", element.getEndTime()));
         }
         if (element.hasConfidence()) {
-            updateNodeBuilder.put("confidence", ImmutableMap.of("set", element.getConfidence().getValue()));
+            updateNodeBuilder.put("confidence", ImmutableMap.of("set", element.getConfidence()));
         }
         if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
         if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
         if (element.getLabelsCount() > 0) {
             List<Map<String, String>> labels = new ArrayList<>();

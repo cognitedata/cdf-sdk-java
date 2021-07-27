@@ -101,7 +101,7 @@ class EntityMatchingTest {
         LOG.debug(loggingPrefix + "Train matching model response body: {}",
                 models.get(0));
 
-        return models.get(0).getId().getValue();
+        return models.get(0).getId();
     }
 
     private ImmutableList<Struct> generateSourceStructs() {

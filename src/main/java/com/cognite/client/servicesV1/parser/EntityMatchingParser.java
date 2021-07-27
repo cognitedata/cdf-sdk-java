@@ -69,7 +69,7 @@ public class EntityMatchingParser {
                     }
 
                     if (node.path("score").isNumber()) {
-                        entityMatchBuilder.setScore(DoubleValue.of(node.path("score").doubleValue()));
+                        entityMatchBuilder.setScore(node.path("score").doubleValue());
                     }
                     responseBuilder.addMatches(entityMatchBuilder.build());
                 } else {
@@ -93,35 +93,35 @@ public class EntityMatchingParser {
         String jsonExcerpt = json.substring(0, Math.min(json.length() - 1, MAX_LOG_ELEMENT_LENGTH));
 
         if (root.path("id").isIntegralNumber()) {
-            responseBuilder.setId(Int64Value.of(root.get("id").longValue()));
+            responseBuilder.setId(root.get("id").longValue());
         } else {
             String message = logPrefix + "Unable to parse attribute: id. Item excerpt: " + jsonExcerpt;
             throw new Exception(message);
         }
 
         if (root.path("status").isTextual()) {
-            responseBuilder.setStatus(StringValue.of(root.get("status").textValue()));
+            responseBuilder.setStatus(root.get("status").textValue());
         } else {
             String message = logPrefix + "Unable to parse attribute: status. Item excerpt: " + jsonExcerpt;
             throw new Exception(message);
         }
 
         if (root.path("createdTime").isIntegralNumber()) {
-            responseBuilder.setCreatedTime(Int64Value.of(root.get("createdTime").longValue()));
+            responseBuilder.setCreatedTime(root.get("createdTime").longValue());
         } else {
             String message = logPrefix + "Unable to parse attribute: createdTime. Item excerpt: " + jsonExcerpt;
             throw new Exception(message);
         }
 
         if (root.path("startTime").isIntegralNumber()) {
-            responseBuilder.setStartTime(Int64Value.of(root.get("startTime").longValue()));
+            responseBuilder.setStartTime(root.get("startTime").longValue());
         } else {
             String message = logPrefix + "Unable to parse attribute: startTime. Item excerpt: " + jsonExcerpt;
             throw new Exception(message);
         }
 
         if (root.path("statusTime").isIntegralNumber()) {
-            responseBuilder.setStatusTime(Int64Value.of(root.get("statusTime").longValue()));
+            responseBuilder.setStatusTime(root.get("statusTime").longValue());
         } else {
             String message = logPrefix + "Unable to parse attribute: statusTime. Item excerpt: " + jsonExcerpt;
             throw new Exception(message);
@@ -129,16 +129,16 @@ public class EntityMatchingParser {
 
         // Optional attributes
         if (root.path("externalId").isTextual()) {
-            responseBuilder.setExternalId(StringValue.of(root.get("externalId").textValue()));
+            responseBuilder.setExternalId(root.get("externalId").textValue());
         }
         if (root.path("name").isTextual()) {
-            responseBuilder.setName(StringValue.of(root.get("name").textValue()));
+            responseBuilder.setName(root.get("name").textValue());
         }
         if (root.path("description").isTextual()) {
-            responseBuilder.setDescription(StringValue.of(root.get("description").textValue()));
+            responseBuilder.setDescription(root.get("description").textValue());
         }
         if (root.path("featureType").isTextual()) {
-            responseBuilder.setFeatureType(StringValue.of(root.get("featureType").textValue()));
+            responseBuilder.setFeatureType(root.get("featureType").textValue());
         }
         if (root.path("matchFields").isArray()) {
             for (JsonNode node : root.path("matchFields")) {
@@ -159,10 +159,10 @@ public class EntityMatchingParser {
             }
         }
         if (root.path("classifier").isTextual()) {
-            responseBuilder.setClassifier(StringValue.of(root.get("classifier").textValue()));
+            responseBuilder.setClassifier(root.get("classifier").textValue());
         }
         if (root.path("ignoreMissingFields").isBoolean()) {
-            responseBuilder.setIgnoreMissingFields(BoolValue.of(root.get("ignoreMissingFields").booleanValue()));
+            responseBuilder.setIgnoreMissingFields(root.get("ignoreMissingFields").booleanValue());
         }
 
         return responseBuilder.build();

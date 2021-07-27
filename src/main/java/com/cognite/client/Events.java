@@ -60,6 +60,15 @@ public abstract class Events extends ApiBase {
     }
 
     /**
+     * Returns all {@link Event} objects.
+     *
+     * @see #list(Request)
+     */
+    public Iterator<List<Event>> list() throws Exception {
+        return this.list(Request.create());
+    }
+
+    /**
      * Returns all {@link Event} objects that matches the filters set in the {@link Request}.
      *
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
@@ -232,9 +241,9 @@ public abstract class Events extends ApiBase {
      */
     private Optional<String> getEventId(Event item) {
         if (item.hasExternalId()) {
-            return Optional.of(item.getExternalId().getValue());
+            return Optional.of(item.getExternalId());
         } else if (item.hasId()) {
-            return Optional.of(String.valueOf(item.getId().getValue()));
+            return Optional.of(String.valueOf(item.getId()));
         } else {
             return Optional.<String>empty();
         }

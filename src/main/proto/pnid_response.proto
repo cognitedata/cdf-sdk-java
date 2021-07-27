@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package com.cognite.beam.proto;
 
-import "google/protobuf/wrappers.proto";
 import "google/protobuf/struct.proto";
 
 option java_package = "com.cognite.client.dto";
@@ -18,10 +17,10 @@ message BoundingBox {
 
 message Annotation {
      BoundingBox boundingBox = 1;
-     google.protobuf.StringValue text = 2;
+     optional string text = 2;
      repeated google.protobuf.Struct entities = 3;
-     google.protobuf.DoubleValue confidence = 4;
-     google.protobuf.StringValue type = 5;
+     optional double confidence = 4;
+     optional string type = 5;
 }
 
 message PnIDResponse {
@@ -29,22 +28,22 @@ message PnIDResponse {
      The id of the source file used for detecting annotations and building
      interactive P&ID
      */
-    google.protobuf.Int64Value file_id = 1;
+    optional int64 file_id = 1;
 
     /*
     The external id of the source file used for detecting annotations and building
     interactive P&ID
     */
-    google.protobuf.StringValue file_external_id = 2;
+    optional string file_external_id = 2;
 
     // The identified entity annotations with bounding boxes
     repeated Annotation items = 3;
 
     // The converted SVG binary
-    google.protobuf.BytesValue svg_binary = 4;
+    optional bytes svg_binary = 4;
 
     // The converted PNG binary
-    google.protobuf.BytesValue png_binary = 5;
+  optional bytes png_binary = 5;
 }
 
 message ConvertResponse {
@@ -52,17 +51,17 @@ message ConvertResponse {
      The id of the source file used for building
      interactive P&ID
      */
-  google.protobuf.Int64Value file_id = 1;
+  optional int64 file_id = 1;
 
   /*
   The external id of the source file used for building
   interactive P&ID
   */
-  google.protobuf.StringValue file_external_id = 2;
+  optional string file_external_id = 2;
 
   // The URL for the converted SVG file
-  google.protobuf.StringValue svg_url = 4;
+  optional string svg_url = 4;
 
   // The URL for the converted PNG file
-  google.protobuf.StringValue png_url = 5;
+  optional string png_url = 5;
 }

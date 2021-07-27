@@ -18,6 +18,7 @@ package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
+import com.cognite.client.dto.Event;
 import com.cognite.client.dto.Item;
 import com.cognite.client.dto.Relationship;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
@@ -59,6 +60,15 @@ public abstract class Relationships extends ApiBase {
         return Relationships.builder()
                 .setClient(client)
                 .build();
+    }
+
+    /**
+     * Returns all {@link Relationship} objects.
+     *
+     * @see #list(Request)
+     */
+    public Iterator<List<Relationship>> list() throws Exception {
+        return this.list(Request.create());
     }
 
     /**
