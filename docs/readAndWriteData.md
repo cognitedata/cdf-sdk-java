@@ -13,6 +13,7 @@ In this document we will cover all the basics you need to know to interact with 
 - _Common I/O operations_. Covers the various operations, like `list`, `upsert`, `delete`, etc.
 - _The `Request` object_. How to perform complex queries/requests.
 - _The data transfer objects_. Covers the actual data payload objects: `Asset`, `Event`, `File`, etc.
+- _Migrating from SDK < v0.9.9_. Covers important information when migrating from older SDK versions.
 
 ### Common data read/write operations
 
