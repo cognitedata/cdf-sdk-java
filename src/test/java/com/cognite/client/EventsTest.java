@@ -71,12 +71,11 @@ class EventsTest {
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
             LOG.info(loggingPrefix + "Start deleting events.");
-            List<Item> deleteItemsInput = new ArrayList<>();
-            listEventsResults.stream()
+            List<Item> deleteItemsInput = listEventsResults.stream()
                     .map(event -> Item.newBuilder()
                             .setExternalId(event.getExternalId())
                             .build())
-                    .forEach(item -> deleteItemsInput.add(item));
+                    .collect(Collectors.toList());
 
             List<Item> deleteItemsResults = client.events().delete(deleteItemsInput);
             LOG.info(loggingPrefix + "Finished deleting events. Duration: {}",
