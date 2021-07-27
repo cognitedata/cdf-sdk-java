@@ -27,6 +27,13 @@ Changes are grouped as follows:
 - `list()` convenience method that returns all objects for a given resource type.
 - User documentation.
 
+### Changed
+
+- Breaking change: Remove the use of wrapper objects from the data transfer objects (`Asset`, `Event`, etc.). Please 
+refer to the [documentation](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/readAndWriteData.md#migrating-from-sdk-099) 
+  for more information.
+- Improved handling of updates for `Relationships`.
+
 ## [0.9.8]
 
 ### Fixed
