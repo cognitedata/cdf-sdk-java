@@ -121,6 +121,10 @@ public class RelationshipParser {
      */
     public static Map<String, Object> toRequestInsertItem(Relationship element) {
         Preconditions.checkNotNull(element, "Input cannot be null.");
+        Preconditions.checkArgument(element.hasSourceExternalId(),
+                "The relationship object must specify a source external id.");
+        Preconditions.checkArgument(element.hasTargetExternalId(),
+                "The relationship object must specify a target external id.");
 
         // Add all the mandatory attributes
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.<String, Object>builder()
@@ -172,14 +176,17 @@ public class RelationshipParser {
         // Add id reference
         mapBuilder.put("externalId", element.getExternalId());
 
-        // Add all the mandatory attributes
-        updateNodeBuilder
-                .put("sourceExternalId", ImmutableMap.of("set", element.getSourceExternalId()))
-                .put("sourceType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getSourceType())))
-                .put("targetExternalId", ImmutableMap.of("set", element.getTargetExternalId()))
-                .put("targetType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getTargetType())));
-
-        // Add optional attributes
+        // Add the update fields
+        if (element.hasSourceExternalId()) {
+            updateNodeBuilder
+                    .put("sourceExternalId", ImmutableMap.of("set", element.getSourceExternalId()))
+                    .put("sourceType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getSourceType())));
+        }
+        if (element.hasTargetExternalId()) {
+            updateNodeBuilder
+                    .put("targetExternalId", ImmutableMap.of("set", element.getTargetExternalId()))
+                    .put("targetType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getTargetType())));
+        }
         if (element.hasStartTime()) {
             updateNodeBuilder.put("startTime", ImmutableMap.of("set", element.getStartTime()));
         }
@@ -192,9 +199,7 @@ public class RelationshipParser {
         if (element.hasDataSetId()) {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
-        if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
-        }
+
         if (element.getLabelsCount() > 0) {
             List<Map<String, String>> labels = new ArrayList<>();
             for (String label : element.getLabelsList()) {
@@ -202,6 +207,70 @@ public class RelationshipParser {
             }
             updateNodeBuilder.put("labels", ImmutableMap.of("add", labels));
         }
+        mapBuilder.put("update", updateNodeBuilder.build());
+        return mapBuilder.build();
+    }
+
+    /**
+     * Builds a request replace item object from {@link Relationship}.
+     *
+     * A replace item object replaces an existing event object with new values for all provided fields.
+     * Fields that are not in the update object are set to null.
+     *
+     * @param element
+     * @return
+     */
+    public static Map<String, Object> toRequestReplaceItem(Relationship element) {
+        Preconditions.checkNotNull(element, "Input cannot be null.");
+        Preconditions.checkArgument(element.hasSourceExternalId(),
+                "The relationship object must specify a source external id.");
+        Preconditions.checkArgument(element.hasTargetExternalId(),
+                "The relationship object must specify a target external id.");
+
+        ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
+        ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
+
+        // Add id reference
+        mapBuilder.put("externalId", element.getExternalId());
+
+        // Add the mandatory update replace fields
+        updateNodeBuilder
+                .put("sourceExternalId", ImmutableMap.of("set", element.getSourceExternalId()))
+                .put("sourceType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getSourceType())))
+                .put("targetExternalId", ImmutableMap.of("set", element.getTargetExternalId()))
+                .put("targetType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getTargetType())));
+
+        // Add the optional update replace fields
+        if (element.hasStartTime()) {
+            updateNodeBuilder.put("startTime", ImmutableMap.of("set", element.getStartTime()));
+        } else {
+            updateNodeBuilder.put("startTime", ImmutableMap.of("setNull", true));
+        }
+
+        if (element.hasEndTime()) {
+            updateNodeBuilder.put("endTime", ImmutableMap.of("set", element.getEndTime()));
+        } else {
+            updateNodeBuilder.put("endTime", ImmutableMap.of("setNull", true));
+        }
+
+        if (element.hasConfidence()) {
+            updateNodeBuilder.put("confidence", ImmutableMap.of("set", element.getConfidence()));
+        } else {
+            updateNodeBuilder.put("confidence", ImmutableMap.of("setNull", true));
+        }
+
+        if (element.hasDataSetId()) {
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
+        } else {
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("setNull", true));
+        }
+
+        List<Map<String, String>> labels = new ArrayList<>();
+        for (String label : element.getLabelsList()) {
+            labels.add(ImmutableMap.of("externalId", label));
+        }
+        updateNodeBuilder.put("labels", ImmutableMap.of("set", labels));
+
         mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();
     }
