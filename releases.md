@@ -21,6 +21,12 @@ Changes are grouped as follows:
 
 ## [0.9.10-SNAPSHOT]
 
+### Added
+
+- Utility methods for converting `Value` to various types. This can be useful when working with CDF.Raw which 
+represents its columns as `Struct` and `Value`.
+- 
+
 ## [0.9.9]
 
 ### Added
