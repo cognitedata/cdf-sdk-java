@@ -99,7 +99,7 @@ public abstract class Assets extends ApiBase {
     public Iterator<List<Asset>> list(Request requestParameters) throws Exception {
         List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
 
-        return this.list(requestParameters, partitions.toArray(new String[partitions.size()]));
+        return this.list(requestParameters, partitions.toArray(new String[0]));
     }
 
     /**
@@ -173,7 +173,7 @@ public abstract class Assets extends ApiBase {
         }
 
         Map<String, Asset> assetMap = new HashMap<>();
-        assetHierarchies.stream()
+        assetHierarchies
                 .forEach(asset -> assetMap.put(asset.getExternalId(), asset));
 
         // Identify the hierarchies by loading all assets into a graph and identify the connected sub-graphs
@@ -189,7 +189,7 @@ public abstract class Assets extends ApiBase {
                 graph.addEdge(assetMap.get(asset.getParentExternalId()), asset);
             }
         }
-        ConnectivityInspector connectivityInspector = new ConnectivityInspector(graph);
+        ConnectivityInspector<Asset, DefaultEdge> connectivityInspector = new ConnectivityInspector<>(graph);
         List<Set<Asset>> hierarchies = connectivityInspector.connectedSets();
         LOG.info(loggingPrefix + "Identified {} hierarchies in the input collection. Duration: {}",
                 hierarchies.size(),
@@ -266,7 +266,7 @@ public abstract class Assets extends ApiBase {
         getClient().assets().list(assetRequest)
                 .forEachRemaining(assetBatch -> {
                     Map<String, Asset> batchMap = assetBatch.stream()
-                            .collect(Collectors.toMap(asset -> asset.getExternalId(), Function.identity()));
+                            .collect(Collectors.toMap(Asset::getExternalId, Function.identity()));
                     cdfAssets.putAll(batchMap);
                 });
 
@@ -650,7 +650,7 @@ public abstract class Assets extends ApiBase {
             LOG.warn(message.toString());
             return false;
         }
-        LOG.info(loggingPrefix + "All assets contain an externalId.");
+        LOG.debug(loggingPrefix + "All assets contain an externalId.");
 
         return true;
     }
@@ -693,7 +693,7 @@ public abstract class Assets extends ApiBase {
             return false;
         }
 
-        LOG.info(loggingPrefix + "No duplicates detected in the assets collection.");
+        LOG.debug(loggingPrefix + "No duplicates detected in the assets collection.");
         return true;
     }
 
@@ -736,7 +736,7 @@ public abstract class Assets extends ApiBase {
             LOG.warn(message.toString());
             return false;
         }
-        LOG.info(loggingPrefix + "No self-references detected in the assets collection.");
+        LOG.debug(loggingPrefix + "No self-references detected in the assets collection.");
 
         return true;
     }
@@ -750,8 +750,7 @@ public abstract class Assets extends ApiBase {
     private boolean checkCircularReferences(Collection<Asset> assets) {
         String loggingPrefix = "checkCircularReferences() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         Map<String, Asset> assetMap = new HashMap<>();
-        assets.stream()
-                .forEach(asset -> assetMap.put(asset.getExternalId(), asset));
+        assets.forEach(asset -> assetMap.put(asset.getExternalId(), asset));
 
         // Checking for circular references
         Graph<Asset, DefaultEdge> graph = new SimpleDirectedGraph<>(DefaultEdge.class);
@@ -769,15 +768,17 @@ public abstract class Assets extends ApiBase {
 
         CycleDetector<Asset, DefaultEdge> cycleDetector = new CycleDetector<>(graph);
         if (cycleDetector.detectCycles()) {
-            Set<String> cycle = new HashSet<>();
-            cycleDetector.findCycles().stream().forEach((Asset item) -> cycle.add(item.getExternalId()));
-            String message = loggingPrefix + "Cycles detected. Number of asset in the cycle: " + cycle.size();
+            List<String> cycles = cycleDetector.findCycles().stream()
+                    .map(Asset::getExternalId)
+                    .collect(Collectors.toList());
+
+            String message = loggingPrefix + "Cycles detected. Number of asset in the cycle: " + cycles.size();
             LOG.error(message);
-            LOG.error(loggingPrefix + "Cycle: " + cycle.toString());
+            LOG.error(loggingPrefix + "Cycles: " + cycles.toString());
             return false;
         }
 
-        LOG.info(loggingPrefix + "No cycles detected in the assets collection.");
+        LOG.debug(loggingPrefix + "No cycles detected in the assets collection.");
         return true;
     }
 
@@ -853,7 +854,7 @@ public abstract class Assets extends ApiBase {
             return false;
         }
 
-        LOG.info(loggingPrefix + "The asset collection contains a single root node and valid parent references.");
+        LOG.debug(loggingPrefix + "The asset collection contains a single root node and valid parent references.");
         return true;
     }
 

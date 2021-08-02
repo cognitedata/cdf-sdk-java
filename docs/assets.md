@@ -19,15 +19,23 @@ order. The SDK has a number of methods that help you when operating on asset hie
 - _Verify hierarchy integrity_. Checks if your input satisfies all data integrity constraints.
 
 ### Synchronize hierarchy
-The SDK can handle all hierarchy operations for you via `synchronizeHierarchy(Collection<Asset> assetHierarchy)`. Using 
+The SDK can handle all hierarchy operations for you via 
+`synchronizeHierarchy(Collection<Asset> assetHierarchy)` (single asset hierarchy) and
+`synchronizeMultipleHierarchies(Collection<Asset> assetHierarchies)` (multiple asset hierarchies). Using 
 this method, you input the target state of the hierarchy (via a collection of `assets`), and the SDK does the rest for
 you--it verifies the input, performs change detection to optimize operations and operates the assets in the 
 correct order. 
 
+Please note that if you need to remove a hierarchy completely (including the root node) from CDF, then you need to 
+use the `delete()` method. Synchronization is able to remove child asset nodes, but not the root node itself. 
+
 ```java
 List<Asset> myInputAssets = new ArrayList<>();
 populateMyAssets(myInputAssets)  // Fill the collection with all assets
-List<Asset> upsertedAssets = cogniteClient.assets().synchronizeHierarchy(myInputAssets);
+
+List<Asset> upsertedAssets = cogniteClient.assets().synchronizeMultipleHierarchies(myInputAssets);    // can be multiple hierarchies
+        
+List<Asset> upsertedAssets = cogniteClient.assets().synchronizeHierarchy(myInputAssets);        // only a single hierarchy
 ```
 
 The first time you call the method it will build the hierarchy from scratch. Upon subsequent calls (with the same 
