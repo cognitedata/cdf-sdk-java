@@ -2,6 +2,7 @@ package com.cognite.client.util;
 
 import com.google.common.base.Preconditions;
 import com.google.protobuf.Struct;
+import com.google.protobuf.Value;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,10 +38,14 @@ public class ParseStruct {
      * @param path The path of node to parse, separated by period ("."). Ex: "parent.child.grandChild"
      * @return A list of the data matching the path. If no match, then an empty list is returned.
      */
-    public static List<String> parseStringList(Struct struct, String path) {
+    public static List<String> parseStringList(Struct struct, List<String> path) {
         Preconditions.checkNotNull(struct, "Struct cannot be null");
-        Preconditions.checkArgument(null != path && path.isBlank(),
-                "Node cannot be null or empty");
+        Preconditions.checkNotNull(path, "Node cannot be null or empty");
+
+        return Collections.emptyList();
+    }
+
+    private static List<String> parseStringList(Value value, List<String> path) {
 
         return Collections.emptyList();
     }
