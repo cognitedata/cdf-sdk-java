@@ -98,7 +98,7 @@ public abstract class Assets extends ApiBase {
     public Iterator<List<Asset>> list(Request requestParameters) throws Exception {
         List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
 
-        return this.list(requestParameters, partitions.toArray(new String[partitions.size()]));
+        return this.list(requestParameters, partitions.toArray(new String[0]));
     }
 
     /**
@@ -521,7 +521,7 @@ public abstract class Assets extends ApiBase {
 
         LOG.debug(loggingPrefix + "Constraints check passed. Starting sort.");
         Map<String, Asset> inputMap = assets.stream()
-                .collect(Collectors.toMap(asset -> asset.getExternalId(), Function.identity()));
+                .collect(Collectors.toMap(Asset::getExternalId, Function.identity()));
         List<Asset> sortedAssets = new ArrayList<>();
 
 
@@ -692,8 +692,7 @@ public abstract class Assets extends ApiBase {
     private boolean checkCircularReferences(Collection<Asset> assets) {
         String loggingPrefix = "checkCircularReferences() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         Map<String, Asset> assetMap = new HashMap<>();
-        assets.stream()
-                .forEach(asset -> assetMap.put(asset.getExternalId(), asset));
+        assets.forEach(asset -> assetMap.put(asset.getExternalId(), asset));
 
         // Checking for circular references
         Graph<Asset, DefaultEdge> graph = new SimpleDirectedGraph<>(DefaultEdge.class);
@@ -712,7 +711,7 @@ public abstract class Assets extends ApiBase {
         CycleDetector<Asset, DefaultEdge> cycleDetector = new CycleDetector<>(graph);
         if (cycleDetector.detectCycles()) {
             Set<String> cycle = new HashSet<>();
-            cycleDetector.findCycles().stream().forEach((Asset item) -> cycle.add(item.getExternalId()));
+            cycleDetector.findCycles().forEach((Asset item) -> cycle.add(item.getExternalId()));
             String message = loggingPrefix + "Cycles detected. Number of asset in the cycle: " + cycle.size();
             LOG.error(message);
             LOG.error(loggingPrefix + "Cycle: " + cycle.toString());
