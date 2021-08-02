@@ -21,9 +21,9 @@ Requirements:
 Please refer to [the documentation](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.md) for more
 information ([https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.md](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.md)).
     
-## Upcoming breaking change in v 0.9.9
+## Breaking change in v0.9.9
 
-SDK v 0.9.9 will introduce a breaking change in the definition of the data transfer objects 
+SDK v0.9.9 will introduce a breaking change in the definition of the data transfer objects 
 (`Asset`, `Event`, `File`, etc.). This is the carefully considered change, and the last big item before locking down 
 the SDK for v1 release.
 

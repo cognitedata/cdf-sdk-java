@@ -29,6 +29,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jgrapht.Graph;
+import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.alg.cycle.CycleDetector;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleDirectedGraph;
@@ -98,7 +99,7 @@ public abstract class Assets extends ApiBase {
     public Iterator<List<Asset>> list(Request requestParameters) throws Exception {
         List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
 
-        return this.list(requestParameters, partitions.toArray(new String[partitions.size()]));
+        return this.list(requestParameters, partitions.toArray(new String[0]));
     }
 
     /**
@@ -149,6 +150,63 @@ public abstract class Assets extends ApiBase {
     }
 
     /**
+     * Synchronizes the input collection of {@link Asset} (representing multiple, complete asset hierarchies)
+     * with existing asset hierarchies in CDF.
+     *
+     * This method will inspect the input collection of {@link Asset} and identify the various asset hierarchies. Each
+     * hierarchy is then processed by {@link #synchronizeHierarchy(Collection)}.
+     *
+     * @see #synchronizeHierarchy(Collection)
+     *
+     * @param assetHierarchies The input asset hierarchies--this represents the target state of the synchronization.
+     * @return the synchronized assets.
+     * @throws Exception
+     */
+    public List<Asset> synchronizeMultipleHierarchies(Collection<Asset> assetHierarchies) throws Exception {
+        String loggingPrefix = "synchronizeMultipleHierarchies() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        Instant startInstant = Instant.now();
+
+        if (!checkExternalId(assetHierarchies)) {
+            String message = loggingPrefix + "Some input assets are missing externalId.";
+            LOG.error(message);
+            throw new Exception(message);
+        }
+
+        Map<String, Asset> assetMap = new HashMap<>();
+        assetHierarchies
+                .forEach(asset -> assetMap.put(asset.getExternalId(), asset));
+
+        // Identify the hierarchies by loading all assets into a graph and identify the connected sub-graphs
+        Graph<Asset, DefaultEdge> graph = new SimpleDirectedGraph<>(DefaultEdge.class);
+
+        // add vertices
+        for (Asset vertex : assetMap.values()) {
+            graph.addVertex(vertex);
+        }
+        // add edges
+        for (Asset asset : assetMap.values()) {
+            if (asset.hasParentExternalId() && assetMap.containsKey(asset.getParentExternalId())) {
+                graph.addEdge(assetMap.get(asset.getParentExternalId()), asset);
+            }
+        }
+        ConnectivityInspector<Asset, DefaultEdge> connectivityInspector = new ConnectivityInspector<>(graph);
+        List<Set<Asset>> hierarchies = connectivityInspector.connectedSets();
+        LOG.info(loggingPrefix + "Identified {} hierarchies in the input collection. Duration: {}",
+                hierarchies.size(),
+                Duration.between(startInstant, Instant.now()));
+
+        List<Asset> returnList = new ArrayList<>();
+        for (Set<Asset> hierarchy : hierarchies) {
+            returnList.addAll(this.synchronizeHierarchy(hierarchy));
+        }
+        LOG.info(loggingPrefix + "Finished synchronizing {} hierarchies. Duration: {}",
+                hierarchies.size(),
+                Duration.between(startInstant, Instant.now()));
+
+        return returnList;
+    }
+
+    /**
      * Synchronizes the input collection of {@link Asset} (representing a single, complete asset hierarchy)
      * with an existing asset hierarchy in CDF. The input asset collection represents the target state.
      * New asset nodes will be added, changed asset nodes will be updated
@@ -195,7 +253,7 @@ public abstract class Assets extends ApiBase {
             throw new Exception(message);
         }
         String rootExternalId = rootNodes.get(0).getExternalId();
-        LOG.debug(loggingPrefix + "Identified root node with external id [{}]. Duration: {}",
+        LOG.info(loggingPrefix + "Identified root node with external id [{}]. Duration: {}",
                 rootExternalId,
                 Duration.between(startInstant, Instant.now()));
 
@@ -208,7 +266,7 @@ public abstract class Assets extends ApiBase {
         getClient().assets().list(assetRequest)
                 .forEachRemaining(assetBatch -> {
                     Map<String, Asset> batchMap = assetBatch.stream()
-                            .collect(Collectors.toMap(asset -> asset.getExternalId(), Function.identity()));
+                            .collect(Collectors.toMap(Asset::getExternalId, Function.identity()));
                     cdfAssets.putAll(batchMap);
                 });
 
@@ -565,7 +623,7 @@ public abstract class Assets extends ApiBase {
      */
     private boolean checkExternalId(Collection<Asset> assets) {
         String loggingPrefix = "checkExternalId() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
-        List<Asset> missingExternalIdList = new ArrayList<>(50);
+        List<Asset> missingExternalIdList = new ArrayList<>();
 
         for (Asset asset : assets) {
             if (!asset.hasExternalId()) {
@@ -574,7 +632,7 @@ public abstract class Assets extends ApiBase {
         }
 
         // Report on missing externalId
-        if (!missingExternalIdList.isEmpty()) {
+        if (missingExternalIdList.size() > 0) {
             StringBuilder message = new StringBuilder();
             String errorMessage = loggingPrefix + "Found " + missingExternalIdList.size() + " assets missing externalId.";
             message.append(errorMessage).append(System.lineSeparator());
@@ -592,7 +650,7 @@ public abstract class Assets extends ApiBase {
             LOG.warn(message.toString());
             return false;
         }
-        LOG.info(loggingPrefix + "All assets contain an externalId.");
+        LOG.debug(loggingPrefix + "All assets contain an externalId.");
 
         return true;
     }
@@ -605,8 +663,8 @@ public abstract class Assets extends ApiBase {
      */
     private boolean checkDuplicates(Collection<Asset> assets) {
         String loggingPrefix = "checkDuplicates() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
-        List<Asset> duplicatesList = new ArrayList<>(50);
-        Map<String, Asset> inputMap = new HashMap<>((int) (assets.size() * 1.35));
+        List<Asset> duplicatesList = new ArrayList<>();
+        Map<String, Asset> inputMap = new HashMap<>();
 
         for (Asset asset : assets) {
             if (inputMap.containsKey(asset.getExternalId())) {
@@ -616,7 +674,7 @@ public abstract class Assets extends ApiBase {
         }
 
         // Report on duplicates
-        if (!duplicatesList.isEmpty()) {
+        if (duplicatesList.size() > 0) {
             StringBuilder message = new StringBuilder();
             String errorMessage = loggingPrefix + "Found " + duplicatesList.size() + " duplicates.";
             message.append(errorMessage).append(System.lineSeparator());
@@ -635,7 +693,7 @@ public abstract class Assets extends ApiBase {
             return false;
         }
 
-        LOG.info(loggingPrefix + "No duplicates detected in the assets collection.");
+        LOG.debug(loggingPrefix + "No duplicates detected in the assets collection.");
         return true;
     }
 
@@ -678,7 +736,7 @@ public abstract class Assets extends ApiBase {
             LOG.warn(message.toString());
             return false;
         }
-        LOG.info(loggingPrefix + "No self-references detected in the assets collection.");
+        LOG.debug(loggingPrefix + "No self-references detected in the assets collection.");
 
         return true;
     }
@@ -692,8 +750,7 @@ public abstract class Assets extends ApiBase {
     private boolean checkCircularReferences(Collection<Asset> assets) {
         String loggingPrefix = "checkCircularReferences() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         Map<String, Asset> assetMap = new HashMap<>();
-        assets.stream()
-                .forEach(asset -> assetMap.put(asset.getExternalId(), asset));
+        assets.forEach(asset -> assetMap.put(asset.getExternalId(), asset));
 
         // Checking for circular references
         Graph<Asset, DefaultEdge> graph = new SimpleDirectedGraph<>(DefaultEdge.class);
@@ -711,15 +768,17 @@ public abstract class Assets extends ApiBase {
 
         CycleDetector<Asset, DefaultEdge> cycleDetector = new CycleDetector<>(graph);
         if (cycleDetector.detectCycles()) {
-            Set<String> cycle = new HashSet<>();
-            cycleDetector.findCycles().stream().forEach((Asset item) -> cycle.add(item.getExternalId()));
-            String message = loggingPrefix + "Cycles detected. Number of asset in the cycle: " + cycle.size();
+            List<String> cycles = cycleDetector.findCycles().stream()
+                    .map(Asset::getExternalId)
+                    .collect(Collectors.toList());
+
+            String message = loggingPrefix + "Cycles detected. Number of asset in the cycle: " + cycles.size();
             LOG.error(message);
-            LOG.error(loggingPrefix + "Cycle: " + cycle.toString());
+            LOG.error(loggingPrefix + "Cycles: " + cycles.toString());
             return false;
         }
 
-        LOG.info(loggingPrefix + "No cycles detected in the assets collection.");
+        LOG.debug(loggingPrefix + "No cycles detected in the assets collection.");
         return true;
     }
 
@@ -736,21 +795,21 @@ public abstract class Assets extends ApiBase {
      */
     private boolean checkReferentialIntegrity(Collection<Asset> assets) {
         String loggingPrefix = "checkReferentialIntegrity() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
-        Map<String, Asset> inputMap = new HashMap<>();
-        List<Asset> invalidReferenceList = new ArrayList<>(50);
-        List<Asset> rootNodeList = new ArrayList<>(2);
+        Set<String> extIdSet = new HashSet<>();
+        List<Asset> invalidReferenceList = new ArrayList<>();
+        List<Asset> rootNodeList = new ArrayList<>();
 
         LOG.debug(loggingPrefix + "Checking asset input table for integrity.");
         for (Asset element : assets) {
-            if (element.getParentExternalId().isBlank()) {
+            if (!element.hasParentExternalId()) {
                 rootNodeList.add(element);
             }
-            inputMap.put(element.getExternalId(), element);
+            extIdSet.add(element.getExternalId());
         }
 
         for (Asset element : assets) {
-            if (!element.getParentExternalId().isEmpty()
-                    && !inputMap.containsKey(element.getParentExternalId())) {
+            if (element.hasParentExternalId()
+                    && !extIdSet.contains(element.getParentExternalId())) {
                 invalidReferenceList.add(element);
             }
         }
@@ -775,7 +834,7 @@ public abstract class Assets extends ApiBase {
             return false;
         }
 
-        if (!invalidReferenceList.isEmpty()) {
+        if (invalidReferenceList.size() > 0) {
             StringBuilder message = new StringBuilder();
             String errorMessage = loggingPrefix + "Found " + invalidReferenceList.size() + " assets with invalid parent reference.";
             message.append(errorMessage).append(System.lineSeparator());
@@ -795,7 +854,7 @@ public abstract class Assets extends ApiBase {
             return false;
         }
 
-        LOG.info(loggingPrefix + "The asset collection contains a single root node and valid parent references.");
+        LOG.debug(loggingPrefix + "The asset collection contains a single root node and valid parent references.");
         return true;
     }
 
