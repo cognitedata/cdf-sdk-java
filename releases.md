@@ -25,7 +25,7 @@ Changes are grouped as follows:
 
 - Utility methods for converting `Value` to various types. This can be useful when working with CDF.Raw which 
 represents its columns as `Struct` and `Value`.
-- 
+- Utility methods for parsing nested `Struct` and `Value` objects. This can be useful when working with CDF.Raw.
 
 ## [0.9.9]
 
