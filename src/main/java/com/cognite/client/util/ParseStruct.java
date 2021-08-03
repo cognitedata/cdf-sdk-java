@@ -85,7 +85,7 @@ public class ParseStruct {
                     returnList.addAll(parseStringList(element, path));
                 }
             }
-        } else if (path.isEmpty()) {
+        } else {
             // We are at the child node. Must not be null. Handle list separately.
             if (value.hasListValue()) {
                 List<Value> valueList = value.getListValue().getValuesList();
