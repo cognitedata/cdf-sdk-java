@@ -15,7 +15,6 @@ public class ParseValue {
      *
      * @param rawValue
      * @return
-     * @throws NumberFormatException
      */
     public static String parseString(Value rawValue) {
         Preconditions.checkNotNull(rawValue, "rawValue cannot be null");

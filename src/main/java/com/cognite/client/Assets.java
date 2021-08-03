@@ -579,7 +579,7 @@ public abstract class Assets extends ApiBase {
 
         LOG.debug(loggingPrefix + "Constraints check passed. Starting sort.");
         Map<String, Asset> inputMap = assets.stream()
-                .collect(Collectors.toMap(asset -> asset.getExternalId(), Function.identity()));
+                .collect(Collectors.toMap(Asset::getExternalId, Function.identity()));
         List<Asset> sortedAssets = new ArrayList<>();
 
 
