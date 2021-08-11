@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import okhttp3.*;
+import okhttp3.internal.http2.StreamResetException;
 import okio.BufferedSink;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -32,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLProtocolException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -308,7 +311,11 @@ public abstract class FileBinaryRequestExecutor {
                 catchedExceptions.add(e);
 
                 // if we get a transient error, retry the call
-                if (e instanceof java.net.SocketTimeoutException || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
+                if (e instanceof java.net.SocketTimeoutException
+                        || e instanceof StreamResetException
+                        || e instanceof SSLProtocolException
+                        || e instanceof SSLException
+                        || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     LOG.warn(loggingPrefix + "Transient error when downloading file ("
                             + ", response code: " + responseCode
                             + "). Retrying...", e);
@@ -471,7 +478,11 @@ public abstract class FileBinaryRequestExecutor {
                 catchedExceptions.add(e);
 
                 // if we get a transient error, retry the call
-                if (e instanceof java.net.SocketTimeoutException || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
+                if (e instanceof java.net.SocketTimeoutException
+                        || e instanceof StreamResetException
+                        || e instanceof SSLProtocolException
+                        || e instanceof SSLException
+                        || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     apiRetryCounter++;
                     LOG.warn(loggingPrefix + "Transient error when reading from Fusion (request id: " + requestId
                             + ", response code: " + responseCode
