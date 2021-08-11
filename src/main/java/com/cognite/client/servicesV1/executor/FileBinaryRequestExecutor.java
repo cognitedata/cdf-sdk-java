@@ -52,10 +52,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 
 /**
  * This request executor implements specific behavior to deal with very large request/response bodies when
@@ -84,8 +81,9 @@ public abstract class FileBinaryRequestExecutor {
             504     // gateway timeout
     );
 
-    private static final int DEFAULT_NUM_WORKERS = 10;
-    private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(DEFAULT_NUM_WORKERS);
+    private static final int DEFAULT_NUM_WORKERS = 8;
+    //private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(DEFAULT_NUM_WORKERS);
+    private static final ExecutorService DEFAULT_POOL = Executors.newFixedThreadPool(DEFAULT_NUM_WORKERS);
 
     protected final static Logger LOG = LoggerFactory.getLogger(FileBinaryRequestExecutor.class);
 
@@ -226,7 +224,7 @@ public abstract class FileBinaryRequestExecutor {
      */
     public CompletableFuture<FileBinary> downloadBinaryAsync(Request request) {
         LOG.debug(loggingPrefix + "Executing request async. Detected {} CPUs. Default executor running with "
-                + "a target parallelism of {}", Runtime.getRuntime().availableProcessors(), DEFAULT_POOL.getParallelism());
+                + "a target parallelism of {}", Runtime.getRuntime().availableProcessors(), DEFAULT_NUM_WORKERS);
 
         CompletableFuture<FileBinary> completableFuture = new CompletableFuture<>();
         getExecutor().execute((Runnable & CompletableFuture.AsynchronousCompletionTask) () -> {
@@ -354,7 +352,7 @@ public abstract class FileBinaryRequestExecutor {
      */
     public CompletableFuture<ResponseBinary> uploadBinaryAsync(FileBinary fileBinary, URL targetURL) {
         LOG.debug(loggingPrefix + "Executing request async. Detected {} CPUs. Default executor running with "
-                + "a target parallelism of {}", Runtime.getRuntime().availableProcessors(), DEFAULT_POOL.getParallelism());
+                + "a target parallelism of {}", Runtime.getRuntime().availableProcessors(), DEFAULT_NUM_WORKERS);
 
         CompletableFuture<ResponseBinary> completableFuture = new CompletableFuture<>();
         getExecutor().execute((Runnable & CompletableFuture.AsynchronousCompletionTask) () -> {
