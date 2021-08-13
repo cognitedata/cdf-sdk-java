@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import okhttp3.*;
+import okhttp3.internal.http2.StreamResetException;
 import okio.BufferedSink;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -32,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLProtocolException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -49,10 +52,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 
 /**
  * This request executor implements specific behavior to deal with very large request/response bodies when
@@ -81,8 +81,9 @@ public abstract class FileBinaryRequestExecutor {
             504     // gateway timeout
     );
 
-    private static final int DEFAULT_NUM_WORKERS = 10;
-    private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(DEFAULT_NUM_WORKERS);
+    private static final int DEFAULT_NUM_WORKERS = 8;
+    //private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(DEFAULT_NUM_WORKERS);
+    private static final ExecutorService DEFAULT_POOL = Executors.newFixedThreadPool(DEFAULT_NUM_WORKERS);
 
     protected final static Logger LOG = LoggerFactory.getLogger(FileBinaryRequestExecutor.class);
 
@@ -223,7 +224,7 @@ public abstract class FileBinaryRequestExecutor {
      */
     public CompletableFuture<FileBinary> downloadBinaryAsync(Request request) {
         LOG.debug(loggingPrefix + "Executing request async. Detected {} CPUs. Default executor running with "
-                + "a target parallelism of {}", Runtime.getRuntime().availableProcessors(), DEFAULT_POOL.getParallelism());
+                + "a target parallelism of {}", Runtime.getRuntime().availableProcessors(), DEFAULT_NUM_WORKERS);
 
         CompletableFuture<FileBinary> completableFuture = new CompletableFuture<>();
         getExecutor().execute((Runnable & CompletableFuture.AsynchronousCompletionTask) () -> {
@@ -308,7 +309,11 @@ public abstract class FileBinaryRequestExecutor {
                 catchedExceptions.add(e);
 
                 // if we get a transient error, retry the call
-                if (e instanceof java.net.SocketTimeoutException || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
+                if (e instanceof java.net.SocketTimeoutException
+                        || e instanceof StreamResetException
+                        || e instanceof SSLProtocolException
+                        || e instanceof SSLException
+                        || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     LOG.warn(loggingPrefix + "Transient error when downloading file ("
                             + ", response code: " + responseCode
                             + "). Retrying...", e);
@@ -347,7 +352,7 @@ public abstract class FileBinaryRequestExecutor {
      */
     public CompletableFuture<ResponseBinary> uploadBinaryAsync(FileBinary fileBinary, URL targetURL) {
         LOG.debug(loggingPrefix + "Executing request async. Detected {} CPUs. Default executor running with "
-                + "a target parallelism of {}", Runtime.getRuntime().availableProcessors(), DEFAULT_POOL.getParallelism());
+                + "a target parallelism of {}", Runtime.getRuntime().availableProcessors(), DEFAULT_NUM_WORKERS);
 
         CompletableFuture<ResponseBinary> completableFuture = new CompletableFuture<>();
         getExecutor().execute((Runnable & CompletableFuture.AsynchronousCompletionTask) () -> {
@@ -471,7 +476,11 @@ public abstract class FileBinaryRequestExecutor {
                 catchedExceptions.add(e);
 
                 // if we get a transient error, retry the call
-                if (e instanceof java.net.SocketTimeoutException || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
+                if (e instanceof java.net.SocketTimeoutException
+                        || e instanceof StreamResetException
+                        || e instanceof SSLProtocolException
+                        || e instanceof SSLException
+                        || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     apiRetryCounter++;
                     LOG.warn(loggingPrefix + "Transient error when reading from Fusion (request id: " + requestId
                             + ", response code: " + responseCode

@@ -21,6 +21,10 @@ Changes are grouped as follows:
 
 ## [0.9.11-SNAPSHOT]
 
+### Fixed
+
+- More robust file binary download when running very large jobs.
+
 ## [0.9.10]
 
 ### Added
