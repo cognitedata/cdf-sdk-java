@@ -597,11 +597,11 @@ public abstract class Files extends ApiBase {
             // Get the file metadata
             List<FileMetadata> fileMetadataList = retrieve(batch);
             // Merge the binary and metadata
-            List<FileContainer> containers = buildFileContainers(fileBinaries, fileMetadataList);
+            List<FileContainer> tempNameContainers = buildFileContainers(fileBinaries, fileMetadataList);
 
             // Rename the file from random temp name to file name
             List<FileContainer> resultContainers = new ArrayList<>();
-            for (FileContainer container : containers) {
+            for (FileContainer container : tempNameContainers) {
                 if (container.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY_URI
                         && container.hasFileMetadata()) {
                     // Get the temp file name
@@ -635,8 +635,9 @@ public abstract class Files extends ApiBase {
 
                     // Swap the old container with the new one
                     resultContainers.add(updated);
+                } else {
+                    resultContainers.add(container);
                 }
-                resultContainers.add(container);
             }
             results.addAll(resultContainers);
         }
