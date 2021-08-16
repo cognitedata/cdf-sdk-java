@@ -27,7 +27,8 @@ import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -45,15 +46,23 @@ public abstract class CogniteClient implements Serializable {
 
     private static final int DEFAULT_CPU_MULTIPLIER = 8;
     private final static int DEFAULT_MAX_WORKER_THREADS = 8;
+    /*
     private static ForkJoinPool executorService = new ForkJoinPool(Math.min(
             Runtime.getRuntime().availableProcessors() * DEFAULT_CPU_MULTIPLIER,
             DEFAULT_MAX_WORKER_THREADS));
+
+     */
+
+    private static int NO_WORKERS = Math.min(
+            Runtime.getRuntime().availableProcessors() * DEFAULT_CPU_MULTIPLIER,
+            DEFAULT_MAX_WORKER_THREADS);
+    private static ExecutorService executorService = Executors.newFixedThreadPool(NO_WORKERS);
 
     protected final static Logger LOG = LoggerFactory.getLogger(CogniteClient.class);
 
     static {
         LOG.info("CogniteClient - setting up default worker pool with {} workers.",
-                executorService.getParallelism());
+                NO_WORKERS);
     }
 
     @Nullable
@@ -72,9 +81,9 @@ public abstract class CogniteClient implements Serializable {
     private static OkHttpClient.Builder getHttpClientBuilder() {
         return new OkHttpClient.Builder()
                 .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS))
-                .connectTimeout(90, TimeUnit.SECONDS)
-                .readTimeout(90, TimeUnit.SECONDS)
-                .writeTimeout(90, TimeUnit.SECONDS);
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(15, TimeUnit.SECONDS)
+                .writeTimeout(15, TimeUnit.SECONDS);
     }
 
     /**
@@ -199,7 +208,7 @@ public abstract class CogniteClient implements Serializable {
     public abstract ClientConfig getClientConfig();
     public abstract OkHttpClient getHttpClient();
 
-    public ForkJoinPool getExecutorService() {
+    public ExecutorService getExecutorService() {
         return executorService;
     }
 
@@ -262,8 +271,9 @@ public abstract class CogniteClient implements Serializable {
         LOG.info("Setting up client with {} worker threads and {} list partitions",
                 config.getNoWorkers(),
                 config.getNoListPartitions());
-        if (config.getNoWorkers() != executorService.getParallelism()) {
-            executorService = new ForkJoinPool(config.getNoWorkers());
+        if (config.getNoWorkers() != NO_WORKERS) {
+            NO_WORKERS = config.getNoWorkers();
+            executorService = Executors.newFixedThreadPool(NO_WORKERS);
         }
 
         return toBuilder().setClientConfig(config).build();
