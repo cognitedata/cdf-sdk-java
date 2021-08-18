@@ -19,6 +19,8 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+
+
 ## [1.0.0], Aug 18th, 2021
 
 ### Fixed
