@@ -35,7 +35,7 @@ Please check [the documentation](https://github.com/cognitedata/cdf-sdk-java/blo
 <dependency>    
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 </dependency>
 ```
     

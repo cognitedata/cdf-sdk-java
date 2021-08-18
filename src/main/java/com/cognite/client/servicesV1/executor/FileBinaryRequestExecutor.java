@@ -83,7 +83,8 @@ public abstract class FileBinaryRequestExecutor {
 
     private static final int DEFAULT_NUM_WORKERS = 8;
     //private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(DEFAULT_NUM_WORKERS);
-    private static final ExecutorService DEFAULT_POOL = Executors.newFixedThreadPool(DEFAULT_NUM_WORKERS);
+    private static final ExecutorService DEFAULT_POOL = new ThreadPoolExecutor(0, DEFAULT_NUM_WORKERS,
+            1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
 
     protected final static Logger LOG = LoggerFactory.getLogger(FileBinaryRequestExecutor.class);
 

@@ -27,9 +27,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Supplier;
 
 /**
@@ -56,7 +54,8 @@ public abstract class CogniteClient implements Serializable {
     private static int NO_WORKERS = Math.min(
             Runtime.getRuntime().availableProcessors() * DEFAULT_CPU_MULTIPLIER,
             DEFAULT_MAX_WORKER_THREADS);
-    private static ExecutorService executorService = Executors.newFixedThreadPool(NO_WORKERS);
+    private static ExecutorService executorService = new ThreadPoolExecutor(0, NO_WORKERS,
+            1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
 
     protected final static Logger LOG = LoggerFactory.getLogger(CogniteClient.class);
 
@@ -273,7 +272,8 @@ public abstract class CogniteClient implements Serializable {
                 config.getNoListPartitions());
         if (config.getNoWorkers() != NO_WORKERS) {
             NO_WORKERS = config.getNoWorkers();
-            executorService = Executors.newFixedThreadPool(NO_WORKERS);
+            executorService = new ThreadPoolExecutor(0, NO_WORKERS,
+                    1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
         }
 
         return toBuilder().setClientConfig(config).build();
