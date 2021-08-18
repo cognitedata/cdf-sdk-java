@@ -25,7 +25,7 @@ import javax.annotation.Nullable;
 import java.io.Serializable;
 
 /**
- * This is a helper class for transporting an http response. We cannot use the <code>okhttp3.Response</code> object
+ * This is a helper class for transporting a http response. We cannot use the <code>okhttp3.Response</code> object
  * as its main payload can only be consumed once and must be closed as soon as possible to prevent holding on to
  * connection resources.
  *

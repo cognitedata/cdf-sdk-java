@@ -597,15 +597,17 @@ public abstract class Files extends ApiBase {
             // Get the file metadata
             List<FileMetadata> fileMetadataList = retrieve(batch);
             // Merge the binary and metadata
-            List<FileContainer> containers = buildFileContainers(fileBinaries, fileMetadataList);
+            List<FileContainer> tempNameContainers = buildFileContainers(fileBinaries, fileMetadataList);
 
             // Rename the file from random temp name to file name
             List<FileContainer> resultContainers = new ArrayList<>();
-            for (FileContainer container : containers) {
+            for (FileContainer container : tempNameContainers) {
                 if (container.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY_URI
                         && container.hasFileMetadata()) {
-                    // Get the temp file name
-                    String fileNameBase = container.getFileMetadata().getName();
+                    // Get the target file name. Replace illegal characters with dashes
+                    String fileNameBase = container.getFileMetadata().getName()
+                            .trim()
+                            .replaceAll("[\\/|\\\\|&|\\$]", "-");
                     String fileSuffix = "";
                     if (fileNameBase.lastIndexOf(".") != -1) {
                         // The file name has a suffix. Let's break it out.
@@ -635,8 +637,9 @@ public abstract class Files extends ApiBase {
 
                     // Swap the old container with the new one
                     resultContainers.add(updated);
+                } else {
+                    resultContainers.add(container);
                 }
-                resultContainers.add(container);
             }
             results.addAll(resultContainers);
         }

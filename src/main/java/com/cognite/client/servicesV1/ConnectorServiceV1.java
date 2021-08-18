@@ -2360,7 +2360,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
          *
          * The following storage providers are supported:
          * - Google Cloud Storage. Specify the temp path as {@code gs://<my-storage-bucket>/<my-path>/}.
-         * - Local (network) storage.
+         * - Local (network) storage: {@code file://localhost/home/files/, file:///home/files/, file:///c:/temp/}
          *
          * @param path The URI to the temp storage
          * @return a {@FileBinaryReader} with temp storage configured.
@@ -2427,7 +2427,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
             LOG.info(loggingPrefix + "Received {} file download URLs.", fileItems.size());
 
             // Start download the file binaries on separate threads
-            List<CompletableFuture<ResponseItems<FileBinary>>> futuresList = new ArrayList<>(fileItems.size());
+            List<CompletableFuture<ResponseItems<FileBinary>>> futuresList = new ArrayList<>();
 
             for (String fileItem : fileItems) {
                 LOG.debug(loggingPrefix + "Building download request for file item: {}", fileItem);
@@ -2637,7 +2637,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
             String jsonResponsePayload = fileUploadResponse.getResponseBodyBytes().toStringUtf8();
             Map<String, Object> fileUploadResponseItem = objectMapper
                     .readValue(jsonResponsePayload, new TypeReference<Map<String, Object>>(){});
-            LOG.info(loggingPrefix + "Posted file metadata for [{}]. Received file upload URL response.",
+            LOG.debug(loggingPrefix + "Posted file metadata for [{}]. Received file upload URL response.",
                     fileContainer.getFileMetadata().getName());
 
             Preconditions.checkState(fileUploadResponseItem.containsKey(uploadUrlKey),
@@ -2748,8 +2748,8 @@ public abstract class ConnectorServiceV1 implements Serializable {
         final static String loggingPrefix = "DownloadFileBinary() - ";
         final static OkHttpClient client = new OkHttpClient.Builder()
                 .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS))
-                .connectTimeout(90, TimeUnit.SECONDS)
-                .readTimeout(90, TimeUnit.SECONDS)
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(10, TimeUnit.SECONDS)
                 .build();
 
         public static CompletableFuture<FileBinary> downloadFileBinaryFromURL(String downloadUrl) {
