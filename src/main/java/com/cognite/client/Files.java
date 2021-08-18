@@ -604,8 +604,10 @@ public abstract class Files extends ApiBase {
             for (FileContainer container : tempNameContainers) {
                 if (container.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY_URI
                         && container.hasFileMetadata()) {
-                    // Get the temp file name
-                    String fileNameBase = container.getFileMetadata().getName();
+                    // Get the target file name. Replace illegal characters with dashes
+                    String fileNameBase = container.getFileMetadata().getName()
+                            .trim()
+                            .replaceAll("[\\/|\\\\|&|\\$]", "-");
                     String fileSuffix = "";
                     if (fileNameBase.lastIndexOf(".") != -1) {
                         // The file name has a suffix. Let's break it out.

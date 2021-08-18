@@ -2637,7 +2637,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
             String jsonResponsePayload = fileUploadResponse.getResponseBodyBytes().toStringUtf8();
             Map<String, Object> fileUploadResponseItem = objectMapper
                     .readValue(jsonResponsePayload, new TypeReference<Map<String, Object>>(){});
-            LOG.info(loggingPrefix + "Posted file metadata for [{}]. Received file upload URL response.",
+            LOG.debug(loggingPrefix + "Posted file metadata for [{}]. Received file upload URL response.",
                     fileContainer.getFileMetadata().getName());
 
             Preconditions.checkState(fileUploadResponseItem.containsKey(uploadUrlKey),

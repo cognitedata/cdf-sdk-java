@@ -24,6 +24,7 @@ Changes are grouped as follows:
 ### Fixed
 
 - More robust file binary download when running very large jobs.
+- Improved guard against illegal characters in file names when downloading file binaries.
 
 ## [0.9.10]
 

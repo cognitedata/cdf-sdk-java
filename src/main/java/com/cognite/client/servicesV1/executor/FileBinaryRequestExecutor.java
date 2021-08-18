@@ -515,11 +515,11 @@ public abstract class FileBinaryRequestExecutor {
         Preconditions.checkState(null != getTempStoragePath(),
                 "Invalid temp storage path");
         ZonedDateTime nowUTC = Instant.now().atZone(ZoneId.of("UTC"));
-        DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+        DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssSSS");
         String tempFileName = new StringBuilder(36)
-                .append("tempFile-")
+                .append("temp-")
                 .append(nowUTC.format(format) + "-")
-                .append(RandomStringUtils.randomAlphanumeric(7))
+                .append(RandomStringUtils.randomAlphanumeric(8))
                 .append(".tmp")
                 .toString();
 
