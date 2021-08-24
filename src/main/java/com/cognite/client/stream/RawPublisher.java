@@ -2,6 +2,7 @@ package com.cognite.client.stream;
 
 import com.cognite.client.RawRows;
 import com.google.auto.value.AutoValue;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +14,7 @@ import java.time.Instant;
  */
 @AutoValue
 public abstract class RawPublisher {
-    protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
+    protected static final Logger LOG = LoggerFactory.getLogger(RawPublisher.class);
 
     private static Builder builder() {
         return new AutoValue_RawPublisher.Builder()
@@ -45,8 +46,19 @@ public abstract class RawPublisher {
     abstract Instant getEndTime();
 
     void run() {
-        Double aDouble = new Double(234308D);
-        aDouble.intValue();
+        final String loggingPrefix = "streaming() [" + RandomStringUtils.randomAlphanumeric(6) + "] - ";
+        LOG.info(loggingPrefix + "Setting up streaming read from CDF.Raw {}.{}",
+                getRawDbName(),
+                getRawTableName());
+
+        long startRange = getStartTime().toEpochMilli();
+        long endRange = getEndTime().toEpochMilli();
+
+        while (Instant.now().isBefore(getEndTime().minus(getPollingOffset()))) {
+
+
+        }
+
     }
 
 
