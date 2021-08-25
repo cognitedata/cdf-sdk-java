@@ -1,6 +1,7 @@
 package com.cognite.client.stream;
 
 import com.cognite.client.RawRows;
+import com.cognite.client.Request;
 import com.cognite.client.dto.RawRow;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
@@ -11,7 +12,11 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -23,6 +28,7 @@ public abstract class RawPublisher {
     protected static final Logger LOG = LoggerFactory.getLogger(RawPublisher.class);
 
     private AtomicBoolean abortStream = new AtomicBoolean(false);
+    private State state = State.READY;
 
     private static Builder builder() {
         return new AutoValue_RawPublisher.Builder()
@@ -55,7 +61,40 @@ public abstract class RawPublisher {
     @Nullable
     abstract Consumer<List<RawRow>> getConsumer();
 
-    void run() throws Exception {
+    /**
+     * Add the consumer of the data stream.
+     *
+     * The consumer will be called for each batch of {@link RawRow}. This is potentially a blocking operation,
+     * so you should take care to process the batch efficiently (or spin off processing to a separate thread).
+     *
+     * @param consumer The function to call for each batch of {@link RawRow}.
+     * @return A {@link RawPublisher} with the consumer configured.
+     */
+    public RawPublisher withConsumer(Consumer<List<RawRow>> consumer) {
+        return toBuilder().setConsumer(consumer).build();
+    }
+
+    public Future<Boolean> start() {
+        Callable<Boolean> task = () -> this.run();
+        return ;
+    }
+
+    /**
+     * Aborts the current stream operation. It may take a few seconds for this operation to complete.
+     */
+    public void abort() {
+        abortStream.set(true);
+        while (State.RUNNING == state) {
+            // wait for the stream to close
+            try {
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                break;
+            }
+        }
+    }
+
+    boolean run() throws Exception {
         final String loggingPrefix = "streaming() [" + RandomStringUtils.randomAlphanumeric(6) + "] - ";
         Preconditions.checkNotNull(getConsumer(),
                 loggingPrefix + "You must specify a Consumer via withConsumer(Consumer<List<RawRow>>)");
@@ -66,14 +105,34 @@ public abstract class RawPublisher {
         LOG.info(loggingPrefix + "Setting up streaming read from CDF.Raw: {}.{}",
                 getRawDbName(),
                 getRawTableName());
+        state = State.RUNNING;
 
         // Set the time range for the first query
         long startRange = getStartTime().toEpochMilli();
         long endRange = Instant.now().minus(getPollingOffset()).toEpochMilli();
 
-        while (Instant.now().isBefore(getEndTime().minus(getPollingOffset())) && !abortStream.get()) {
+        while (Instant.now().isBefore(getEndTime().plus(getPollingOffset())) && !abortStream.get()) {
             endRange = Instant.now().minus(getPollingOffset()).toEpochMilli();
+            LOG.debug(loggingPrefix + "Enter polling loop with startRange: [{}] and endRange: [{}]",
+                    startRange,
+                    endRange);
+            if (startRange < endRange) {
+                Request query = Request.create()
+                        .withRootParameter("minLastUpdatedTime", startRange)
+                        .withRootParameter("maxLastUpdatedTime", endRange);
+                LOG.debug(loggingPrefix + "Send request to read CDF Raw: {}",
+                        query);
 
+                Iterator<List<RawRow>> iterator = getRawRows().list(getRawDbName(), getRawTableName(), query);
+                while (iterator.hasNext() && !abortStream.get()) {
+                    getConsumer().accept(iterator.next());
+                }
+            }
+
+            LOG.debug(loggingPrefix + "Exit polling loop with startRange: [{}] and endRange: [{}]. Sleeping for {}",
+                    startRange,
+                    endRange,
+                    getPollingInterval().toString());
             // Sleep for a polling interval
             try {
                 Thread.sleep(getPollingInterval().toMillis());
@@ -82,9 +141,9 @@ public abstract class RawPublisher {
                 abortStream.set(true);
             }
         }
-
+        state = State.STOPPED;
+        return !abortStream.get();
     }
-
 
     @AutoValue.Builder
     abstract static class Builder {
@@ -98,5 +157,11 @@ public abstract class RawPublisher {
         abstract Builder setConsumer(Consumer<List<RawRow>> value);
 
         abstract RawPublisher build();
+    }
+
+    enum State {
+        READY,
+        RUNNING,
+        STOPPED
     }
 }
