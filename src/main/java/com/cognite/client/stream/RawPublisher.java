@@ -1,13 +1,19 @@
 package com.cognite.client.stream;
 
 import com.cognite.client.RawRows;
+import com.cognite.client.dto.RawRow;
 import com.google.auto.value.AutoValue;
+import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  *
@@ -16,11 +22,13 @@ import java.time.Instant;
 public abstract class RawPublisher {
     protected static final Logger LOG = LoggerFactory.getLogger(RawPublisher.class);
 
+    private AtomicBoolean abortStream = new AtomicBoolean(false);
+
     private static Builder builder() {
         return new AutoValue_RawPublisher.Builder()
                 .setPollingInterval(Duration.ofSeconds(5))
                 .setPollingOffset(Duration.ofSeconds(2))
-                .setStartTime(Instant.MIN)
+                .setStartTime(Instant.ofEpochMilli(1L))
                 .setEndTime(Instant.MAX)
                 ;
     }
@@ -44,19 +52,35 @@ public abstract class RawPublisher {
     abstract Duration getPollingOffset();
     abstract Instant getStartTime();
     abstract Instant getEndTime();
+    @Nullable
+    abstract Consumer<List<RawRow>> getConsumer();
 
-    void run() {
+    void run() throws Exception {
         final String loggingPrefix = "streaming() [" + RandomStringUtils.randomAlphanumeric(6) + "] - ";
-        LOG.info(loggingPrefix + "Setting up streaming read from CDF.Raw {}.{}",
+        Preconditions.checkNotNull(getConsumer(),
+                loggingPrefix + "You must specify a Consumer via withConsumer(Consumer<List<RawRow>>)");
+        Preconditions.checkState(getStartTime().isBefore(getEndTime()),
+                String.format(loggingPrefix + "Start time must be before end time. Start time: %s. End time: %s",
+                        getStartTime(),
+                        getEndTime()));
+        LOG.info(loggingPrefix + "Setting up streaming read from CDF.Raw: {}.{}",
                 getRawDbName(),
                 getRawTableName());
 
+        // Set the time range for the first query
         long startRange = getStartTime().toEpochMilli();
-        long endRange = getEndTime().toEpochMilli();
+        long endRange = Instant.now().minus(getPollingOffset()).toEpochMilli();
 
-        while (Instant.now().isBefore(getEndTime().minus(getPollingOffset()))) {
+        while (Instant.now().isBefore(getEndTime().minus(getPollingOffset())) && !abortStream.get()) {
+            endRange = Instant.now().minus(getPollingOffset()).toEpochMilli();
 
-
+            // Sleep for a polling interval
+            try {
+                Thread.sleep(getPollingInterval().toMillis());
+            } catch (Exception e) {
+                LOG.warn(loggingPrefix + "Exception when reading: " + e.toString());
+                abortStream.set(true);
+            }
         }
 
     }
@@ -71,6 +95,7 @@ public abstract class RawPublisher {
         abstract Builder setRawTableName(String value);
         abstract Builder setStartTime(Instant value);
         abstract Builder setEndTime(Instant value);
+        abstract Builder setConsumer(Consumer<List<RawRow>> value);
 
         abstract RawPublisher build();
     }
