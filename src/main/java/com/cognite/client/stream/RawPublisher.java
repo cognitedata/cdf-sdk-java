@@ -14,9 +14,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -74,9 +72,29 @@ public abstract class RawPublisher {
         return toBuilder().setConsumer(consumer).build();
     }
 
+    public RawPublisher withEndTime(Instant endTime) {
+        return toBuilder().setEndTime(endTime).build();
+    }
+
+    public RawPublisher withPollingInterval(Duration interval) {
+        return toBuilder().setPollingInterval(interval).build();
+    }
+
+    /**
+     * Starts the streaming job.
+     *
+     * The job is executed on a separate thread and this method will return immediately to the caller. It returns
+     * a {@link Future} that you can use to block the execution of your own code if you want to explicitly
+     * wait for completion of the streaming job.
+     *
+     * @return A Future hosting the end state of the streaming job. The future returns {@code true} when the
+     * polling loop completes (at its specified end time). {@code false} if the job is aborted before the specified end time.
+     */
     public Future<Boolean> start() {
-        Callable<Boolean> task = () -> this.run();
-        return ;
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        Future<Boolean> future = executorService.submit(this::run);
+        executorService.shutdown();
+        return future;
     }
 
     /**
@@ -94,6 +112,13 @@ public abstract class RawPublisher {
         }
     }
 
+    /**
+     * Start the main polling loop for reading rows from a raw table.
+     *
+     * @return {@code true} when the polling loop completes (at the specified end time). {@code false} if the
+     * job is aborted before the specified end time.
+     * @throws Exception
+     */
     boolean run() throws Exception {
         final String loggingPrefix = "streaming() [" + RandomStringUtils.randomAlphanumeric(6) + "] - ";
         Preconditions.checkNotNull(getConsumer(),
@@ -133,6 +158,8 @@ public abstract class RawPublisher {
                     startRange,
                     endRange,
                     getPollingInterval().toString());
+
+            startRange = endRange + 1; // endRange is inclusive in the raw request, so we must bump the startRange
             // Sleep for a polling interval
             try {
                 Thread.sleep(getPollingInterval().toMillis());

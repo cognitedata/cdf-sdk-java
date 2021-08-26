@@ -2,7 +2,9 @@ package com.cognite.client;
 
 import com.cognite.client.config.ClientConfig;
 import com.cognite.client.dto.RawRow;
+import com.cognite.client.stream.RawPublisher;
 import com.cognite.client.util.DataGenerator;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -14,7 +16,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -149,6 +155,94 @@ class RawTest {
             assertEquals(createRowsList.size(), createRowsResults.size());
             assertEquals(rowsToRetrieve.size(), rowsRetrieved.size());
             assertEquals(rowsToDelete.size(), deleteRowResults.size());
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void writeStreamAndDeleteRaw() {
+        Instant startInstant = Instant.now();
+        String dbName = "stream-test-db-" + RandomStringUtils.randomAlphanumeric(3);
+        String tableName = "stream-test-table-" + RandomStringUtils.randomAlphanumeric(3);
+
+        String loggingPrefix = "UnitTest - writeStreamAndDeleteRaw() -";
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
+                .withBaseUrl(TestConfigProvider.getHost())
+                //.withClientConfig(config)
+                ;
+        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        try {
+            LOG.info(loggingPrefix + "Start creating raw database and table.");
+            client.raw().tables().create(dbName, List.of(tableName), true);
+            LOG.info(loggingPrefix + "Finished creating raw database and table. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            LOG.info(loggingPrefix + "Setup the stream subscriber to the raw table.");
+            AtomicInteger receiveRowsCount = new AtomicInteger(0);
+            List<RawRow> rowList = new CopyOnWriteArrayList<>();
+
+            RawPublisher publisher = client.raw().rows().stream(dbName, tableName)
+                    .withEndTime(Instant.now().plusSeconds(20))
+                    .withPollingInterval(Duration.ofSeconds(2))
+                    .withConsumer(batch -> {
+                            LOG.info(loggingPrefix + "Received a batch of {} rows.",
+                                    batch.size());
+                            receiveRowsCount.addAndGet(batch.size());
+                            rowList.addAll(batch);
+            });
+
+            Future<Boolean> streamer = publisher.start();
+            LOG.info(loggingPrefix + "Finished setup the stream subscriber to the raw table. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            LOG.info(loggingPrefix + "Start creating raw rows.");
+            AtomicInteger publishRowsCount = new AtomicInteger(0);
+            CompletableFuture.runAsync(() -> {
+               for (int i = 0; i < 5; i++) {
+                   int noRows = 10;
+                   List<RawRow> createRowsList = DataGenerator.generateRawRows(dbName, tableName, noRows);
+                   publishRowsCount.addAndGet(noRows);
+                   try {
+                       client.raw().rows().upsert(createRowsList, false);
+                       Thread.sleep(800L);
+                   } catch (Exception e) {
+                       e.printStackTrace();
+                   }
+               }
+            });
+
+            LOG.info(loggingPrefix + "Finished creating raw rows. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+
+            LOG.info(loggingPrefix + "Wait for stream to finish.");
+
+            LOG.info(loggingPrefix + "Finished reading stream with result {}. Duration: {}",
+                    streamer.get(),
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            LOG.info(loggingPrefix + "Start deleting raw databases.");
+
+            client.raw().databases().delete(List.of(dbName), true);
+            LOG.info(loggingPrefix + "Finished deleting raw databases. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            // assertEquals(createDatabasesList.size(), listDatabaseResults.size());
+
+
+            assertEquals(receiveRowsCount.get(), publishRowsCount.get());
         } catch (Exception e) {
             LOG.error(e.toString());
             e.printStackTrace();
