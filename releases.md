@@ -19,6 +19,16 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [1.1.0-SNAPSHOT]
+
+### Added
+
+- Streaming support for reading rows from raw tables.
+
+### Fixed
+
+- `ensureParent` when creating a raw table.
+
 ## [1.0.1], Aug 18th, 2021
 
 ### Fixed

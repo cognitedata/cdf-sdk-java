@@ -947,7 +947,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
         Preconditions.checkArgument(!dbName.isEmpty(), "Database name cannot be empty.");
         LOG.debug(loggingPrefix + "Creating tables in database {}", dbName);
 
-        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+        RawWriteTablesRequestProvider requestProvider = RawWriteTablesRequestProvider.builder()
                 .setEndpoint("raw/dbs/" + dbName + "/tables")
                 .setRequest(Request.create())
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
