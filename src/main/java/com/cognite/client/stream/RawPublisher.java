@@ -19,24 +19,44 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /**
- *
+ * This class produces a continuous data stream of rows from a raw table. The raw table is monitored for changes and
+ * all new or changed rows are streamed.
  */
 @AutoValue
 public abstract class RawPublisher {
     protected static final Logger LOG = LoggerFactory.getLogger(RawPublisher.class);
 
+    // Defaults and boundary values
+    private static final Instant MIN_START_TIME = Instant.EPOCH;
+
+    private static final Duration MIN_POLLING_INTERVAL = Duration.ofMillis(500L);
+    private static final Duration DEFAULT_POLLING_INTERVAL = Duration.ofSeconds(5L);
+    private static final Duration MAX_POLLING_INTERVAL = Duration.ofSeconds(60L);
+
+    private static final Duration MIN_POLLING_OFFSET = Duration.ofMillis(500L);
+    private static final Duration DEFAULT_POLLING_OFFSET = Duration.ofSeconds(2L);
+    private static final Duration MAX_POLLING_OFFSET = Duration.ofDays(10L);
+
+    // Internal state
     private AtomicBoolean abortStream = new AtomicBoolean(false);
     private State state = State.READY;
 
     private static Builder builder() {
         return new AutoValue_RawPublisher.Builder()
-                .setPollingInterval(Duration.ofSeconds(5))
-                .setPollingOffset(Duration.ofSeconds(2))
-                .setStartTime(Instant.ofEpochMilli(1L))
+                .setPollingInterval(DEFAULT_POLLING_INTERVAL)
+                .setPollingOffset(DEFAULT_POLLING_OFFSET)
+                .setStartTime(MIN_START_TIME.plusSeconds(1))
                 .setEndTime(Instant.MAX)
                 ;
     }
 
+    /**
+     *
+     * @param rawRows
+     * @param rawDbName
+     * @param rawTableName
+     * @return
+     */
     public static RawPublisher of(RawRows rawRows,
                                   String rawDbName,
                                   String rawTableName) {
@@ -66,18 +86,68 @@ public abstract class RawPublisher {
      * so you should take care to process the batch efficiently (or spin off processing to a separate thread).
      *
      * @param consumer The function to call for each batch of {@link RawRow}.
-     * @return A {@link RawPublisher} with the consumer configured.
+     * @return The {@link RawPublisher} with the consumer configured.
      */
     public RawPublisher withConsumer(Consumer<List<RawRow>> consumer) {
         return toBuilder().setConsumer(consumer).build();
     }
 
+    /**
+     * Sets the start time (i.e. the earliest possible created/changed time of the CDF Raw Row) of the data stream.
+     *
+     * The default start time is at Unix epoch. I.e. the publisher will read all existing rows (if any) in the raw table.
+     * @param startTime The start time instant
+     * @return The {@link RawPublisher} with the consumer configured.
+     */
+    public RawPublisher withStartTime(Instant startTime) {
+        Preconditions.checkArgument(startTime.isAfter(MIN_START_TIME),
+                "Start time must be after Unix Epoch.");
+        return toBuilder().setStartTime(startTime).build();
+    }
+
+    /**
+     * Sets the end time (i.e. the latest possible created/changed time of the CDF Raw Row) of the data stream.
+     *
+     * The default end time is {@code Instant.MAX}. I.e. the publisher will stream data indefinitely, or until
+     * aborted.
+     * @param endTime The end time instant
+     * @return The {@link RawPublisher} with the consumer configured.
+     */
     public RawPublisher withEndTime(Instant endTime) {
+        Preconditions.checkArgument(endTime.isAfter(MIN_START_TIME),
+                "End time must be after Unix Epoch.");
         return toBuilder().setEndTime(endTime).build();
     }
 
+    /**
+     * Sets the polling interval to check for updates to the source raw table. The default polling interval is
+     * every 5 seconds. You can configure a more or less frequent interval, down to every 0.5 seconds.
+     *
+     * @param interval The interval to check the source raw table for updates.
+     * @return The {@link RawPublisher} with the consumer configured.
+     */
     public RawPublisher withPollingInterval(Duration interval) {
+        Preconditions.checkArgument(interval.compareTo(MIN_POLLING_INTERVAL) > 0
+                        && interval.compareTo(MAX_POLLING_INTERVAL) < 0,
+                String.format("Polling interval must be greater than %s and less than %s.",
+                        MIN_POLLING_INTERVAL,
+                        MAX_POLLING_INTERVAL));
         return toBuilder().setPollingInterval(interval).build();
+    }
+
+    /**
+     * Sets the polling offset. The offset is a time window "buffer"
+     *
+     * @param interval The interval to check the source raw table for updates.
+     * @return The {@link RawPublisher} with the consumer configured.
+     */
+    public RawPublisher withPollingOffset(Duration interval) {
+        Preconditions.checkArgument(interval.compareTo(MIN_POLLING_OFFSET) > 0
+                        && interval.compareTo(MAX_POLLING_OFFSET) < 0,
+                String.format("Polling offset must be greater than %s and less than %s.",
+                        MIN_POLLING_OFFSET,
+                        MAX_POLLING_OFFSET));
+        return toBuilder().setPollingOffset(interval).build();
     }
 
     /**
@@ -110,6 +180,7 @@ public abstract class RawPublisher {
                 break;
             }
         }
+        LOG.info("Publisher aborted.");
     }
 
     /**

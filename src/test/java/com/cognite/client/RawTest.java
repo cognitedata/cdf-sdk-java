@@ -190,6 +190,7 @@ class RawTest {
             List<RawRow> rowList = new CopyOnWriteArrayList<>();
 
             RawPublisher publisher = client.raw().rows().stream(dbName, tableName)
+                    .withStartTime(Instant.now())
                     .withEndTime(Instant.now().plusSeconds(20))
                     .withPollingInterval(Duration.ofSeconds(2))
                     .withConsumer(batch -> {
@@ -207,13 +208,13 @@ class RawTest {
             LOG.info(loggingPrefix + "Start creating raw rows.");
             AtomicInteger publishRowsCount = new AtomicInteger(0);
             CompletableFuture.runAsync(() -> {
-               for (int i = 0; i < 5; i++) {
+               for (int i = 0; i < 6; i++) {
                    int noRows = 10;
                    List<RawRow> createRowsList = DataGenerator.generateRawRows(dbName, tableName, noRows);
                    publishRowsCount.addAndGet(noRows);
                    try {
                        client.raw().rows().upsert(createRowsList, false);
-                       Thread.sleep(800L);
+                       Thread.sleep(500L);
                    } catch (Exception e) {
                        e.printStackTrace();
                    }
@@ -223,7 +224,6 @@ class RawTest {
             LOG.info(loggingPrefix + "Finished creating raw rows. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
-
 
             LOG.info(loggingPrefix + "Wait for stream to finish.");
 
@@ -238,9 +238,6 @@ class RawTest {
             LOG.info(loggingPrefix + "Finished deleting raw databases. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
-
-            // assertEquals(createDatabasesList.size(), listDatabaseResults.size());
-
 
             assertEquals(receiveRowsCount.get(), publishRowsCount.get());
         } catch (Exception e) {
