@@ -27,9 +27,9 @@ public final class ConnectorConstants {
     /*
     API request identifiers
      */
-    public final static String SDK_IDENTIFIER = "cognite-beam-sdk-0.9.x";
-    public final static String DEFAULT_APP_IDENTIFIER = "cognite-beam-sdk";
-    public final static String DEFAULT_SESSION_IDENTIFIER = "cognite-beam-sdk";
+    public final static String SDK_IDENTIFIER = "cdf-sdk-java-1.1.x";
+    public final static String DEFAULT_APP_IDENTIFIER = "cdf-sdk-java";
+    public final static String DEFAULT_SESSION_IDENTIFIER = "cdf-sdk-java";
 
     /*
     Constants related to executing api http requests.
