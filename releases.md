@@ -24,6 +24,7 @@ Changes are grouped as follows:
 ### Added
 
 - Streaming support for reading rows from raw tables.
+- Support for recursively deleting raw databases and tables.
 
 ### Fixed
 

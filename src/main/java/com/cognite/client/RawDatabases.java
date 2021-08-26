@@ -113,13 +113,25 @@ public abstract class RawDatabases extends ApiBase {
     }
 
     /**
-     * Deletes a set of Raw database.
+     * Deletes a set of Raw databases. The databases must be empty.
      *
      * @param databases The Raw database to delete.
      * @return The deleted databases.
      * @throws Exception
      */
     public List<String> delete(List<String> databases) throws Exception {
+        return delete(databases, false);
+    }
+
+    /**
+     * Deletes a set of Raw databases. Allows to recursively delete the databases' tables in the same operation.
+     *
+     * @param databases The Raw database to delete.
+     * @param recursive Set to true to automatically delete the tables in the databases.
+     * @return The deleted databases.
+     * @throws Exception
+     */
+    public List<String> delete(List<String> databases, boolean recursive) throws Exception {
         String loggingPrefix = "delete() - ";
         Instant startInstant = Instant.now();
         LOG.info(loggingPrefix + "Received {} databases to delete.",
@@ -137,7 +149,8 @@ public abstract class RawDatabases extends ApiBase {
                 items.add(ImmutableMap.of("name", table));
             }
             Request request = addAuthInfo(Request.create()
-                    .withItems(items));
+                    .withItems(items)
+                    .withRootParameter("recursive", recursive));
             ResponseItems<String> response = deleteItemWriter.writeItems(request);
             if (!response.isSuccessful()) {
                 throw new Exception(String.format(loggingPrefix + "Delete database request failed: %s",
