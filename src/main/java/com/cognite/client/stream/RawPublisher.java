@@ -21,6 +21,10 @@ import java.util.function.Consumer;
 /**
  * This class produces a continuous data stream of rows from a raw table. The raw table is monitored for changes and
  * all new or changed rows are streamed.
+ *
+ * The publisher polls Raw for updates at the {@code pollingInterval} (default every 5 sec.) and push the resulting
+ * batch of {@link RawRow} to the registered {@code Consumer}.
+ *
  */
 @AutoValue
 public abstract class RawPublisher {
@@ -51,11 +55,14 @@ public abstract class RawPublisher {
     }
 
     /**
+     * For internal use.
      *
-     * @param rawRows
-     * @param rawDbName
-     * @param rawTableName
-     * @return
+     * Configures a publisher to stream rows from the specified raw table.
+     *
+     * @param rawRows The read raw rows api to use for querying Raw.
+     * @param rawDbName The raw database to read from.
+     * @param rawTableName The raw table to read from.
+     * @return The configured {@link RawPublisher}
      */
     public static RawPublisher of(RawRows rawRows,
                                   String rawDbName,
@@ -136,7 +143,11 @@ public abstract class RawPublisher {
     }
 
     /**
-     * Sets the polling offset. The offset is a time window "buffer"
+     * Sets the polling offset. The offset is a time window "buffer" subtracted from the current time when polling
+     * for data from CDF Raw. It is intended as a safeguard for clock differences between the client (running this
+     * publisher) and the CDF service.
+     *
+     * For example, if the polling offset is 2 seconds, then this publisher will
      *
      * @param interval The interval to check the source raw table for updates.
      * @return The {@link RawPublisher} with the consumer configured.
@@ -153,12 +164,13 @@ public abstract class RawPublisher {
     /**
      * Starts the streaming job.
      *
-     * The job is executed on a separate thread and this method will return immediately to the caller. It returns
+     * The job is executed on a separate thread and this method will immediately return to the caller. It returns
      * a {@link Future} that you can use to block the execution of your own code if you want to explicitly
      * wait for completion of the streaming job.
      *
      * @return A Future hosting the end state of the streaming job. The future returns {@code true} when the
-     * polling loop completes (at its specified end time). {@code false} if the job is aborted before the specified end time.
+     * polling loop completes (at its specified end time). {@code false} if the job is aborted before the
+     * specified end time.
      */
     public Future<Boolean> start() {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -198,9 +210,11 @@ public abstract class RawPublisher {
                 String.format(loggingPrefix + "Start time must be before end time. Start time: %s. End time: %s",
                         getStartTime(),
                         getEndTime()));
-        LOG.info(loggingPrefix + "Setting up streaming read from CDF.Raw: {}.{}",
+        LOG.info(loggingPrefix + "Setting up streaming read from CDF.Raw: [{}.{}]. Time window start: {}. End: {}",
                 getRawDbName(),
-                getRawTableName());
+                getRawTableName(),
+                getStartTime().toString(),
+                getEndTime().toString());
         state = State.RUNNING;
 
         // Set the time range for the first query
@@ -225,7 +239,7 @@ public abstract class RawPublisher {
                 }
             }
 
-            LOG.debug(loggingPrefix + "Exit polling loop with startRange: [{}] and endRange: [{}]. Sleeping for {}",
+            LOG.debug(loggingPrefix + "Finished polling loop with startRange: [{}] and endRange: [{}]. Sleeping for {}",
                     startRange,
                     endRange,
                     getPollingInterval().toString());
