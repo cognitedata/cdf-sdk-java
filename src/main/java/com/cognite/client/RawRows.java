@@ -23,6 +23,7 @@ import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ItemReader;
 import com.cognite.client.servicesV1.ResponseItems;
 import com.cognite.client.servicesV1.parser.RawParser;
+import com.cognite.client.stream.RawPublisher;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -211,6 +212,17 @@ public abstract class RawRows extends ApiBase {
 
         return AdapterIterator.of(listJson(ResourceType.RAW_ROW, request, "cursor", cursors),
                 RawRowParser.of(dbName, tableName));
+    }
+
+    /**
+     * Streams rows from a raw table.
+     *
+     * @param dbName The database to read rows from.
+     * @param tableName The table to read rows from.
+     * @return The stream producing object. Call {@code start()} to start the stream.
+     */
+    public RawPublisher stream(String dbName, String tableName) {
+        return RawPublisher.of(this, dbName, tableName);
     }
 
     /**
