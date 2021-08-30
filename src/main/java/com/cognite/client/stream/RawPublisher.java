@@ -147,7 +147,8 @@ public abstract class RawPublisher {
      * for data from CDF Raw. It is intended as a safeguard for clock differences between the client (running this
      * publisher) and the CDF service.
      *
-     * For example, if the polling offset is 2 seconds, then this publisher will
+     * For example, if the polling offset is 2 seconds, then this publisher will look for data updates up to (and including)
+     * T-2 seconds. That is, data will be streamed with a 2 second fixed latency/delay.
      *
      * @param interval The interval to check the source raw table for updates.
      * @return The {@link RawPublisher} with the consumer configured.

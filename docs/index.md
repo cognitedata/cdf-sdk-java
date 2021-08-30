@@ -19,6 +19,7 @@ map directly to the API's definitions.
 
 - [Client configuration. How to setup authentication.](clientSetup.md)
 - [Reading and writing data. All the basics of how to use the SDK](readAndWriteData.md)
+- [Streaming data from Cognite Data Fusion](streamingData.md)
 - [The Asset resource type. The secret sauce for handling the asset-hierarchy](assets.md)
 - [Time series--TBD]
 - [Contextualization](contextualization.md)
