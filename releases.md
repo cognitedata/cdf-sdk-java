@@ -19,24 +19,24 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
-## [1.1.0-SNAPSHOT]
+## [1.1.0] 2021-08-30
 
 ### Added
 
-- Streaming support for reading rows from raw tables.
+- Streaming support for reading rows from raw tables. [More information in the documentation](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/streamingData.md)
 - Support for recursively deleting raw databases and tables.
 
 ### Fixed
 
 - `ensureParent` when creating a raw table.
 
-## [1.0.1], Aug 18th, 2021
+## [1.0.1], 2021-08-18
 
 ### Fixed
 
 - Lingering threads could keep the client from shutting down in a timely manner.
 
-## [1.0.0], Aug 18th, 2021
+## [1.0.0], 2021-08-18
 
 ### Fixed
 

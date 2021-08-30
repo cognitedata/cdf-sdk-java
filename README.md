@@ -12,6 +12,7 @@ for you so you can spend more time on your core client logic.
 
 Some of the SDK's capabilities:
 - _Upsert support_. It will automatically handle `create`and `update` for you.
+- _Streaming reads_. Subscribe to a stream of created and updated data.
 - _Retries with backoff_. Transient failures will automatically be retried.
 - _Performance optimization_. The SDK will handle batching and parallelization of requests.
 
@@ -35,7 +36,7 @@ Please check [the documentation](https://github.com/cognitedata/cdf-sdk-java/blo
 <dependency>    
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>1.0.1</version>
+    <version>1.1.0</version>
 </dependency>
 ```
     
