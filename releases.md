@@ -21,6 +21,12 @@ Changes are grouped as follows:
 
 ## [1.2.0-SNAPSHOT]
 
+## [1.1.1] 2021-08-31
+
+### Fixed
+
+- Streaming reads may not start for very large/high end times.
+
 ## [1.1.0] 2021-08-30
 
 ### Added
