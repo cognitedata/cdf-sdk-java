@@ -32,10 +32,6 @@ public abstract class RawPublisher {
     protected static final Logger LOG = LoggerFactory.getLogger(RawPublisher.class);
 
     // Defaults and boundary values
-    private static final Instant MIN_START_TIME = Instant.EPOCH;
-    // Have to subtract to guard against overflow
-    private static final Instant MAX_END_TIME = Instant.MAX.minus(1, ChronoUnit.YEARS);
-
     private static final Duration MIN_POLLING_INTERVAL = Duration.ofMillis(500L);
     private static final Duration DEFAULT_POLLING_INTERVAL = Duration.ofSeconds(5L);
     private static final Duration MAX_POLLING_INTERVAL = Duration.ofSeconds(60L);
@@ -43,6 +39,10 @@ public abstract class RawPublisher {
     private static final Duration MIN_POLLING_OFFSET = Duration.ofMillis(500L);
     private static final Duration DEFAULT_POLLING_OFFSET = Duration.ofSeconds(2L);
     private static final Duration MAX_POLLING_OFFSET = Duration.ofDays(10L);
+
+    private static final Instant MIN_START_TIME = Instant.EPOCH;
+    // Have to subtract to guard against overflow
+    private static final Instant MAX_END_TIME = Instant.MAX.minus(MAX_POLLING_OFFSET).minusSeconds(1);
 
     // Internal state
     private AtomicBoolean abortStream = new AtomicBoolean(false);
