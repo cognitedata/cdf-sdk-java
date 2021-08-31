@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
@@ -32,6 +33,8 @@ public abstract class RawPublisher {
 
     // Defaults and boundary values
     private static final Instant MIN_START_TIME = Instant.EPOCH;
+    // Have to subtract to guard against overflow
+    private static final Instant MAX_END_TIME = Instant.MAX.minus(1, ChronoUnit.YEARS);
 
     private static final Duration MIN_POLLING_INTERVAL = Duration.ofMillis(500L);
     private static final Duration DEFAULT_POLLING_INTERVAL = Duration.ofSeconds(5L);
@@ -50,7 +53,7 @@ public abstract class RawPublisher {
                 .setPollingInterval(DEFAULT_POLLING_INTERVAL)
                 .setPollingOffset(DEFAULT_POLLING_OFFSET)
                 .setStartTime(MIN_START_TIME.plusSeconds(1))
-                .setEndTime(Instant.MAX)
+                .setEndTime(MAX_END_TIME)
                 ;
     }
 
@@ -107,8 +110,8 @@ public abstract class RawPublisher {
      * @return The {@link RawPublisher} with the consumer configured.
      */
     public RawPublisher withStartTime(Instant startTime) {
-        Preconditions.checkArgument(startTime.isAfter(MIN_START_TIME),
-                "Start time must be after Unix Epoch.");
+        Preconditions.checkArgument(startTime.isAfter(MIN_START_TIME) && startTime.isBefore(MAX_END_TIME),
+                "Start time must be after Unix Epoch and before Instant.MAX.minus(1, ChronoUnit.YEARS).");
         return toBuilder().setStartTime(startTime).build();
     }
 
@@ -121,8 +124,8 @@ public abstract class RawPublisher {
      * @return The {@link RawPublisher} with the consumer configured.
      */
     public RawPublisher withEndTime(Instant endTime) {
-        Preconditions.checkArgument(endTime.isAfter(MIN_START_TIME),
-                "End time must be after Unix Epoch.");
+        Preconditions.checkArgument(endTime.isAfter(MIN_START_TIME) && endTime.isBefore(MAX_END_TIME),
+                "End time must be after Unix Epoch and before Instant.MAX.minus(1, ChronoUnit.YEARS).");
         return toBuilder().setEndTime(endTime).build();
     }
 
@@ -236,7 +239,10 @@ public abstract class RawPublisher {
 
                 Iterator<List<RawRow>> iterator = getRawRows().list(getRawDbName(), getRawTableName(), query);
                 while (iterator.hasNext() && !abortStream.get()) {
-                    getConsumer().accept(iterator.next());
+                    List<RawRow> batch = iterator.next();
+                    if (batch.size() > 0) {
+                        getConsumer().accept(iterator.next());
+                    }
                 }
             }
 
