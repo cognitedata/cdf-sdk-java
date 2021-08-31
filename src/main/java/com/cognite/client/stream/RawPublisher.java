@@ -241,7 +241,7 @@ public abstract class RawPublisher {
                 while (iterator.hasNext() && !abortStream.get()) {
                     List<RawRow> batch = iterator.next();
                     if (batch.size() > 0) {
-                        getConsumer().accept(iterator.next());
+                        getConsumer().accept(batch);
                     }
                 }
             }
