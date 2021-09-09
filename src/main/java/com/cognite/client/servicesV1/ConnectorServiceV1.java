@@ -1483,18 +1483,17 @@ public abstract class ConnectorServiceV1 implements Serializable {
     }
 
     /**
-     * Detect references to assets and files in a P&ID and annotate the references with bounding boxes.
-     * Finds entities in the P&ID that match a list of entity names,
+     * Detect references to assets and files in an engineering diagram and annotate the references with bounding boxes.
+     * Finds entities in the engineering diagram that match a list of entity names,
      * for instance asset names. The P&ID must be a single-page PDF file.
      *
      * @return
      */
-    public ItemReader<String> detectAnnotationsPnid() {
-        LOG.debug(loggingPrefix + "Initiating the annotation detection service.");
+    public ItemReader<String> detectAnnotationsDiagrams() {
 
         PostPlaygroundJsonRequestProvider jobStartRequestProvider =
                 PostPlaygroundJsonRequestProvider.builder()
-                        .setEndpoint("context/pnid/detect")
+                        .setEndpoint("context/diagram/detect")
                         .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                         .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
                         .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
@@ -1503,7 +1502,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
         RequestParametersResponseParser jobStartResponseParser = RequestParametersResponseParser.of(
                 ImmutableMap.of("jobId", "jobId"));
 
-        GetPlaygroundJobIdRequestProvider jobResultsRequestProvider = GetPlaygroundJobIdRequestProvider.of("context/pnid/detect")
+        GetPlaygroundJobIdRequestProvider jobResultsRequestProvider = GetPlaygroundJobIdRequestProvider.of("context/diagram/detect")
                 .toBuilder()
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
@@ -1515,17 +1514,17 @@ public abstract class ConnectorServiceV1 implements Serializable {
     }
 
     /**
-     * Convert a single-page P&ID in PDF format to an interactive SVG where
+     * Convert a single-page engineering diagram in PDF format to an interactive SVG where
      * the provided annotations are highlighted.
      *
      * @return
      */
-    public ItemReader<String> convertPnid() {
+    public ItemReader<String> convertDiagrams() {
         LOG.debug(loggingPrefix + "Initiating the convert PDF service.");
 
         PostPlaygroundJsonRequestProvider jobStartRequestProvider =
                 PostPlaygroundJsonRequestProvider.builder()
-                        .setEndpoint("context/pnid/convert")
+                        .setEndpoint("context/diagram/convert")
                         .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                         .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
                         .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
@@ -1534,7 +1533,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
         RequestParametersResponseParser jobStartResponseParser = RequestParametersResponseParser.of(
                 ImmutableMap.of("jobId", "jobId"));
 
-        GetPlaygroundJobIdRequestProvider jobResultsRequestProvider = GetPlaygroundJobIdRequestProvider.of("context/pnid/convert")
+        GetPlaygroundJobIdRequestProvider jobResultsRequestProvider = GetPlaygroundJobIdRequestProvider.of("context/diagram/convert")
                 .toBuilder()
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
