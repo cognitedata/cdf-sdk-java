@@ -20,10 +20,9 @@ import com.cognite.client.dto.*;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ItemReader;
 import com.cognite.client.servicesV1.ResponseItems;
-import com.cognite.client.servicesV1.parser.PnIDResponseParser;
+import com.cognite.client.servicesV1.parser.DiagramResponseParser;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
-import com.google.protobuf.BytesValue;
 import com.google.protobuf.Struct;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
@@ -329,7 +328,7 @@ public abstract class PnID extends ApiBase {
      */
     private PnIDResponse parsePnIDAnnotationResult(String json) {
         try {
-            return PnIDResponseParser.ParsePnIDAnnotationResponse(json);
+            return DiagramResponseParser.ParsePnIDAnnotationResponse(json);
         } catch (Exception e)  {
             throw new RuntimeException(e);
         }
@@ -341,7 +340,7 @@ public abstract class PnID extends ApiBase {
      */
     private ConvertResponse parseConvertResult(String json) {
         try {
-            return PnIDResponseParser.ParsePnIDConvertResponse(json);
+            return DiagramResponseParser.ParsePnIDConvertResponse(json);
         } catch (Exception e)  {
             throw new RuntimeException(e);
         }
