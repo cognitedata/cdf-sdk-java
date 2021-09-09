@@ -6,33 +6,35 @@ import "google/protobuf/struct.proto";
 
 option java_package = "com.cognite.client.dto";
 option java_multiple_files = true;
-option java_outer_classname = "PnIDResponseOuter";
-
-message BoundingBox {
-    double xMax = 1;
-    double xMin = 2;
-    double yMax = 3;
-    double yMin = 4;
-}
+//option java_outer_classname = "DiagramResponseOuter";
 
 message Annotation {
-     BoundingBox boundingBox = 1;
-     optional string text = 2;
-     repeated google.protobuf.Struct entities = 3;
-     optional double confidence = 4;
-     optional string type = 5;
+  message Vertex {
+    double x = 1;
+    double y = 2;
+  }
+  message Region {
+    string shape = 1;
+    repeated Vertex vertices = 2;
+    int32 page = 3;
+  }
+
+  optional string text = 1;
+  optional double confidence = 2;
+  Region region = 3;
+  repeated google.protobuf.Struct entities = 4;
 }
 
-message PnIDResponse {
+message DiagramResponse {
     /*
      The id of the source file used for detecting annotations and building
-     interactive P&ID
+     the interactive engineering diagram
      */
     optional int64 file_id = 1;
 
     /*
     The external id of the source file used for detecting annotations and building
-    interactive P&ID
+    the interactive engineering diagram
     */
     optional string file_external_id = 2;
 
@@ -47,6 +49,17 @@ message PnIDResponse {
 }
 
 message ConvertResponse {
+  message Result {
+    int32 page = 1;
+
+    // The URL for the converted SVG file
+    optional string svg_url = 2;
+
+    // The URL for the converted PNG file
+    optional string png_url = 3;
+
+    optional string error_message = 4;
+  }
   /*
      The id of the source file used for building
      interactive P&ID
@@ -59,9 +72,5 @@ message ConvertResponse {
   */
   optional string file_external_id = 2;
 
-  // The URL for the converted SVG file
-  optional string svg_url = 4;
-
-  // The URL for the converted PNG file
-  optional string png_url = 5;
+  repeated Result results = 3;
 }
