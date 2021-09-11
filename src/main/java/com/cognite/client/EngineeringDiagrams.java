@@ -32,6 +32,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Array;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -86,14 +87,14 @@ public abstract class EngineeringDiagrams extends ApiBase {
                                                     Collection<Struct> entities,
                                                     String searchField,
                                                     boolean convertToInteractive) throws Exception {
-        return detectAnnotationsPnID(files, entities, searchField, false, 2, convertToInteractive);
+        return detectAnnotationsDiagrams(files, entities, searchField, false, 2, convertToInteractive);
     }
 
     /**
-     * Detect references to assets and files, etc. from a P&ID and annotate them with bounding boxes.
-     * The P&ID must be a single-page PDF file or an image with JPEG, PNG or TIFF format.
+     * Detect references to assets and files, etc. from an engineering diagram and annotate them with bounding boxes.
+     * The engineering diagram must be a PDF file or an image with JPEG, PNG or TIFF format.
      *
-     * @param files The P&IDs to process.
+     * @param files The engineering diagram files to process.
      * @param entities The entities to use for matching.
      * @param searchField The entity attribute to use for string matching.
      * @param partialMatch If set to {@code true}, use partial matching
@@ -102,7 +103,7 @@ public abstract class EngineeringDiagrams extends ApiBase {
      * @return The results from the detect annotations job(s).
      * @throws Exception
      */
-    public List<DiagramResponse> detectAnnotationsPnID(Collection<Item> files,
+    public List<DiagramResponse> detectAnnotationsDiagrams(Collection<Item> files,
                                                     Collection<Struct> entities,
                                                     String searchField,
                                                     boolean partialMatch,
@@ -134,16 +135,24 @@ public abstract class EngineeringDiagrams extends ApiBase {
                 .withRootParameter("partialMatch", partialMatch)
                 .withRootParameter("minTokens", minTokens);
 
+        // Build the item batches
+        List<List<Item>> itemBatchesList = Partition.ofSize(new ArrayList<>(files), 2);
+
         List<Request> requestBatches = new ArrayList<>();
-        for (Item file : files) {
-            if (file.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
-                requestBatches.add(detectAnnotations.withRootParameter("fileExternalId", file.getExternalId()));
-            } else if (file.getIdTypeCase() == Item.IdTypeCase.ID) {
-                requestBatches.add(detectAnnotations.withRootParameter("fileId", file.getId()));
-            }
+        for (List<Item> fileBatch : itemBatchesList) {
+            List<Map<String, Object>> items = new ArrayList<>();
+            fileBatch.forEach(file -> {
+                if (file.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
+                    items.add(Map.of("fileExternalId", file.getExternalId()));
+                } else if (file.getIdTypeCase() == Item.IdTypeCase.ID) {
+                    items.add(Map.of("fileId", file.getId()));
+                }
+            });
+
+            requestBatches.add(detectAnnotations.withItems(items));
         }
 
-        return detectAnnotationsPnID(requestBatches, convertToInteractive);
+        return detectAnnotationsDiagrams(requestBatches, convertToInteractive);
     }
 
 
