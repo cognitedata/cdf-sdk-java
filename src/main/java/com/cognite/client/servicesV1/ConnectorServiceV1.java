@@ -1490,7 +1490,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> detectAnnotationsDiagrams() {
-
         PostPlaygroundJsonRequestProvider jobStartRequestProvider =
                 PostPlaygroundJsonRequestProvider.builder()
                         .setEndpoint("context/diagram/detect")
@@ -1509,19 +1508,17 @@ public abstract class ConnectorServiceV1 implements Serializable {
                 .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
                 .build();
 
-        return AsyncJobReader.of(getClient(), jobStartRequestProvider, jobResultsRequestProvider, JsonResponseParser.create())
+        return AsyncJobReader.of(getClient(), jobStartRequestProvider, jobResultsRequestProvider, JsonItemResponseParser.create())
                 .withJobStartResponseParser(jobStartResponseParser);
     }
 
     /**
-     * Convert a single-page engineering diagram in PDF format to an interactive SVG where
+     * Convert an engineering diagram in PDF format to an interactive SVG where
      * the provided annotations are highlighted.
      *
      * @return
      */
     public ItemReader<String> convertDiagrams() {
-        LOG.debug(loggingPrefix + "Initiating the convert PDF service.");
-
         PostPlaygroundJsonRequestProvider jobStartRequestProvider =
                 PostPlaygroundJsonRequestProvider.builder()
                         .setEndpoint("context/diagram/convert")
@@ -1540,7 +1537,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                 .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
                 .build();
 
-        return AsyncJobReader.of(getClient(), jobStartRequestProvider, jobResultsRequestProvider, JsonResponseParser.create())
+        return AsyncJobReader.of(getClient(), jobStartRequestProvider, jobResultsRequestProvider, JsonItemResponseParser.create())
                 .withJobStartResponseParser(jobStartResponseParser);
     }
 

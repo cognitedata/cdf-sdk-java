@@ -26,6 +26,17 @@ message Annotation {
 }
 
 message DiagramResponse {
+  message ConvertResult {
+    int32 page = 1;
+
+    // The binary for the converted SVG file
+    optional bytes svg_binary = 2;
+
+    // The binary for the converted PNG file
+    optional bytes png_binary = 3;
+
+    optional string error_message = 4;
+  }
     /*
      The id of the source file used for detecting annotations and building
      the interactive engineering diagram
@@ -41,11 +52,8 @@ message DiagramResponse {
     // The identified entity annotations with bounding boxes
     repeated Annotation items = 3;
 
-    // The converted SVG binary
-    optional bytes svg_binary = 4;
-
-    // The converted PNG binary
-  optional bytes png_binary = 5;
+    // Converted SVGs / PNGs
+    repeated ConvertResult convertResults = 4;
 }
 
 message ConvertResponse {
