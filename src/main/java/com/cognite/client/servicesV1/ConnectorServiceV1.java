@@ -2046,7 +2046,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
          */
         public CompletableFuture<ResponseItems<T>> getItemsAsync(Request items) throws Exception {
             Preconditions.checkNotNull(items, "Input cannot be null.");
-            LOG.info(loggingPrefix + "Starting async api job.");
+            LOG.debug(loggingPrefix + "Starting async api job.");
 
             // Execute the request and get the response future
             CompletableFuture<ResponseItems<T>> responseItemsFuture = getRequestExecutor()
