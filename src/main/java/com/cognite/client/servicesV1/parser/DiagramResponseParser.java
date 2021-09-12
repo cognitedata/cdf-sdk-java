@@ -59,7 +59,7 @@ public class DiagramResponseParser {
                     JsonNode regionNode = node.get("region");
                     Annotation.Region.Builder regionBuilder = Annotation.Region.newBuilder();
                     if (regionNode.path("shape").isTextual()) {
-                        regionBuilder.setShape(node.path("shape").textValue());
+                        regionBuilder.setShape(regionNode.path("shape").textValue());
                     }
                     if (regionNode.path("vertices").isArray()) {
                         for (JsonNode vertexNode : regionNode.path("vertices")) {
@@ -74,7 +74,7 @@ public class DiagramResponseParser {
                         }
                     }
                     if (regionNode.path("page").isIntegralNumber()) {
-                        regionBuilder.setPage(node.path("page").intValue());
+                        regionBuilder.setPage(regionNode.path("page").intValue());
                     }
 
                     annotationBuilder.setRegion(regionBuilder.build());
