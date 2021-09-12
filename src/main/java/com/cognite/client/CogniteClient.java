@@ -54,12 +54,13 @@ public abstract class CogniteClient implements Serializable {
     private static int NO_WORKERS = Math.min(
             Runtime.getRuntime().availableProcessors() * DEFAULT_CPU_MULTIPLIER,
             DEFAULT_MAX_WORKER_THREADS);
-    private static ExecutorService executorService = new ThreadPoolExecutor(0, NO_WORKERS,
+    private static ThreadPoolExecutor executorService = new ThreadPoolExecutor(NO_WORKERS, NO_WORKERS,
             1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
 
     protected final static Logger LOG = LoggerFactory.getLogger(CogniteClient.class);
 
     static {
+        executorService.allowCoreThreadTimeOut(true);
         LOG.info("CogniteClient - setting up default worker pool with {} workers.",
                 NO_WORKERS);
     }
@@ -272,8 +273,9 @@ public abstract class CogniteClient implements Serializable {
                 config.getNoListPartitions());
         if (config.getNoWorkers() != NO_WORKERS) {
             NO_WORKERS = config.getNoWorkers();
-            executorService = new ThreadPoolExecutor(0, NO_WORKERS,
+            executorService = new ThreadPoolExecutor(NO_WORKERS, NO_WORKERS,
                     1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+            executorService.allowCoreThreadTimeOut(true);
         }
 
         return toBuilder().setClientConfig(config).build();
