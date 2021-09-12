@@ -153,12 +153,12 @@ class DiagramsTest {
                 for (DiagramResponse.ConvertResult result : response.getConvertResultsList()) {
                     if (result.hasSvgBinary()) {
                         java.nio.file.Files.write(
-                                baseFilePath.resolve("test-svg-" + result.getPage() + RandomStringUtils.randomAlphanumeric(2) + ".svg"),
+                                baseFilePath.resolve("test-svg-page" + result.getPage() + "-" + RandomStringUtils.randomAlphanumeric(2) + ".svg"),
                                 result.getSvgBinary().toByteArray());
                     }
                     if (result.hasPngBinary()) {
                         java.nio.file.Files.write(
-                                baseFilePath.resolve("test-png-" + result.getPage() + RandomStringUtils.randomAlphanumeric(2) + ".png"),
+                                baseFilePath.resolve("test-png-page" + result.getPage() + "-" + RandomStringUtils.randomAlphanumeric(2) + ".png"),
                                 result.getPngBinary().toByteArray());
                     }
                 }

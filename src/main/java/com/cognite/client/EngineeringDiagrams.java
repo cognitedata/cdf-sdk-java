@@ -74,10 +74,10 @@ public abstract class EngineeringDiagrams extends ApiBase {
      *
      * The detection will perform complete matches (i.e. partial matches are not accepted).
      *
-     * @param files The P&IDs to process.
+     * @param files The engineering diagram files to process.
      * @param entities The entities to use for matching.
      * @param searchField The entity attribute to use for string matching.
-     * @param convertToInteractive If set to {@code true} then an interactive P&ID (SVG) will be included in the results.
+     * @param convertToInteractive If set to {@code true} then an interactive diagram (SVG) will be included in the results.
      * @return The results from the detect annotations job(s).
      * @throws Exception
      */
@@ -107,7 +107,7 @@ public abstract class EngineeringDiagrams extends ApiBase {
                                                     boolean partialMatch,
                                                     int minTokens,
                                                     boolean convertToInteractive) throws Exception {
-        final String loggingPrefix = "detectAnnotationsPnID() - batch: " + RandomStringUtils.randomAlphanumeric(6) + " - ";
+        final String loggingPrefix = "detectAnnotationsDiagrams() - batch: " + RandomStringUtils.randomAlphanumeric(4) + " - ";
         Preconditions.checkNotNull(files, loggingPrefix + "Files cannot be null.");
         Preconditions.checkNotNull(entities, loggingPrefix + "Entities cannot be null.");
         Preconditions.checkNotNull(searchField, loggingPrefix + "Search field cannot be null.");
@@ -156,17 +156,17 @@ public abstract class EngineeringDiagrams extends ApiBase {
 
     /**
      * Detect references to assets and files, etc. from an engineering diagram and annotate them with bounding boxes.
-     * The P&ID must be a single-page PDF file or an image with JPEG, PNG or TIFF format.
+     * The engineering diagram must be a PDF file or an image with JPEG, PNG or TIFF format.
      *
      * All input parameters are provided via the request object.
      * @param requests Input parameters for the detect annotations job(s).
-     * @param convertToInteractive If set to {@code true} then an interactive P&ID (SVG) will be included in the results.
+     * @param convertToInteractive If set to {@code true} then an interactive diagram (SVG) will be included in the results.
      * @return The results from the detect annotations job(s).
      * @throws Exception
      */
     public List<DiagramResponse> detectAnnotationsDiagrams(Collection<Request> requests,
                                                     boolean convertToInteractive) throws Exception {
-        final String loggingPrefix = "detectAnnotationsDiagrams() - batch: " + RandomStringUtils.randomAlphanumeric(6) + " - ";
+        final String loggingPrefix = "detectAnnotationsDiagrams() - batch: " + RandomStringUtils.randomAlphanumeric(4) + " - ";
         Preconditions.checkNotNull(requests, loggingPrefix + "Requests cannot be null.");
         Instant startInstant = Instant.now();
         LOG.debug(loggingPrefix + "Received {} detect annotations requests.",
@@ -234,7 +234,7 @@ public abstract class EngineeringDiagrams extends ApiBase {
      * @throws Exception
      */
     public List<DiagramResponse> convertDiagrams(Collection<DiagramResponse> annotationsList, boolean grayscale) throws Exception {
-        final String loggingPrefix = "convertDiagrams() - batch: " + RandomStringUtils.randomAlphanumeric(6) + " - ";
+        final String loggingPrefix = "convertDiagrams() - batch: " + RandomStringUtils.randomAlphanumeric(4) + " - ";
         Preconditions.checkNotNull(annotationsList, loggingPrefix + "Requests cannot be null.");
         Instant startInstant = Instant.now();
         LOG.debug(loggingPrefix + "Received {} convert diagrams requests.",
@@ -265,6 +265,7 @@ public abstract class EngineeringDiagrams extends ApiBase {
 
             // add the annotations for the file
             item.put("annotations", annotations.getItemsList());
+            itemsList.add(item);
         }
 
         // Partition into batches per request
