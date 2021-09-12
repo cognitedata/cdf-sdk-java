@@ -22,19 +22,19 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class PnIDTest {
+class DiagramsTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
     static final String metaKey = "source";
     static final String metaValue = "unit_test";
 
     @Test
     @Tag("remoteCDP")
-    void createInteractivePnId() {
+    void createInteractiveDiagrams() {
         Instant startInstant = Instant.now();
         ClientConfig config = ClientConfig.create()
                 .withNoWorkers(1)
                 .withNoListPartitions(1);
-        String loggingPrefix = "UnitTest - createInteractivePnId() -";
+        String loggingPrefix = "UnitTest - createInteractiveDiagrams() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
                 .withBaseUrl(TestConfigProvider.getHost())
@@ -139,9 +139,9 @@ class PnIDTest {
                             .build())
                     .collect(Collectors.toList());
 
-            List<PnIDResponse> detectResults = client.experimental()
-                    .pnid()
-                    .detectAnnotationsPnID(fileItems, entities, "searchText", true);
+            List<DiagramResponse> detectResults = client.experimental()
+                    .engineeringDiagrams()
+                    .detectAnnotationsDiagrams(fileItems, entities, "searchText", true);
 
             LOG.info(loggingPrefix + "Finished detect annotations and convert to SVG. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
@@ -149,16 +149,18 @@ class PnIDTest {
 
             LOG.info(loggingPrefix + "Start writing SVGs to local storage.");
             Path baseFilePath = Paths.get("./");
-            for (PnIDResponse response : detectResults) {
-                if (response.hasSvgBinary()) {
-                    java.nio.file.Files.write(
-                            baseFilePath.resolve("test-svg-" + RandomStringUtils.randomAlphanumeric(2) + ".svg"),
-                            response.getSvgBinary().toByteArray());
-                }
-                if (response.hasPngBinary()) {
-                    java.nio.file.Files.write(
-                            baseFilePath.resolve("test-png-" + RandomStringUtils.randomAlphanumeric(2) + ".png"),
-                            response.getPngBinary().toByteArray());
+            for (DiagramResponse response : detectResults) {
+                for (DiagramResponse.ConvertResult result : response.getConvertResultsList()) {
+                    if (result.hasSvgBinary()) {
+                        java.nio.file.Files.write(
+                                baseFilePath.resolve("test-svg-" + result.getPage() + RandomStringUtils.randomAlphanumeric(2) + ".svg"),
+                                result.getSvgBinary().toByteArray());
+                    }
+                    if (result.hasPngBinary()) {
+                        java.nio.file.Files.write(
+                                baseFilePath.resolve("test-png-" + result.getPage() + RandomStringUtils.randomAlphanumeric(2) + ".png"),
+                                result.getPngBinary().toByteArray());
+                    }
                 }
             }
 

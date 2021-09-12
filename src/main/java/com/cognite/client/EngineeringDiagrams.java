@@ -32,14 +32,12 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Array;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
-
 
 /**
  * This class represents the Cognite engineering api endpoint
@@ -83,7 +81,7 @@ public abstract class EngineeringDiagrams extends ApiBase {
      * @return The results from the detect annotations job(s).
      * @throws Exception
      */
-    public List<DiagramResponse> detectAnnotationsPnID(Collection<Item> files,
+    public List<DiagramResponse> detectAnnotationsDiagrams(Collection<Item> files,
                                                     Collection<Struct> entities,
                                                     String searchField,
                                                     boolean convertToInteractive) throws Exception {
