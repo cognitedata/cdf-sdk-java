@@ -42,8 +42,6 @@ public abstract class CogniteClient implements Serializable {
     private final static String DEFAULT_BASE_URL = "https://api.cognitedata.com";
     private final static String API_ENV_VAR = "COGNITE_API_KEY";
 
-    private static final int DEFAULT_CPU_MULTIPLIER = 8;
-    private final static int DEFAULT_MAX_WORKER_THREADS = 8;
     /*
     private static ForkJoinPool executorService = new ForkJoinPool(Math.min(
             Runtime.getRuntime().availableProcessors() * DEFAULT_CPU_MULTIPLIER,
@@ -51,9 +49,7 @@ public abstract class CogniteClient implements Serializable {
 
      */
 
-    private static int NO_WORKERS = Math.min(
-            Runtime.getRuntime().availableProcessors() * DEFAULT_CPU_MULTIPLIER,
-            DEFAULT_MAX_WORKER_THREADS);
+    private static int NO_WORKERS = 8;
     private static ThreadPoolExecutor executorService = new ThreadPoolExecutor(NO_WORKERS, NO_WORKERS,
             1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
 
