@@ -21,6 +21,17 @@ Changes are grouped as follows:
 
 ## [1.2.0-SNAPSHOT]
 
+### Changed
+
+- Refactor the experimental `interactive P&ID` to the new `engineering diagram` api endpoint. Basically, 
+`client.experimental().pnid().detectAnnotationsPnid()` changes to `client.experimental().engineeringDiagrams().detectAnnotations()`.
+Please refer to [the documentation](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/contextualization.md) 
+for more information.
+
+### Fixed
+
+- A performance regression introduced in v1.0.0. Performance should be back now :).
+
 ## [1.1.1] 2021-08-31
 
 ### Fixed
