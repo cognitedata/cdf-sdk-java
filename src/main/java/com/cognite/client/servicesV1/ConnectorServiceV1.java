@@ -1888,8 +1888,8 @@ public abstract class ConnectorServiceV1 implements Serializable {
      */
     @AutoValue
     public static abstract class AsyncJobReader<T> extends ConnectorBase implements Connector<T>, ItemReader<T> {
-        private static final int DEFAULT_MAX_WORKERS = 32;
-        private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool();
+        private static final int DEFAULT_MAX_WORKERS = 24;
+        private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(DEFAULT_MAX_WORKERS);
 
         // parsers for various job status attributes
         private static final JsonStringAttributeResponseParser jobStatusResponseParser =
