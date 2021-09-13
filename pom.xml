@@ -6,7 +6,7 @@
 
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0-SNAPSHOT</version>
     <licenses>
         <license>
             <name>Apache 2</name>
