@@ -1483,18 +1483,16 @@ public abstract class ConnectorServiceV1 implements Serializable {
     }
 
     /**
-     * Detect references to assets and files in a P&ID and annotate the references with bounding boxes.
-     * Finds entities in the P&ID that match a list of entity names,
+     * Detect references to assets and files in an engineering diagram and annotate the references with bounding boxes.
+     * Finds entities in the engineering diagram that match a list of entity names,
      * for instance asset names. The P&ID must be a single-page PDF file.
      *
      * @return
      */
-    public ItemReader<String> detectAnnotationsPnid() {
-        LOG.debug(loggingPrefix + "Initiating the annotation detection service.");
-
+    public ItemReader<String> detectAnnotationsDiagrams() {
         PostPlaygroundJsonRequestProvider jobStartRequestProvider =
                 PostPlaygroundJsonRequestProvider.builder()
-                        .setEndpoint("context/pnid/detect")
+                        .setEndpoint("context/diagram/detect")
                         .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                         .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
                         .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
@@ -1503,29 +1501,27 @@ public abstract class ConnectorServiceV1 implements Serializable {
         RequestParametersResponseParser jobStartResponseParser = RequestParametersResponseParser.of(
                 ImmutableMap.of("jobId", "jobId"));
 
-        GetPlaygroundJobIdRequestProvider jobResultsRequestProvider = GetPlaygroundJobIdRequestProvider.of("context/pnid/detect")
+        GetPlaygroundJobIdRequestProvider jobResultsRequestProvider = GetPlaygroundJobIdRequestProvider.of("context/diagram/detect")
                 .toBuilder()
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
                 .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
                 .build();
 
-        return AsyncJobReader.of(getClient(), jobStartRequestProvider, jobResultsRequestProvider, JsonResponseParser.create())
+        return AsyncJobReader.of(getClient(), jobStartRequestProvider, jobResultsRequestProvider, JsonItemResponseParser.create())
                 .withJobStartResponseParser(jobStartResponseParser);
     }
 
     /**
-     * Convert a single-page P&ID in PDF format to an interactive SVG where
+     * Convert an engineering diagram in PDF format to an interactive SVG where
      * the provided annotations are highlighted.
      *
      * @return
      */
-    public ItemReader<String> convertPnid() {
-        LOG.debug(loggingPrefix + "Initiating the convert PDF service.");
-
+    public ItemReader<String> convertDiagrams() {
         PostPlaygroundJsonRequestProvider jobStartRequestProvider =
                 PostPlaygroundJsonRequestProvider.builder()
-                        .setEndpoint("context/pnid/convert")
+                        .setEndpoint("context/diagram/convert")
                         .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                         .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
                         .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
@@ -1534,14 +1530,14 @@ public abstract class ConnectorServiceV1 implements Serializable {
         RequestParametersResponseParser jobStartResponseParser = RequestParametersResponseParser.of(
                 ImmutableMap.of("jobId", "jobId"));
 
-        GetPlaygroundJobIdRequestProvider jobResultsRequestProvider = GetPlaygroundJobIdRequestProvider.of("context/pnid/convert")
+        GetPlaygroundJobIdRequestProvider jobResultsRequestProvider = GetPlaygroundJobIdRequestProvider.of("context/diagram/convert")
                 .toBuilder()
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
                 .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
                 .build();
 
-        return AsyncJobReader.of(getClient(), jobStartRequestProvider, jobResultsRequestProvider, JsonResponseParser.create())
+        return AsyncJobReader.of(getClient(), jobStartRequestProvider, jobResultsRequestProvider, JsonItemResponseParser.create())
                 .withJobStartResponseParser(jobStartResponseParser);
     }
 
@@ -1892,6 +1888,9 @@ public abstract class ConnectorServiceV1 implements Serializable {
      */
     @AutoValue
     public static abstract class AsyncJobReader<T> extends ConnectorBase implements Connector<T>, ItemReader<T> {
+        private static final int DEFAULT_MAX_WORKERS = 24;
+        private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(DEFAULT_MAX_WORKERS);
+
         // parsers for various job status attributes
         private static final JsonStringAttributeResponseParser jobStatusResponseParser =
                 JsonStringAttributeResponseParser.create().withAttributePath("status");
@@ -2050,7 +2049,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
          */
         public CompletableFuture<ResponseItems<T>> getItemsAsync(Request items) throws Exception {
             Preconditions.checkNotNull(items, "Input cannot be null.");
-            LOG.info(loggingPrefix + "Starting async api job.");
+            LOG.debug(loggingPrefix + "Starting async api job.");
 
             // Execute the request and get the response future
             CompletableFuture<ResponseItems<T>> responseItemsFuture = getRequestExecutor()
@@ -2061,7 +2060,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                             ResponseItems.of(getJobStartResponseParser(), responseBinary)
                                     .withErrorMessageResponseParser(errorMessageResponseParser)
                                     .withStatusResponseParser(jobStatusResponseParser))
-                    .thenCompose(responseItems -> {
+                    .thenApplyAsync(responseItems -> {
                         try {
                             List<String> responseStatus = responseItems.getStatus();
                             List<Request> resultsItems = responseItems.getResultsItems();
@@ -2081,7 +2080,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
 
                                 // Activate the get results loop and return the end result.
                                 // Must copy the project config (auth details) from the original request.
-                                return getJobResultAsync(resultsItems.get(0).withAuthConfig(items.getAuthConfig()),
+                                return getJobResult(resultsItems.get(0).withAuthConfig(items.getAuthConfig()),
                                         items);
                             } else {
                                 // The async job did not start successfully
@@ -2091,9 +2090,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                                         responseItems.getResponseBodyAsString(),
                                         responseItems.getResponseBinary().getResponse().headers());
 
-                                return CompletableFuture.completedFuture(
-                                        ResponseItems.of(getResponseParser(), responseItems.getResponseBinary())
-                                );
+                                return ResponseItems.of(getResponseParser(), responseItems.getResponseBinary());
                             }
                         } catch (Exception e) {
                             String message = String.format(loggingPrefix + "The async api job failed to start. Response headers: %s%n"
@@ -2103,123 +2100,113 @@ public abstract class ConnectorServiceV1 implements Serializable {
                                     responseItems.getResponseBodyAsString(),
                                     e.getMessage());
                             LOG.error(message);
-                            CompletableFuture<ResponseItems<T>> exceptionally = new CompletableFuture<>();
-                            exceptionally.completeExceptionally(new Throwable(message, e));
-
-                            return exceptionally;
+                           throw new CompletionException(new Exception(message));
                         }
-                    })
+                    }, DEFAULT_POOL)
                     ;
 
             return responseItemsFuture;
         }
 
         /*
-        Get the job results via a polling loop.
+        Get the async job results via a polling loop.
          */
-        private CompletableFuture<ResponseItems<T>> getJobResultAsync(Request request,
-                                                                      Request jobStartRequest) {
-            Preconditions.checkNotNull(request, "Input cannot be null.");
+        private ResponseItems<T> getJobResult(Request request, Request jobStartRequest) {
+            Preconditions.checkNotNull(request, "Request cannot be null.");
+            Preconditions.checkNotNull(request, "jobStartRequest cannot be null.");
 
-            // Execute the request and get the response future
-            CompletableFuture<ResponseItems<T>> responseItemsFuture = CompletableFuture
-                    .supplyAsync(() -> {
-                        long timeStart = System.currentTimeMillis();
-                        long timeMax = System.currentTimeMillis() + getJobTimeoutDuration().toMillis();
-                        Map<String, Object> jobResultItems = null;
-                        ResponseBinary jobResultResponse = null;
-                        boolean jobComplete = false;
+            long timeStart = System.currentTimeMillis();
+            long timeMax = System.currentTimeMillis() + getJobTimeoutDuration().toMillis();
+            Map<String, Object> jobResultItems = null;
+            ResponseBinary jobResultResponse = null;
+            boolean jobComplete = false;
 
-                        LOG.info(loggingPrefix + "Start polling the async api for results.");
-                        while (!jobComplete && System.currentTimeMillis() < timeMax) {
-                            try {
-                                Thread.sleep(getPollingInterval().toMillis());
+            LOG.info(loggingPrefix + "Start polling the async api for results.");
+            while (!jobComplete && System.currentTimeMillis() < timeMax) {
+                try {
+                    Thread.sleep(getPollingInterval().toMillis());
 
-                                jobResultResponse = getRequestExecutor()
-                                        .executeRequestAsync(getJobResultRequestProvider()
-                                                .withRequest(request)
-                                                .buildRequest(Optional.empty()))
-                                        .join();
+                    jobResultResponse = getRequestExecutor()
+                            .executeRequest(getJobResultRequestProvider()
+                                    .withRequest(request)
+                                    .buildRequest(Optional.empty()));
 
-                                String payload = jobResultResponse.getResponseBodyBytes().toStringUtf8();
-                                jobResultItems = objectMapper
-                                        .readValue(payload, new TypeReference<Map<String, Object>>() {});
+                    String payload = jobResultResponse.getResponseBodyBytes().toStringUtf8();
+                    jobResultItems = objectMapper
+                            .readValue(payload, new TypeReference<Map<String, Object>>() {});
 
-                                if (jobResultItems.containsKey("errorMessage")
-                                        && ((String) jobResultItems.get("status")).equalsIgnoreCase("Failed")) {
-                                    // The api job has failed.
-                                    String message = String.format(loggingPrefix
-                                            + "Error occurred when completing the async api job. "
-                                            + "Status: Failed. Error message: %s %n"
-                                            + "Request: %s"
-                                            + "Response headers: %s"
-                                            + "Job start request: %s",
-                                            jobResultItems.get("errorMessage"),
-                                            request.getRequestParametersAsJson(),
-                                            jobResultResponse.getResponse().headers(),
-                                            jobStartRequest.getRequestParametersAsJson().substring(0,
-                                                    Math.min(300, jobStartRequest.getRequestParametersAsJson().length())));
-                                    LOG.error(message);
-                                    throw new Exception(message);
-                                }
+                    if (jobResultItems.containsKey("errorMessage")
+                            && ((String) jobResultItems.get("status")).equalsIgnoreCase("Failed")) {
+                        // The api job has failed.
+                        String message = String.format(loggingPrefix
+                                        + "Error occurred when completing the async api job. "
+                                        + "Status: Failed. Error message: %s %n"
+                                        + "Request: %s"
+                                        + "Response headers: %s"
+                                        + "Job start request: %s",
+                                jobResultItems.get("errorMessage"),
+                                request.getRequestParametersAsJson(),
+                                jobResultResponse.getResponse().headers(),
+                                jobStartRequest.getRequestParametersAsJson().substring(0,
+                                        Math.min(300, jobStartRequest.getRequestParametersAsJson().length())));
+                        LOG.error(message);
+                        throw new Exception(message);
+                    }
 
-                                if (((String) jobResultItems.get("status")).equalsIgnoreCase("Completed")) {
-                                    jobComplete = true;
-                                } else {
-                                    LOG.debug(loggingPrefix + "Async job not completed. Status : {}",
-                                            jobResultItems.get("status"));
-                                }
-                            } catch (Exception e) {
-                                LOG.error(loggingPrefix + "Failed to get async api job results. Exception: {}. ",
-                                        e.getMessage());
-                                throw new CompletionException(e);
-                            }
-                        }
+                    if (((String) jobResultItems.get("status")).equalsIgnoreCase("Completed")) {
+                        jobComplete = true;
+                    } else {
+                        LOG.debug(loggingPrefix + "Async job not completed. Status : {}",
+                                jobResultItems.get("status"));
+                    }
+                } catch (Exception e) {
+                    LOG.error(loggingPrefix + "Failed to get async api job results. Exception: {}. ",
+                            e.getMessage());
+                    throw new CompletionException(e);
+                }
+            }
 
-                        if (jobComplete) {
-                            LOG.info(loggingPrefix + "Job results received.");
-                            // Try to register job queue time
-                            if (null != jobResultItems
-                                    && jobResultItems.containsKey("requestTimestamp")
-                                    && null != jobResultItems.get("requestTimestamp")
-                                    && jobResultItems.containsKey("startTimestamp")
-                                    && null != jobResultItems.get("startTimestamp")) {
-                                long requestTimestamp = (Long) jobResultItems.get("requestTimestamp");
-                                long startTimestamp = (Long) jobResultItems.get("startTimestamp");
-                                jobResultResponse = jobResultResponse
-                                        .withApiJobQueueDuration(startTimestamp - requestTimestamp);
-                            }
-                            // Try to register job execution time
-                            if (null != jobResultItems
-                                    && jobResultItems.containsKey("startTimestamp")
-                                    && null != jobResultItems.get("startTimestamp")
-                                    && jobResultItems.containsKey("statusTimestamp")
-                                    && null != jobResultItems.get("statusTimestamp")) {
-                                long startTimestamp = (Long) jobResultItems.get("startTimestamp");
-                                long statusTimestamp = (Long) jobResultItems.get("statusTimestamp");
-                                jobResultResponse = jobResultResponse
-                                        .withApiJobDuration(statusTimestamp - startTimestamp);
-                            } else {
-                                // register job execution time using the local time registrations
-                                jobResultResponse = jobResultResponse
-                                        .withApiJobDuration(System.currentTimeMillis() - timeStart);
-                            }
-                        } else {
-                            String message = "The api job did not complete within the given timeout. Request parameters: "
-                                    + request.getRequestParameters().toString();
-                            LOG.error(loggingPrefix + message);
-                            throw new CompletionException(
-                                    new Throwable(message + " Job status: " + jobResultItems.get("status")));
-                        }
+            if (jobComplete) {
+                LOG.info(loggingPrefix + "Job results received.");
+                // Try to register job queue time
+                if (null != jobResultItems
+                        && jobResultItems.containsKey("requestTimestamp")
+                        && null != jobResultItems.get("requestTimestamp")
+                        && jobResultItems.containsKey("startTimestamp")
+                        && null != jobResultItems.get("startTimestamp")) {
+                    long requestTimestamp = (Long) jobResultItems.get("requestTimestamp");
+                    long startTimestamp = (Long) jobResultItems.get("startTimestamp");
+                    jobResultResponse = jobResultResponse
+                            .withApiJobQueueDuration(startTimestamp - requestTimestamp);
+                }
+                // Try to register job execution time
+                if (null != jobResultItems
+                        && jobResultItems.containsKey("startTimestamp")
+                        && null != jobResultItems.get("startTimestamp")
+                        && jobResultItems.containsKey("statusTimestamp")
+                        && null != jobResultItems.get("statusTimestamp")) {
+                    long startTimestamp = (Long) jobResultItems.get("startTimestamp");
+                    long statusTimestamp = (Long) jobResultItems.get("statusTimestamp");
+                    jobResultResponse = jobResultResponse
+                            .withApiJobDuration(statusTimestamp - startTimestamp);
+                } else {
+                    // register job execution time using the local time registrations
+                    jobResultResponse = jobResultResponse
+                            .withApiJobDuration(System.currentTimeMillis() - timeStart);
+                }
+            } else {
+                String message = "The api job did not complete within the given timeout. Request parameters: "
+                        + request.getRequestParameters().toString();
+                LOG.error(loggingPrefix + message);
+                throw new CompletionException(
+                        new Throwable(message + " Job status: " + jobResultItems.get("status")));
+            }
 
-                        ResponseItems<T> responseItems = ResponseItems.of(getResponseParser(), jobResultResponse)
-                                .withStatusResponseParser(jobStatusResponseParser)
-                                .withErrorMessageResponseParser(errorMessageResponseParser);
+            ResponseItems<T> responseItems = ResponseItems.of(getResponseParser(), jobResultResponse)
+                    .withStatusResponseParser(jobStatusResponseParser)
+                    .withErrorMessageResponseParser(errorMessageResponseParser);
 
-                        return responseItems;
-                    });
-
-            return responseItemsFuture;
+            return responseItems;
         }
 
         @AutoValue.Builder

@@ -42,8 +42,6 @@ public abstract class CogniteClient implements Serializable {
     private final static String DEFAULT_BASE_URL = "https://api.cognitedata.com";
     private final static String API_ENV_VAR = "COGNITE_API_KEY";
 
-    private static final int DEFAULT_CPU_MULTIPLIER = 8;
-    private final static int DEFAULT_MAX_WORKER_THREADS = 8;
     /*
     private static ForkJoinPool executorService = new ForkJoinPool(Math.min(
             Runtime.getRuntime().availableProcessors() * DEFAULT_CPU_MULTIPLIER,
@@ -51,15 +49,14 @@ public abstract class CogniteClient implements Serializable {
 
      */
 
-    private static int NO_WORKERS = Math.min(
-            Runtime.getRuntime().availableProcessors() * DEFAULT_CPU_MULTIPLIER,
-            DEFAULT_MAX_WORKER_THREADS);
-    private static ExecutorService executorService = new ThreadPoolExecutor(0, NO_WORKERS,
+    private static int NO_WORKERS = 8;
+    private static ThreadPoolExecutor executorService = new ThreadPoolExecutor(NO_WORKERS, NO_WORKERS,
             1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
 
     protected final static Logger LOG = LoggerFactory.getLogger(CogniteClient.class);
 
     static {
+        executorService.allowCoreThreadTimeOut(true);
         LOG.info("CogniteClient - setting up default worker pool with {} workers.",
                 NO_WORKERS);
     }
@@ -272,8 +269,9 @@ public abstract class CogniteClient implements Serializable {
                 config.getNoListPartitions());
         if (config.getNoWorkers() != NO_WORKERS) {
             NO_WORKERS = config.getNoWorkers();
-            executorService = new ThreadPoolExecutor(0, NO_WORKERS,
+            executorService = new ThreadPoolExecutor(NO_WORKERS, NO_WORKERS,
                     1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+            executorService.allowCoreThreadTimeOut(true);
         }
 
         return toBuilder().setClientConfig(config).build();

@@ -156,8 +156,7 @@ public abstract class RequestExecutor {
      * @return a {@link CompletableFuture} encapsulating the future response.
      */
     public CompletableFuture<ResponseBinary> executeRequestAsync(Request request) {
-        LOG.debug(loggingPrefix + "Executing request async. Detected {} CPUs. Default executor running with "
-                + "a target parallelism of {}", Runtime.getRuntime().availableProcessors(), DEFAULT_POOL.getParallelism());
+        LOG.debug(loggingPrefix + "Executing request async.");
 
         CompletableFuture<ResponseBinary> completableFuture = new CompletableFuture<>();
         getExecutor().execute((Runnable & CompletableFuture.AsynchronousCompletionTask) () -> {
