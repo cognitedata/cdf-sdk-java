@@ -141,7 +141,7 @@ class DiagramsTest {
 
             List<DiagramResponse> detectResults = client.experimental()
                     .engineeringDiagrams()
-                    .detectAnnotationsDiagrams(fileItems, entities, "searchText", true);
+                    .detectAnnotations(fileItems, entities, "searchText", true);
 
             LOG.info(loggingPrefix + "Finished detect annotations and convert to SVG. Duration: {}",
                     Duration.between(startInstant, Instant.now()));

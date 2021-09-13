@@ -81,11 +81,11 @@ public abstract class EngineeringDiagrams extends ApiBase {
      * @return The results from the detect annotations job(s).
      * @throws Exception
      */
-    public List<DiagramResponse> detectAnnotationsDiagrams(Collection<Item> files,
-                                                    Collection<Struct> entities,
-                                                    String searchField,
-                                                    boolean convertToInteractive) throws Exception {
-        return detectAnnotationsDiagrams(files, entities, searchField, false, 2, convertToInteractive);
+    public List<DiagramResponse> detectAnnotations(Collection<Item> files,
+                                                   Collection<Struct> entities,
+                                                   String searchField,
+                                                   boolean convertToInteractive) throws Exception {
+        return detectAnnotations(files, entities, searchField, false, 2, convertToInteractive);
     }
 
     /**
@@ -101,12 +101,12 @@ public abstract class EngineeringDiagrams extends ApiBase {
      * @return The results from the detect annotations job(s).
      * @throws Exception
      */
-    public List<DiagramResponse> detectAnnotationsDiagrams(Collection<Item> files,
-                                                    Collection<Struct> entities,
-                                                    String searchField,
-                                                    boolean partialMatch,
-                                                    int minTokens,
-                                                    boolean convertToInteractive) throws Exception {
+    public List<DiagramResponse> detectAnnotations(Collection<Item> files,
+                                                   Collection<Struct> entities,
+                                                   String searchField,
+                                                   boolean partialMatch,
+                                                   int minTokens,
+                                                   boolean convertToInteractive) throws Exception {
         final String loggingPrefix = "detectAnnotationsDiagrams() - batch: " + RandomStringUtils.randomAlphanumeric(4) + " - ";
         Preconditions.checkNotNull(files, loggingPrefix + "Files cannot be null.");
         Preconditions.checkNotNull(entities, loggingPrefix + "Entities cannot be null.");
@@ -150,7 +150,7 @@ public abstract class EngineeringDiagrams extends ApiBase {
             requestBatches.add(detectAnnotations.withItems(items));
         }
 
-        return detectAnnotationsDiagrams(requestBatches, convertToInteractive);
+        return detectAnnotations(requestBatches, convertToInteractive);
     }
 
 
@@ -164,8 +164,8 @@ public abstract class EngineeringDiagrams extends ApiBase {
      * @return The results from the detect annotations job(s).
      * @throws Exception
      */
-    public List<DiagramResponse> detectAnnotationsDiagrams(Collection<Request> requests,
-                                                    boolean convertToInteractive) throws Exception {
+    public List<DiagramResponse> detectAnnotations(Collection<Request> requests,
+                                                   boolean convertToInteractive) throws Exception {
         final String loggingPrefix = "detectAnnotationsDiagrams() - batch: " + RandomStringUtils.randomAlphanumeric(4) + " - ";
         Preconditions.checkNotNull(requests, loggingPrefix + "Requests cannot be null.");
         Instant startInstant = Instant.now();
@@ -215,7 +215,7 @@ public abstract class EngineeringDiagrams extends ApiBase {
                 .collect(Collectors.toList());
 
         if (convertToInteractive) {
-            results = convertDiagrams(results, false);
+            results = convert(results, false);
             LOG.info(loggingPrefix + "Completed converting {} annotated files within a duration of {}.",
                     responseItems.size(),
                     Duration.between(startInstant, Instant.now()).toString());
@@ -233,7 +233,7 @@ public abstract class EngineeringDiagrams extends ApiBase {
      * @return Annotations together with an interactive SVG/PNG binary
      * @throws Exception
      */
-    public List<DiagramResponse> convertDiagrams(Collection<DiagramResponse> annotationsList, boolean grayscale) throws Exception {
+    public List<DiagramResponse> convert(Collection<DiagramResponse> annotationsList, boolean grayscale) throws Exception {
         final String loggingPrefix = "convertDiagrams() - batch: " + RandomStringUtils.randomAlphanumeric(4) + " - ";
         Preconditions.checkNotNull(annotationsList, loggingPrefix + "Requests cannot be null.");
         Instant startInstant = Instant.now();
