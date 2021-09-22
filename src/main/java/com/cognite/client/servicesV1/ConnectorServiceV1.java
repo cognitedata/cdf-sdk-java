@@ -2093,7 +2093,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                                 return ResponseItems.of(getResponseParser(), responseItems.getResponseBinary());
                             }
                         } catch (Exception e) {
-                            String message = String.format(loggingPrefix + "The async api job failed to start. Response headers: %s%n"
+                            String message = String.format(loggingPrefix + "Error during async job execution. Response headers: %s%n"
                                     + "Response summary: %s%n"
                                     + " Exception: %s",
                                     responseItems.getResponseBinary().getResponse().headers().toString(),
