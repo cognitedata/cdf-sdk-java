@@ -6,6 +6,7 @@ import com.cognite.client.config.ClientConfig;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.Secret;
@@ -27,6 +28,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
 
@@ -75,8 +77,12 @@ public abstract class CogniteClient implements Serializable {
     to add specific interceptor depending on the auth method used.
      */
     private static OkHttpClient.Builder getHttpClientBuilder() {
+        List<ConnectionSpec> connectionSpecs = Lists.newArrayList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS);
+        if (Boolean.parseBoolean(System.getenv("enableCdfOverHttp"))) {
+            connectionSpecs.add(ConnectionSpec.CLEARTEXT);
+        }
         return new OkHttpClient.Builder()
-                .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS))
+                .connectionSpecs(connectionSpecs)
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)
                 .writeTimeout(15, TimeUnit.SECONDS);
