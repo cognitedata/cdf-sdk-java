@@ -94,6 +94,7 @@ public abstract class CogniteClient implements Serializable {
      * @return the client object.
      * @throws Exception if the api key cannot be read from the system environment.
      */
+    @Deprecated
     public static CogniteClient create() throws Exception {
         String apiKey = System.getenv(API_ENV_VAR);
         if (null == apiKey) {
@@ -123,6 +124,7 @@ public abstract class CogniteClient implements Serializable {
 
         return CogniteClient.builder()
                 .setApiKey(apiKey)
+                .setAuthType(AuthType.API_KEY)
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
                         .addInterceptor(new ApiKeyInterceptor(host, apiKey))
                         .build())
@@ -151,6 +153,8 @@ public abstract class CogniteClient implements Serializable {
         }
 
         return CogniteClient.builder()
+                .setTokenSupplier(tokenSupplier)
+                .setAuthType(AuthType.TOKEN_SUPPLIER)
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
                         .addInterceptor(new TokenInterceptor(host, tokenSupplier))
                         .build())
@@ -187,6 +191,7 @@ public abstract class CogniteClient implements Serializable {
                 .setClientId(clientId)
                 .setClientSecret(clientSecret)
                 .setTokenUrl(tokenUrl)
+                .setAuthType(AuthType.CLIENT_CREDENTIALS)
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
                         .addInterceptor(new ClientCredentialsInterceptor(host, clientId,
                                 clientSecret, tokenUrl, DEFAULT_BASE_URL + "/.default"))
@@ -205,7 +210,10 @@ public abstract class CogniteClient implements Serializable {
     protected abstract URL getTokenUrl();
     @Nullable
     protected abstract String getApiKey();
+    @Nullable
+    protected abstract Supplier<String> getTokenSupplier();
 
+    protected abstract AuthType getAuthType();
     protected abstract String getBaseUrl();
     public abstract ClientConfig getClientConfig();
     public abstract OkHttpClient getHttpClient();
@@ -243,7 +251,14 @@ public abstract class CogniteClient implements Serializable {
             throw new RuntimeException(e);
         }
 
-        if (null != getApiKey()) {
+        if (getAuthType() == AuthType.TOKEN_SUPPLIER) {
+            return toBuilder()
+                    .setBaseUrl(baseUrl)
+                    .setHttpClient(CogniteClient.getHttpClientBuilder()
+                            .addInterceptor(new TokenInterceptor(host, getTokenSupplier()))
+                            .build())
+                    .build();
+        } else if (getAuthType() == AuthType.API_KEY) {
             // the client is configured with api key auth
             return toBuilder()
                     .setBaseUrl(baseUrl)
@@ -253,6 +268,7 @@ public abstract class CogniteClient implements Serializable {
                     .build();
         }
 
+        // The default is using client credentials
         return toBuilder()
                 .setBaseUrl(baseUrl)
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
@@ -611,6 +627,15 @@ public abstract class CogniteClient implements Serializable {
         }
     }
 
+    /*
+    The set of valid authentication types supported by the client.
+     */
+    protected enum AuthType {
+        API_KEY,
+        CLIENT_CREDENTIALS,
+        TOKEN_SUPPLIER
+    }
+
     @AutoValue.Builder
     abstract static class Builder {
         abstract Builder setProject(String value);
@@ -621,6 +646,8 @@ public abstract class CogniteClient implements Serializable {
         abstract Builder setClientSecret(String value);
         abstract Builder setTokenUrl(URL value);
         abstract Builder setApiKey(String value);
+        abstract Builder setTokenSupplier(Supplier<String> supplier);
+        abstract Builder setAuthType(AuthType value);
 
         abstract CogniteClient build();
     }
