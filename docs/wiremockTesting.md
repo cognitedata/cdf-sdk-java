@@ -36,12 +36,6 @@ annotation.<br>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.junit-pioneer</groupId>
-            <artifactId>junit-pioneer</artifactId>
-            <version>1.4.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.github.tomakehurst</groupId>
             <artifactId>wiremock-jre8</artifactId>
             <version>2.31.0</version>
@@ -58,18 +52,16 @@ import com.cognite.client.CogniteClient;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import org.junit.jupiter.api.Test;
-import org.junitpioneer.jupiter.SetEnvironmentVariable;
-
 import java.util.Iterator;
 import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @WireMockTest(httpPort = 80)
 public class TestCdfMock {
 
     @Test
-    @SetEnvironmentVariable(key = "enableCdfOverHttp", value = "true")
     public void testCdfConnect(WireMockRuntimeInfo wireMockRuntimeInfo) throws Exception {
         stubFor(get("/login/status").willReturn(ok().withBody("{\n" +
                 "    \"data\": {\n" +
@@ -90,10 +82,10 @@ public class TestCdfMock {
                 "    \"nextCursor\": \"wIxxsu58VLnXfHvBQL8v3g==\"\n" +
                 "}")));
 
-        CogniteClient client = CogniteClient.ofKey("TEST").withBaseUrl("http://localhost/");
+        CogniteClient client = CogniteClient.ofKey("TEST").withBaseUrl("http://localhost/").enableHttp(true);
         Iterator<List<String>> databases = client.raw().databases().list();
-        System.out.println(databases.next());
-        System.out.println(databases);
+        assertTrue(databases.hasNext());
+        assertEquals(1, databases.next().size());
     }
 }
 ```
