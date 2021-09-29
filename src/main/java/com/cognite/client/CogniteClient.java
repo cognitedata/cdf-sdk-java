@@ -27,7 +27,6 @@ import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
@@ -77,8 +76,12 @@ public abstract class CogniteClient implements Serializable {
     to add specific interceptor depending on the auth method used.
      */
     private static OkHttpClient.Builder getHttpClientBuilder() {
+        return getHttpClientBuilder(false);
+    }
+
+    private static OkHttpClient.Builder getHttpClientBuilder(boolean enableHttp) {
         List<ConnectionSpec> connectionSpecs = Lists.newArrayList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS);
-        if (Boolean.parseBoolean(System.getenv("enableCdfOverHttp"))) {
+        if (enableHttp) {
             connectionSpecs.add(ConnectionSpec.CLEARTEXT);
         }
         return new OkHttpClient.Builder()
@@ -210,6 +213,7 @@ public abstract class CogniteClient implements Serializable {
     public abstract ClientConfig getClientConfig();
     public abstract OkHttpClient getHttpClient();
 
+
     public ExecutorService getExecutorService() {
         return executorService;
     }
@@ -223,6 +227,24 @@ public abstract class CogniteClient implements Serializable {
     public CogniteClient withProject(String project) {
         return toBuilder().setProject(project).build();
     }
+
+    /**
+     * Returns a {@link CogniteClient} enabling basic HTTP requests.
+     * This should not be used in production environment, but is enabled for testing.
+     *
+     * @return the client object with the base URL set.
+     */
+    public CogniteClient withHttp() {
+        List<Interceptor> interceptorList = toBuilder().build().getHttpClient().interceptors();
+        OkHttpClient.Builder httpClientBuilder = CogniteClient.getHttpClientBuilder(true);
+        for(Interceptor interceptor: interceptorList){
+            httpClientBuilder.addInterceptor(interceptor);
+        }
+        return toBuilder()
+                .setHttpClient(httpClientBuilder.build())
+                .build();
+    }
+
 
     /**
      * Returns a {@link CogniteClient} using the specified base URL for issuing API requests.
