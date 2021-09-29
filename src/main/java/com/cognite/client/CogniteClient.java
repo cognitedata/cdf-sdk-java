@@ -27,6 +27,7 @@ import java.net.URI;
 import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
@@ -55,6 +56,10 @@ public abstract class CogniteClient implements Serializable {
     private static ThreadPoolExecutor executorService = new ThreadPoolExecutor(NO_WORKERS, NO_WORKERS,
             1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
 
+    // Default http client settings
+    private final static List<ConnectionSpec> DEFAULT_CONNECTION_SPECS =
+            List.of(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS);
+
     protected final static Logger LOG = LoggerFactory.getLogger(CogniteClient.class);
 
     static {
@@ -77,12 +82,8 @@ public abstract class CogniteClient implements Serializable {
     to add specific interceptor depending on the auth method used.
      */
     private static OkHttpClient.Builder getHttpClientBuilder() {
-        List<ConnectionSpec> connectionSpecs = Lists.newArrayList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS);
-        if (Boolean.parseBoolean(System.getenv("enableCdfOverHttp"))) {
-            connectionSpecs.add(ConnectionSpec.CLEARTEXT);
-        }
         return new OkHttpClient.Builder()
-                .connectionSpecs(connectionSpecs)
+                .connectionSpecs(DEFAULT_CONNECTION_SPECS)
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(15, TimeUnit.SECONDS)
                 .writeTimeout(15, TimeUnit.SECONDS);
@@ -297,6 +298,28 @@ public abstract class CogniteClient implements Serializable {
         }
 
         return toBuilder().setClientConfig(config).build();
+    }
+
+    /**
+     * Enable (or disable) support for http. Set to {@code true} to enable support for http calls. Set to
+     * {@code false} to disable support for http (then only https will be possible).
+     *
+     * The default setting is {@code disabled}. I.e. only https calls are allowed.
+     * @param enable Set to {@code true} to enable support for http calls. Set to {@code false} to disable support for http.
+     * @return the client object with the config applied.
+     */
+    public CogniteClient enableHttp(boolean enable) {
+        List<ConnectionSpec> connectionSpecs = new ArrayList<>();
+        connectionSpecs.addAll(DEFAULT_CONNECTION_SPECS);
+        if (enable) {
+            connectionSpecs.add(ConnectionSpec.CLEARTEXT);
+        }
+
+        OkHttpClient newClient = getHttpClient().newBuilder()
+                .connectionSpecs(connectionSpecs)
+                .build();
+
+        return toBuilder().setHttpClient(newClient).build();
     }
 
     /**
