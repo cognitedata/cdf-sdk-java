@@ -256,31 +256,37 @@ public abstract class CogniteClient implements Serializable {
             throw new RuntimeException(e);
         }
 
-        if (getAuthType() == AuthType.TOKEN_SUPPLIER) {
-            return toBuilder()
-                    .setBaseUrl(baseUrl)
-                    .setHttpClient(CogniteClient.getHttpClientBuilder()
-                            .addInterceptor(new TokenInterceptor(host, getTokenSupplier()))
-                            .build())
-                    .build();
-        } else if (getAuthType() == AuthType.API_KEY) {
-            // the client is configured with api key auth
-            return toBuilder()
-                    .setBaseUrl(baseUrl)
-                    .setHttpClient(CogniteClient.getHttpClientBuilder()
-                            .addInterceptor(new ApiKeyInterceptor(host, getApiKey()))
-                            .build())
-                    .build();
+        // Set the generic part of the configuration
+        CogniteClient.Builder returnValueBuilder = toBuilder()
+                .setBaseUrl(baseUrl);
+
+        // Add the auth specific config
+        switch (getAuthType()) {
+            case API_KEY:
+                returnValueBuilder = returnValueBuilder
+                        .setHttpClient(CogniteClient.getHttpClientBuilder()
+                                .addInterceptor(new ApiKeyInterceptor(host, getApiKey()))
+                                .build());
+                break;
+            case TOKEN_SUPPLIER:
+                returnValueBuilder = returnValueBuilder
+                        .setHttpClient(CogniteClient.getHttpClientBuilder()
+                                .addInterceptor(new TokenInterceptor(host, getTokenSupplier()))
+                                .build());
+                break;
+            case CLIENT_CREDENTIALS:
+                returnValueBuilder = returnValueBuilder
+                        .setHttpClient(CogniteClient.getHttpClientBuilder()
+                                .addInterceptor(new ClientCredentialsInterceptor(host, getClientId(),
+                                        getClientSecret(), getTokenUrl(), baseUrl + "/.default"))
+                                .build());
+                break;
+            default:
+                // This should never execute...
+                throw new RuntimeException("Unknown authentication type. Cannot configure the client.");
         }
 
-        // The default is using client credentials
-        return toBuilder()
-                .setBaseUrl(baseUrl)
-                .setHttpClient(CogniteClient.getHttpClientBuilder()
-                        .addInterceptor(new ClientCredentialsInterceptor(host, getClientId(),
-                                getClientSecret(), getTokenUrl(), baseUrl + "/.default"))
-                        .build())
-                .build();
+        return returnValueBuilder.build();
     }
 
     /**
