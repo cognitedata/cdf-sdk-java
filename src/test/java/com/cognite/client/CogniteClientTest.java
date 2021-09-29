@@ -2,6 +2,7 @@ package com.cognite.client;
 
 import okhttp3.ConnectionSpec;
 import okhttp3.Interceptor;
+import org.checkerframework.framework.qual.IgnoreInWholeProgramInference;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.SetEnvironmentVariable;
 
@@ -39,7 +40,7 @@ class CogniteClientTest {
 
     @Test
     void test_withHttp_config() throws Exception {
-        CogniteClient client = CogniteClient.ofKey("TEST").withBaseUrl("https://localhost").withHttp();
+        CogniteClient client = CogniteClient.ofKey("TEST").withBaseUrl("https://localhost").enableHttp(true);
         assertNotNull(client.getHttpClient());
         List<Interceptor> interceptorList = client.getHttpClient().interceptors();
         assertNotNull(interceptorList);
@@ -49,42 +50,5 @@ class CogniteClientTest {
         List<ConnectionSpec> connectionSpecs = client.getHttpClient().connectionSpecs();
         assertEquals(3, connectionSpecs.size());
     }
-    @Test
-    /** Expects java.net.UnknownServiceException: CLEARTEXT communication not enabled for client as basic HTTP is not supported */
-    void test_block_http_URI() throws Exception {
-        Exception exception = assertThrows(java.net.UnknownServiceException.class, () -> {
-            try {
-                CogniteClient client = CogniteClient.ofKey("TEST").withBaseUrl("http://localhost");
-                Iterator<List<String>> databases = client.raw().databases().list();
-            }catch (java.util.concurrent.CompletionException e) {
-                throw e.getCause();
-            }
-        });
-    }
-
-    @Test
-    /** Expects connection refused (no localhost exist) */
-    void test_accept_https_URI() throws Exception {
-        Exception exception = assertThrows(java.net.ConnectException.class, () -> {
-            try {
-                CogniteClient client = CogniteClient.ofKey("TEST").withBaseUrl("https://localhost");
-                Iterator<List<String>> databases = client.raw().databases().list();
-            }catch (java.util.concurrent.CompletionException e) {
-                throw e.getCause();
-            }
-        });
-    }
-
-    @Test
-    /** Expects connection refused (no localhost exist) */
-    void test_accept_http_URI_withFlag() throws Exception {
-        Exception exception = assertThrows(java.net.ConnectException.class, () -> {
-            try {
-                CogniteClient client = CogniteClient.ofKey("TEST").withBaseUrl("http://localhost").withHttp();
-                Iterator<List<String>> databases = client.raw().databases().list();
-            }catch (java.util.concurrent.CompletionException e) {
-                throw e.getCause();
-            }
-        });
-    }
+    
 }
