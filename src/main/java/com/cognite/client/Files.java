@@ -580,7 +580,6 @@ public abstract class Files extends ApiBase {
         Preconditions.checkArgument(java.nio.file.Files.isDirectory(downloadPath),
                 loggingPrefix + "The download path must be a valid directory.");
 
-        final int maxBatchSize = 10;
         Instant startInstant = Instant.now();
         if (files.isEmpty()) {
             LOG.warn(loggingPrefix + "No items specified in the request. Will skip the download request.");
@@ -589,7 +588,7 @@ public abstract class Files extends ApiBase {
         LOG.info(loggingPrefix + "Received {} items to download.",
                 files.size());
 
-        List<List<Item>> batches = Partition.ofSize(files, maxBatchSize);
+        List<List<Item>> batches = Partition.ofSize(files, MAX_DOWNLOAD_BINARY_BATCH_SIZE);
         List<FileContainer> results = new ArrayList<>();
         for (List<Item> batch : batches) {
             // Get the file binaries
@@ -734,7 +733,6 @@ public abstract class Files extends ApiBase {
                 fileItems.size());
 
         // Download and completed lists
-        Map<String, Item> itemMap = mapItemToId(deDuplicate(fileItems));
         List<Item> elementListDownload = deDuplicate(fileItems);
         List<FileBinary> elementListCompleted = new ArrayList<>();
 

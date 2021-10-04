@@ -2301,7 +2301,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      */
     @AutoValue
     public static abstract class FileBinaryReader extends ConnectorBase {
-        private static int DEFAULT_MAX_BATCH_SIZE_FILE_READ = 100;
         private final String randomIdString = RandomStringUtils.randomAlphanumeric(5);
         private final String loggingPrefix = "FileBinaryReader [" + randomIdString + "] -";
         private final ObjectMapper objectMapper = new ObjectMapper();
@@ -2430,7 +2429,10 @@ public abstract class ConnectorServiceV1 implements Serializable {
                 String downloadUrl = (String) fileRequestItem.get("downloadUrl");
 
                 CompletableFuture<ResponseItems<FileBinary>> future = DownloadFileBinary
-                        .downloadFileBinaryFromURL(downloadUrl, getTempStoragePath(), isForceTempStorage())
+                        .downloadFileBinaryFromURL(downloadUrl,
+                                getClient().getClientConfig().getMaxRetries(),
+                                getTempStoragePath(),
+                                isForceTempStorage())
                         .thenApply(fileBinary -> {
                             // add the file id
                             if (!fileExternalId.isEmpty()) {
@@ -2777,7 +2779,8 @@ public abstract class ConnectorServiceV1 implements Serializable {
             Preconditions.checkArgument(!(null == tempStorageURI && forceTempStorage),
                     "Cannot force the use of temp storage without a valid temp storage URI.");
             HttpUrl url = HttpUrl.parse(downloadUrl);
-            Preconditions.checkState(null != url, "Download URL not valid: " + downloadUrl);
+            Preconditions.checkState(null != url,
+                    loggingPrefix + "Download URL is not valid: " + downloadUrl);
 
             okhttp3.Request FileBinaryBuilder = new okhttp3.Request.Builder()
                     .url(url)
