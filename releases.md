@@ -19,6 +19,18 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [1.3.0] 2021-10-12
+
+### Added
+
+- Support for interacting with a non-encrypted api endpoint (via `CogniteClient.enableHttp(true)`). 
+This feature targets testing scenarios. The client will default to secure communication via https which is the only
+way to interact with Cognite Data Fusion.
+
+### Fixed
+- In some cases `baseUrl` would not be respected when using OIDC authentication.
+- Data set upsert fails on duplicate `externalId` / `id`.
+
 ## [1.2.0] 2021-09-13
 
 ### Changed
