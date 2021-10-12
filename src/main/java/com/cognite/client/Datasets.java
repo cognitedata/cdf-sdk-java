@@ -155,7 +155,8 @@ public abstract class Datasets extends ApiBase {
 
         UpsertItems<DataSet> upsertItems = UpsertItems.of(createItemWriter, this::toRequestInsertItem, getClient().buildAuthConfig())
                 .withUpdateItemWriter(updateItemWriter)
-                .withUpdateMappingFunction(this::toRequestUpdateItem);
+                .withUpdateMappingFunction(this::toRequestUpdateItem)
+                .withIdFunction(this::getDatasetId);
 
         if (getClient().getClientConfig().getUpsertMode() == UpsertMode.REPLACE) {
             upsertItems = upsertItems.withUpdateMappingFunction(this::toRequestReplaceItem);
