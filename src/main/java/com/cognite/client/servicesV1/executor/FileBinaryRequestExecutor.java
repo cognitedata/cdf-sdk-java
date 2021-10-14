@@ -276,7 +276,7 @@ public abstract class FileBinaryRequestExecutor {
 
                 // if the call was not successful, throw an error
                 if (!response.isSuccessful() && !getValidResponseCodes().contains(responseCode)) {
-                    throw new Exception(loggingPrefix +
+                    throw new IOException(loggingPrefix +
                             "Unexpected response code when reading: " + responseCode + ". "
                                     + response.toString() + System.lineSeparator()
                                     + "Response content length: " + response.body().contentLength() + System.lineSeparator()
