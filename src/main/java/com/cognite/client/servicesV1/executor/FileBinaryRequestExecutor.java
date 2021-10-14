@@ -451,12 +451,18 @@ public abstract class FileBinaryRequestExecutor {
 
                 // if the call was not successful, throw an error
                 if (!response.isSuccessful() && !getValidResponseCodes().contains(responseCode)) {
-                    throw new IOException(
-                            "Uploading file binary: Unexpected response code: " + responseCode + ". "
+                    String errorMessage = "Uploading file binary: Unexpected response code: " + responseCode + ". "
                             + response.toString() + System.lineSeparator()
                             + "Response body: " + response.body().string() + System.lineSeparator()
-                            + "Response headers: " + response.headers().toString() + System.lineSeparator()
-                    );
+                            + "Response headers: " + response.headers().toString() + System.lineSeparator();
+
+                    if (responseCode >= 400 && responseCode <= 500) {
+                        // a 400 range response code indicates an expired download URL. Will throw a special exception
+                        // so that it can be handled (i.e. retried) higher up in the caller stack.
+                        throw new ClientRequestException(errorMessage, responseCode);
+                    } else {
+                        throw new IOException(errorMessage);
+                    }
                 }
                 // check the response
                 if (response.body() == null) {
@@ -758,6 +764,27 @@ public abstract class FileBinaryRequestExecutor {
                 cloudStorage = StorageOptions.getDefaultInstance().getService();
             }
             return cloudStorage;
+        }
+    }
+
+    /**
+     * Represents a request error caused by a client error. Typically this indicates a malformed file binary
+     * download URL. For example, an expired download URL.
+     */
+    public static class ClientRequestException extends IOException {
+        private int httpResponseCode;
+
+        ClientRequestException(String message, int httpResponseCode) {
+            super(message);
+            this.httpResponseCode = httpResponseCode;
+        }
+        ClientRequestException(Throwable cause, int httpResponseCode) {
+            super(cause);
+            this.httpResponseCode = httpResponseCode;
+        }
+
+        public int getHttpResponseCode() {
+            return httpResponseCode;
         }
     }
 
