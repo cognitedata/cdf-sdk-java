@@ -84,7 +84,9 @@ public abstract class FileBinaryRequestExecutor {
     private static final int DEFAULT_NUM_WORKERS = 8;
     //private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(DEFAULT_NUM_WORKERS);
     private static final ThreadPoolExecutor DEFAULT_POOL = new ThreadPoolExecutor(DEFAULT_NUM_WORKERS, DEFAULT_NUM_WORKERS,
-            1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+            2000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+
+    private static final int DATA_TRANSFER_BUFFER_SIZE = 1024 * 4;
 
     protected final static Logger LOG = LoggerFactory.getLogger(FileBinaryRequestExecutor.class);
 
@@ -547,9 +549,17 @@ public abstract class FileBinaryRequestExecutor {
             BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
                     .setContentType("application/octet-stream")
                     .build();
-            FileBinaryRequestExecutor.transferBytes(response.body().source(),
-                    cloudStorage.writer(blobInfo),
-                    (1024 * 4));
+
+            try {
+                FileBinaryRequestExecutor.transferBytes(response.body().source(),
+                        cloudStorage.writer(blobInfo),
+                        (DATA_TRANSFER_BUFFER_SIZE));
+            } catch (Exception e) {
+                // remove the temp file
+                cloudStorage.delete(blobId);
+
+                throw e;
+            }
 
             URI fileURI = new URI("gs", bucketName, "/" + objectName, null);
             LOG.debug(loggingPrefix + "Finished downloading to GCS. Temp file URI: {}",
@@ -568,9 +578,16 @@ public abstract class FileBinaryRequestExecutor {
                     tempFilePath.toAbsolutePath().toString());
 
             Files.createFile(tempFilePath);
-            FileBinaryRequestExecutor.transferBytes(response.body().source(),
-                    Files.newByteChannel(tempFilePath, StandardOpenOption.WRITE),
-                    (1024 * 4));
+            try {
+                FileBinaryRequestExecutor.transferBytes(response.body().source(),
+                        Files.newByteChannel(tempFilePath, StandardOpenOption.WRITE),
+                        (DATA_TRANSFER_BUFFER_SIZE));
+            } catch (Exception e) {
+                // remove the temp file
+                Files.delete(tempFilePath);
+
+                throw e;
+            }
             LOG.debug(loggingPrefix + "Finished downloading to local storage. Temp file URI: {}",
                     tempFilePath.toUri().toString());
 
@@ -686,7 +703,7 @@ public abstract class FileBinaryRequestExecutor {
                 try {
                     FileBinaryRequestExecutor.transferBytes(tempFileChannel,
                             bufferedSink,
-                            (1024 * 4));
+                            (DATA_TRANSFER_BUFFER_SIZE));
                     if (deleteTempFile) {
                         Files.delete(Paths.get(fileURI));
                     }
