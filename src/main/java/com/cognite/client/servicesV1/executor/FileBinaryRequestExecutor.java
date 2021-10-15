@@ -276,12 +276,18 @@ public abstract class FileBinaryRequestExecutor {
 
                 // if the call was not successful, throw an error
                 if (!response.isSuccessful() && !getValidResponseCodes().contains(responseCode)) {
-                    throw new IOException(loggingPrefix +
-                            "Unexpected response code when reading: " + responseCode + ". "
-                                    + response.toString() + System.lineSeparator()
-                                    + "Response content length: " + response.body().contentLength() + System.lineSeparator()
-                                    + "Response headers: " + response.headers().toString() + System.lineSeparator()
-                    );
+                    String errorMessage = "Downloading file binary: Unexpected response code: " + responseCode + ". "
+                            + response.toString() + System.lineSeparator()
+                            + "Response body: " + response.body().string() + System.lineSeparator()
+                            + "Response headers: " + response.headers().toString() + System.lineSeparator();
+
+                    if (responseCode >= 400 && responseCode <= 500) {
+                        // a 400 range response code indicates an expired download URL. Will throw a special exception
+                        // so that it can be handled (i.e. retried) higher up in the caller stack.
+                        throw new ClientRequestException(errorMessage, responseCode);
+                    } else {
+                        throw new IOException(errorMessage);
+                    }
                 }
                 // check the response
                 if (response.body() == null) {
@@ -322,13 +328,13 @@ public abstract class FileBinaryRequestExecutor {
                         || e instanceof SSLException
                         || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     LOG.warn(loggingPrefix + "Transient error when downloading file ("
-                            + ", response code: " + responseCode
+                            + "response code: " + responseCode
                             + "). Retrying...", e);
 
                 } else {
                     // not transient, just re-throw
                     LOG.error(loggingPrefix + "Non-transient error occurred when downloading file."
-                            + ", Response code: " + responseCode, e);
+                            + " Response code: " + responseCode, e);
                     throw e;
                 }
             }
@@ -456,13 +462,7 @@ public abstract class FileBinaryRequestExecutor {
                             + "Response body: " + response.body().string() + System.lineSeparator()
                             + "Response headers: " + response.headers().toString() + System.lineSeparator();
 
-                    if (responseCode >= 400 && responseCode <= 500) {
-                        // a 400 range response code indicates an expired download URL. Will throw a special exception
-                        // so that it can be handled (i.e. retried) higher up in the caller stack.
-                        throw new ClientRequestException(errorMessage, responseCode);
-                    } else {
-                        throw new IOException(errorMessage);
-                    }
+                    throw new IOException(errorMessage);
                 }
                 // check the response
                 if (response.body() == null) {

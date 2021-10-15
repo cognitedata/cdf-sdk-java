@@ -41,6 +41,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -910,14 +911,26 @@ public abstract class Files extends ApiBase {
 
             try {
                 responseMap.put(reader.readFileBinaries(request), batch);
-            } catch (FileBinaryRequestExecutor.ClientRequestException e) {
-                // This exception indicates a malformed download URL--typically an expired URL. This can be caused
-                // by the parallel downloads interfering with each other. Retry with the file items downloaded individually
-                LOG.warn(loggingPrefix + "Error when downloading a batch of file binaries. Will retry each file individually.");
-                for (Item item : batch) {
-                    Request singleItemRequest = addAuthInfo(Request.create()
-                            .withItems(toRequestItems(List.of(item))));
-                    responseMap.put(reader.readFileBinaries(singleItemRequest), List.of(item));
+            } catch (CompletionException | FileBinaryRequestExecutor.ClientRequestException e) {
+                // First we need to find out the cause / which exception type is thrown
+                FileBinaryRequestExecutor.ClientRequestException requestException = null;
+                if (e instanceof FileBinaryRequestExecutor.ClientRequestException) {
+                    requestException = (FileBinaryRequestExecutor.ClientRequestException) e;
+                } else if (e instanceof CompletionException) {
+                    // Unwrap the completion exception to see if the underlying cause is a ClientRequestException
+                    requestException = ((CompletionException) e).getCause() instanceof FileBinaryRequestExecutor.ClientRequestException ?
+                            ((FileBinaryRequestExecutor.ClientRequestException) ((CompletionException) e).getCause()) : null;
+                }
+
+                if (null != requestException) {
+                    // This exception indicates a malformed download URL--typically an expired URL. This can be caused
+                    // by the parallel downloads interfering with each other. Retry with the file items downloaded individually
+                    LOG.warn(loggingPrefix + "Error when downloading a batch of file binaries. Will retry each file individually.");
+                    for (Item item : batch) {
+                        Request singleItemRequest = addAuthInfo(Request.create()
+                                .withItems(toRequestItems(List.of(item))));
+                        responseMap.put(reader.readFileBinaries(singleItemRequest), List.of(item));
+                    }
                 }
             }
         }
