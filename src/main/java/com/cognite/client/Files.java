@@ -21,6 +21,7 @@ import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.*;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ResponseItems;
+import com.cognite.client.servicesV1.executor.FileBinaryRequestExecutor;
 import com.cognite.client.servicesV1.parser.FileParser;
 import com.cognite.client.servicesV1.parser.ItemParser;
 import com.cognite.client.util.Partition;
@@ -40,6 +41,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -889,6 +891,8 @@ public abstract class Files extends ApiBase {
     private Map<List<ResponseItems<FileBinary>>, List<Item>> splitAndDownloadFileBinaries(List<Item> fileItems,
                                                                                           @Nullable URI tempStoragePath,
                                                                                           boolean forceTempStorage) throws Exception {
+        String loggingPrefix = "splitAndDownloadFileBinaries() - ";
+
         Map<List<ResponseItems<FileBinary>>, List<Item>> responseMap = new HashMap<>();
         List<List<Item>> itemBatches = Partition.ofSize(fileItems, MAX_DOWNLOAD_BINARY_BATCH_SIZE);
 
@@ -905,7 +909,30 @@ public abstract class Files extends ApiBase {
             Request request = addAuthInfo(Request.create()
                             .withItems(toRequestItems(deDuplicate(batch))));
 
-            responseMap.put(reader.readFileBinaries(request), batch);
+            try {
+                responseMap.put(reader.readFileBinaries(request), batch);
+            } catch (CompletionException | FileBinaryRequestExecutor.ClientRequestException e) {
+                // First we need to find out the cause / which exception type is thrown
+                FileBinaryRequestExecutor.ClientRequestException requestException = null;
+                if (e instanceof FileBinaryRequestExecutor.ClientRequestException) {
+                    requestException = (FileBinaryRequestExecutor.ClientRequestException) e;
+                } else if (e instanceof CompletionException) {
+                    // Unwrap the completion exception to see if the underlying cause is a ClientRequestException
+                    requestException = ((CompletionException) e).getCause() instanceof FileBinaryRequestExecutor.ClientRequestException ?
+                            ((FileBinaryRequestExecutor.ClientRequestException) ((CompletionException) e).getCause()) : null;
+                }
+
+                if (null != requestException) {
+                    // This exception indicates a malformed download URL--typically an expired URL. This can be caused
+                    // by the parallel downloads interfering with each other. Retry with the file items downloaded individually
+                    LOG.warn(loggingPrefix + "Error when downloading a batch of file binaries. Will retry each file individually.");
+                    for (Item item : batch) {
+                        Request singleItemRequest = addAuthInfo(Request.create()
+                                .withItems(toRequestItems(List.of(item))));
+                        responseMap.put(reader.readFileBinaries(singleItemRequest), List.of(item));
+                    }
+                }
+            }
         }
 
         return responseMap;

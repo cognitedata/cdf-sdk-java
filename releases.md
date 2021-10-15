@@ -19,6 +19,12 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [1.4.0-SNAPSHOT]
+
+### Fixed
+
+- More stability improvements to file binary downloads, in particular in situations with limited bandwidth. 
+
 ## [1.3.0] 2021-10-12
 
 ### Added

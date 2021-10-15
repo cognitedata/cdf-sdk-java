@@ -84,7 +84,9 @@ public abstract class FileBinaryRequestExecutor {
     private static final int DEFAULT_NUM_WORKERS = 8;
     //private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(DEFAULT_NUM_WORKERS);
     private static final ThreadPoolExecutor DEFAULT_POOL = new ThreadPoolExecutor(DEFAULT_NUM_WORKERS, DEFAULT_NUM_WORKERS,
-            1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+            2000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+
+    private static final int DATA_TRANSFER_BUFFER_SIZE = 1024 * 4;
 
     protected final static Logger LOG = LoggerFactory.getLogger(FileBinaryRequestExecutor.class);
 
@@ -274,12 +276,18 @@ public abstract class FileBinaryRequestExecutor {
 
                 // if the call was not successful, throw an error
                 if (!response.isSuccessful() && !getValidResponseCodes().contains(responseCode)) {
-                    throw new Exception(loggingPrefix +
-                            "Unexpected response code when reading: " + responseCode + ". "
-                                    + response.toString() + System.lineSeparator()
-                                    + "Response content length: " + response.body().contentLength() + System.lineSeparator()
-                                    + "Response headers: " + response.headers().toString() + System.lineSeparator()
-                    );
+                    String errorMessage = "Downloading file binary: Unexpected response code: " + responseCode + ". "
+                            + response.toString() + System.lineSeparator()
+                            + "Response body: " + response.body().string() + System.lineSeparator()
+                            + "Response headers: " + response.headers().toString() + System.lineSeparator();
+
+                    if (responseCode >= 400 && responseCode <= 500) {
+                        // a 400 range response code indicates an expired download URL. Will throw a special exception
+                        // so that it can be handled (i.e. retried) higher up in the caller stack.
+                        throw new ClientRequestException(errorMessage, responseCode);
+                    } else {
+                        throw new IOException(errorMessage);
+                    }
                 }
                 // check the response
                 if (response.body() == null) {
@@ -320,13 +328,13 @@ public abstract class FileBinaryRequestExecutor {
                         || e instanceof SSLException
                         || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     LOG.warn(loggingPrefix + "Transient error when downloading file ("
-                            + ", response code: " + responseCode
+                            + "response code: " + responseCode
                             + "). Retrying...", e);
 
                 } else {
                     // not transient, just re-throw
                     LOG.error(loggingPrefix + "Non-transient error occurred when downloading file."
-                            + ", Response code: " + responseCode, e);
+                            + " Response code: " + responseCode, e);
                     throw e;
                 }
             }
@@ -449,12 +457,12 @@ public abstract class FileBinaryRequestExecutor {
 
                 // if the call was not successful, throw an error
                 if (!response.isSuccessful() && !getValidResponseCodes().contains(responseCode)) {
-                    throw new IOException(
-                            "Uploading file binary: Unexpected response code: " + responseCode + ". "
+                    String errorMessage = "Uploading file binary: Unexpected response code: " + responseCode + ". "
                             + response.toString() + System.lineSeparator()
                             + "Response body: " + response.body().string() + System.lineSeparator()
-                            + "Response headers: " + response.headers().toString() + System.lineSeparator()
-                    );
+                            + "Response headers: " + response.headers().toString() + System.lineSeparator();
+
+                    throw new IOException(errorMessage);
                 }
                 // check the response
                 if (response.body() == null) {
@@ -547,9 +555,17 @@ public abstract class FileBinaryRequestExecutor {
             BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
                     .setContentType("application/octet-stream")
                     .build();
-            FileBinaryRequestExecutor.transferBytes(response.body().source(),
-                    cloudStorage.writer(blobInfo),
-                    (1024 * 4));
+
+            try {
+                FileBinaryRequestExecutor.transferBytes(response.body().source(),
+                        cloudStorage.writer(blobInfo),
+                        (DATA_TRANSFER_BUFFER_SIZE));
+            } catch (Exception e) {
+                // remove the temp file
+                cloudStorage.delete(blobId);
+
+                throw e;
+            }
 
             URI fileURI = new URI("gs", bucketName, "/" + objectName, null);
             LOG.debug(loggingPrefix + "Finished downloading to GCS. Temp file URI: {}",
@@ -568,9 +584,16 @@ public abstract class FileBinaryRequestExecutor {
                     tempFilePath.toAbsolutePath().toString());
 
             Files.createFile(tempFilePath);
-            FileBinaryRequestExecutor.transferBytes(response.body().source(),
-                    Files.newByteChannel(tempFilePath, StandardOpenOption.WRITE),
-                    (1024 * 4));
+            try {
+                FileBinaryRequestExecutor.transferBytes(response.body().source(),
+                        Files.newByteChannel(tempFilePath, StandardOpenOption.WRITE),
+                        (DATA_TRANSFER_BUFFER_SIZE));
+            } catch (Exception e) {
+                // remove the temp file
+                Files.delete(tempFilePath);
+
+                throw e;
+            }
             LOG.debug(loggingPrefix + "Finished downloading to local storage. Temp file URI: {}",
                     tempFilePath.toUri().toString());
 
@@ -686,7 +709,7 @@ public abstract class FileBinaryRequestExecutor {
                 try {
                     FileBinaryRequestExecutor.transferBytes(tempFileChannel,
                             bufferedSink,
-                            (1024 * 4));
+                            (DATA_TRANSFER_BUFFER_SIZE));
                     if (deleteTempFile) {
                         Files.delete(Paths.get(fileURI));
                     }
@@ -741,6 +764,27 @@ public abstract class FileBinaryRequestExecutor {
                 cloudStorage = StorageOptions.getDefaultInstance().getService();
             }
             return cloudStorage;
+        }
+    }
+
+    /**
+     * Represents a request error caused by a client error. Typically this indicates a malformed file binary
+     * download URL. For example, an expired download URL.
+     */
+    public static class ClientRequestException extends IOException {
+        private int httpResponseCode;
+
+        ClientRequestException(String message, int httpResponseCode) {
+            super(message);
+            this.httpResponseCode = httpResponseCode;
+        }
+        ClientRequestException(Throwable cause, int httpResponseCode) {
+            super(cause);
+            this.httpResponseCode = httpResponseCode;
+        }
+
+        public int getHttpResponseCode() {
+            return httpResponseCode;
         }
     }
 
