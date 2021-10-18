@@ -97,13 +97,11 @@ public class EventParser {
         }
 
         if (root.path("metadata").isObject()) {
-            Iterator<Map.Entry<String, JsonNode>> fieldIterator = root
-                    .path("metadata").fields();
+            Iterator<Map.Entry<String, JsonNode>> fieldIterator = root.path("metadata").fields();
             while (fieldIterator.hasNext()) {
                 Map.Entry<String, JsonNode> entry = fieldIterator.next();
                 if (entry.getValue().isTextual()) {
-                    eventBuilder
-                            .putMetadata(entry.getKey(), entry.getValue().textValue());
+                    eventBuilder.putMetadata(entry.getKey(), entry.getValue().textValue());
                 }
             }
         }
