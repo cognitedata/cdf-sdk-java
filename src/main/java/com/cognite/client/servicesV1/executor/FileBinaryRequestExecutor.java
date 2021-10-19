@@ -281,7 +281,7 @@ public abstract class FileBinaryRequestExecutor {
                             + "Response body: " + response.body().string() + System.lineSeparator()
                             + "Response headers: " + response.headers().toString() + System.lineSeparator();
 
-                    if (responseCode >= 400 && responseCode <= 500) {
+                    if (responseCode >= 400 && responseCode < 500) {
                         // a 400 range response code indicates an expired download URL. Will throw a special exception
                         // so that it can be handled (i.e. retried) higher up in the caller stack.
                         throw new ClientRequestException(errorMessage, responseCode);
