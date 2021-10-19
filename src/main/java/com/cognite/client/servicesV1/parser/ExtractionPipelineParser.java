@@ -45,7 +45,7 @@ public class ExtractionPipelineParser {
             .build();
 
     /**
-     * Parses a extraction pipeline json string to {@link ExtractionPipeline} proto object.
+     * Parses an extraction pipeline json string to {@link ExtractionPipeline} proto object.
      *
      * @param json
      * @return
@@ -80,9 +80,44 @@ public class ExtractionPipelineParser {
         if (root.path("description").isTextual()) {
             pipelineBuilder.setDescription(root.get("description").textValue());
         }
-
+        if (root.path("rawTables").isArray()) {
+            for (JsonNode node : root.path("rawTables")) {
+                if (node.isObject()
+                        && node.path("dbName").isTextual()
+                        && node.path("tableName").isTextual()) {
+                    pipelineBuilder.addRawTables(ExtractionPipeline.RawTable.newBuilder()
+                            .setDbName(node.path("dbName").textValue())
+                            .setTableName(node.path("tableName").textValue())
+                            .build());
+                } else {
+                    throw new Exception(ExtractionPipelineParser.buildParsingExceptionString("rawTables", jsonExcerpt));
+                }
+            }
+        }
         if (root.path("schedule").isTextual()) {
             pipelineBuilder.setSchedule(root.get("schedule").textValue());
+        }
+        if (root.path("contacts").isArray()) {
+            for (JsonNode node : root.path("contacts")) {
+                if (node.isObject()) {
+                    ExtractionPipeline.Contact.Builder contactBuilder = ExtractionPipeline.Contact.newBuilder();
+                    if (node.path("name").isTextual()) {
+                        contactBuilder.setName(node.path("name").textValue());
+                    }
+                    if (node.path("email").isTextual()) {
+                        contactBuilder.setEmail(node.path("email").textValue());
+                    }
+                    if (node.path("role").isTextual()) {
+                        contactBuilder.setRole(node.path("role").textValue());
+                    }
+                    if (node.path("sendNotification").isBoolean()) {
+                        contactBuilder.setSendNotification(node.path("sendNotification").booleanValue());
+                    }
+                    pipelineBuilder.addContacts(contactBuilder.build());
+                } else {
+                    throw new Exception(ExtractionPipelineParser.buildParsingExceptionString("contacts", jsonExcerpt));
+                }
+            }
         }
         if (root.path("metadata").isObject()) {
             Iterator<Map.Entry<String, JsonNode>> fieldIterator = root.path("metadata").fields();
@@ -99,213 +134,328 @@ public class ExtractionPipelineParser {
         if (root.path("documentation").isTextual()) {
             pipelineBuilder.setDocumentation(root.get("documentation").textValue());
         }
-
-        if (root.path("endTime").isIntegralNumber()) {
-            relationshipBuilder.setEndTime(root.get("endTime").longValue());
+        if (root.path("lastSuccess").isIntegralNumber()) {
+            pipelineBuilder.setLastSuccess(root.get("lastSuccess").longValue());
         }
-        if (root.path("confidence").isFloatingPointNumber()) {
-            relationshipBuilder.setConfidence(root.get("confidence").floatValue());
+        if (root.path("lastFailure").isIntegralNumber()) {
+            pipelineBuilder.setLastFailure(root.get("lastFailure").longValue());
         }
-        if (root.path("dataSetId").isIntegralNumber()) {
-            relationshipBuilder.setDataSetId(root.get("dataSetId").longValue());
+        if (root.path("lastMessage").isTextual()) {
+            pipelineBuilder.setLastMessage(root.get("lastMessage").textValue());
+        }
+        if (root.path("lastSeen").isIntegralNumber()) {
+            pipelineBuilder.setLastSeen(root.get("lastSeen").longValue());
         }
         if (root.path("createdTime").isIntegralNumber()) {
-            relationshipBuilder.setCreatedTime(root.get("createdTime").longValue());
+            pipelineBuilder.setCreatedTime(root.get("createdTime").longValue());
         }
         if (root.path("lastUpdatedTime").isIntegralNumber()) {
-            relationshipBuilder.setLastUpdatedTime(root.get("lastUpdatedTime").longValue());
+            pipelineBuilder.setLastUpdatedTime(root.get("lastUpdatedTime").longValue());
+        }
+        if (root.path("createdBy").isTextual()) {
+            pipelineBuilder.setCreatedBy(root.get("createdBy").textValue());
         }
 
-        return relationshipBuilder.build();
-    }
-
-    if (root.path("targetType").isTextual() && resourceTypeMap.containsKey(root.get("targetType").textValue())) {
-        relationshipBuilder.setSourceType(resourceTypeMap.get(root.get("targetType").textValue()));
-    } else {
-        throw new Exception(ExtractionPipelineParser.buildParsingExceptionString("targetType", jsonExcerpt));
+        return pipelineBuilder.build();
     }
 
     /**
-     * Builds a request insert item object from {@link Relationship}.
+     * Parses an extraction pipeline json string to {@link ExtractionPipelineRun} proto object.
+     *
+     * @param json
+     * @return
+     * @throws Exception
+     */
+    public static ExtractionPipelineRun parseExtractionPipelineRun(String json) throws Exception {
+        String jsonExcerpt = json.substring(0, Math.min(json.length() - 1, MAX_LOG_ELEMENT_LENGTH));
+        JsonNode root = objectMapper.readTree(json);
+        ExtractionPipelineRun.Builder pipelineRunBuilder = ExtractionPipelineRun.newBuilder();
+
+        // Required attributes.
+        if (root.path("status").isTextual() && statusMap.containsKey(root.get("status").textValue())) {
+            pipelineRunBuilder.setStatus(statusMap.get(root.get("status").textValue()));
+        } else {
+            throw new Exception(ExtractionPipelineParser.buildParsingExceptionString("status", jsonExcerpt));
+        }
+
+        // The rest of the attributes are optional.
+        if (root.path("id").isIntegralNumber()) {
+            pipelineRunBuilder.setId(root.get("id").longValue());
+        }
+        if (root.path("message").isTextual()) {
+            pipelineRunBuilder.setMessage(root.get("message").textValue());
+        }
+        if (root.path("createdTime").isIntegralNumber()) {
+            pipelineRunBuilder.setCreatedTime(root.get("createdTime").longValue());
+        }
+
+        return pipelineRunBuilder.build();
+    }
+
+    /**
+     * Builds a request insert item object from {@link ExtractionPipeline}.
      *
      * An insert item object creates a new asset data object in the Cognite system.
      *
      * @param element
      * @return
      */
-    public static Map<String, Object> toRequestInsertItem(Relationship element) {
+    public static Map<String, Object> toRequestInsertItem(ExtractionPipeline element) {
         Preconditions.checkNotNull(element, "Input cannot be null.");
-        Preconditions.checkArgument(element.hasSourceExternalId(),
-                "The relationship object must specify a source external id.");
-        Preconditions.checkArgument(element.hasTargetExternalId(),
-                "The relationship object must specify a target external id.");
+        Preconditions.checkState(element.hasExternalId(), "Input must contain externalId.");
+        Preconditions.checkState(element.hasName(), "Input must contain name.");
+        Preconditions.checkState(element.hasDataSetId(), "Input must contain dataSetId.");
 
         // Add all the mandatory attributes
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.<String, Object>builder()
                 .put("externalId", element.getExternalId())
-                .put("sourceExternalId", element.getSourceExternalId())
-                .put("sourceType", resourceTypeMap.inverse().get(element.getSourceType()))
-                .put("targetExternalId", element.getTargetExternalId())
-                .put("targetType", resourceTypeMap.inverse().get(element.getTargetType()));
+                .put("name", element.getName())
+                .put("dataSetId", element.getDataSetId());
 
         // Add optional attributes
-        if (element.hasStartTime()) {
-            mapBuilder.put("startTime", element.getStartTime());
+        if (element.hasDescription()) {
+            mapBuilder.put("description", element.getDescription());
         }
-        if (element.hasEndTime()) {
-            mapBuilder.put("endTime", element.getEndTime());
-        }
-        if (element.hasConfidence()) {
-            mapBuilder.put("confidence", element.getConfidence());
-        }
-        if (element.hasDataSetId()) {
-            mapBuilder.put("dataSetId", element.getDataSetId());
-        }
-        if (element.getLabelsCount() > 0) {
-            List<Map<String, String>> labels = new ArrayList<>();
-            for (String label : element.getLabelsList()) {
-                labels.add(ImmutableMap.of("externalId", label));
+        if (element.getRawTablesCount() > 0) {
+            List<Map<String, String>> rawTables = new ArrayList<>();
+            for (ExtractionPipeline.RawTable table : element.getRawTablesList()) {
+                rawTables.add(ImmutableMap.of(
+                        "dbName", table.getDbName(),
+                        "tableName", table.getTableName()));
             }
-            mapBuilder.put("labels", labels);
+            mapBuilder.put("rawTables", rawTables);
+        }
+        if (element.hasSchedule()) {
+            mapBuilder.put("schedule", element.getSchedule());
+        }
+        if (element.getContactsCount() > 0) {
+            List<Map<String, Object>> contacts = new ArrayList<>();
+            for (ExtractionPipeline.Contact contact : element.getContactsList()) {
+                Map<String, Object> contactMap = new HashMap<>();
+                contactMap.put("sendNotification", contact.getSendNotification());
+                if (contact.hasName()) {
+                    contactMap.put("name", contact.getName());
+                }
+                if (contact.hasEmail()) {
+                    contactMap.put("email", contact.getEmail());
+                }
+                if (contact.hasRole()) {
+                    contactMap.put("role", contact.getRole());
+                }
+                contacts.add(contactMap);
+            }
+            mapBuilder.put("contacts", contacts);
+        }
+        if (element.getMetadataCount() > 0) {
+            mapBuilder.put("metadata", element.getMetadataMap());
+        }
+        if (element.hasSource()) {
+            mapBuilder.put("source", element.getSource());
+        }
+        if (element.hasDocumentation()) {
+            mapBuilder.put("documentation", element.getDocumentation());
         }
 
         return mapBuilder.build();
     }
 
     /**
-     * Builds a request update item object from {@link Relationship}.
+     * Builds a request insert item object from {@link ExtractionPipelineRun}.
      *
-     * An update item object updates an existing relationship object with new values for all provided fields.
+     * An insert item object creates a new asset data object in the Cognite system.
+     *
+     * @param element
+     * @return
+     */
+    public static Map<String, Object> toRequestInsertItem(ExtractionPipelineRun element) {
+        Preconditions.checkNotNull(element, "Input cannot be null.");
+        Preconditions.checkState(element.hasExternalId(), "Input must contain externalId.");
+
+        // Add all the mandatory attributes
+        ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.<String, Object>builder()
+                .put("externalId", element.getExternalId())
+                .put("status", statusMap.inverse().get(element.getStatus()));
+
+        // Add optional attributes
+        if (element.hasMessage()) {
+            mapBuilder.put("message", element.getMessage());
+        }
+        if (element.hasCreatedTime()) {
+            mapBuilder.put("createdTime", element.getCreatedTime());
+        }
+
+        return mapBuilder.build();
+    }
+
+    /**
+     * Builds a request update item object from {@link ExtractionPipeline}.
+     *
+     * An update item object updates an existing extraction pipeline object with new values for all provided fields.
      * Fields that are not in the update object retain their original value.
      *
      * @param element
      * @return
      */
-    public static Map<String, Object> toRequestUpdateItem(Relationship element) {
+    public static Map<String, Object> toRequestUpdateItem(ExtractionPipeline element) {
         Preconditions.checkNotNull(element, "Input cannot be null.");
+        Preconditions.checkArgument(element.hasExternalId() || element.hasId(),
+                "Element must have externalId or Id in order to be written as an update");
 
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
 
         // Add id reference
-        mapBuilder.put("externalId", element.getExternalId());
+        if (element.hasExternalId()) {
+            mapBuilder.put("externalId", element.getExternalId());
+        } else {
+            mapBuilder.put("id", element.getId());
+        }
 
         // Add the update fields
-        if (element.hasSourceExternalId()) {
-            updateNodeBuilder
-                    .put("sourceExternalId", ImmutableMap.of("set", element.getSourceExternalId()))
-                    .put("sourceType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getSourceType())));
+        if (element.hasName()) {
+            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
         }
-        if (element.hasTargetExternalId()) {
-            updateNodeBuilder
-                    .put("targetExternalId", ImmutableMap.of("set", element.getTargetExternalId()))
-                    .put("targetType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getTargetType())));
-        }
-        if (element.hasStartTime()) {
-            updateNodeBuilder.put("startTime", ImmutableMap.of("set", element.getStartTime()));
-        }
-        if (element.hasEndTime()) {
-            updateNodeBuilder.put("endTime", ImmutableMap.of("set", element.getEndTime()));
-        }
-        if (element.hasConfidence()) {
-            updateNodeBuilder.put("confidence", ImmutableMap.of("set", element.getConfidence()));
+        if (element.hasDescription()) {
+            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
         }
         if (element.hasDataSetId()) {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
-
-        if (element.getLabelsCount() > 0) {
-            List<Map<String, String>> labels = new ArrayList<>();
-            for (String label : element.getLabelsList()) {
-                labels.add(ImmutableMap.of("externalId", label));
-            }
-            updateNodeBuilder.put("labels", ImmutableMap.of("add", labels));
+        if (element.hasSchedule()) {
+            updateNodeBuilder.put("schedule", ImmutableMap.of("set", element.getSchedule()));
         }
+        if (element.getRawTablesCount() > 0) {
+            List<Map<String, String>> rawTables = new ArrayList<>();
+            for (ExtractionPipeline.RawTable table : element.getRawTablesList()) {
+                rawTables.add(ImmutableMap.of(
+                        "dbName", table.getDbName(),
+                        "tableName", table.getTableName()));
+            }
+            updateNodeBuilder.put("rawTables", ImmutableMap.of("add", rawTables));
+        }
+        if (element.getContactsCount() > 0) {
+            List<Map<String, Object>> contacts = new ArrayList<>();
+            for (ExtractionPipeline.Contact contact : element.getContactsList()) {
+                Map<String, Object> contactMap = new HashMap<>();
+                contactMap.put("sendNotification", contact.getSendNotification());
+                if (contact.hasName()) {
+                    contactMap.put("name", contact.getName());
+                }
+                if (contact.hasEmail()) {
+                    contactMap.put("email", contact.getEmail());
+                }
+                if (contact.hasRole()) {
+                    contactMap.put("role", contact.getRole());
+                }
+                contacts.add(contactMap);
+            }
+            updateNodeBuilder.put("contacts", ImmutableMap.of("add", contacts));
+        }
+        if (element.getMetadataCount() > 0) {
+            updateNodeBuilder.put("metadata", ImmutableMap.of("add", element.getMetadataMap()));
+        }
+        if (element.hasSource()) {
+            updateNodeBuilder.put("source", ImmutableMap.of("set", element.getSource()));
+        }
+        if (element.hasDocumentation()) {
+            updateNodeBuilder.put("documentation", ImmutableMap.of("set", element.getDocumentation()));
+        }
+
         mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();
     }
 
     /**
-     * Builds a request replace item object from {@link Relationship}.
+     * Builds a request replace item object from {@link ExtractionPipeline}.
      *
-     * A replace item object replaces an existing event object with new values for all provided fields.
+     * A replace item object replaces an existing extraction pipeline object with new values for all provided fields.
      * Fields that are not in the update object are set to null.
      *
      * @param element
      * @return
      */
-    public static Map<String, Object> toRequestReplaceItem(Relationship element) {
+    public static Map<String, Object> toRequestReplaceItem(ExtractionPipeline element) {
         Preconditions.checkNotNull(element, "Input cannot be null.");
-        Preconditions.checkArgument(element.hasSourceExternalId(),
-                "The relationship object must specify a source external id.");
-        Preconditions.checkArgument(element.hasTargetExternalId(),
-                "The relationship object must specify a target external id.");
+        Preconditions.checkArgument(element.hasExternalId() || element.hasId(),
+                "Element must have externalId or Id in order to be written as an update");
 
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
 
         // Add id reference
-        mapBuilder.put("externalId", element.getExternalId());
-
-        // Add the mandatory update replace fields
-        updateNodeBuilder
-                .put("sourceExternalId", ImmutableMap.of("set", element.getSourceExternalId()))
-                .put("sourceType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getSourceType())))
-                .put("targetExternalId", ImmutableMap.of("set", element.getTargetExternalId()))
-                .put("targetType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getTargetType())));
-
-        // Add the optional update replace fields
-        if (element.hasStartTime()) {
-            updateNodeBuilder.put("startTime", ImmutableMap.of("set", element.getStartTime()));
+        if (element.hasExternalId()) {
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            updateNodeBuilder.put("startTime", ImmutableMap.of("setNull", true));
+            mapBuilder.put("id", element.getId());
         }
 
-        if (element.hasEndTime()) {
-            updateNodeBuilder.put("endTime", ImmutableMap.of("set", element.getEndTime()));
-        } else {
-            updateNodeBuilder.put("endTime", ImmutableMap.of("setNull", true));
+        // Add the fields that cannot be set to null. Here we only add a value if it is set.
+        if (element.hasName()) {
+            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
         }
-
-        if (element.hasConfidence()) {
-            updateNodeBuilder.put("confidence", ImmutableMap.of("set", element.getConfidence()));
-        } else {
-            updateNodeBuilder.put("confidence", ImmutableMap.of("setNull", true));
-        }
-
         if (element.hasDataSetId()) {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
-        } else {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("setNull", true));
         }
 
-        List<Map<String, String>> labels = new ArrayList<>();
-        for (String label : element.getLabelsList()) {
-            labels.add(ImmutableMap.of("externalId", label));
+        // Add fields that can be set to null. Please note that extraction pipelines do not use an explicit
+        // "setNull", but rather an implicit empty string.
+        updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
+        updateNodeBuilder.put("schedule", ImmutableMap.of("set", element.getSchedule()));
+        updateNodeBuilder.put("source", ImmutableMap.of("set", element.getSource()));
+        updateNodeBuilder.put("documentation", ImmutableMap.of("set", element.getDocumentation()));
+
+        List<Map<String, String>> rawTables = new ArrayList<>();
+        for (ExtractionPipeline.RawTable table : element.getRawTablesList()) {
+            rawTables.add(ImmutableMap.of(
+                    "dbName", table.getDbName(),
+                    "tableName", table.getTableName()));
         }
-        updateNodeBuilder.put("labels", ImmutableMap.of("set", labels));
+        updateNodeBuilder.put("rawTables", ImmutableMap.of("set", rawTables));
+
+        List<Map<String, Object>> contacts = new ArrayList<>();
+        for (ExtractionPipeline.Contact contact : element.getContactsList()) {
+            Map<String, Object> contactMap = new HashMap<>();
+            contactMap.put("sendNotification", contact.getSendNotification());
+            if (contact.hasName()) {
+                contactMap.put("name", contact.getName());
+            }
+            if (contact.hasEmail()) {
+                contactMap.put("email", contact.getEmail());
+            }
+            if (contact.hasRole()) {
+                contactMap.put("role", contact.getRole());
+            }
+            contacts.add(contactMap);
+        }
+        updateNodeBuilder.put("contacts", ImmutableMap.of("set", contacts));
+
+        if (element.getMetadataCount() > 0) {
+            updateNodeBuilder.put("metadata", ImmutableMap.of("set", element.getMetadataMap()));
+        } else {
+            updateNodeBuilder.put("metadata", ImmutableMap.of("set", ImmutableMap.<String, String>of()));
+        }
 
         mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();
     }
 
     /**
-     * Returns the string representation of a relationship reference resource type.
-     * @param resourceType
+     * Returns the string representation of a pipeline run status.
+     * @param status
      * @return
      */
-    public static String toString(Relationship.ResourceType resourceType) {
-        return resourceTypeMap.inverse().get(resourceType);
+    public static String toString(ExtractionPipelineRun.Status status) {
+        return statusMap.inverse().get(status);
     }
 
     /**
-     * Tries to parse a string into a {@code ResourceType}. If the string cannot be parsed, the returned
+     * Tries to parse a string into a {@code ExtractionPipelineRun.Status}. If the string cannot be parsed, the returned
      * {@code Optional} will be empty.
-     * @param type
+     * @param status
      * @return
      */
-    public static Optional<Relationship.ResourceType> parseResourceType(String type) {
-        return Optional.ofNullable(resourceTypeMap.get(type));
+    public static Optional<ExtractionPipelineRun.Status> parsePipelineRunStatus(String status) {
+        return Optional.ofNullable(statusMap.get(status));
     }
 
     private static String buildParsingExceptionString(String attribute, String json) {
