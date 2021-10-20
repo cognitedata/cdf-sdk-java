@@ -216,6 +216,9 @@ abstract class ApiBase {
             case DATA_SET:
                 itemReader = connector.readDataSetsById();
                 break;
+            case EXTRACTION_PIPELINE:
+                itemReader = connector.readExtractionPipelinesById();
+                break;
             default:
                 LOG.error(batchLogPrefix + "Not a supported resource type: " + resourceType);
                 throw new Exception(batchLogPrefix + "Not a supported resource type: " + resourceType);
@@ -385,6 +388,12 @@ abstract class ApiBase {
                 break;
             case RAW_ROW:
                 results = connector.readRawRows(requestParameters);
+                break;
+            case EXTRACTION_PIPELINE:
+                results = connector.readExtractionPipelines(requestParameters);
+                break;
+            case EXTRACTION_PIPELINE_RUN:
+                results = connector.readExtractionPipelineRuns(requestParameters);
                 break;
             default:
                 throw new Exception("Not a supported resource type: " + resourceType);
