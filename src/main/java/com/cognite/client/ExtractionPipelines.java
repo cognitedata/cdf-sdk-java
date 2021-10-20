@@ -63,6 +63,15 @@ public abstract class ExtractionPipelines extends ApiBase {
     }
 
     /**
+     * Returns {@link ExtractionPipelineRuns} representing the extraction pipeline runs api endpoint.
+     *
+     * @return the extraction pipeline runs api object
+     */
+    public ExtractionPipelineRuns runs() {
+        return ExtractionPipelineRuns.of(getClient());
+    }
+
+    /**
      * Returns all {@link ExtractionPipeline} objects.
      *
      * @see #list(Request)
