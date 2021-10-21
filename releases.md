@@ -21,6 +21,11 @@ Changes are grouped as follows:
 
 ## [1.4.0-SNAPSHOT]
 
+### Added
+
+- Support for `ExtractionPipeline` and `ExtractionPipelineRun` so you can send extractor/pipeline observations and 
+ heartbeats to CDF.
+
 ### Fixed
 
 - More stability improvements to file binary downloads, in particular in situations with limited bandwidth. 

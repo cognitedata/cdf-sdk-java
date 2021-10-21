@@ -45,42 +45,48 @@ class ExtractionPipelinesTest {
             List<DataSet> upsertDataSetList = DataGenerator.generateDataSets(1);
             List<DataSet> upsertDataSetsResults = client.datasets().upsert(upsertDataSetList);
             long dataSetId = upsertDataSetsResults.get(0).getId();
-            LOG.info(loggingPrefix + "----------- Finished upserting events. Duration: {} -------------",
+            LOG.info(loggingPrefix + "----------- Finished upserting data set. Duration: {} -------------",
                     Duration.between(startInstant, Instant.now()));
-            LOG.info(loggingPrefix + "----------------------------------------------------------------------")
 
             LOG.info(loggingPrefix + "------------ Start upserting extraction pipelines. ------------------");
             List<ExtractionPipeline> upsertPipelinesList = DataGenerator.generateExtractionPipelines(3, dataSetId);
-            client.events().upsert(upsertPipelinesList);
-            LOG.info(loggingPrefix + "Finished upserting events. Duration: {}",
+            client.extractionPipelines().upsert(upsertPipelinesList);
+            LOG.info(loggingPrefix + "------------ Finished upserting extraction pipelines. Duration: {} -----------",
                     Duration.between(startInstant, Instant.now()));
-            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-            Thread.sleep(20000); // wait for eventual consistency
+            Thread.sleep(2000); // wait for eventual consistency
 
-            LOG.info(loggingPrefix + "Start reading events.");
-            List<Event> listEventsResults = new ArrayList<>();
-            client.events()
+            LOG.info(loggingPrefix + "------------ Start reading extraction pipelines. ------------------");
+            List<ExtractionPipeline> listPipelinesResults = new ArrayList<>();
+            client.extractionPipelines()
                     .list(Request.create()
                             .withFilterParameter("source", DataGenerator.sourceValue))
-                    .forEachRemaining(events -> listEventsResults.addAll(events));
-            LOG.info(loggingPrefix + "Finished reading events. Duration: {}",
+                    .forEachRemaining(events -> listPipelinesResults.addAll(events));
+            LOG.info(loggingPrefix + "------------ Finished reading extraction pipelines. Duration: {} -----------",
                     Duration.between(startInstant, Instant.now()));
-            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-            LOG.info(loggingPrefix + "Start deleting events.");
-            List<Item> deleteItemsInput = listEventsResults.stream()
-                    .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId())
+            LOG.info(loggingPrefix + "------------ Start creating extraction pipeline runs. ------------------");
+            List<ExtractionPipelineRun> upsertPipelineRunsList = new ArrayList<>();
+            listPipelinesResults.stream()
+                    .map(extractionPipeline -> extractionPipeline.getExternalId())
+                    .forEach(extId -> upsertPipelineRunsList.addAll(DataGenerator.generateExtractionPipelineRuns(3, extId)));
+
+            client.extractionPipelines().runs().create(upsertPipelineRunsList);
+            LOG.info(loggingPrefix + "------------ Finished upserting extraction pipeline runs. Duration: {} -----------",
+                    Duration.between(startInstant, Instant.now()));
+
+            LOG.info(loggingPrefix + "------------ Start deleting extraction pipelines. ------------------");
+            List<Item> deleteItemsInput = listPipelinesResults.stream()
+                    .map(pipeline -> Item.newBuilder()
+                            .setExternalId(pipeline.getExternalId())
                             .build())
                     .collect(Collectors.toList());
 
-            List<Item> deleteItemsResults = client.events().delete(deleteItemsInput);
-            LOG.info(loggingPrefix + "Finished deleting events. Duration: {}",
+            List<Item> deleteItemsResults = client.extractionPipelines().delete(deleteItemsInput);
+            LOG.info(loggingPrefix + "------------ Finished deleting extraction pipelines. Duration: {} -----------",
                     Duration.between(startInstant, Instant.now()));
-            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-            assertEquals(upsertPipelinesList.size(), listEventsResults.size());
+            assertEquals(upsertPipelinesList.size(), listPipelinesResults.size());
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
