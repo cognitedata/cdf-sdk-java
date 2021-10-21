@@ -85,16 +85,16 @@ public abstract class Relationships extends ApiBase {
      * @throws Exception
      */
     public Iterator<List<Relationship>> list(Request requestParameters) throws Exception {
-        /*
+
         List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
 
         return this.list(requestParameters, partitions.toArray(new String[partitions.size()]));
-         */
+
 
         // The relationships API endpoint does not support partitions (yet). Therefore no partitions are used here
         // in the list implementation. Convert to using partitions when the relationship endpoint is updated.
 
-        return list(requestParameters, new String[0]);
+        //return list(requestParameters, new String[0]);
     }
 
     /**
