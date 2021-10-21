@@ -33,7 +33,7 @@ import java.util.Optional;
 import static com.cognite.client.servicesV1.ConnectorConstants.MAX_LOG_ELEMENT_LENGTH;
 
 /**
- * This class contains a set of methods to help parsing file objects between Cognite api representations
+ * This class contains a set of methods to help parsing relationship objects between Cognite api representations
  * (json and proto) and typed objects.
  */
 public class RelationshipParser {
@@ -50,7 +50,7 @@ public class RelationshipParser {
             .build();
 
     /**
-     * Parses an relationship json string to {@link Relationship} proto object.
+     * Parses a relationship json string to {@link Relationship} proto object.
      *
      * @param json
      * @return
@@ -106,6 +106,44 @@ public class RelationshipParser {
         }
         if (root.path("lastUpdatedTime").isIntegralNumber()) {
             relationshipBuilder.setLastUpdatedTime(root.get("lastUpdatedTime").longValue());
+        }
+        if (root.path("source").isObject()) {
+            switch (relationshipBuilder.getSourceType()) {
+                case ASSET:
+                    relationshipBuilder.setSourceAsset(AssetParser.parseAsset(root.get("source").toString()));
+                    break;
+                case FILE:
+                    relationshipBuilder.setSourceFile(FileParser.parseFileMetadata(root.get("source").toString()));
+                    break;
+                case EVENT:
+                    relationshipBuilder.setSourceEvent(EventParser.parseEvent(root.get("source").toString()));
+                    break;
+                case SEQUENCE:
+                    relationshipBuilder.setSourceSequence(SequenceParser.parseSequenceMetadata(root.get("source").toString()));
+                    break;
+                case TIME_SERIES:
+                    relationshipBuilder.setSourceTimeseries(TimeseriesParser.parseTimeseriesMetadata(root.get("source").toString()));
+                    break;
+            }
+        }
+        if (root.path("target").isObject()) {
+            switch (relationshipBuilder.getTargetType()) {
+                case ASSET:
+                    relationshipBuilder.setTargetAsset(AssetParser.parseAsset(root.get("target").toString()));
+                    break;
+                case FILE:
+                    relationshipBuilder.setTargetFile(FileParser.parseFileMetadata(root.get("target").toString()));
+                    break;
+                case EVENT:
+                    relationshipBuilder.setTargetEvent(EventParser.parseEvent(root.get("target").toString()));
+                    break;
+                case SEQUENCE:
+                    relationshipBuilder.setTargetSequence(SequenceParser.parseSequenceMetadata(root.get("target").toString()));
+                    break;
+                case TIME_SERIES:
+                    relationshipBuilder.setTargetTimeseries(TimeseriesParser.parseTimeseriesMetadata(root.get("target").toString()));
+                    break;
+            }
         }
 
         return relationshipBuilder.build();

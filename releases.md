@@ -25,6 +25,8 @@ Changes are grouped as follows:
 
 - Support for `ExtractionPipeline` and `ExtractionPipelineRun` so you can send extractor/pipeline observations and 
  heartbeats to CDF.
+- Improved performance of `Relationships.list()` with the added support for partitions.
+- Support for including the `source` and `target` object of a `relationship` when using `list()` or `retrieve()`.
 
 ### Fixed
 
