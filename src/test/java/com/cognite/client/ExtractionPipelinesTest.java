@@ -37,9 +37,8 @@ class ExtractionPipelinesTest {
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
                     .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost());
-            LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+            LOG.info(loggingPrefix + "-------------- Finished creating the Cognite client. Duration : {} ---------------",
                     Duration.between(startInstant, Instant.now()));
-            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
             LOG.info(loggingPrefix + "------------ Start create data set. ------------------");
             List<DataSet> upsertDataSetList = DataGenerator.generateDataSets(1);
