@@ -22,8 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.FloatValue;
-import com.google.protobuf.Int64Value;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +81,7 @@ public class RelationshipParser {
             throw new Exception(RelationshipParser.buildParsingExceptionString("targetExternalId", jsonExcerpt));
         }
         if (root.path("targetType").isTextual() && resourceTypeMap.containsKey(root.get("targetType").textValue())) {
-            relationshipBuilder.setSourceType(resourceTypeMap.get(root.get("targetType").textValue()));
+            relationshipBuilder.setTargetType(resourceTypeMap.get(root.get("targetType").textValue()));
         } else {
             throw new Exception(RelationshipParser.buildParsingExceptionString("targetType", jsonExcerpt));
         }
