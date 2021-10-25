@@ -2747,8 +2747,12 @@ public abstract class ConnectorServiceV1 implements Serializable {
             URL fileUploadURL = new URL((String) fileUploadResponseItem.get(uploadUrlKey));
 
             CompletableFuture<ResponseItems<String>> future;
-            if (fileContainer.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY
-                    && fileContainer.getFileBinary().getBinary().isEmpty()) {
+            if ((fileContainer.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY
+                    && fileContainer.getFileBinary().getBinary().isEmpty())
+                    ||
+                    (fileContainer.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY_URI
+                    && fileContainer.getFileBinary().getBinaryUri().isBlank())
+            ) {
                 LOG.warn(loggingPrefix + "Binary is empty for file {}. File externalId = [{}]. Will skip upload.",
                         fileContainer.getFileMetadata().getName(),
                         fileContainer.getFileMetadata().getExternalId());
