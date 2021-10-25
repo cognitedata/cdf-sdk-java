@@ -32,6 +32,8 @@ Changes are grouped as follows:
 ### Fixed
 
 - More stability improvements to file binary downloads, in particular in situations with limited bandwidth. 
+- When trying to upload a `File` without a binary, the SDK could throw an exception if the binary was set to 
+ be a `URI`.
 - `Relationship.sourceType` was wrongly set equal to `Relationship.targetType`.
 
 ## [1.3.0] 2021-10-12
