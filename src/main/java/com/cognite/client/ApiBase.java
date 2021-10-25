@@ -610,7 +610,7 @@ abstract class ApiBase {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            LOG.info(String.format(batchLogPrefix + "Retrieved %1$d results items across %2$d requests in %3$s.",
+            LOG.debug(String.format(batchLogPrefix + "Retrieved %1$d results items across %2$d requests in %3$s.",
                     nextBatch.size(),
                     futures.size(),
                     Duration.between(batchStartInstant, Instant.now()).toString()));
