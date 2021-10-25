@@ -25,6 +25,14 @@ class RelationshipsTest {
     @Tag("remoteCDP")
     void writeReadAndDeleteRelationships() throws Exception {
         Instant startInstant = Instant.now();
+        int noAssets = 50;
+        //int noAssets = 5;
+        int noEvents = 7895;
+        //int noEvents = 2;
+        int noTs = 2346;
+        //int noTs = 2;
+        int noSeq = 234;
+        //int noSeq = 1;
 
         String loggingPrefix = "UnitTest - writeReadAndDeleteRelationships() -";
         LOG.info(loggingPrefix + "------------------- Start test. Creating Cognite client. ----------------------");
@@ -42,16 +50,16 @@ class RelationshipsTest {
             LOG.info(loggingPrefix + "------------------- Start upserting entities. --------------------");
             List<Asset> assetUpsertList = client
                     .assets()
-                    .upsert(DataGenerator.generateAssetHierarchy(800));
+                    .upsert(DataGenerator.generateAssetHierarchy(noAssets));
             List<Event> eventUpsertList = client
                     .events()
-                    .upsert(DataGenerator.generateEvents(7685));
+                    .upsert(DataGenerator.generateEvents(noEvents));
             List<TimeseriesMetadata> timseriesUpsertList = client
                     .timeseries()
-                    .upsert(DataGenerator.generateTsHeaderObjects(2346));
+                    .upsert(DataGenerator.generateTsHeaderObjects(noTs));
             List<SequenceMetadata> sequenceUpsertList = client
                     .sequences()
-                    .upsert(DataGenerator.generateSequenceMetadata(234));
+                    .upsert(DataGenerator.generateSequenceMetadata(noSeq));
             LOG.info(loggingPrefix + "-------------- Finished upserting entities. Duration: {} ------------------",
                     Duration.between(startInstant, Instant.now()));
 
@@ -98,13 +106,13 @@ class RelationshipsTest {
 
             Thread.sleep(15000); // wait for eventual consistency
 
-            LOG.info(loggingPrefix + "Start listing relationships.");
+            LOG.info(loggingPrefix + "---------------- Start listing relationships. ---------------------------");
             List<Relationship> listRelationshipsResults = new ArrayList<>();
             client.relationships()
                     .list(Request.create()
                             .withRootParameter("fetchResources", true))
                     .forEachRemaining(relationships -> listRelationshipsResults.addAll(relationships));
-            LOG.info(loggingPrefix + "Finished listing relationships. Duration: {}",
+            LOG.info(loggingPrefix + "----------------------- Finished listing relationships. Duration: {} -----------------",
                     Duration.between(startInstant, Instant.now()));
 
             LOG.info(loggingPrefix + "---------------- Start deleting relationships. ---------------------");
@@ -146,7 +154,7 @@ class RelationshipsTest {
                             .setExternalId(event.getExternalId())
                             .build())
                     .collect(Collectors.toList());
-            List<Item> deleteAssetsResults = client.assets().delete(deleteItemsSequences);
+            List<Item> deleteAssetsResults = client.assets().delete(deleteItemsAssets);
 
             LOG.info(loggingPrefix + "----------------- Finished deleting entities. Duration: {} -----------------",
                     Duration.between(startInstant, Instant.now()));

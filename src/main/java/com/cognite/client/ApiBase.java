@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
 abstract class ApiBase {
     private static final ImmutableList<ResourceType> resourcesSupportingPartitions =
             ImmutableList.of(ResourceType.ASSET, ResourceType.EVENT, ResourceType.FILE_HEADER, ResourceType.TIMESERIES_HEADER,
-                    ResourceType.RAW_ROW, ResourceType.RELATIONSHIP);
+                    ResourceType.RAW_ROW, ResourceType.RELATIONSHIP, ResourceType.SEQUENCE_HEADER);
 
     protected static final Logger LOG = LoggerFactory.getLogger(ApiBase.class);
 
@@ -610,7 +610,7 @@ abstract class ApiBase {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            LOG.debug(String.format(batchLogPrefix + "Retrieved %1$d results items across %2$d requests in %3$s.",
+            LOG.info(String.format(batchLogPrefix + "Retrieved %1$d results items across %2$d requests in %3$s.",
                     nextBatch.size(),
                     futures.size(),
                     Duration.between(batchStartInstant, Instant.now()).toString()));

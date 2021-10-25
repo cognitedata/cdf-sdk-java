@@ -27,10 +27,12 @@ Changes are grouped as follows:
  heartbeats to CDF.
 - Improved performance of `Relationships.list()` with the added support for partitions.
 - Support for including the `source` and `target` object of a `relationship` when using `list()` or `retrieve()`.
+- Improved performance of `Sequences.list()` with the added support for partitions.
 
 ### Fixed
 
 - More stability improvements to file binary downloads, in particular in situations with limited bandwidth. 
+- `Relationship.sourceType` was wrongly set equal to `Relationship.targetType`.
 
 ## [1.3.0] 2021-10-12
 
