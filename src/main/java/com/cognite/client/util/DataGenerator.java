@@ -218,10 +218,10 @@ public class DataGenerator {
                                     .setName("generated-" + RandomStringUtils.randomAlphanumeric(5))
                                     .setRole("generated")
                                     .build())
-                            .addRawTables(ExtractionPipeline.RawTable.newBuilder()
-                                    .setDbName("generated-")
-                                    .setTableName("generated")
-                                    .build())
+                            //.addRawTables(ExtractionPipeline.RawTable.newBuilder()
+                            //        .setDbName("generated-")
+                            //        .setTableName("generated")
+                            //        .build())
                             .build());
         }
         return objects;

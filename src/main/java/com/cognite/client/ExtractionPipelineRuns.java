@@ -125,16 +125,8 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
         //ConnectorServiceV1.ItemWriter updateItemWriter = connector.updateExtractionPipelines();
 
         UpsertItems<ExtractionPipelineRun> upsertItems = UpsertItems.of(createItemWriter, this::toRequestInsertItem, getClient().buildAuthConfig())
-                //.withUpdateItemWriter(updateItemWriter)
-                //.withUpdateMappingFunction(this::toRequestUpdateItem)
                 .withIdFunction(this::getExtractionPipelineId)
                 .withMaxBatchSize(1);
-/*
-        if (getClient().getClientConfig().getUpsertMode() == UpsertMode.REPLACE) {
-            upsertItems = upsertItems.withUpdateMappingFunction(this::toRequestReplaceItem);
-        }
-
- */
 
         return upsertItems.create(runs).stream()
                 .map(this::parseExtractionPipelineRun)

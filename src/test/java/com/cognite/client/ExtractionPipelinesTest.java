@@ -59,7 +59,8 @@ class ExtractionPipelinesTest {
             List<ExtractionPipeline> listPipelinesResults = new ArrayList<>();
             client.extractionPipelines()
                     .list(Request.create()
-                            .withFilterParameter("source", DataGenerator.sourceValue))
+                    //        .withFilterParameter("source", DataGenerator.sourceValue)
+                    )
                     .forEachRemaining(events -> listPipelinesResults.addAll(events));
             LOG.info(loggingPrefix + "------------ Finished reading extraction pipelines. Duration: {} -----------",
                     Duration.between(startInstant, Instant.now()));
