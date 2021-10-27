@@ -2751,9 +2751,11 @@ public abstract class ConnectorServiceV1 implements Serializable {
                     && fileContainer.getFileBinary().getBinary().isEmpty())
                     ||
                     (fileContainer.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY_URI
-                    && fileContainer.getFileBinary().getBinaryUri().isBlank())
+                    && fileContainer.getFileBinary().getBinaryUri().isBlank()
+                    ||
+                    !fileContainer.hasFileBinary())
             ) {
-                LOG.warn(loggingPrefix + "Binary is empty for file {}. File externalId = [{}]. Will skip upload.",
+                LOG.warn(loggingPrefix + "Binary is empty for file {}. File externalId = [{}]. Will skip binary upload.",
                         fileContainer.getFileMetadata().getName(),
                         fileContainer.getFileMetadata().getExternalId());
 

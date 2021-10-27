@@ -149,4 +149,71 @@ class FilesTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    @Tag("remoteCDP")
+    void writeReadAndDeleteFilesNoBinary() throws Exception {
+        Instant startInstant = Instant.now();
+
+        List<FileMetadata> fileMetadataList = DataGenerator.generateFileHeaderObjects(2);
+        List<FileContainer> fileContainerInput = new ArrayList<>();
+        for (FileMetadata fileMetadata:  fileMetadataList) {
+            FileContainer fileContainer = FileContainer.newBuilder()
+                    .setFileMetadata(fileMetadata)
+                    .build();
+            fileContainerInput.add(fileContainer);
+        }
+        String loggingPrefix = "UnitTest - writeReadAndDeleteFiles() -";
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                        TestConfigProvider.getClientId(),
+                        TestConfigProvider.getClientSecret(),
+                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                .withProject(TestConfigProvider.getProject())
+                .withBaseUrl(TestConfigProvider.getHost())
+                //.withClientConfig(config)
+                ;
+        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        try {
+            LOG.info(loggingPrefix + "Start uploading file with empty binaries.");
+            List<FileMetadata> uploadFileResult = client.files().upload(fileContainerInput);
+            LOG.info(loggingPrefix + "Finished uploading file with empty binaries. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            Thread.sleep(5000); // wait for eventual consistency
+
+            LOG.info(loggingPrefix + "Start reading file metadata.");
+            List<FileMetadata> listFilesResults = new ArrayList<>();
+            client.files()
+                    .list(Request.create()
+                            .withFilterParameter("source", DataGenerator.sourceValue))
+                    .forEachRemaining(files -> listFilesResults.addAll(files));
+            LOG.info(loggingPrefix + "Finished reading file metadata. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            LOG.info(loggingPrefix + "Start deleting files.");
+            List<Item> deleteItemsInput = listFilesResults.stream()
+                    .map(fileMetadata -> Item.newBuilder()
+                            .setExternalId(fileMetadata.getExternalId())
+                            .build())
+                    .collect(Collectors.toList());
+            List<Item> deleteItemsResults = client.files().delete(deleteItemsInput);
+            LOG.info(loggingPrefix + "Finished deleting files. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+
+            assertEquals(fileContainerInput.size(), listFilesResults.size());
+            assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
+
+
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            e.printStackTrace();
+        }
+    }
 }
