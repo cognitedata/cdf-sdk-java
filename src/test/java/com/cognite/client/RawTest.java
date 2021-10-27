@@ -1,6 +1,7 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ClientConfig;
+import com.cognite.client.config.TokenUrl;
 import com.cognite.client.dto.RawRow;
 import com.cognite.client.stream.RawPublisher;
 import com.cognite.client.util.DataGenerator;
@@ -30,15 +31,19 @@ class RawTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeReadAndDeleteRaw() {
+    void writeReadAndDeleteRaw() throws Exception {
         Instant startInstant = Instant.now();
         ClientConfig config = ClientConfig.create()
                 .withNoWorkers(1)
                 .withNoListPartitions(1);
         String loggingPrefix = "UnitTest - writeReadAndDeleteRaw() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -163,15 +168,19 @@ class RawTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeStreamAndDeleteRaw() {
+    void writeStreamAndDeleteRaw() throws Exception {
         Instant startInstant = Instant.now();
         String dbName = "stream-test-db-" + RandomStringUtils.randomAlphanumeric(3);
         String tableName = "stream-test-table-" + RandomStringUtils.randomAlphanumeric(3);
 
         String loggingPrefix = "UnitTest - writeStreamAndDeleteRaw() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",

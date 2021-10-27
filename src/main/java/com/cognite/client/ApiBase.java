@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
 abstract class ApiBase {
     private static final ImmutableList<ResourceType> resourcesSupportingPartitions =
             ImmutableList.of(ResourceType.ASSET, ResourceType.EVENT, ResourceType.FILE_HEADER, ResourceType.TIMESERIES_HEADER,
-                    ResourceType.RAW_ROW);
+                    ResourceType.RAW_ROW, ResourceType.RELATIONSHIP, ResourceType.SEQUENCE_HEADER);
 
     protected static final Logger LOG = LoggerFactory.getLogger(ApiBase.class);
 
@@ -215,6 +215,9 @@ abstract class ApiBase {
                 break;
             case DATA_SET:
                 itemReader = connector.readDataSetsById();
+                break;
+            case EXTRACTION_PIPELINE:
+                itemReader = connector.readExtractionPipelinesById();
                 break;
             default:
                 LOG.error(batchLogPrefix + "Not a supported resource type: " + resourceType);
@@ -385,6 +388,12 @@ abstract class ApiBase {
                 break;
             case RAW_ROW:
                 results = connector.readRawRows(requestParameters);
+                break;
+            case EXTRACTION_PIPELINE:
+                results = connector.readExtractionPipelines(requestParameters);
+                break;
+            case EXTRACTION_PIPELINE_RUN:
+                results = connector.readExtractionPipelineRuns(requestParameters);
                 break;
             default:
                 throw new Exception("Not a supported resource type: " + resourceType);

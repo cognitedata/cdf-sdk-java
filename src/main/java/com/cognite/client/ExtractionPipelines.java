@@ -18,10 +18,11 @@ package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
+import com.cognite.client.dto.Event;
+import com.cognite.client.dto.ExtractionPipeline;
 import com.cognite.client.dto.Item;
-import com.cognite.client.dto.Relationship;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
-import com.cognite.client.servicesV1.parser.RelationshipParser;
+import com.cognite.client.servicesV1.parser.ExtractionPipelineParser;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,21 +34,21 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * This class represents the Cognite relationships api endpoint.
+ * This class represents the Cognite extraction pipelines api endpoint.
  *
- * It provides methods for reading and writing {@link Relationship}.
+ * It provides methods for reading and writing {@link Event}.
  */
 @AutoValue
-public abstract class Relationships extends ApiBase {
+public abstract class ExtractionPipelines extends ApiBase {
 
     private static Builder builder() {
-        return new AutoValue_Relationships.Builder();
+        return new AutoValue_ExtractionPipelines.Builder();
     }
 
-    protected static final Logger LOG = LoggerFactory.getLogger(Relationships.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(ExtractionPipelines.class);
 
     /**
-     * Constructs a new {@link Relationships} object using the provided client configuration.
+     * Constructs a new {@link ExtractionPipelines} object using the provided client configuration.
      *
      * This method is intended for internal use--SDK clients should always use {@link CogniteClient}
      * as the entry point to this class.
@@ -55,44 +56,56 @@ public abstract class Relationships extends ApiBase {
      * @param client The {@link CogniteClient} to use for configuration settings.
      * @return the assets api object.
      */
-    public static Relationships of(CogniteClient client) {
-        return Relationships.builder()
+    public static ExtractionPipelines of(CogniteClient client) {
+        return ExtractionPipelines.builder()
                 .setClient(client)
                 .build();
     }
 
     /**
-     * Returns all {@link Relationship} objects.
+     * Returns {@link ExtractionPipelineRuns} representing the extraction pipeline runs api endpoint.
+     *
+     * @return the extraction pipeline runs api object
+     */
+    public ExtractionPipelineRuns runs() {
+        return ExtractionPipelineRuns.of(getClient());
+    }
+
+    /**
+     * Returns all {@link ExtractionPipeline} objects.
      *
      * @see #list(Request)
      */
-    public Iterator<List<Relationship>> list() throws Exception {
+    public Iterator<List<ExtractionPipeline>> list() throws Exception {
         return this.list(Request.create());
     }
 
     /**
-     * Returns all {@link Relationship} objects that matches the filters set in the {@link Request}.
+     * Returns all {@link ExtractionPipeline} objects that matches the filters set in the {@link Request}.
      *
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
-     * The relationships are retrieved using multiple, parallel request streams towards the Cognite api. The number of
-     * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
-     *
      * @param requestParameters the filters to use for retrieving the assets.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
      */
-    public Iterator<List<Relationship>> list(Request requestParameters) throws Exception {
-
+    public Iterator<List<ExtractionPipeline>> list(Request requestParameters) throws Exception {
+        /*
         List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
 
         return this.list(requestParameters, partitions.toArray(new String[partitions.size()]));
+         */
+
+        // The extraction pipeline API endpoint does not support partitions (yet). Therefore no partitions are used here
+        // in the list implementation.
+
+        return list(requestParameters, new String[0]);
     }
 
     /**
-     * Returns all {@link Relationship} objects that matches the filters set in the {@link Request} for the
+     * Returns all {@link ExtractionPipeline} objects that matches the filters set in the {@link Request} for the
      * specified partitions. This is method is intended for advanced use cases where you need direct control over
      * the individual partitions. For example, when using the SDK in a distributed computing environment.
      *
@@ -105,86 +118,82 @@ public abstract class Relationships extends ApiBase {
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
      */
-    public Iterator<List<Relationship>> list(Request requestParameters, String... partitions) throws Exception {
-        return AdapterIterator.of(listJson(ResourceType.RELATIONSHIP, requestParameters, partitions), this::parseRelationship);
+    public Iterator<List<ExtractionPipeline>> list(Request requestParameters, String... partitions) throws Exception {
+        return AdapterIterator.of(listJson(ResourceType.EXTRACTION_PIPELINE, requestParameters, partitions), this::parseExtractionPipeline);
     }
 
     /**
-     * Retrieve Relationships by id.
+     * Retrieve extraction pipelines by id.
      *
      * @param items The item(s) {@code externalId / id} to retrieve.
-     * @return The retrieved relationships.
+     * @return The retrieved extraction pipelines.
      * @throws Exception
      */
-    public List<Relationship> retrieve(List<Item> items) throws Exception {
-        return retrieveJson(ResourceType.RELATIONSHIP, items).stream()
-                .map(this::parseRelationship)
+    public List<ExtractionPipeline> retrieve(List<Item> items) throws Exception {
+        return retrieveJson(ResourceType.EXTRACTION_PIPELINE, items).stream()
+                .map(this::parseExtractionPipeline)
                 .collect(Collectors.toList());
     }
 
-
     /**
-     * Creates or updates a set of {@link Relationship} objects.
+     * Creates or updates a set of {@link ExtractionPipeline} objects.
      *
-     * If it is a new {@link Relationship} object (based on {@code id / externalId}, then it will be created.
+     * If it is a new {@link ExtractionPipeline} object (based on {@code id / externalId}, then it will be created.
      *
-     * If an {@link Relationship} object already exists in Cognite Data Fusion, it will be updated. The update behavior
+     * If an {@link ExtractionPipeline} object already exists in Cognite Data Fusion, it will be updated. The update behavior
      * is specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
      *
-     * @param relationships The relationships to upsert.
-     * @return The upserted relationships.
+     * @param pipelines The extraction pipelines to upsert.
+     * @return The upserted extraction pipelines.
      * @throws Exception
      */
-    public List<Relationship> upsert(List<Relationship> relationships) throws Exception {
+    public List<ExtractionPipeline> upsert(List<ExtractionPipeline> pipelines) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
-        ConnectorServiceV1.ItemWriter createItemWriter = connector.writeRelationships();
-        ConnectorServiceV1.ItemWriter updateItemWriter = connector.updateRelationships();
-        ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteRelationships();
+        ConnectorServiceV1.ItemWriter createItemWriter = connector.writeExtractionPipelines();
+        ConnectorServiceV1.ItemWriter updateItemWriter = connector.updateExtractionPipelines();
 
-        UpsertItems<Relationship> upsertItems = UpsertItems.of(createItemWriter, this::toRequestInsertItem, getClient().buildAuthConfig())
-                .withDeleteItemWriter(deleteItemWriter)
+        UpsertItems<ExtractionPipeline> upsertItems = UpsertItems.of(createItemWriter, this::toRequestInsertItem, getClient().buildAuthConfig())
                 .withUpdateItemWriter(updateItemWriter)
                 .withUpdateMappingFunction(this::toRequestUpdateItem)
-                .addDeleteParameter("ignoreUnknownIds", true)
-                .withItemMappingFunction(this::toItem)
-                .withIdFunction(this::getRelationshipId);
+                .withIdFunction(this::getExtractionPipelineId);
 
         if (getClient().getClientConfig().getUpsertMode() == UpsertMode.REPLACE) {
             upsertItems = upsertItems.withUpdateMappingFunction(this::toRequestReplaceItem);
         }
 
-        return upsertItems.upsertViaCreateAndUpdate(relationships).stream()
-                .map(this::parseRelationship)
+        return upsertItems.upsertViaCreateAndUpdate(pipelines).stream()
+                .map(this::parseExtractionPipeline)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Deletes a set of Relationships.
+     * Deletes a set of extraction pipelines.
      *
-     * The events to delete are identified via their {@code externalId / id} by submitting a list of
+     * The extraction pipelines to delete are identified via their {@code externalId / id} by submitting a list of
      * {@link Item}.
      *
-     * @param relationships a list of {@link Item} representing the events (externalId / id) to be deleted
-     * @return The deleted events via {@link Item}
+     * @param events a list of {@link Item} representing the extraction pipelines (externalId / id) to be deleted
+     * @return The deleted extraction pipelines via {@link Item}
      * @throws Exception
      */
-    public List<Item> delete(List<Item> relationships) throws Exception {
+    public List<Item> delete(List<Item> events) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
-        ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteRelationships();
+        ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteExtractionPipelines();
 
         DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig())
-                .addParameter("ignoreUnknownIds", true);
+                //.addParameter("ignoreUnknownIds", true)
+                ;
 
-        return deleteItems.deleteItems(relationships);
+        return deleteItems.deleteItems(events);
     }
 
     /*
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
     deal very well with exceptions.
      */
-    private Relationship parseRelationship(String json) {
+    private ExtractionPipeline parseExtractionPipeline(String json) {
         try {
-            return RelationshipParser.parseRelationship(json);
+            return ExtractionPipelineParser.parseExtractionPipeline(json);
         } catch (Exception e)  {
             throw new RuntimeException(e);
         }
@@ -194,9 +203,9 @@ public abstract class Relationships extends ApiBase {
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
     deal very well with exceptions.
      */
-    private Map<String, Object> toRequestInsertItem(Relationship item) {
+    private Map<String, Object> toRequestInsertItem(ExtractionPipeline item) {
         try {
-            return RelationshipParser.toRequestInsertItem(item);
+            return ExtractionPipelineParser.toRequestInsertItem(item);
         } catch (Exception e)  {
             throw new RuntimeException(e);
         }
@@ -206,9 +215,9 @@ public abstract class Relationships extends ApiBase {
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
     deal very well with exceptions.
      */
-    private Map<String, Object> toRequestUpdateItem(Relationship item) {
+    private Map<String, Object> toRequestUpdateItem(ExtractionPipeline item) {
         try {
-            return RelationshipParser.toRequestUpdateItem(item);
+            return ExtractionPipelineParser.toRequestUpdateItem(item);
         } catch (Exception e)  {
             throw new RuntimeException(e);
         }
@@ -218,35 +227,31 @@ public abstract class Relationships extends ApiBase {
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
     deal very well with exceptions.
      */
-    private Map<String, Object> toRequestReplaceItem(Relationship item) {
+    private Map<String, Object> toRequestReplaceItem(ExtractionPipeline item) {
         try {
-            return RelationshipParser.toRequestReplaceItem(item);
+            return ExtractionPipelineParser.toRequestReplaceItem(item);
         } catch (Exception e)  {
             throw new RuntimeException(e);
         }
     }
 
     /*
-    Returns the id of an event. It will first check for an externalId, second it will check for id.
+    Returns the id of an extraction pipeline. It will first check for an externalId, second it will check for id.
 
     If no id is found, it returns an empty Optional.
      */
-    private Optional<String> getRelationshipId(Relationship item) {
-        return Optional.of(item.getExternalId());
-    }
-
-    /*
-    Returns an Item reflecting the input relationship. This will extract the relationship externalId
-    and populate the Item with it.
-     */
-    private Item toItem(Relationship item) {
-        return Item.newBuilder()
-                .setExternalId(item.getExternalId())
-                .build();
+    private Optional<String> getExtractionPipelineId(ExtractionPipeline item) {
+        if (item.hasExternalId()) {
+            return Optional.of(item.getExternalId());
+        } else if (item.hasId()) {
+            return Optional.of(String.valueOf(item.getId()));
+        } else {
+            return Optional.<String>empty();
+        }
     }
 
     @AutoValue.Builder
     abstract static class Builder extends ApiBase.Builder<Builder> {
-        abstract Relationships build();
+        abstract ExtractionPipelines build();
     }
 }
