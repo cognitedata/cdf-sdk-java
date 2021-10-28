@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 
 /**
  * Base class for the various apis (asset, event, ts, raw, etc.).
- * <p>
+ * 
  * This class collects the set of common attributes across all apis. The individual api
  * implementations will automatically pick these up via the AutoValue generator.
  *
@@ -65,7 +65,7 @@ abstract class ApiBase {
     /**
      * Builds an array of partition specifications for parallel retrieval from the Cognite api. This specification
      * is used as a parameter together with the filter / list endpoints.
-     * <p>
+     * 
      * The number of partitions indicate the number of parallel read streams. Employ one partition specification
      * per read stream.
      *
@@ -84,11 +84,11 @@ abstract class ApiBase {
     /**
      * Will return the results from a {@code list / filter} api endpoint. For example, the {@code filter assets}
      * endpoint.
-     * <p>
+     * 
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
-     * <p>
+     * 
      * This method support parallel retrieval via a set of {@code partition} specifications. The specified partitions
      * will be collected and merged together before being returned via the {@link Iterator}.
      *
@@ -107,11 +107,11 @@ abstract class ApiBase {
     /**
      * Will return the results from a {@code list / filter} api endpoint. For example, the {@code filter assets}
      * endpoint.
-     * <p>
+     * 
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
-     * <p>
+     * 
      * This method support parallel retrieval via a set of {@code partition} specifications. The specified partitions
      * will be collected and merged together before being returned via the {@link Iterator}.
      *
@@ -264,7 +264,7 @@ abstract class ApiBase {
 
     /**
      * Performs an item aggregation request to Cognite Data Fusion.
-     * <p>
+     * 
      * The default aggregation is a total item count based on the (optional) filters in the request. Some
      * resource types, for example {@link com.cognite.client.dto.Event}, supports multiple types of aggregation.
      *
@@ -324,10 +324,10 @@ abstract class ApiBase {
     /**
      * Adds the required authentication information into the request object. If the request object already have
      * complete auth info nothing will be added.
-     * <p>
+     * 
      * The following authentication schemes are supported:
      * 1) API key.
-     * <p>
+     * 
      * When using an api key, this service will look up the corresponding project/tenant to issue requests to.
      *
      * @param request The request to enrich with auth information.
@@ -466,7 +466,7 @@ abstract class ApiBase {
     /**
      * Maps all items to their externalId (primary) or id (secondary). If the id function does not return any
      * identity, the item will be mapped to the empty string.
-     * <p>
+     * 
      * Via the identity mapping, this function will also perform deduplication of the input items.
      *
      * @param items the items to map to externalId / id.
@@ -521,7 +521,7 @@ abstract class ApiBase {
 
     /**
      * An iterator that uses multiple input iterators and combines them into a single stream / collection.
-     * <p>
+     * 
      * It is used to support multiple, parallel read streams from the Cognite api and present them as a single
      * stream to the client. The backing iterators have to support async calls in order to enjoy the improved
      * performance of parallel I/O operations.
@@ -622,7 +622,7 @@ abstract class ApiBase {
     /**
      * This {@link Iterator} takes the input from an input {@link Iterator} and maps the output to a new
      * type via a mapping {@link Function}.
-     * <p>
+     * 
      * The input {@link Iterator} must provide a {@link List} as its output. I.e. it iterates over a potentially large
      * collection via a set of batches. This iterator then applies the mapping function on each individual element
      * in the {@link List}.
@@ -688,7 +688,7 @@ abstract class ApiBase {
     /**
      * This class handles upsert of items to Cognite Data Fusion. It will perform upserts via
      * insert/create, update and delete requests.
-     * <p>
+     * 
      * It will also split large write batches into smaller batches distributed over multiple, parallel
      * requests.
      *
@@ -802,7 +802,7 @@ abstract class ApiBase {
 
         /**
          * Adds an attribute to the delete items request.
-         * <p>
+         * 
          * This is typically used to add attributes such as {@code ignoreUnknownIds} and / or {@code recursive}.
          *
          * @param key   The name of the attribute.
@@ -827,7 +827,7 @@ abstract class ApiBase {
         /**
          * Sets the id function for reading the {@code externalId / id} from the input items. This function
          * is used when orchestrating upserts--in order to identify duplicates and missing items.
-         * <p>
+         * 
          * If the item does not carry an {@code externalId / id}, the function must return an
          * empty {@link Optional}.
          *
@@ -873,7 +873,7 @@ abstract class ApiBase {
 
         /**
          * Upserts a set of items via create and update.
-         * <p>
+         * 
          * This function will first try to write the items as new items. In case the items already exists
          * (based on externalId or Id), the items will be updated. Effectively this results in an upsert.
          *
@@ -1050,7 +1050,7 @@ abstract class ApiBase {
 
         /**
          * Upserts a set of items via update and create.
-         * <p>
+         * 
          * This function will first try to update the items. In case the items do not exist
          * (based on externalId or Id), the items will be created. Effectively this results in an upsert.
          *
@@ -1231,10 +1231,10 @@ abstract class ApiBase {
 
         /**
          * Upserts a set of items via delete and create.
-         * <p>
+         * 
          * This function will first try to delete the items (in case they already exist in CDF)
          * before creating them. Effectively this results in an upsert.
-         * <p>
+         * 
          * This method is used for resource types that do not support updates natively
          * in the CDF api.
          *
@@ -1376,10 +1376,10 @@ abstract class ApiBase {
 
         /**
          * Upserts a set of items via get, create and update.
-         * <p>
+         * 
          * This function will first try to get all the items (in case they already exist in CDF)
          * before creating them. Effectively this results in an upsert.
-         * <p>
+         * 
          * This method is used for resource types that do not support updates natively
          * in the CDF api.
          *
@@ -1573,7 +1573,7 @@ abstract class ApiBase {
 
         /**
          * Upserts a set of items via create.
-         * <p>
+         * 
          * This function will first try to write the items as new items.
          *
          * @param items The items to be created.
@@ -1682,11 +1682,11 @@ abstract class ApiBase {
 
         /**
          * Upserts a set of items via create and delete.
-         * <p>
+         * 
          * This function will first try to create the items, in case the items already exists
          * (based on externalId or Id) the items will be deleted and created again.
          * Effectively this results in an upsert.
-         * <p>
+         * 
          * This method is used for resource types that do not support updates natively
          * in the CDF api and that do not have the ability to ignore unknown ids.
          *
@@ -1830,7 +1830,7 @@ abstract class ApiBase {
 
         /**
          * Create /insert items.
-         * <p>
+         * 
          * Submits a (large) batch of items by splitting it up into multiple, parallel create / insert requests.
          * The response from each request is returned along with the items used as input.
          *
@@ -1844,7 +1844,7 @@ abstract class ApiBase {
 
         /**
          * Update items.
-         * <p>
+         * 
          * Submits a (large) batch of items by splitting it up into multiple, parallel update requests.
          * The response from each request is returned along with the items used as input.
          *
@@ -1858,7 +1858,7 @@ abstract class ApiBase {
 
         /**
          * Update items.
-         * <p>
+         * 
          * Submits a (large) batch of items by splitting it up into multiple, parallel update requests.
          * The response from each request is returned along with the items used as input.
          *
@@ -1968,7 +1968,7 @@ abstract class ApiBase {
         /**
          * Maps all items to their externalId (primary) or id (secondary). If the id function does not return any
          * identity, the item will be mapped to the empty string.
-         * <p>
+         * 
          * Via the identity mapping, this function will also perform deduplication of the input items.
          *
          * @param items the items to map to externalId / id.
@@ -2029,7 +2029,7 @@ abstract class ApiBase {
 
     /**
      * This class handles deletion of items from Cognite Data Fusion.
-     * <p>
+     * 
      * It will also split large delete batches into smaller batches distributed over multiple, parallel
      * requests.
      */
@@ -2091,7 +2091,7 @@ abstract class ApiBase {
 
         /**
          * Sets the delete parameters map.
-         * <p>
+         * 
          * This is typically used to add attributes such as {@code ignoreUnknownIds} and / or {@code recursive}.
          *
          * @param parameters The parameter map.
@@ -2113,7 +2113,7 @@ abstract class ApiBase {
 
         /**
          * Adds an attribute to the delete items request.
-         * <p>
+         * 
          * This is typically used to add attributes such as {@code ignoreUnknownIds} and / or {@code recursive}.
          *
          * @param key   The name of the attribute.
@@ -2126,7 +2126,7 @@ abstract class ApiBase {
 
         /**
          * Sets the delete item mapping function.
-         * <p>
+         * 
          * This function builds the delete item object based on the input {@link Item}. The default function
          * builds delete items based on {@code externalId / id}.
          *
@@ -2259,7 +2259,7 @@ abstract class ApiBase {
 
         /**
          * Delete items.
-         * <p>
+         * 
          * Submits a (large) batch of items by splitting it up into multiple, parallel delete requests.
          * The response from each request is returned along with the items used as input.
          *
@@ -2337,7 +2337,7 @@ abstract class ApiBase {
         /**
          * Maps all items to their externalId (primary) or id (secondary). If the id function does not return any
          * identity, the item will be mapped to the empty string.
-         * <p>
+         * 
          * Via the identity mapping, this function will also perform deduplication of the input items.
          *
          * @param items the items to map to externalId / id.
