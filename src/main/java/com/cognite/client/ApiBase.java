@@ -42,6 +42,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -753,6 +754,9 @@ abstract class ApiBase {
         abstract Function<List<Item>, List<T>> getRetrieveFunction();
 
         @Nullable
+        abstract BiFunction<T, T, Boolean> getEqualFunction();
+
+        @Nullable
         abstract Function<T, Item> getItemMappingFunction();
 
         abstract ConnectorServiceV1.ItemWriter getCreateItemWriter();
@@ -844,6 +848,17 @@ abstract class ApiBase {
          */
         public UpsertItems<T> withRetrieveFunction(Function<List<Item>, List<T>> function) {
             return toBuilder().setRetrieveFunction(function).build();
+        }
+
+        /**
+         * Sets the equality function for comparing objects with the {@code externalId / id} from CDF.
+         * This function is used when orchestrating upserts--in order to compare items IDs.
+         *
+         * @param function that compares objects
+         * @return The {@link UpsertItems} object with the configuration applied.
+         */
+        public UpsertItems<T> withEqualFunction(BiFunction<T, T, Boolean> function) {
+            return toBuilder().setEqualFunction(function).build();
         }
 
         /**
@@ -1405,9 +1420,9 @@ abstract class ApiBase {
             List<T> elementListCreate = new ArrayList<>(1000);
             List<T> elementListUpdate = new ArrayList<>(1000);
 
-            elementListGet.stream().forEach(item -> {
+            elementListGet.forEach(item -> {
                 if (existingResources.stream()
-                        .anyMatch(existing -> getIdFunction().apply(existing) == getIdFunction().apply(item))) {
+                        .anyMatch(existing -> Objects.requireNonNull(getEqualFunction()).apply(existing, item))) {
                     elementListUpdate.add(item);
                 } else {
                     elementListCreate.add(item);
@@ -1992,6 +2007,8 @@ abstract class ApiBase {
             abstract Builder<T> setItemMappingFunction(Function<T, Item> value);
 
             abstract Builder<T> setRetrieveFunction(Function<List<Item>, List<T>> value);
+
+            abstract Builder<T> setEqualFunction(BiFunction<T, T, Boolean> value);
 
             abstract Builder<T> setCreateItemWriter(ConnectorServiceV1.ItemWriter value);
 

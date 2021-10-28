@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 /**
  * This class represents the Cognite datasets api endpoint
- * <p>
+ *
  * It provides methods for reading and writing {@link DataSet}
  */
 @AutoValue
@@ -49,7 +49,7 @@ public abstract class Datasets extends ApiBase {
 
     /**
      * Construct a new {@link Datasets} object using the provided configuration.
-     * <p>
+     *
      * This method is intended for internal use--SDK clients should always use {@link CogniteClient}
      * as the entry point to this class.
      *
@@ -73,11 +73,11 @@ public abstract class Datasets extends ApiBase {
 
     /**
      * Return all {@link DataSet} object that matches the filters set in the {@link Request}.
-     * <p>
+     *
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer entire results set, then you have to
      * stream these results into your own data structure.
-     * <p>
+     *
      * The datasets are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
      *
@@ -95,7 +95,7 @@ public abstract class Datasets extends ApiBase {
      * Return all {@link DataSet} objects that matches the filters set in the {@link Request} for the specific
      * partitions. This method is intended for advanced use cases where you need direct control over the individual
      * partitions. For example, when using the SDK in a distributed computing environment.
-     * <p>
+     *
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is now buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you have
      * to stream these results into your own data strcture.
@@ -128,7 +128,7 @@ public abstract class Datasets extends ApiBase {
 
     /**
      * Performs an item aggregation to Cognite Data Fusion.
-     * <p>
+     *
      * The default aggregation is a total item count based on the (optional) filters in the request. Multiple
      * aggregation types are supported. Please refer to the Cognite API specification for more information on the
      * possible settings.
@@ -144,9 +144,9 @@ public abstract class Datasets extends ApiBase {
 
     /**
      * Creates or update a set of {@link DataSet} objects.
-     * <p>
+     *
      * If it si a new {@link DataSet} object (based on the {@code id / externalId}, thenit will be created.
-     * <p>
+     *
      * If an {@link Iterator} object already exists in Cognite Data Fusion, it will be updated. The update behaviour is
      * specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
      *
@@ -162,15 +162,18 @@ public abstract class Datasets extends ApiBase {
         UpsertItems<DataSet> upsertItems = UpsertItems.of(createItemWriter, this::toRequestInsertItem, getClient().buildAuthConfig())
                 .withUpdateItemWriter(updateItemWriter)
                 .withUpdateMappingFunction(this::toRequestUpdateItem)
-                .withIdFunction(this::getDatasetId)
-                .withRetrieveFunction(this::retrieve)
-                .withItemMappingFunction(this::toItem);
+                .withIdFunction(this::getDatasetId);
 
         if (getClient().getClientConfig().getUpsertMode() == UpsertMode.REPLACE) {
             upsertItems = upsertItems.withUpdateMappingFunction(this::toRequestReplaceItem);
         }
 
-        return upsertItems.upsertViaGetCreateAndUpdate(datasets).stream()
+        return upsertItems
+                .withRetrieveFunction(this::retrieve)
+                .withItemMappingFunction(this::toItem)  // used by upsertViaGetCreateAndUpdate
+                .withEqualFunction((DataSet a, DataSet b) ->
+                        a.getId() == b.getId() || (a.hasExternalId() && b.hasExternalId() && a.getExternalId().equals(b.getExternalId())))
+                .upsertViaGetCreateAndUpdate(datasets).stream()
                 .map(this::parseDatasets)
                 .collect(Collectors.toList());
     }
