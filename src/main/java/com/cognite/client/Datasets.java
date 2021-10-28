@@ -18,7 +18,9 @@ package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
-import com.cognite.client.dto.*;
+import com.cognite.client.dto.Aggregate;
+import com.cognite.client.dto.DataSet;
+import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.DataSetParser;
 import com.google.auto.value.AutoValue;
@@ -39,11 +41,11 @@ import java.util.stream.Collectors;
 @AutoValue
 public abstract class Datasets extends ApiBase {
 
+    protected static final Logger LOG = LoggerFactory.getLogger(Datasets.class);
+
     private static Builder builder() {
         return new AutoValue_Datasets.Builder();
     }
-
-    protected static final Logger LOG = LoggerFactory.getLogger(Datasets.class);
 
     /**
      * Construct a new {@link Datasets} object using the provided configuration.
@@ -99,7 +101,7 @@ public abstract class Datasets extends ApiBase {
      * to stream these results into your own data strcture.
      *
      * @param requestParameters The filters to use for retrieving the datasets
-     * @param partitions The partitions to include
+     * @param partitions        The partitions to include
      * @return An {@link Iterator} to page through the results set
      * @throws Exception
      */
@@ -114,10 +116,14 @@ public abstract class Datasets extends ApiBase {
      * @return The retrieved datasets.
      * @throws Exception
      */
-    public List<DataSet> retrieve(List<Item> items) throws Exception {
-        return retrieveJson(ResourceType.DATA_SET, items).stream()
-                .map(this::parseDatasets)
-                .collect(Collectors.toList());
+    public List<DataSet> retrieve(List<Item> items) {
+        try {
+            return retrieveJson(ResourceType.DATA_SET, items).stream()
+                    .map(this::parseDatasets)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
@@ -162,9 +168,22 @@ public abstract class Datasets extends ApiBase {
             upsertItems = upsertItems.withUpdateMappingFunction(this::toRequestReplaceItem);
         }
 
-        return upsertItems.upsertViaCreateAndUpdate(datasets).stream()
+        return upsertItems
+                .withRetrieveFunction(this::retrieve)
+                .withItemMappingFunction(this::toItem)  // used by upsertViaGetCreateAndUpdate
+                .withEqualFunction((DataSet a, DataSet b) ->
+                        a.getId() == b.getId() || (a.hasExternalId() && b.hasExternalId() && a.getExternalId().equals(b.getExternalId())))
+                .upsertViaGetCreateAndUpdate(datasets).stream()
                 .map(this::parseDatasets)
                 .collect(Collectors.toList());
+    }
+
+    /*
+    Returns an Item reflecting the input dataset. This will extract the dataset externalId
+    and populate the Item with it.
+     */
+    private Item toItem(DataSet dataSet) {
+        return Item.newBuilder().setExternalId(dataSet.getExternalId()).build();
     }
 
     /*
