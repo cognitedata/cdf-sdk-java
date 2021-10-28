@@ -2,6 +2,12 @@ syntax = "proto3";
 
 package com.cognite.beam.proto;
 
+import "asset.proto";
+import "event.proto";
+import "file.proto";
+import "sequence.proto";
+import "timeseries.proto";
+
 option java_package = "com.cognite.client.dto";
 option java_multiple_files = true;
 
@@ -26,4 +32,19 @@ message Relationship {
     repeated string labels = 10;
     optional int64 created_time = 11;
     optional int64 last_updated_time = 12;
+
+    oneof source {
+        Asset source_asset = 13;
+        Event source_event = 14;
+        TimeseriesMetadata source_timeseries = 15;
+        FileMetadata source_file = 16;
+        SequenceMetadata source_sequence = 17;
+    }
+    oneof target {
+        Asset target_asset = 18;
+        Event target_event = 19;
+        TimeseriesMetadata target_timeseries = 20;
+        FileMetadata target_file = 21;
+        SequenceMetadata target_sequence = 22;
+    }
 }

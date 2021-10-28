@@ -1,7 +1,6 @@
 # Unit testing with wiremock quick howto
-Enabling running wiremock using plain http, the environment variable "enableCdfOverHttp" 
-must be set to true. This can be done for example by using junit-pioneer @SetEnviromentVariable
-annotation.<br>
+Enabling running wiremock using plain http, the client configuration `.enableHttp()`
+must be set to true.<br>
 **Note:** Currently only works with port 80!
 
 ## Example

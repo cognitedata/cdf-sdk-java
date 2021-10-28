@@ -410,6 +410,15 @@ public abstract class CogniteClient implements Serializable {
     }
 
     /**
+     * Returns {@link ExtractionPipelines} representing the Cognite extraction pipelines api endpoint.
+     *
+     * @return The extraction pipelines api object.
+     */
+    public ExtractionPipelines extractionPipelines() {
+        return ExtractionPipelines.of(this);
+    }
+
+    /**
      * Returns {@link SecurityCategories} representing the Cognite labels api endpoints.
      *
      * @return The security categories api endpoint.

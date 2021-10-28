@@ -189,6 +189,62 @@ public class DataGenerator {
         return objects;
     }
 
+    public static List<DataSet> generateDataSets(int noObjects) {
+        List<DataSet> objects = new ArrayList<>();
+        for (int i = 0; i < noObjects; i++) {
+            objects.add(DataSet.newBuilder()
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(10))
+                    .setName("generated-" + RandomStringUtils.randomAlphanumeric(5))
+                    .setDescription("Generated description")
+                    .putMetadata("type", DataGenerator.sourceValue)
+                    .putMetadata(sourceKey, DataGenerator.sourceValue)
+                    .build());
+        }
+        return objects;
+    }
+
+    public static List<ExtractionPipeline> generateExtractionPipelines(int noObjects, long dataSetId) {
+        List<ExtractionPipeline> objects = new ArrayList<>();
+        for (int i = 0; i < noObjects; i++) {
+            objects.add(ExtractionPipeline.newBuilder()
+                            .setExternalId(RandomStringUtils.randomAlphanumeric(10))
+                            .setName("generated-" + RandomStringUtils.randomAlphanumeric(5))
+                            .setDescription("Generated description")
+                            .setDataSetId(dataSetId)
+                            .setSource(sourceValue)
+                            .putMetadata("type", DataGenerator.sourceValue)
+                            .putMetadata(sourceKey, DataGenerator.sourceValue)
+                            .addContacts(ExtractionPipeline.Contact.newBuilder()
+                                    .setName("generated-" + RandomStringUtils.randomAlphanumeric(5))
+                                    .setRole("generated")
+                                    .build())
+                            //.addRawTables(ExtractionPipeline.RawTable.newBuilder()
+                            //        .setDbName("generated-")
+                            //        .setTableName("generated")
+                            //        .build())
+                            .build());
+        }
+        return objects;
+    }
+
+    public static List<ExtractionPipelineRun> generateExtractionPipelineRuns(int noObjects, String pipelineExtId) {
+        List<ExtractionPipelineRun> objects = new ArrayList<>();
+        for (int i = 0; i < noObjects; i++) {
+            objects.add(ExtractionPipelineRun.newBuilder()
+                            .setExternalId(pipelineExtId)
+                            .setCreatedTime(Instant.now().toEpochMilli())
+                            .setMessage("generated-" + RandomStringUtils.randomAlphanumeric(5))
+                            .setStatus(ExtractionPipelineRun.Status.SUCCESS)
+                            .build());
+            try {
+                Thread.sleep(500L);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return objects;
+    }
+
     /*
     Will generate a hierarchy that is 4 levels deep.
      */

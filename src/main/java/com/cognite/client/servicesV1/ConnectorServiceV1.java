@@ -208,8 +208,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ResultFutureIterator<String> readEvents(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read events service.");
-
         PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
                 .setEndpoint("events/list")
                 .setRequest(queryParameters)
@@ -227,8 +225,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> readEventsAggregates() {
-        LOG.debug(loggingPrefix + "Initiating read events aggregates service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("events/aggregate")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -245,8 +241,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> readEventsById() {
-        LOG.debug(loggingPrefix + "Initiating read events service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("events/byids")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -264,8 +258,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter writeEvents() {
-        LOG.debug(loggingPrefix + "Initiating write events service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("events")
                 .setRequest(Request.create())
@@ -284,8 +276,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter updateEvents() {
-        LOG.debug(loggingPrefix + "Initiating update events service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("events/update")
                 .setRequest(Request.create())
@@ -304,8 +294,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter deleteEvents() {
-        LOG.debug(loggingPrefix + "Initiating delete events service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("events/delete")
                 .setRequest(Request.create())
@@ -324,8 +312,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ResultFutureIterator<String> readSequencesHeaders(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read sequences headers service.");
-
         PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
                 .setEndpoint("sequences/list")
                 .setRequest(queryParameters)
@@ -343,8 +329,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> readSequencesAggregates() {
-        LOG.debug(loggingPrefix + "Initiating read sequences aggregates service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("sequences/aggregate")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -1353,6 +1337,130 @@ public abstract class ConnectorServiceV1 implements Serializable {
 
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("datasets")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Read extraction pipelines from Cognite.
+     *
+     * @param queryParameters The parameters for the events query.
+     * @return
+     */
+    public ResultFutureIterator<String> readExtractionPipelines(Request queryParameters) {
+        PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
+                .setEndpoint("extpipes/list")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    /**
+     * Read extraction pipelines by id from Cognite.
+     *
+     * @return
+     */
+    public ItemReader<String> readExtractionPipelinesById() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("extpipes/byids")
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    /**
+     * Write extraction pipelines to Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @return
+     */
+    public ItemWriter writeExtractionPipelines() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("extpipes")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Update extraction pipelines in Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @return
+     */
+    public ItemWriter updateExtractionPipelines() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("extpipes/update")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Delete extraction pipelines in Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @return
+     */
+    public ItemWriter deleteExtractionPipelines() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("extpipes/delete")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Read extraction pipeline runs from Cognite.
+     *
+     * @param queryParameters The parameters for the events query.
+     * @return
+     */
+    public ResultFutureIterator<String> readExtractionPipelineRuns(Request queryParameters) {
+        PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
+                .setEndpoint("extpipes/run/list")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    /**
+     * Write extraction pipeline runs to Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @return
+     */
+    public ItemWriter writeExtractionPipelineRuns() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("extpipes/runs")
                 .setRequest(Request.create())
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
@@ -2639,9 +2747,15 @@ public abstract class ConnectorServiceV1 implements Serializable {
             URL fileUploadURL = new URL((String) fileUploadResponseItem.get(uploadUrlKey));
 
             CompletableFuture<ResponseItems<String>> future;
-            if (fileContainer.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY
-                    && fileContainer.getFileBinary().getBinary().isEmpty()) {
-                LOG.warn(loggingPrefix + "Binary is empty for file {}. File externalId = [{}]. Will skip upload.",
+            if ((fileContainer.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY
+                    && fileContainer.getFileBinary().getBinary().isEmpty())
+                    ||
+                    (fileContainer.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY_URI
+                    && fileContainer.getFileBinary().getBinaryUri().isBlank()
+                    ||
+                    !fileContainer.hasFileBinary())
+            ) {
+                LOG.warn(loggingPrefix + "Binary is empty for file {}. File externalId = [{}]. Will skip binary upload.",
                         fileContainer.getFileMetadata().getName(),
                         fileContainer.getFileMetadata().getExternalId());
 

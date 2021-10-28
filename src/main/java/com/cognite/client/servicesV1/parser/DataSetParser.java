@@ -157,8 +157,17 @@ public class DataSetParser {
             updateNodeBuilder.put("writeProtected", ImmutableMap.of("set", element.getWriteProtected()));
         }
 
+        /*
+        Temporarily disabled while waiting for the api to support "upsert" of metadata keys. Using a "replace" approach
+        as the temporary mitigation.
         if (element.getMetadataCount() > 0) {
             updateNodeBuilder.put("metadata", ImmutableMap.of("add", element.getMetadataMap()));
+        }
+         */
+        if (element.getMetadataCount() > 0) {
+            updateNodeBuilder.put("metadata", ImmutableMap.of("set", element.getMetadataMap()));
+        } else {
+            updateNodeBuilder.put("metadata", ImmutableMap.of("set", ImmutableMap.<String, String>of()));
         }
 
         mapBuilder.put("update", updateNodeBuilder.build());
@@ -202,7 +211,6 @@ public class DataSetParser {
         } else {
             updateNodeBuilder.put("writeProtected", ImmutableMap.of("set", false));
         }
-
 
         if (element.getMetadataCount() > 0) {
             updateNodeBuilder.put("metadata", ImmutableMap.of("set", element.getMetadataMap()));
