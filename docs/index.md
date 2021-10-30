@@ -21,5 +21,6 @@ map directly to the API's definitions.
 - [Reading and writing data. All the basics of how to use the SDK](readAndWriteData.md)
 - [Streaming data from Cognite Data Fusion](streamingData.md)
 - [The Asset resource type. The secret sauce for handling the asset-hierarchy](assets.md)
+- [Relationships, powering the Cognite Data Fusion graph](relationships.md)
 - [Time series--TBD]
 - [Contextualization](contextualization.md)
