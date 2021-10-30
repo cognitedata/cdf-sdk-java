@@ -285,7 +285,7 @@ class RelationshipsTest {
                             .build())
                     .forEach(item -> relationshipItems.add(item));
 
-            List<Relationship> retrievedRelationships = client.relationships().retrieve(relationshipItems);
+            List<Relationship> retrievedRelationships = client.relationships().retrieve(relationshipItems, true);
             LOG.info(loggingPrefix + "Finished retrieving relationships. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
