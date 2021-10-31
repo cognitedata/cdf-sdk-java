@@ -111,9 +111,11 @@ class RelationshipsTest {
             client.relationships()
                     .list(Request.create()
                             .withRootParameter("fetchResources", true))
-                    .forEachRemaining(relationships -> listRelationshipsResults.addAll(relationships));
+                    .forEachRemaining(listRelationshipsResults::addAll);
             LOG.info(loggingPrefix + "----------------------- Finished listing relationships. Duration: {} -----------------",
                     Duration.between(startInstant, Instant.now()));
+
+            listRelationshipsResults.get(0).getSourceCase() == Relationship.SourceCase.SOURCE_NOT_SET
 
             LOG.info(loggingPrefix + "---------------- Start deleting relationships. ---------------------");
             List<Item> deleteItemsInput = new ArrayList<>();
@@ -271,8 +273,7 @@ class RelationshipsTest {
             LOG.info(loggingPrefix + "Start listing relationships.");
             List<Relationship> listRelationshipsResults = new ArrayList<>();
             client.relationships()
-                    .list(Request.create()
-                    )
+                    .list(Request.create())
                     .forEachRemaining(relationships -> listRelationshipsResults.addAll(relationships));
             LOG.info(loggingPrefix + "Finished listing relationships. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
@@ -285,15 +286,15 @@ class RelationshipsTest {
                             .build())
                     .forEach(item -> relationshipItems.add(item));
 
-            List<Relationship> retrievedRelationships = client.relationships().retrieve(relationshipItems);
+            List<Relationship> retrievedRelationships = client.relationships().retrieve(relationshipItems, true);
             LOG.info(loggingPrefix + "Finished retrieving relationships. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
             LOG.info(loggingPrefix + "Start deleting relationships.");
             List<Item> deleteItemsInput = new ArrayList<>();
             listRelationshipsResults.stream()
-                    .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId())
+                    .map(relationship -> Item.newBuilder()
+                            .setExternalId(relationship.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 

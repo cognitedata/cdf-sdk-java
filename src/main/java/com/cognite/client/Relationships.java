@@ -112,12 +112,33 @@ public abstract class Relationships extends ApiBase {
     /**
      * Retrieve Relationships by id.
      *
+     * Source and target objects will not be included--only the relationship object.
+     *
      * @param items The item(s) {@code externalId / id} to retrieve.
      * @return The retrieved relationships.
      * @throws Exception
      */
     public List<Relationship> retrieve(List<Item> items) throws Exception {
-        return retrieveJson(ResourceType.RELATIONSHIP, items).stream()
+        return retrieve(items, false);
+    }
+
+    /**
+     * Retrieve Relationships by id.
+     *
+     * Source and target objects will not be included--only the relationship object.
+     *
+     * @param items The item(s) {@code externalId / id} to retrieve.
+     * @param fetchResources If true, will try to fetch the resources referred to in the relationship (source/target).
+     * @return The retrieved relationships.
+     * @throws Exception
+     */
+    public List<Relationship> retrieve(List<Item> items, boolean fetchResources) throws Exception {
+        Map<String, Object> parameters = Map.of(
+                "ignoreUnknownIds", true,
+                "fetchResources", fetchResources
+        );
+
+        return retrieveJson(ResourceType.RELATIONSHIP, items, parameters).stream()
                 .map(this::parseRelationship)
                 .collect(Collectors.toList());
     }

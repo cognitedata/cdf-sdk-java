@@ -159,6 +159,8 @@ abstract class ApiBase {
     /**
      * Retrieve items by id.
      *
+     * Will ignore unknown ids by default.
+     *
      * @param resourceType The item resource type ({@link com.cognite.client.dto.Event},
      *                     {@link com.cognite.client.dto.Asset}, etc.) to retrieve.
      * @param items        The item(s) {@code externalId / id} to retrieve.
@@ -166,6 +168,25 @@ abstract class ApiBase {
      * @throws Exception
      */
     protected List<String> retrieveJson(ResourceType resourceType, Collection<Item> items) throws Exception {
+        return retrieveJson(resourceType, items, Map.of("ignoreUnknownIds", true));
+    }
+
+    /**
+     * Retrieve items by id.
+     *
+     * This version allows you to explicitly set additional parameters for the retrieve request. For example:
+     * {@code <"ignoreUnknownIds", true>} and {@code <"fetchResources", true>}.
+     *
+     * @param resourceType The item resource type ({@link com.cognite.client.dto.Event},
+     *                     {@link com.cognite.client.dto.Asset}, etc.) to retrieve.
+     * @param items        The item(s) {@code externalId / id} to retrieve.
+     * @param parameters   Additional parameters for the request. For example <"ignoreUnknownIds", true>
+     * @return The items in Json representation.
+     * @throws Exception
+     */
+    protected List<String> retrieveJson(ResourceType resourceType,
+                                        Collection<Item> items,
+                                        Map<String, Object> parameters) throws Exception {
         String batchLogPrefix =
                 "retrieveJson() - batch " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         Instant startInstant = Instant.now();
@@ -229,13 +250,18 @@ abstract class ApiBase {
         deduplicatedItems.addAll(internalIdMap.values());
         List<List<Item>> itemBatches = Partition.ofSize(deduplicatedItems, 1000);
 
+        // Build the request template
+        Request requestTemplate = addAuthInfo(Request.create());
+        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+            requestTemplate = requestTemplate.withRootParameter(entry.getKey(), entry.getValue());
+        }
+
         // Submit all batches
         List<CompletableFuture<ResponseItems<String>>> futureList = new ArrayList<>();
         for (List<Item> batch : itemBatches) {
             // build initial request object
-            Request request = addAuthInfo(Request.create()
-                    .withItems(toRequestItems(batch))
-                    .withRootParameter("ignoreUnknownIds", true));
+            Request request = requestTemplate
+                    .withItems(toRequestItems(batch));
 
             futureList.add(itemReader.getItemsAsync(request));
         }
