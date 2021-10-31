@@ -19,6 +19,8 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [1.5.0-SNAPSHOT]
+
 ## [1.4.0] 2021-10-31
 
 ### Added
