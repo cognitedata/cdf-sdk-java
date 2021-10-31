@@ -19,15 +19,15 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
-## [1.4.0-SNAPSHOT]
+## [1.4.0] 2021-10-31
 
 ### Added
 
 - Support for `ExtractionPipeline` and `ExtractionPipelineRun` so you can send extractor/pipeline observations and 
  heartbeats to CDF.
-- Improved performance of `Relationships.list()` with the added support for partitions.
+- Improved performance of `Relationships.list()` with added support for partitions.
 - Support for including the `source` and `target` object of a `relationship` when using `list()` or `retrieve()`.
-- Improved performance of `Sequences.list()` with the added support for partitions.
+- Improved performance of `Sequences.list()` with added support for partitions.
 
 ### Fixed
 

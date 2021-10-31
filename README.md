@@ -36,7 +36,7 @@ Please check [the documentation](https://github.com/cognitedata/cdf-sdk-java/blo
 <dependency>    
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>1.3.0</version>
+    <version>1.4.0</version>
 </dependency>
 ```
     
@@ -53,6 +53,7 @@ Please check [the documentation](https://github.com/cognitedata/cdf-sdk-java/blo
 #### Data organization
 - Data sets
 - Labels
+- Extraction Pipelines
 
 #### Contextualization
 - Entity matching
