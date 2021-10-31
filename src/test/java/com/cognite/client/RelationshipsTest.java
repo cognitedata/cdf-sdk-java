@@ -115,8 +115,6 @@ class RelationshipsTest {
             LOG.info(loggingPrefix + "----------------------- Finished listing relationships. Duration: {} -----------------",
                     Duration.between(startInstant, Instant.now()));
 
-            listRelationshipsResults.get(0).getSourceCase() == Relationship.SourceCase.SOURCE_NOT_SET
-
             LOG.info(loggingPrefix + "---------------- Start deleting relationships. ---------------------");
             List<Item> deleteItemsInput = new ArrayList<>();
             listRelationshipsResults.stream()
