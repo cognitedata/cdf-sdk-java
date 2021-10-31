@@ -12,7 +12,7 @@ particularly useful when contextualizing data.
 ### Upsert (create and edit)
 
 One thing to be aware of, is how to specify the `source` and `target` of a `relationship`. When creating or updating 
-a relationship you specify source/target by setting the appropriate `resource type` and `externalId`.
+a relationship you specify source and target by setting the appropriate `resource type` and `externalId`.
 ```java
 // Build the relationship object
 Relationship rel = Relationship.newBuilder()
@@ -21,6 +21,7 @@ Relationship rel = Relationship.newBuilder()
         .setSourceExternalId("sap:wo:400_239292")               // The source externalId
         .setTargetType(Relationship.ResourceType.EVENT)         // Specify the target resource type
         .setTargetExternalId("sap:woItem:400_23434703")         // Specify the target externalId
+        .setDataSetId(123456789L)                               // Optional: the internal id of the data set
         .setStartTime(1635604752000)                            // Optional: start time in epoch ms
         .setEndTime(1635605752000)                              // Optional: end time in epoch ms
         .setConfidence(1.0f)                                    // Optional: confidence level 0 - 1
@@ -42,73 +43,47 @@ client.relationships()
 ### List and retrieve
 
 When reading `relationships` via `list()` or `retrive()` you can choose to include the source and target objects
-(not just their `externalId` references) in the response object. 
+(not just their `externalId` references) in the response object. This can be useful when you need to inspect the 
+nodes of the graph as a part of your traversal.
 
 ```java
-List<Asset> myInputAssets = new ArrayList<>();
-populateMyAssets(myInputAssets)  // Fill the collection with all assets
+// Listing relationships
+List<Relationship> listRelationshipsResults = new ArrayList<>();
+client.relationships()
+        .list(Request.create()
+                .withRootParameter("fetchResources", true))     // Add <"fetchResources", true> as a parameter to the 
+        .forEachRemaining(listRelationshipsResults::addAll);    // request to include source and target objects.
 
-List<Asset> upsertedAssets = cogniteClient.assets().synchronizeMultipleHierarchies(myInputAssets);    // can be multiple hierarchies
-        
-List<Asset> upsertedAssets = cogniteClient.assets().synchronizeHierarchy(myInputAssets);        // only a single hierarchy
-```
+// Retrieving relationships
+Item relItem = Item.newBuilder()
+        .setExternalId("external-id-of-relationship-object")
+        .build();
 
-The first time you call the method it will build the hierarchy from scratch. Upon subsequent calls (with the same 
-asset hierarchy as input), it will perform change detection and perform the needed operations (create, update, delete) 
-to get the CDF hierarchy in sync with the input. 
+List<Relationship> retrievedRelationshipsWithObjects = client
+        .relationships()                                // When the second parameter is set to "true", source and target
+        .retrieve(relationshipItems, true);             // objects are included in the result.
 
-The asset input collection must be a single, complete hierarchy satisfying the following constraints:
-- All `assets` must specify an `externalId`.
-- No duplicates (based on `externalId`).
-- The collection must contain one and only one asset object with no parent reference (representing the root node).
-- All other assets must contain a valid `parentExternalId` reference (no self-references).
-- No circular references.
+List<Relationship> retrievedRelationships = client
+        .relationships()                                // With no second parameter, source and target
+        .retrieve(relationshipItems);                   // objects are not included in the result.
 
-### Upsert
-If you need to create and/or update a set of `assets` then the `upsert(Collection<Asset> assets)` method can 
-come in handy. It will operate on the input in topological order and detect whether to perform a create or update 
-operation. 
 
-```java
-List<Asset> myUpsertAssets = new ArrayList<>();
-populateMyAssets(myUpsertAssets)  // Fill the collection with assets to upsert
-List<Asset> upsertedAssets = cogniteClient.assets().upsert(myUpsertAssets);
-```
+// Resolving the source and taget objects
+// You can always retrieve the reference externalId and resource type...
+String sourceExternalId = retrievedRelationships.get(0).getSourceExternalId();
+if (retrievedRelationships.get(0).getSourceType() == Relationship.ResourceType.ASSET) {   
+    // continue resolving the asset or iterate further in the graph...
+}
 
-The asset input collection must satisfy the following constraints:
-- All `assets` must specify an `externalId`.
-- No duplicates (based on `externalId`).
-- All parent(External)Id references must point to either a) an existing asset in CDF or b) an asset in the input collection.
-- No self-references.
-- No circular references.
+// When the source and target objects are included, you can access them directly.
+// Since source/target are optimitically included, you should always double check their presence
+// via one of the Relationship case methods. 
+if (retrievedRelationshipsWithObjects.get(0).hasSourceAsset()) {                    // Check source object and type using
+    Asset sourceAsset = retrievedRelationshipsWithObjects.get(0).getSourceAsset();  // the hasSourceXXX() and hasTargetXX()
+}                                                                                   // methods
 
-### Delete
-You can delete `assets` via two flavors of `delete()`:
-- `delete(List<Item> items)`. Deletes asset nodes in non-recursive mode. All items must be leaf nodes or complete sub-hierarchies.
-- `delete(List<Item> items, boolean recursive)`. Deletes asset nodes in recursive mode.
+if (retrievedRelationshipsWithObjects.get(0).getSourceCase() == Relationship.SourceCase.SOURCE_NOT_SET) {
+    // You can also check the source and target "case" to check if it is set--and its resource type
+}
 
-Deleting assets in recursive mode is a fairly resource intensive operation. We recommend that you pay attention to the
-complete size of the asset-hierarchy (or sub-tree) that will be impacted by the delete operation.
-
-```java
-List<Item> myDeleteItems = new ArrayList<>();
-populateMyDeleteItems(myDeleteItems)  // Fill the collection with items to delete
-List<Item> deletedItems = cogniteClient.assets().delete(myDeleteItems);
-```
-
-### Verify asset hierarchy integrity
-You can ask the SDK to analyze an `asset` collection's data integrity without performing any operation towards CDF (no 
-CRUD operations). This can be useful if you want to check if your asset collection represents a valid asset-hierarchy.
-
-The SDK will report on any constraint violations via the log:
-- All `assets` must specify an `externalId`.
-- No duplicates (based on `externalId`).
-- The collection must contain one and only one asset object with no parent reference (representing the root node).
-- All other assets must contain a valid `parentExternalId` reference (no self-references).
-- No circular references.
-
-```java
-List<Asset> myAssetHierarchy = new ArrayList<>();
-populateMyAssets(myAssetHierarchy)  // Fill the collection with all assets
-boolean isValid = cogniteClient.assets().verifyAssetHierarchyIntegrity(myInputAssets);
 ```
