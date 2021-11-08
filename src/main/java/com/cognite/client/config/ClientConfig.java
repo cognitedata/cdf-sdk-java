@@ -15,7 +15,7 @@ public abstract class ClientConfig implements Serializable {
     /*
     API request identifiers
      */
-    private final static String SDK_IDENTIFIER = "cognite-java-sdk-1.2.x";
+    private final static String SDK_IDENTIFIER = "cognite-java-sdk-1.x.x";
     private final static String DEFAULT_APP_IDENTIFIER = "cognite-java-sdk";
     private final static String DEFAULT_SESSION_IDENTIFIER = "cognite-java-sdk";
 

@@ -510,7 +510,7 @@ public abstract class Files extends ApiBase {
         fileContainerList.addAll(internalIdMap.values());
 
         // Results set container
-        List<CompletableFuture<ResponseItems<String>>> resultFutures = new ArrayList<>(10);
+        List<CompletableFuture<ResponseItems<String>>> resultFutures = new ArrayList<>();
 
         // Write files async
         for (FileContainer file : fileContainerList) {
