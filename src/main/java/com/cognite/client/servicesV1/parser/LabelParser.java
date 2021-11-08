@@ -68,6 +68,11 @@ public class LabelParser {
             labelBuilder.setCreatedTime(root.get("createdTime").longValue());
         }
 
+        if (root.path("dataSetId").isIntegralNumber()) {
+            labelBuilder.setDataSetId(root.get("dataSetId").longValue());
+        }
+
+
         return labelBuilder.build();
     }
 
@@ -87,6 +92,10 @@ public class LabelParser {
 
         if (element.hasDescription()) {
             mapBuilder.put("description", element.getDescription());
+        }
+
+        if (element.hasDataSetId()) {
+            mapBuilder.put("dataSetId", element.getDataSetId());
         }
 
         return mapBuilder.build();
