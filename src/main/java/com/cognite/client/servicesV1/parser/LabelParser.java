@@ -94,6 +94,10 @@ public class LabelParser {
             mapBuilder.put("description", element.getDescription());
         }
 
+        if (element.hasDataSetId()) {
+            mapBuilder.put("dataSetId", element.getDataSetId());
+        }
+
         return mapBuilder.build();
     }
 }
