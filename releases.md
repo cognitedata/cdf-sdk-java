@@ -21,6 +21,10 @@ Changes are grouped as follows:
 
 ## [1.5.0-SNAPSHOT]
 
+### Added 
+
+- Support for `dataSetId` in the `Labels` resource type.
+
 ## [1.4.0] 2021-10-31
 
 ### Added
