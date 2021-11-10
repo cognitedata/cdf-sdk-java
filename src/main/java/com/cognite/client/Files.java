@@ -54,6 +54,7 @@ import java.util.stream.Collectors;
 public abstract class Files extends ApiBase {
     private static final int MAX_WRITE_REQUEST_BATCH_SIZE = 100;
     private static final int MAX_DOWNLOAD_BINARY_BATCH_SIZE = 10;
+    private static final int MAX_UPLOAD_BINARY_BATCH_SIZE = 10;
 
     private static Builder builder() {
         return new AutoValue_Files.Builder();
