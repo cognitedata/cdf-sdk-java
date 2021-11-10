@@ -34,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -479,15 +480,12 @@ public abstract class Files extends ApiBase {
      * @throws Exception
      */
     public List<FileMetadata> upload(@NotNull List<FileContainer> files, boolean deleteTempFile) throws Exception {
-        String loggingPrefix = "upload() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        String loggingPrefix = "upload() - " + RandomStringUtils.randomAlphanumeric(3) + " - ";
         Instant startInstant = Instant.now();
         if (files.isEmpty()) {
             LOG.warn(loggingPrefix + "No items specified in the request. Will skip the upload request.");
             return Collections.emptyList();
         }
-
-        ConnectorServiceV1.FileWriter fileWriter = getClient().getConnectorService().writeFileProto()
-                .enableDeleteTempFile(deleteTempFile);
 
         // naive de-duplication based on ids
         Map<Long, FileContainer> internalIdMap = new HashMap<>();
@@ -505,52 +503,40 @@ public abstract class Files extends ApiBase {
         }
         LOG.info(loggingPrefix + "Received {} files to upload.", internalIdMap.size() + externalIdMap.size());
 
-        // Combine into list
+        // Combine into list and split into upload batches
         List<FileContainer> fileContainerList = new ArrayList<>();
         fileContainerList.addAll(externalIdMap.values());
         fileContainerList.addAll(internalIdMap.values());
+        List<List<FileContainer>> fileContainerBatches = Partition.ofSize(fileContainerList, MAX_UPLOAD_BINARY_BATCH_SIZE);
 
-        // Results set container
-        List<CompletableFuture<ResponseItems<String>>> resultFutures = new ArrayList<>();
+        // Response list
+        List<FileMetadata> responseFileMetadata = new ArrayList<>();
 
-        // Write files async
-        for (FileContainer file : fileContainerList) {
-            CompletableFuture<ResponseItems<String>> future = fileWriter.writeFileAsync(
-                    addAuthInfo(Request.create()
-                            .withProtoRequestBody(file))
-            );
-            resultFutures.add(future);
-        }
-        LOG.info(loggingPrefix + "Dispatched {} files for upload. Duration: {}",
-                fileContainerList.size(),
-                Duration.between(startInstant, Instant.now()).toString());
+        int batchCounter = 0;
+        for (List<FileContainer> uploadBatch : fileContainerBatches) {
+            batchCounter++;
+            String batchLoggingPrefix = loggingPrefix + batchCounter + " - ";
 
-        // Sync all downloads to a single future. It will complete when all the upstream futures have completed.
-        CompletableFuture<Void> allFutures = CompletableFuture.allOf(resultFutures.toArray(
-                new CompletableFuture[resultFutures.size()]));
-        // Wait until the uber future completes.
-        allFutures.join();
-
-        // Collect the response items
-        List<String> responseItems = new ArrayList<>();
-        for (CompletableFuture<ResponseItems<String>> responseItemsFuture : resultFutures) {
-            if (!responseItemsFuture.join().isSuccessful()) {
-                // something went wrong with the request
-                String message = loggingPrefix + "Failed to upload file to Cognite Data Fusion: "
-                        + responseItemsFuture.join().getResponseBodyAsString();
-                LOG.error(message);
-                throw new Exception(message);
+            try {
+                responseFileMetadata.addAll(uploadFileBinaries(uploadBatch, deleteTempFile));
+            } catch (CompletionException e) {
+                if (e.getCause() instanceof SocketTimeoutException) {
+                    // The API is most likely saturated. Retry the uploads one file at a time.
+                    LOG.warn(batchLoggingPrefix + "Error when uploading the batch of file binaries. Will retry each file individually.");
+                    for (FileContainer file : uploadBatch) {
+                        responseFileMetadata.addAll(uploadFileBinaries(List.of(file), deleteTempFile));
+                    }
+                } else {
+                    throw e;
+                }
             }
-            responseItemsFuture.join().getResultsItems().forEach(result -> responseItems.add(result));
-        }
 
+        }
         LOG.info(loggingPrefix + "Completed upload of {} files within a duration of {}.",
-                fileContainerList.size(),
+                files.size(),
                 Duration.between(startInstant, Instant.now()).toString());
 
-        return responseItems.stream()
-                .map(this::parseFileMetadata)
-                .collect(Collectors.toList());
+        return responseFileMetadata;
     }
 
     /**
@@ -881,6 +867,63 @@ public abstract class Files extends ApiBase {
     }
 
     /**
+     * Uploads a set of file binaries.
+     *
+     * @param files The files to upload.
+     * @param deleteTempFile Set to true to remove the URI binary after upload. Set to false to keep the URI binary.
+     * @return The response json strings (file headers).
+     * @throws Exception
+     */
+    private List<FileMetadata> uploadFileBinaries(@NotNull List<FileContainer> files, boolean deleteTempFile) throws Exception {
+        String loggingPrefix = "uploadFileBinaries() - " + RandomStringUtils.randomAlphanumeric(3) + " - ";
+        Instant startInstant = Instant.now();
+        ConnectorServiceV1.FileWriter fileWriter = getClient().getConnectorService().writeFileProto()
+                .enableDeleteTempFile(deleteTempFile);
+
+        List<String> responseItems = new ArrayList<>();
+
+        // Results set container
+        List<CompletableFuture<ResponseItems<String>>> resultFutures = new ArrayList<>();
+
+        // Write files async
+        for (FileContainer file : files) {
+            CompletableFuture<ResponseItems<String>> future = fileWriter.writeFileAsync(
+                    addAuthInfo(Request.create()
+                            .withProtoRequestBody(file))
+            );
+            resultFutures.add(future);
+        }
+        LOG.debug(loggingPrefix + "Dispatched a batch of {} files for upload. Duration: {}",
+                files.size(),
+                Duration.between(startInstant, Instant.now()).toString());
+
+        // Sync all downloads to a single future. It will complete when all the upstream futures have completed.
+        CompletableFuture<Void> allFutures = CompletableFuture.allOf(resultFutures.toArray(
+                new CompletableFuture[resultFutures.size()]));
+        // Wait until the uber future completes.
+        allFutures.join();
+
+        // Collect the response items
+        for (CompletableFuture<ResponseItems<String>> responseItemsFuture : resultFutures) {
+            if (!responseItemsFuture.join().isSuccessful()) {
+                // something went wrong with the request
+                String message = loggingPrefix + "Failed to upload file to Cognite Data Fusion: "
+                        + responseItemsFuture.join().getResponseBodyAsString();
+                LOG.error(message);
+                throw new Exception(message);
+            }
+            responseItemsFuture.join().getResultsItems().forEach(responseItems::add);
+        }
+        LOG.debug(loggingPrefix + "Completed upload of a batch of {} files within a duration of {}.",
+                files.size(),
+                Duration.between(startInstant, Instant.now()).toString());
+
+        return responseItems.stream()
+                .map(this::parseFileMetadata)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Download a set of file binaries. Large batches are split into multiple download requests.
      *
      * @param fileItems The list of files to download.
@@ -932,6 +975,8 @@ public abstract class Files extends ApiBase {
                                 .withItems(toRequestItems(List.of(item))));
                         responseMap.put(reader.readFileBinaries(singleItemRequest), List.of(item));
                     }
+                } else {
+                    throw e;
                 }
             }
         }
