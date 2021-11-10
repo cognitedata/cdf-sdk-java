@@ -219,7 +219,7 @@ public abstract class Assets extends ApiBase {
      *      - The collection must contain one and only one asset object with no parent reference (representing the root node)
      *      - All other assets must contain a valid {@code parentExternalId} reference (no self-references).
      *      - No circular references.
-     * - Read the CDF asset hierarchy based on the supplied root external id.
+     * - Read the CDF asset hierarchy based on the identified root external id.
      * - Compare the input collection with the existing CDF hierarchy. Identify creates, updates and deletes.
      * - Write creates and updates in topological order.
      * - Write deletes in reverse topological order.
@@ -259,7 +259,8 @@ public abstract class Assets extends ApiBase {
 
         LOG.debug(loggingPrefix + "Start downloading the existing asset hierarchy for root [{}]",
                 rootExternalId);
-        // Use the subtree query. Must check the constraints (max 100k)
+        // Use the subtree query. The max 100k constraint does not count towards root assets. I.e. root assets
+        // subtrees will return the entire subtree every time.
         Map<String, Asset> cdfAssets = new HashMap<>();
         Request assetRequest = Request.create()
                 .withFilterParameter("assetSubtreeIds", List.of(Map.of("externalId", rootExternalId)));
