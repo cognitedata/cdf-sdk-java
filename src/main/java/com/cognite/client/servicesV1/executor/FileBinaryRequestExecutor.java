@@ -347,7 +347,7 @@ public abstract class FileBinaryRequestExecutor {
             exceptionMessage += System.lineSeparator();
             exceptionMessage += catchedExceptions.get(catchedExceptions.size() -1).getMessage();
         }
-        Exception e = new Exception(exceptionMessage);
+        Exception e = new IOException(exceptionMessage);
         catchedExceptions.forEach(e::addSuppressed);
         throw e;
     }
@@ -472,8 +472,8 @@ public abstract class FileBinaryRequestExecutor {
                 }
 
                 // check the response content length. When downloading very large files this may exceed 4GB
-                // we put a limit of 500MiB on the response
-                if (response.body().contentLength() > (1024L * 1024L * 500L)) {
+                // we put a limit of 200MiB on the response
+                if (response.body().contentLength() > (1024L * 1024L * 200L)) {
                     String message = String.format("Response too large. "
                                     + "Content-length = [%d]. %n"
                                     + "Response headers: %s",
@@ -515,7 +515,7 @@ public abstract class FileBinaryRequestExecutor {
             exceptionMessage += System.lineSeparator();
             exceptionMessage += catchedExceptions.get(catchedExceptions.size() -1).getMessage();
         }
-        Exception e = new Exception(exceptionMessage);
+        Exception e = new IOException(exceptionMessage);
         catchedExceptions.forEach(e::addSuppressed);
         throw e;
     }

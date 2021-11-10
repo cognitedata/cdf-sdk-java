@@ -2595,6 +2595,14 @@ public abstract class ConnectorServiceV1 implements Serializable {
         private final String loggingPrefix = "FileWriter [" + randomIdString + "] -";
         private final ObjectMapper objectMapper = new ObjectMapper();
 
+        // Using a dedicated http client for bile binary
+        final static OkHttpClient httpClient = new OkHttpClient.Builder()
+                .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS))
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
+                .writeTimeout(20, TimeUnit.SECONDS)
+                .build();
+
         static Builder builder() {
             return new com.cognite.client.servicesV1.AutoValue_ConnectorServiceV1_FileWriter.Builder()
                     .setRequestProvider(PostJsonRequestProvider.builder()
@@ -2611,7 +2619,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                             .withExecutor(client.getExecutorService())
                             .withMaxRetries(client.getClientConfig().getMaxRetries())
                             .withValidResponseCodes(ImmutableList.of(400)))
-                    .setFileBinaryRequestExecutor(FileBinaryRequestExecutor.of(client.getHttpClient())
+                    .setFileBinaryRequestExecutor(FileBinaryRequestExecutor.of(httpClient)
                             .withExecutor(client.getExecutorService())
                             .withMaxRetries(client.getClientConfig().getMaxRetries()))
                     .build();
