@@ -19,11 +19,16 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
-## [1.5.0-SNAPSHOT]
+## [1.5.0] 2021-11-11
 
 ### Added 
 
 - Support for `dataSetId` in the `Labels` resource type.
+
+### Fixed
+
+- File binary upload robustness.
+- `Labels` using api v1 endpoint.
 
 ## [1.4.0] 2021-10-31
 
