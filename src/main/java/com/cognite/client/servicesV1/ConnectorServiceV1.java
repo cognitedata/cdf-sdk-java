@@ -1519,7 +1519,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
     public ItemWriter deleteLabels() {
         LOG.debug(loggingPrefix + "Initiating delete labels service.");
 
-        PostPlaygroundJsonRequestProvider requestProvider = PostPlaygroundJsonRequestProvider.builder()
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("labels/delete")
                 .setRequest(Request.create())
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
