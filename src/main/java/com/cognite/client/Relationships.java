@@ -62,13 +62,22 @@ public abstract class Relationships extends ApiBase {
     }
 
     /**
+     * Returns all {@link Relationship} objects.
+     *
+     * @see #list(Request)
+     */
+    public Iterator<List<Relationship>> list() throws Exception {
+        return this.list(Request.create());
+    }
+
+    /**
      * Returns all {@link Relationship} objects that matches the filters set in the {@link Request}.
      *
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
-     * The assets are retrieved using multiple, parallel request streams towards the Cognite api. The number of
+     * The relationships are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
      *
      * @param requestParameters the filters to use for retrieving the assets.
@@ -76,16 +85,10 @@ public abstract class Relationships extends ApiBase {
      * @throws Exception
      */
     public Iterator<List<Relationship>> list(Request requestParameters) throws Exception {
-        /*
+
         List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
 
         return this.list(requestParameters, partitions.toArray(new String[partitions.size()]));
-         */
-
-        // The relationships API endpoint does not support partitions (yet). Therefore no partitions are used here
-        // in the list implementation. Convert to using partitions when the relationship endpoint is updated.
-
-        return list(requestParameters, new String[0]);
     }
 
     /**
@@ -109,12 +112,33 @@ public abstract class Relationships extends ApiBase {
     /**
      * Retrieve Relationships by id.
      *
+     * Source and target objects will not be included--only the relationship object.
+     *
      * @param items The item(s) {@code externalId / id} to retrieve.
      * @return The retrieved relationships.
      * @throws Exception
      */
     public List<Relationship> retrieve(List<Item> items) throws Exception {
-        return retrieveJson(ResourceType.RELATIONSHIP, items).stream()
+        return retrieve(items, false);
+    }
+
+    /**
+     * Retrieve Relationships by id.
+     *
+     * Source and target objects will not be included--only the relationship object.
+     *
+     * @param items The item(s) {@code externalId / id} to retrieve.
+     * @param fetchResources If true, will try to fetch the resources referred to in the relationship (source/target).
+     * @return The retrieved relationships.
+     * @throws Exception
+     */
+    public List<Relationship> retrieve(List<Item> items, boolean fetchResources) throws Exception {
+        Map<String, Object> parameters = Map.of(
+                "ignoreUnknownIds", true,
+                "fetchResources", fetchResources
+        );
+
+        return retrieveJson(ResourceType.RELATIONSHIP, items, parameters).stream()
                 .map(this::parseRelationship)
                 .collect(Collectors.toList());
     }
@@ -147,10 +171,7 @@ public abstract class Relationships extends ApiBase {
                 .withIdFunction(this::getRelationshipId);
 
         if (getClient().getClientConfig().getUpsertMode() == UpsertMode.REPLACE) {
-            // Just delete and re-create the relationship since there is no internal id to take into account.
-            return upsertItems.upsertViaDeleteAndCreate(relationships).stream()
-                    .map(this::parseRelationship)
-                    .collect(Collectors.toList());
+            upsertItems = upsertItems.withUpdateMappingFunction(this::toRequestReplaceItem);
         }
 
         return upsertItems.upsertViaCreateAndUpdate(relationships).stream()
@@ -209,6 +230,18 @@ public abstract class Relationships extends ApiBase {
     private Map<String, Object> toRequestUpdateItem(Relationship item) {
         try {
             return RelationshipParser.toRequestUpdateItem(item);
+        } catch (Exception e)  {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /*
+    Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
+    deal very well with exceptions.
+     */
+    private Map<String, Object> toRequestReplaceItem(Relationship item) {
+        try {
+            return RelationshipParser.toRequestReplaceItem(item);
         } catch (Exception e)  {
             throw new RuntimeException(e);
         }

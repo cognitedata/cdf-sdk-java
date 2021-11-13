@@ -20,7 +20,6 @@ import com.cognite.client.dto.LoginStatus;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
-import com.google.protobuf.Int64Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,7 +112,7 @@ public class LoginStatusParser {
 
             // optional fields
             if (root.path("apiKeyId").isIntegralNumber()) {
-                loginStatusBuilder.setApiKeyId(Int64Value.of(root.get("apiKeyId").longValue()));
+                loginStatusBuilder.setApiKeyId(root.get("apiKeyId").longValue());
             }
 
             LOG.trace(logPrefix + "Item built: {}", loginStatusBuilder.toString());

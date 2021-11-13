@@ -47,6 +47,15 @@ public abstract class Experimental extends ApiBase {
     }
 
     /**
+     * Returns {@link EngineeringDiagrams} representing the engineering diagrams api services.
+     *
+     * @return The engineering diagrams api object.
+     */
+    public EngineeringDiagrams engineeringDiagrams() {
+        return EngineeringDiagrams.of(getClient());
+    }
+
+    /**
      * Returns {@link PnID} representing the interactive P&ID api services.
      *
      * @return The P&ID api object.

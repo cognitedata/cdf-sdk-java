@@ -20,6 +20,7 @@ import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.Asset;
 import com.cognite.client.config.ResourceType;
+import com.cognite.client.dto.Event;
 import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.AssetParser;
@@ -28,6 +29,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jgrapht.Graph;
+import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.alg.cycle.CycleDetector;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleDirectedGraph;
@@ -37,7 +39,9 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * This class represents the Cognite assets api endpoint.
@@ -70,6 +74,15 @@ public abstract class Assets extends ApiBase {
     }
 
     /**
+     * Returns all {@link Asset} objects.
+     *
+     * @see #list(Request)
+     */
+    public Iterator<List<Asset>> list() throws Exception {
+        return this.list(Request.create());
+    }
+
+    /**
      * Returns all {@link Asset} objects that matches the filters set in the {@link Request}.
      *
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
@@ -86,7 +99,7 @@ public abstract class Assets extends ApiBase {
     public Iterator<List<Asset>> list(Request requestParameters) throws Exception {
         List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
 
-        return this.list(requestParameters, partitions.toArray(new String[partitions.size()]));
+        return this.list(requestParameters, partitions.toArray(new String[0]));
     }
 
     /**
@@ -136,7 +149,199 @@ public abstract class Assets extends ApiBase {
         return aggregate(ResourceType.ASSET, requestParameters);
     }
 
-    // todo make sync assets methods.
+    /**
+     * Synchronizes the input collection of {@link Asset} (representing multiple, complete asset hierarchies)
+     * with existing asset hierarchies in CDF.
+     *
+     * This method will inspect the input collection of {@link Asset} and identify the various asset hierarchies. Each
+     * hierarchy is then processed by {@link #synchronizeHierarchy(Collection)}.
+     *
+     * @see #synchronizeHierarchy(Collection)
+     *
+     * @param assetHierarchies The input asset hierarchies--this represents the target state of the synchronization.
+     * @return the synchronized assets.
+     * @throws Exception
+     */
+    public List<Asset> synchronizeMultipleHierarchies(Collection<Asset> assetHierarchies) throws Exception {
+        String loggingPrefix = "synchronizeMultipleHierarchies() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        Instant startInstant = Instant.now();
+
+        if (!checkExternalId(assetHierarchies)) {
+            String message = loggingPrefix + "Some input assets are missing externalId.";
+            LOG.error(message);
+            throw new Exception(message);
+        }
+
+        Map<String, Asset> assetMap = new HashMap<>();
+        assetHierarchies
+                .forEach(asset -> assetMap.put(asset.getExternalId(), asset));
+
+        // Identify the hierarchies by loading all assets into a graph and identify the connected sub-graphs
+        Graph<Asset, DefaultEdge> graph = new SimpleDirectedGraph<>(DefaultEdge.class);
+
+        // add vertices
+        for (Asset vertex : assetMap.values()) {
+            graph.addVertex(vertex);
+        }
+        // add edges
+        for (Asset asset : assetMap.values()) {
+            if (asset.hasParentExternalId() && assetMap.containsKey(asset.getParentExternalId())) {
+                graph.addEdge(assetMap.get(asset.getParentExternalId()), asset);
+            }
+        }
+        ConnectivityInspector<Asset, DefaultEdge> connectivityInspector = new ConnectivityInspector<>(graph);
+        List<Set<Asset>> hierarchies = connectivityInspector.connectedSets();
+        LOG.info(loggingPrefix + "Identified {} hierarchies in the input collection. Duration: {}",
+                hierarchies.size(),
+                Duration.between(startInstant, Instant.now()));
+
+        List<Asset> returnList = new ArrayList<>();
+        for (Set<Asset> hierarchy : hierarchies) {
+            returnList.addAll(this.synchronizeHierarchy(hierarchy));
+        }
+        LOG.info(loggingPrefix + "Finished synchronizing {} hierarchies. Duration: {}",
+                hierarchies.size(),
+                Duration.between(startInstant, Instant.now()));
+
+        return returnList;
+    }
+
+    /**
+     * Synchronizes the input collection of {@link Asset} (representing a single, complete asset hierarchy)
+     * with an existing asset hierarchy in CDF. The input asset collection represents the target state.
+     * New asset nodes will be added, changed asset nodes will be updated
+     * and deleted asset nodes will be removed (from CDF).
+     *
+     * Algorithm:
+     * - Verify that the input collection satisfies the hierarchy constraints:
+     *      - All assets must specify an {@code externalId}.
+     *      - No duplicates (based on {@code externalId}).
+     *      - The collection must contain one and only one asset object with no parent reference (representing the root node)
+     *      - All other assets must contain a valid {@code parentExternalId} reference (no self-references).
+     *      - No circular references.
+     * - Read the CDF asset hierarchy based on the identified root external id.
+     * - Compare the input collection with the existing CDF hierarchy. Identify creates, updates and deletes.
+     * - Write creates and updates in topological order.
+     * - Write deletes in reverse topological order.
+     *
+     * @param assetHierarchy The input asset hierarchy--this represents the target state of the synchronization.
+     * @return the synchronized assets.
+     * @throws Exception
+     */
+    public List<Asset> synchronizeHierarchy(Collection<Asset> assetHierarchy) throws Exception {
+        String loggingPrefix = "synchronizeHierarchy() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        Instant startInstant = Instant.now();
+
+        LOG.info(loggingPrefix + "Start hierarchy synchronization. Received {} assets in the input collection",
+                assetHierarchy.size());
+        LOG.debug(loggingPrefix + "Check input collection data integrity.");
+        if (!verifyAssetHierarchyIntegrity(assetHierarchy)) {
+            String message = loggingPrefix + "The input asset collection does not satisfy the integrity constraints.";
+            LOG.error(message);
+            throw new Exception(message);
+        }
+        LOG.debug(loggingPrefix + "Input collection data integrity is validated. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+
+        LOG.debug(loggingPrefix + "Identify root node.");
+        List<Asset> rootNodes = identifyRootNodes(assetHierarchy);
+        if (rootNodes.size() != 1) {
+            String message = String.format("%s Error, found %d root nodes. Expected to find one.",
+                    loggingPrefix,
+                    rootNodes.size());
+            LOG.error(message);
+            throw new Exception(message);
+        }
+        String rootExternalId = rootNodes.get(0).getExternalId();
+        LOG.info(loggingPrefix + "Identified root node with external id [{}]. Duration: {}",
+                rootExternalId,
+                Duration.between(startInstant, Instant.now()));
+
+        LOG.debug(loggingPrefix + "Start downloading the existing asset hierarchy for root [{}]",
+                rootExternalId);
+        // Use the subtree query. The max 100k constraint does not count towards root assets. I.e. root assets
+        // subtrees will return the entire subtree every time.
+        Map<String, Asset> cdfAssets = new HashMap<>();
+        Request assetRequest = Request.create()
+                .withFilterParameter("assetSubtreeIds", List.of(Map.of("externalId", rootExternalId)));
+        getClient().assets().list(assetRequest)
+                .forEachRemaining(assetBatch -> {
+                    Map<String, Asset> batchMap = assetBatch.stream()
+                            .collect(Collectors.toMap(Asset::getExternalId, Function.identity()));
+                    cdfAssets.putAll(batchMap);
+                });
+
+        LOG.debug(loggingPrefix + "Finished downloading the existing asset hierarchy for root [{}]. "
+                + "No assets: {}. Duration {}",
+                rootExternalId,
+                cdfAssets.size(),
+                Duration.between(startInstant, Instant.now()));
+
+        // Identify upserts and deletes
+        List<Asset> upsertList = new ArrayList<>();
+        List<Asset> noChangeList = new ArrayList<>();
+        List<Item> deleteList = new ArrayList<>();
+        int changedAssetCounter = 0;
+        int noChangeCounter = 0;
+        int newAssetCounter = 0;
+        for (Asset inputAsset : assetHierarchy) {
+            if (cdfAssets.containsKey(inputAsset.getExternalId())) {
+                // The asset exists from before. Check if it has changed.
+                if (!isEqual(inputAsset, cdfAssets.get(inputAsset.getExternalId()))) {
+                    upsertList.add(inputAsset);
+                    changedAssetCounter++;
+                } else {
+                    noChangeList.add(cdfAssets.get(inputAsset.getExternalId())); // Add from CDF to get id fields++
+                    noChangeCounter++;
+                }
+                cdfAssets.remove(inputAsset.getExternalId());
+            } else {
+                // A new asset, add it to the upserts list
+                upsertList.add(inputAsset);
+                newAssetCounter++;
+            }
+        }
+
+        // Check for leftover CDF assets. These should be deleted
+        if (!cdfAssets.isEmpty()) {
+            List<Asset> sortedAssets = topologicalSort(cdfAssets.values());
+            Collections.reverse(sortedAssets); // Should delete assets in reverse topological order
+            deleteList = sortedAssets.stream()
+                    .map(asset ->
+                        Item.newBuilder()
+                            .setExternalId(asset.getExternalId())
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
+        LOG.info(loggingPrefix + "Change detection complete. New assets: {}, changed assets: {}, deleted assets: {}, "
+                        + "assets with no change: {}. Duration {}",
+                newAssetCounter,
+                changedAssetCounter,
+                deleteList.size(),
+                noChangeCounter,
+                Duration.between(startInstant, Instant.now()));
+
+        // Write the changes to CDF
+        // The upserts must be written with REPLACE mode
+        List<Asset> upsertedAssets = getClient()
+                .withClientConfig(getClient().getClientConfig()
+                        .withUpsertMode(UpsertMode.REPLACE))
+                .assets()
+                .upsert(upsertList);
+
+        getClient().assets().delete(deleteList);
+        LOG.info(loggingPrefix + "Finished synchronizing hierarchy. Root asset external id: [{}]. "
+                + "Total no assets: {}. Upserted assets: {}. Deleted assets: {}. Duration: {}",
+                rootExternalId,
+                assetHierarchy.size(),
+                upsertList.size(),
+                deleteList.size(),
+                Duration.between(startInstant, Instant.now()));
+
+        return Stream.concat(noChangeList.stream(), upsertedAssets.stream())
+                .collect(Collectors.toList());
+    }
 
     /**
      * Creates or updates a set of {@link Asset} objects.
@@ -163,7 +368,7 @@ public abstract class Assets extends ApiBase {
         String loggingPrefix = "upsert() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         Instant startInstant = Instant.now();
         // Check integrity and sort assets topologically
-        List<Asset> sortedAssets = sortAssetsForUpsert(assets);
+        List<Asset> sortedAssets = topologicalSort(assets);
 
         // Setup writers and upsert manager
         ConnectorServiceV1 connector = getClient().getConnectorService();
@@ -263,6 +468,77 @@ public abstract class Assets extends ApiBase {
     }
 
     /**
+     * Find and return the root nodes (if any) in the assets collection. A root node is an asset that doesn't
+     * specify a parent external id reference.
+     *
+     * @param assets The assets to search for root nodes.
+     * @return a list of asset root nodes.
+     */
+    private List<Asset> identifyRootNodes(Collection<Asset> assets) {
+        String loggingPrefix = "identifyRootNodes() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        LOG.debug(loggingPrefix + "Start identifying root nodes.");
+        List<Asset> rootNodeList = assets.stream()
+                .filter(asset -> asset.getParentExternalId().isBlank())
+                .collect(Collectors.toList());
+
+        LOG.debug(loggingPrefix + "Found {} root nodes.",
+                rootNodeList.size());
+
+        return rootNodeList;
+    }
+
+    /**
+     * Check if two asset objects are equal in terms of their main payload. Internal attributes like ids and
+     * internal timestamps are ignored.
+     *
+     * @param one The first asset to compare.
+     * @param other The second asset to compare.
+     * @return true if the assets carry an equal payload, false if not.
+     */
+    private boolean isEqual(Asset one, Asset other) {
+        boolean result = true;
+
+        result = result && (one.hasExternalId() == other.hasExternalId());
+        if (one.hasExternalId()) {
+            result = result && one.getExternalId()
+                    .equals(other.getExternalId());
+        }
+
+        result = result && one.getName()
+                .equals(other.getName());
+
+        result = result && (one.hasParentExternalId() == other.hasParentExternalId());
+        if (one.hasParentExternalId()) {
+            result = result && one.getParentExternalId()
+                    .equals(other.getParentExternalId());
+        }
+
+        result = result && (one.hasDescription() == other.hasDescription());
+        if (one.hasDescription()) {
+            result = result && one.getDescription()
+                    .equals(other.getDescription());
+        }
+
+        result = result && one.getMetadataMap().equals(
+                other.getMetadataMap());
+
+        result = result && (one.hasSource() == other.hasSource());
+        if (one.hasSource()) {
+            result = result && one.getSource()
+                    .equals(other.getSource());
+        }
+
+        result = result && (one.hasDataSetId() == other.hasDataSetId());
+        if (one.hasDataSetId()) {
+            result = result && one.getDataSetId() == other.getDataSetId();
+        }
+
+        result = result && (one.getLabelsList().equals(other.getLabelsList()));
+
+        return result;
+    }
+
+    /**
      * This function will sort a collection of assets into the correct order for upsert to CDF.
      *
      * Assets need to be written in a certain order to comply with the hierarchy constraints of CDF. In short, if an asset
@@ -290,7 +566,7 @@ public abstract class Assets extends ApiBase {
      * @return The sorted assets collection.
      * @throws Exception if one (or more) of the constraints are not fulfilled.
      */
-    private List<Asset> sortAssetsForUpsert(Collection<Asset> assets) throws Exception {
+    private List<Asset> topologicalSort(Collection<Asset> assets) throws Exception {
         Instant startInstant = Instant.now();
         String loggingPrefix = "sortAssetsForUpsert - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         Preconditions.checkArgument(checkExternalId(assets),
@@ -303,10 +579,10 @@ public abstract class Assets extends ApiBase {
                 "Circular reference detected. Please check the log for more information.");
 
         LOG.debug(loggingPrefix + "Constraints check passed. Starting sort.");
-        Map<String, Asset> inputMap = new HashMap<>((int) (assets.size() * 1.35));
+        Map<String, Asset> inputMap = assets.stream()
+                .collect(Collectors.toMap(Asset::getExternalId, Function.identity()));
         List<Asset> sortedAssets = new ArrayList<>();
-        assets.stream()
-                .forEach(asset -> inputMap.put(asset.getExternalId().getValue(), asset));
+
 
         while (!inputMap.isEmpty()) {
             int startInputMapSize = inputMap.size();
@@ -315,7 +591,7 @@ public abstract class Assets extends ApiBase {
                 Asset asset = iterator.next();
                 if (asset.hasParentExternalId()) {
                     // Check if the parent asset exists in the input collection. If no, it is safe to write the asset.
-                    if (!inputMap.containsKey(asset.getParentExternalId().getValue())) {
+                    if (!inputMap.containsKey(asset.getParentExternalId())) {
                         sortedAssets.add(asset);
                         iterator.remove();
                     }
@@ -348,7 +624,7 @@ public abstract class Assets extends ApiBase {
      */
     private boolean checkExternalId(Collection<Asset> assets) {
         String loggingPrefix = "checkExternalId() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
-        List<Asset> missingExternalIdList = new ArrayList<>(50);
+        List<Asset> missingExternalIdList = new ArrayList<>();
 
         for (Asset asset : assets) {
             if (!asset.hasExternalId()) {
@@ -357,7 +633,7 @@ public abstract class Assets extends ApiBase {
         }
 
         // Report on missing externalId
-        if (!missingExternalIdList.isEmpty()) {
+        if (missingExternalIdList.size() > 0) {
             StringBuilder message = new StringBuilder();
             String errorMessage = loggingPrefix + "Found " + missingExternalIdList.size() + " assets missing externalId.";
             message.append(errorMessage).append(System.lineSeparator());
@@ -368,14 +644,14 @@ public abstract class Assets extends ApiBase {
             for (Asset item : missingExternalIdList) {
                 message.append("---------------------------").append(System.lineSeparator())
                         .append("name: [").append(item.getName()).append("]").append(System.lineSeparator())
-                        .append("parentExternalId: [").append(item.getParentExternalId().getValue()).append("]").append(System.lineSeparator())
-                        .append("description: [").append(item.getDescription().getValue()).append("]").append(System.lineSeparator())
+                        .append("parentExternalId: [").append(item.getParentExternalId()).append("]").append(System.lineSeparator())
+                        .append("description: [").append(item.getDescription()).append("]").append(System.lineSeparator())
                         .append("--------------------------");
             }
             LOG.warn(message.toString());
             return false;
         }
-        LOG.info(loggingPrefix + "All assets contain an externalId.");
+        LOG.debug(loggingPrefix + "All assets contain an externalId.");
 
         return true;
     }
@@ -388,18 +664,18 @@ public abstract class Assets extends ApiBase {
      */
     private boolean checkDuplicates(Collection<Asset> assets) {
         String loggingPrefix = "checkDuplicates() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
-        List<Asset> duplicatesList = new ArrayList<>(50);
-        Map<String, Asset> inputMap = new HashMap<>((int) (assets.size() * 1.35));
+        List<Asset> duplicatesList = new ArrayList<>();
+        Map<String, Asset> inputMap = new HashMap<>();
 
         for (Asset asset : assets) {
-            if (inputMap.containsKey(asset.getExternalId().getValue())) {
+            if (inputMap.containsKey(asset.getExternalId())) {
                 duplicatesList.add(asset);
             }
-            inputMap.put(asset.getExternalId().getValue(), asset);
+            inputMap.put(asset.getExternalId(), asset);
         }
 
         // Report on duplicates
-        if (!duplicatesList.isEmpty()) {
+        if (duplicatesList.size() > 0) {
             StringBuilder message = new StringBuilder();
             String errorMessage = loggingPrefix + "Found " + duplicatesList.size() + " duplicates.";
             message.append(errorMessage).append(System.lineSeparator());
@@ -409,16 +685,16 @@ public abstract class Assets extends ApiBase {
             message.append("Duplicate items (max 100 displayed): " + System.lineSeparator());
             for (Asset item : duplicatesList) {
                 message.append("---------------------------").append(System.lineSeparator())
-                        .append("externalId: [").append(item.getExternalId().getValue()).append("]").append(System.lineSeparator())
+                        .append("externalId: [").append(item.getExternalId()).append("]").append(System.lineSeparator())
                         .append("name: [").append(item.getName()).append("]").append(System.lineSeparator())
-                        .append("description: [").append(item.getDescription().getValue()).append("]").append(System.lineSeparator())
+                        .append("description: [").append(item.getDescription()).append("]").append(System.lineSeparator())
                         .append("--------------------------");
             }
             LOG.warn(message.toString());
             return false;
         }
 
-        LOG.info(loggingPrefix + "No duplicates detected in the assets collection.");
+        LOG.debug(loggingPrefix + "No duplicates detected in the assets collection.");
         return true;
     }
 
@@ -435,7 +711,7 @@ public abstract class Assets extends ApiBase {
 
         for (Asset asset : assets) {
             if (asset.hasParentExternalId()
-                    && asset.getParentExternalId().getValue().equals(asset.getExternalId().getValue())) {
+                    && asset.getParentExternalId().equals(asset.getExternalId())) {
                 selfReferenceList.add(asset);
             }
         }
@@ -452,16 +728,16 @@ public abstract class Assets extends ApiBase {
             message.append("Items with self-reference (max 100 displayed): " + System.lineSeparator());
             for (Asset item : selfReferenceList) {
                 message.append("---------------------------").append(System.lineSeparator())
-                        .append("externalId: [").append(item.getExternalId().getValue()).append("]").append(System.lineSeparator())
+                        .append("externalId: [").append(item.getExternalId()).append("]").append(System.lineSeparator())
                         .append("name: [").append(item.getName()).append("]").append(System.lineSeparator())
-                        .append("description: [").append(item.getDescription().getValue()).append("]").append(System.lineSeparator())
-                        .append("parentExternalId: [").append(item.getParentExternalId().getValue()).append("]").append(System.lineSeparator())
+                        .append("description: [").append(item.getDescription()).append("]").append(System.lineSeparator())
+                        .append("parentExternalId: [").append(item.getParentExternalId()).append("]").append(System.lineSeparator())
                         .append("--------------------------");
             }
             LOG.warn(message.toString());
             return false;
         }
-        LOG.info(loggingPrefix + "No self-references detected in the assets collection.");
+        LOG.debug(loggingPrefix + "No self-references detected in the assets collection.");
 
         return true;
     }
@@ -475,8 +751,7 @@ public abstract class Assets extends ApiBase {
     private boolean checkCircularReferences(Collection<Asset> assets) {
         String loggingPrefix = "checkCircularReferences() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         Map<String, Asset> assetMap = new HashMap<>();
-        assets.stream()
-                .forEach(asset -> assetMap.put(asset.getExternalId().getValue(), asset));
+        assets.forEach(asset -> assetMap.put(asset.getExternalId(), asset));
 
         // Checking for circular references
         Graph<Asset, DefaultEdge> graph = new SimpleDirectedGraph<>(DefaultEdge.class);
@@ -487,22 +762,24 @@ public abstract class Assets extends ApiBase {
         }
         // add edges
         for (Asset asset : assetMap.values()) {
-            if (asset.hasParentExternalId() && assetMap.containsKey(asset.getParentExternalId().getValue())) {
-                graph.addEdge(assetMap.get(asset.getParentExternalId().getValue()), asset);
+            if (asset.hasParentExternalId() && assetMap.containsKey(asset.getParentExternalId())) {
+                graph.addEdge(assetMap.get(asset.getParentExternalId()), asset);
             }
         }
 
         CycleDetector<Asset, DefaultEdge> cycleDetector = new CycleDetector<>(graph);
         if (cycleDetector.detectCycles()) {
-            Set<String> cycle = new HashSet<>();
-            cycleDetector.findCycles().stream().forEach((Asset item) -> cycle.add(item.getExternalId().getValue()));
-            String message = loggingPrefix + "Cycles detected. Number of asset in the cycle: " + cycle.size();
+            List<String> cycles = cycleDetector.findCycles().stream()
+                    .map(Asset::getExternalId)
+                    .collect(Collectors.toList());
+
+            String message = loggingPrefix + "Cycles detected. Number of asset in the cycle: " + cycles.size();
             LOG.error(message);
-            LOG.error(loggingPrefix + "Cycle: " + cycle.toString());
+            LOG.error(loggingPrefix + "Cycles: " + cycles.toString());
             return false;
         }
 
-        LOG.info(loggingPrefix + "No cycles detected in the assets collection.");
+        LOG.debug(loggingPrefix + "No cycles detected in the assets collection.");
         return true;
     }
 
@@ -519,21 +796,21 @@ public abstract class Assets extends ApiBase {
      */
     private boolean checkReferentialIntegrity(Collection<Asset> assets) {
         String loggingPrefix = "checkReferentialIntegrity() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
-        Map<String, Asset> inputMap = new HashMap<>();
-        List<Asset> invalidReferenceList = new ArrayList<>(50);
-        List<Asset> rootNodeList = new ArrayList<>(2);
+        Set<String> extIdSet = new HashSet<>();
+        List<Asset> invalidReferenceList = new ArrayList<>();
+        List<Asset> rootNodeList = new ArrayList<>();
 
         LOG.debug(loggingPrefix + "Checking asset input table for integrity.");
         for (Asset element : assets) {
-            if (element.getParentExternalId().getValue().isEmpty()) {
+            if (!element.hasParentExternalId()) {
                 rootNodeList.add(element);
             }
-            inputMap.put(element.getExternalId().getValue(), element);
+            extIdSet.add(element.getExternalId());
         }
 
         for (Asset element : assets) {
-            if (!element.getParentExternalId().getValue().isEmpty()
-                    && !inputMap.containsKey(element.getParentExternalId().getValue())) {
+            if (element.hasParentExternalId()
+                    && !extIdSet.contains(element.getParentExternalId())) {
                 invalidReferenceList.add(element);
             }
         }
@@ -548,17 +825,17 @@ public abstract class Assets extends ApiBase {
             message.append("Root nodes (max 100 displayed): " + System.lineSeparator());
             for (Asset item : rootNodeList) {
                 message.append("---------------------------").append(System.lineSeparator())
-                        .append("externalId: [").append(item.getExternalId().getValue()).append("]").append(System.lineSeparator())
+                        .append("externalId: [").append(item.getExternalId()).append("]").append(System.lineSeparator())
                         .append("name: [").append(item.getName()).append("]").append(System.lineSeparator())
-                        .append("parentExternalId: [").append(item.getParentExternalId().getValue()).append("]").append(System.lineSeparator())
-                        .append("description: [").append(item.getDescription().getValue()).append("]").append(System.lineSeparator())
+                        .append("parentExternalId: [").append(item.getParentExternalId()).append("]").append(System.lineSeparator())
+                        .append("description: [").append(item.getDescription()).append("]").append(System.lineSeparator())
                         .append("--------------------------");
             }
             LOG.warn(message.toString());
             return false;
         }
 
-        if (!invalidReferenceList.isEmpty()) {
+        if (invalidReferenceList.size() > 0) {
             StringBuilder message = new StringBuilder();
             String errorMessage = loggingPrefix + "Found " + invalidReferenceList.size() + " assets with invalid parent reference.";
             message.append(errorMessage).append(System.lineSeparator());
@@ -568,17 +845,17 @@ public abstract class Assets extends ApiBase {
             message.append("Items with invalid parentExternalId (max 100 displayed): " + System.lineSeparator());
             for (Asset item : invalidReferenceList) {
                 message.append("---------------------------").append(System.lineSeparator())
-                        .append("externalId: [").append(item.getExternalId().getValue()).append("]").append(System.lineSeparator())
+                        .append("externalId: [").append(item.getExternalId()).append("]").append(System.lineSeparator())
                         .append("name: [").append(item.getName()).append("]").append(System.lineSeparator())
-                        .append("parentExternalId: [").append(item.getParentExternalId().getValue()).append("]").append(System.lineSeparator())
-                        .append("description: [").append(item.getDescription().getValue()).append("]").append(System.lineSeparator())
+                        .append("parentExternalId: [").append(item.getParentExternalId()).append("]").append(System.lineSeparator())
+                        .append("description: [").append(item.getDescription()).append("]").append(System.lineSeparator())
                         .append("--------------------------");
             }
             LOG.warn(message.toString());
             return false;
         }
 
-        LOG.info(loggingPrefix + "The asset collection contains a single root node and valid parent references.");
+        LOG.debug(loggingPrefix + "The asset collection contains a single root node and valid parent references.");
         return true;
     }
 
@@ -637,9 +914,9 @@ public abstract class Assets extends ApiBase {
      */
     private Optional<String> getAssetId(Asset item) {
         if (item.hasExternalId()) {
-            return Optional.of(item.getExternalId().getValue());
+            return Optional.of(item.getExternalId());
         } else if (item.hasId()) {
-            return Optional.of(String.valueOf(item.getId().getValue()));
+            return Optional.of(String.valueOf(item.getId()));
         } else {
             return Optional.<String>empty();
         }

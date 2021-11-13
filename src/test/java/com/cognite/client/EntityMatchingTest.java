@@ -1,6 +1,7 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ClientConfig;
+import com.cognite.client.config.TokenUrl;
 import com.cognite.client.dto.EntityMatchModel;
 import com.cognite.client.dto.EntityMatchResult;
 import com.cognite.client.dto.Item;
@@ -25,15 +26,19 @@ class EntityMatchingTest {
 
     @Test
     @Tag("remoteCDP")
-    void matchEntitiesStruct() {
+    void matchEntitiesStruct() throws Exception {
         Instant startInstant = Instant.now();
         ClientConfig config = ClientConfig.create()
                 .withNoWorkers(1)
                 .withNoListPartitions(1);
         String loggingPrefix = "UnitTest - matchEntitiesStruct() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -101,7 +106,7 @@ class EntityMatchingTest {
         LOG.debug(loggingPrefix + "Train matching model response body: {}",
                 models.get(0));
 
-        return models.get(0).getId().getValue();
+        return models.get(0).getId();
     }
 
     private ImmutableList<Struct> generateSourceStructs() {

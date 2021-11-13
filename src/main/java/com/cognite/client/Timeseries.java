@@ -19,6 +19,7 @@ package com.cognite.client;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Aggregate;
+import com.cognite.client.dto.Event;
 import com.cognite.client.dto.TimeseriesMetadata;
 import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
@@ -69,6 +70,15 @@ public abstract class Timeseries extends ApiBase {
      */
     public DataPoints dataPoints() {
         return DataPoints.of(getClient());
+    }
+
+    /**
+     * Returns all {@link TimeseriesMetadata} objects.
+     *
+     * @see #list(Request)
+     */
+    public Iterator<List<TimeseriesMetadata>> list() throws Exception {
+        return this.list(Request.create());
     }
 
     /**
@@ -228,15 +238,15 @@ public abstract class Timeseries extends ApiBase {
     }
 
     /*
-    Returns the id of an event. It will first check for an externalId, second it will check for id.
+    Returns the id of a time series. It will first check for an externalId, second it will check for id.
 
     If no id is found, it returns an empty Optional.
      */
     private Optional<String> getTimeseriesId(TimeseriesMetadata item) {
         if (item.hasExternalId()) {
-          return Optional.of(item.getExternalId().getValue());
+          return Optional.of(item.getExternalId());
         } else if (item.hasId()) {
-            return Optional.of(String.valueOf(item.getId().getValue()));
+            return Optional.of(String.valueOf(item.getId()));
         } else {
             return Optional.<String>empty();
         }

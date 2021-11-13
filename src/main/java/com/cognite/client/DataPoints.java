@@ -69,9 +69,9 @@ public abstract class DataPoints extends ApiBase {
     private static final String AGGREGATES_KEY = "aggregates";
 
     private static final TimeseriesMetadata DEFAULT_TS_METADATA = TimeseriesMetadata.newBuilder()
-            .setExternalId(StringValue.of("java_sdk_default"))
-            .setName(StringValue.of("java_sdk_default"))
-            .setDescription(StringValue.of("Default TS metadata created by the Java SDK."))
+            .setExternalId("java_sdk_default")
+            .setName("java_sdk_default")
+            .setDescription("Default TS metadata created by the Java SDK.")
             .setIsStep(false)
             .setIsString(false)
             .build();
@@ -218,7 +218,8 @@ public abstract class DataPoints extends ApiBase {
         2. If one (or more) of the sequences fail, it is most likely because of missing headers. Add temp headers.
         3. Retry the failed sequences
         */
-        Map<ResponseItems<String>, List<List<TimeseriesPointPost>>> responseMap = splitAndUpsertDataPoints(dataPoints, createItemWriter);
+        Map<ResponseItems<String>, List<List<TimeseriesPointPost>>> responseMap =
+                splitAndUpsertDataPoints(dataPoints, createItemWriter);
         LOG.debug(batchLogPrefix + "Completed create items requests for {} data points across {} batches at duration {}",
                 dataPoints.size(),
                 responseMap.size(),
@@ -381,7 +382,7 @@ public abstract class DataPoints extends ApiBase {
                 }
 
                 if (item.hasExclusiveEnd()) {
-                    requestItem.put("before", item.getExclusiveEnd().getValue());
+                    requestItem.put("before", item.getExclusiveEnd());
                 } else {
                     requestItem.put("before", defaultBefore);
                 }
@@ -771,6 +772,7 @@ public abstract class DataPoints extends ApiBase {
             }
             if (pointsList.size() > 0) {
                 batch.add(pointsList);
+                batchItemsCounter++;
                 totalItemCounter++;
             }
 
@@ -992,7 +994,7 @@ public abstract class DataPoints extends ApiBase {
                 "Data point is not based on externalId: " + dataPoint.toString());
 
         return DEFAULT_TS_METADATA.toBuilder()
-                .setExternalId(StringValue.of(dataPoint.getExternalId()))
+                .setExternalId(dataPoint.getExternalId())
                 .setIsStep(dataPoint.getIsStep())
                 .setIsString(dataPoint.getValueTypeCase() == TimeseriesPointPost.ValueTypeCase.VALUE_STRING)
                 .build();
@@ -1089,11 +1091,11 @@ public abstract class DataPoints extends ApiBase {
                 .map(ts -> {
                     if (ts.hasExternalId()) {
                         return Item.newBuilder()
-                                .setExternalId(ts.getExternalId().getValue())
+                                .setExternalId(ts.getExternalId())
                                 .build();
                     } else {
                         return Item.newBuilder()
-                                .setId(ts.getId().getValue())
+                                .setId(ts.getId())
                                 .build();
                     }
                 })
@@ -1200,8 +1202,7 @@ public abstract class DataPoints extends ApiBase {
 
                     double candidate = points.stream()
                             .map(TimeseriesPoint::getValueAggregates)
-                            .map(TimeseriesPoint.Aggregates::getCount)
-                            .mapToDouble(Int64Value::getValue)
+                            .mapToLong(TimeseriesPoint.Aggregates::getCount)
                             .average()
                             .orElse(0d);
 
@@ -1265,8 +1266,7 @@ public abstract class DataPoints extends ApiBase {
     }
 
     /*
-    Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
-    deal very well with exceptions.
+    Custom parser for data points since we have to include start and end timestamps.
      */
     private Map<String, Object> toRequestDeleteItem(Item item) {
         Map<String, Object> deleteItem = new HashMap<>();
@@ -1282,14 +1282,14 @@ public abstract class DataPoints extends ApiBase {
 
         // Add the time window
         if (item.hasInclusiveBegin()) {
-            deleteItem.put("inclusiveBegin", item.getInclusiveBegin().getValue());
+            deleteItem.put("inclusiveBegin", item.getInclusiveBegin());
         } else {
             // Add a default start value
             deleteItem.put("inclusiveBegin", 0L);
         }
 
         if (item.hasExclusiveEnd()) {
-            deleteItem.put("exclusiveEnd", item.getExclusiveEnd().getValue());
+            deleteItem.put("exclusiveEnd", item.getExclusiveEnd());
         }
 
         return deleteItem;
@@ -1301,9 +1301,9 @@ public abstract class DataPoints extends ApiBase {
      */
     private Optional<String> getTimeseriesId(TimeseriesMetadata item) {
         if (item.hasExternalId()) {
-            return Optional.of(item.getExternalId().getValue());
+            return Optional.of(item.getExternalId());
         } else if (item.hasId()) {
-            return Optional.of(String.valueOf(item.getId().getValue()));
+            return Optional.of(String.valueOf(item.getId()));
         } else {
             return Optional.<String>empty();
         }

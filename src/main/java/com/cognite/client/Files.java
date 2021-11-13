@@ -21,6 +21,7 @@ import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.*;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ResponseItems;
+import com.cognite.client.servicesV1.executor.FileBinaryRequestExecutor;
 import com.cognite.client.servicesV1.parser.FileParser;
 import com.cognite.client.servicesV1.parser.ItemParser;
 import com.cognite.client.util.Partition;
@@ -33,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -40,6 +42,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -52,6 +55,7 @@ import java.util.stream.Collectors;
 public abstract class Files extends ApiBase {
     private static final int MAX_WRITE_REQUEST_BATCH_SIZE = 100;
     private static final int MAX_DOWNLOAD_BINARY_BATCH_SIZE = 10;
+    private static final int MAX_UPLOAD_BINARY_BATCH_SIZE = 10;
 
     private static Builder builder() {
         return new AutoValue_Files.Builder();
@@ -72,6 +76,15 @@ public abstract class Files extends ApiBase {
         return Files.builder()
                 .setClient(client)
                 .build();
+    }
+
+    /**
+     * Returns all {@link FileMetadata} objects.
+     *
+     * @see #list(Request)
+     */
+    public Iterator<List<FileMetadata>> list() throws Exception {
+        return this.list(Request.create());
     }
 
     /**
@@ -172,9 +185,9 @@ public abstract class Files extends ApiBase {
         Map<String, FileMetadata> externalIdAssetsMap = new HashMap<>(50);
         for (FileMetadata value : fileMetadataList) {
             if (value.hasExternalId()) {
-                externalIdUpdateMap.put(value.getExternalId().getValue(), value);
+                externalIdUpdateMap.put(value.getExternalId(), value);
             } else if (value.hasId()) {
-                internalIdUpdateMap.put(value.getId().getValue(), value);
+                internalIdUpdateMap.put(value.getId(), value);
             } else {
                 throw new Exception("File metadata item does not contain id nor externalId: " + value.toString());
             }
@@ -272,8 +285,8 @@ public abstract class Files extends ApiBase {
                                 elementListCreate.add(itemsMap.get(value.getExternalId()));
                                 itemsMap.remove(value.getExternalId());
                             } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
-                                elementListCreate.add(itemsMap.get(value.getId()));
-                                itemsMap.remove(value.getId());
+                                elementListCreate.add(itemsMap.get(String.valueOf(value.getId())));
+                                itemsMap.remove(String.valueOf(value.getId()));
                             }
                         }
                         elementListUpdate.addAll(itemsMap.values()); // Add remaining items to be re-updated
@@ -318,8 +331,8 @@ public abstract class Files extends ApiBase {
                                 elementListUpdate.add(itemsMap.get(value.getExternalId()));
                                 itemsMap.remove(value.getExternalId());
                             } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
-                                elementListUpdate.add(itemsMap.get(value.getId()));
-                                itemsMap.remove(value.getId());
+                                elementListUpdate.add(itemsMap.get(String.valueOf(value.getId())));
+                                itemsMap.remove(String.valueOf(value.getId()));
                             }
                         }
                         elementListCreate.addAll(itemsMap.values()); // Add remaining items to be re-inserted
@@ -467,24 +480,21 @@ public abstract class Files extends ApiBase {
      * @throws Exception
      */
     public List<FileMetadata> upload(@NotNull List<FileContainer> files, boolean deleteTempFile) throws Exception {
-        String loggingPrefix = "upload() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        String loggingPrefix = "upload() - " + RandomStringUtils.randomAlphanumeric(3) + " - ";
         Instant startInstant = Instant.now();
         if (files.isEmpty()) {
             LOG.warn(loggingPrefix + "No items specified in the request. Will skip the upload request.");
             return Collections.emptyList();
         }
 
-        ConnectorServiceV1.FileWriter fileWriter = getClient().getConnectorService().writeFileProto()
-                .enableDeleteTempFile(deleteTempFile);
-
         // naive de-duplication based on ids
         Map<Long, FileContainer> internalIdMap = new HashMap<>();
         Map<String, FileContainer> externalIdMap = new HashMap<>();
         for (FileContainer item : files) {
             if (item.getFileMetadata().hasExternalId()) {
-                externalIdMap.put(item.getFileMetadata().getExternalId().getValue(), item);
+                externalIdMap.put(item.getFileMetadata().getExternalId(), item);
             } else if (item.getFileMetadata().hasId()) {
-                internalIdMap.put(item.getFileMetadata().getId().getValue(), item);
+                internalIdMap.put(item.getFileMetadata().getId(), item);
             } else {
                 String message = loggingPrefix + "File item does not contain id nor externalId: " + item.toString();
                 LOG.error(message);
@@ -493,52 +503,40 @@ public abstract class Files extends ApiBase {
         }
         LOG.info(loggingPrefix + "Received {} files to upload.", internalIdMap.size() + externalIdMap.size());
 
-        // Combine into list
+        // Combine into list and split into upload batches
         List<FileContainer> fileContainerList = new ArrayList<>();
         fileContainerList.addAll(externalIdMap.values());
         fileContainerList.addAll(internalIdMap.values());
+        List<List<FileContainer>> fileContainerBatches = Partition.ofSize(fileContainerList, MAX_UPLOAD_BINARY_BATCH_SIZE);
 
-        // Results set container
-        List<CompletableFuture<ResponseItems<String>>> resultFutures = new ArrayList<>(10);
+        // Response list
+        List<FileMetadata> responseFileMetadata = new ArrayList<>();
 
-        // Write files async
-        for (FileContainer file : fileContainerList) {
-            CompletableFuture<ResponseItems<String>> future = fileWriter.writeFileAsync(
-                    addAuthInfo(Request.create()
-                            .withProtoRequestBody(file))
-            );
-            resultFutures.add(future);
-        }
-        LOG.info(loggingPrefix + "Dispatched {} files for upload. Duration: {}",
-                fileContainerList.size(),
-                Duration.between(startInstant, Instant.now()).toString());
+        int batchCounter = 0;
+        for (List<FileContainer> uploadBatch : fileContainerBatches) {
+            batchCounter++;
+            String batchLoggingPrefix = loggingPrefix + batchCounter + " - ";
 
-        // Sync all downloads to a single future. It will complete when all the upstream futures have completed.
-        CompletableFuture<Void> allFutures = CompletableFuture.allOf(resultFutures.toArray(
-                new CompletableFuture[resultFutures.size()]));
-        // Wait until the uber future completes.
-        allFutures.join();
-
-        // Collect the response items
-        List<String> responseItems = new ArrayList<>();
-        for (CompletableFuture<ResponseItems<String>> responseItemsFuture : resultFutures) {
-            if (!responseItemsFuture.join().isSuccessful()) {
-                // something went wrong with the request
-                String message = loggingPrefix + "Failed to upload file to Cognite Data Fusion: "
-                        + responseItemsFuture.join().getResponseBodyAsString();
-                LOG.error(message);
-                throw new Exception(message);
+            try {
+                responseFileMetadata.addAll(uploadFileBinaries(uploadBatch, deleteTempFile));
+            } catch (CompletionException e) {
+                if (e.getCause() instanceof SocketTimeoutException) {
+                    // The API is most likely saturated. Retry the uploads one file at a time.
+                    LOG.warn(batchLoggingPrefix + "Error when uploading the batch of file binaries. Will retry each file individually.");
+                    for (FileContainer file : uploadBatch) {
+                        responseFileMetadata.addAll(uploadFileBinaries(List.of(file), deleteTempFile));
+                    }
+                } else {
+                    throw e;
+                }
             }
-            responseItemsFuture.join().getResultsItems().forEach(result -> responseItems.add(result));
-        }
 
+        }
         LOG.info(loggingPrefix + "Completed upload of {} files within a duration of {}.",
-                fileContainerList.size(),
+                files.size(),
                 Duration.between(startInstant, Instant.now()).toString());
 
-        return responseItems.stream()
-                .map(this::parseFileMetadata)
-                .collect(Collectors.toList());
+        return responseFileMetadata;
     }
 
     /**
@@ -571,7 +569,6 @@ public abstract class Files extends ApiBase {
         Preconditions.checkArgument(java.nio.file.Files.isDirectory(downloadPath),
                 loggingPrefix + "The download path must be a valid directory.");
 
-        final int maxBatchSize = 10;
         Instant startInstant = Instant.now();
         if (files.isEmpty()) {
             LOG.warn(loggingPrefix + "No items specified in the request. Will skip the download request.");
@@ -580,7 +577,7 @@ public abstract class Files extends ApiBase {
         LOG.info(loggingPrefix + "Received {} items to download.",
                 files.size());
 
-        List<List<Item>> batches = Partition.ofSize(files, maxBatchSize);
+        List<List<Item>> batches = Partition.ofSize(files, MAX_DOWNLOAD_BINARY_BATCH_SIZE);
         List<FileContainer> results = new ArrayList<>();
         for (List<Item> batch : batches) {
             // Get the file binaries
@@ -588,15 +585,17 @@ public abstract class Files extends ApiBase {
             // Get the file metadata
             List<FileMetadata> fileMetadataList = retrieve(batch);
             // Merge the binary and metadata
-            List<FileContainer> containers = buildFileContainers(fileBinaries, fileMetadataList);
+            List<FileContainer> tempNameContainers = buildFileContainers(fileBinaries, fileMetadataList);
 
             // Rename the file from random temp name to file name
             List<FileContainer> resultContainers = new ArrayList<>();
-            for (FileContainer container : containers) {
+            for (FileContainer container : tempNameContainers) {
                 if (container.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY_URI
                         && container.hasFileMetadata()) {
-                    // Get the temp file name
-                    String fileNameBase = container.getFileMetadata().getName().getValue();
+                    // Get the target file name. Replace illegal characters with dashes
+                    String fileNameBase = container.getFileMetadata().getName()
+                            .trim()
+                            .replaceAll("[\\/|\\\\|&|\\$]", "-");
                     String fileSuffix = "";
                     if (fileNameBase.lastIndexOf(".") != -1) {
                         // The file name has a suffix. Let's break it out.
@@ -626,8 +625,9 @@ public abstract class Files extends ApiBase {
 
                     // Swap the old container with the new one
                     resultContainers.add(updated);
+                } else {
+                    resultContainers.add(container);
                 }
-                resultContainers.add(container);
             }
             results.addAll(resultContainers);
         }
@@ -722,7 +722,6 @@ public abstract class Files extends ApiBase {
                 fileItems.size());
 
         // Download and completed lists
-        Map<String, Item> itemMap = mapItemToId(deDuplicate(fileItems));
         List<Item> elementListDownload = deDuplicate(fileItems);
         List<FileBinary> elementListCompleted = new ArrayList<>();
 
@@ -868,6 +867,63 @@ public abstract class Files extends ApiBase {
     }
 
     /**
+     * Uploads a set of file binaries.
+     *
+     * @param files The files to upload.
+     * @param deleteTempFile Set to true to remove the URI binary after upload. Set to false to keep the URI binary.
+     * @return The response json strings (file headers).
+     * @throws Exception
+     */
+    private List<FileMetadata> uploadFileBinaries(@NotNull List<FileContainer> files, boolean deleteTempFile) throws Exception {
+        String loggingPrefix = "uploadFileBinaries() - " + RandomStringUtils.randomAlphanumeric(3) + " - ";
+        Instant startInstant = Instant.now();
+        ConnectorServiceV1.FileWriter fileWriter = getClient().getConnectorService().writeFileProto()
+                .enableDeleteTempFile(deleteTempFile);
+
+        List<String> responseItems = new ArrayList<>();
+
+        // Results set container
+        List<CompletableFuture<ResponseItems<String>>> resultFutures = new ArrayList<>();
+
+        // Write files async
+        for (FileContainer file : files) {
+            CompletableFuture<ResponseItems<String>> future = fileWriter.writeFileAsync(
+                    addAuthInfo(Request.create()
+                            .withProtoRequestBody(file))
+            );
+            resultFutures.add(future);
+        }
+        LOG.debug(loggingPrefix + "Dispatched a batch of {} files for upload. Duration: {}",
+                files.size(),
+                Duration.between(startInstant, Instant.now()).toString());
+
+        // Sync all downloads to a single future. It will complete when all the upstream futures have completed.
+        CompletableFuture<Void> allFutures = CompletableFuture.allOf(resultFutures.toArray(
+                new CompletableFuture[resultFutures.size()]));
+        // Wait until the uber future completes.
+        allFutures.join();
+
+        // Collect the response items
+        for (CompletableFuture<ResponseItems<String>> responseItemsFuture : resultFutures) {
+            if (!responseItemsFuture.join().isSuccessful()) {
+                // something went wrong with the request
+                String message = loggingPrefix + "Failed to upload file to Cognite Data Fusion: "
+                        + responseItemsFuture.join().getResponseBodyAsString();
+                LOG.error(message);
+                throw new Exception(message);
+            }
+            responseItemsFuture.join().getResultsItems().forEach(responseItems::add);
+        }
+        LOG.debug(loggingPrefix + "Completed upload of a batch of {} files within a duration of {}.",
+                files.size(),
+                Duration.between(startInstant, Instant.now()).toString());
+
+        return responseItems.stream()
+                .map(this::parseFileMetadata)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Download a set of file binaries. Large batches are split into multiple download requests.
      *
      * @param fileItems The list of files to download.
@@ -879,6 +935,8 @@ public abstract class Files extends ApiBase {
     private Map<List<ResponseItems<FileBinary>>, List<Item>> splitAndDownloadFileBinaries(List<Item> fileItems,
                                                                                           @Nullable URI tempStoragePath,
                                                                                           boolean forceTempStorage) throws Exception {
+        String loggingPrefix = "splitAndDownloadFileBinaries() - ";
+
         Map<List<ResponseItems<FileBinary>>, List<Item>> responseMap = new HashMap<>();
         List<List<Item>> itemBatches = Partition.ofSize(fileItems, MAX_DOWNLOAD_BINARY_BATCH_SIZE);
 
@@ -895,7 +953,32 @@ public abstract class Files extends ApiBase {
             Request request = addAuthInfo(Request.create()
                             .withItems(toRequestItems(deDuplicate(batch))));
 
-            responseMap.put(reader.readFileBinaries(request), batch);
+            try {
+                responseMap.put(reader.readFileBinaries(request), batch);
+            } catch (CompletionException | FileBinaryRequestExecutor.ClientRequestException e) {
+                // First we need to find out the cause / which exception type is thrown
+                FileBinaryRequestExecutor.ClientRequestException requestException = null;
+                if (e instanceof FileBinaryRequestExecutor.ClientRequestException) {
+                    requestException = (FileBinaryRequestExecutor.ClientRequestException) e;
+                } else if (e instanceof CompletionException) {
+                    // Unwrap the completion exception to see if the underlying cause is a ClientRequestException
+                    requestException = ((CompletionException) e).getCause() instanceof FileBinaryRequestExecutor.ClientRequestException ?
+                            ((FileBinaryRequestExecutor.ClientRequestException) ((CompletionException) e).getCause()) : null;
+                }
+
+                if (null != requestException) {
+                    // This exception indicates a malformed download URL--typically an expired URL. This can be caused
+                    // by the parallel downloads interfering with each other. Retry with the file items downloaded individually
+                    LOG.warn(loggingPrefix + "Error when downloading a batch of file binaries. Will retry each file individually.");
+                    for (Item item : batch) {
+                        Request singleItemRequest = addAuthInfo(Request.create()
+                                .withItems(toRequestItems(List.of(item))));
+                        responseMap.put(reader.readFileBinaries(singleItemRequest), List.of(item));
+                    }
+                } else {
+                    throw e;
+                }
+            }
         }
 
         return responseMap;
@@ -1113,9 +1196,9 @@ public abstract class Files extends ApiBase {
         Map<String, FileMetadata> idMap = new HashMap<>();
         for (FileMetadata fileMetadata : fileMetadataList) {
             if (fileMetadata.hasExternalId()) {
-                idMap.put(fileMetadata.getExternalId().getValue(), fileMetadata);
+                idMap.put(fileMetadata.getExternalId(), fileMetadata);
             } else if (fileMetadata.hasId()) {
-                idMap.put(String.valueOf(fileMetadata.getId().getValue()), fileMetadata);
+                idMap.put(String.valueOf(fileMetadata.getId()), fileMetadata);
             } else {
                 idMap.put("", fileMetadata);
             }
@@ -1189,9 +1272,9 @@ public abstract class Files extends ApiBase {
      */
     private Optional<String> getFileId(FileMetadata item) {
         if (item.hasExternalId()) {
-            return Optional.of(item.getExternalId().getValue());
+            return Optional.of(item.getExternalId());
         } else if (item.hasId()) {
-            return Optional.of(String.valueOf(item.getId().getValue()));
+            return Optional.of(String.valueOf(item.getId()));
         } else {
             return Optional.<String>empty();
         }
@@ -1217,7 +1300,7 @@ public abstract class Files extends ApiBase {
     private Optional<FileMetadata> getByExternalId(Collection<FileMetadata> itemsToSearch, String externalId) {
         Optional<FileMetadata> returnObject = Optional.empty();
         for (FileMetadata item : itemsToSearch) {
-            if (item.getExternalId().getValue().equals(externalId)) {
+            if (item.getExternalId().equals(externalId)) {
                 return Optional.of(item);
             }
         }
@@ -1230,7 +1313,7 @@ public abstract class Files extends ApiBase {
     private Optional<FileMetadata> getById(Collection<FileMetadata> itemsToSearch, long id) {
         Optional<FileMetadata> returnObject = Optional.empty();
         for (FileMetadata item : itemsToSearch) {
-            if (item.getId().getValue() == id) {
+            if (item.getId() == id) {
                 return Optional.of(item);
             }
         }

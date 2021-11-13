@@ -15,7 +15,7 @@ public abstract class ClientConfig implements Serializable {
     /*
     API request identifiers
      */
-    private final static String SDK_IDENTIFIER = "cognite-beam-sdk-0.9.x";
+    private final static String SDK_IDENTIFIER = "cognite-java-sdk-1.x.x";
     private final static String DEFAULT_APP_IDENTIFIER = "cognite-java-sdk";
     private final static String DEFAULT_SESSION_IDENTIFIER = "cognite-java-sdk";
 
@@ -24,8 +24,7 @@ public abstract class ClientConfig implements Serializable {
     private final static int DEFAULT_LIST_PARTITIONS = 8;
 
     // Thread pool capacity
-    private final static int DEFAULT_CPU_MULTIPLIER = 8;
-    private final static int DEFAULT_MAX_WORKER_THREADS = 8;
+    private final static int DEFAULT_CPU_THREADS = 8;
 
     // Connection retries
     private static final int DEFAULT_RETRIES = 5;
@@ -48,9 +47,7 @@ public abstract class ClientConfig implements Serializable {
                 .setAppIdentifier(DEFAULT_APP_IDENTIFIER)
                 .setSessionIdentifier(DEFAULT_SESSION_IDENTIFIER)
                 .setMaxRetries(DEFAULT_RETRIES)
-                .setNoWorkers(Math.min(
-                        Runtime.getRuntime().availableProcessors() * DEFAULT_CPU_MULTIPLIER,
-                        DEFAULT_MAX_WORKER_THREADS))
+                .setNoWorkers(DEFAULT_CPU_THREADS)
                 .setNoListPartitions(DEFAULT_LIST_PARTITIONS)
                 .setUpsertMode(DEFAULT_UPSERT_MODE)
                 .setEntityMatchingMaxBatchSize(DEFAULT_ENTITY_MATCHING_MAX_BATCH_SIZE);

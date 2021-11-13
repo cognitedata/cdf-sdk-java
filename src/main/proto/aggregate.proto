@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package com.cognite.beam.proto;
 
-import "google/protobuf/wrappers.proto";
-
 option java_package = "com.cognite.client.dto";
 option java_multiple_files = true;
 
@@ -11,7 +9,7 @@ message Aggregate {
     repeated Record aggregates = 1;
 
     message Record {
-        google.protobuf.StringValue value = 1;
+        optional string value = 1;
         int64 count = 2;
     }
 }

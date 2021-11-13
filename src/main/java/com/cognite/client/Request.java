@@ -17,6 +17,7 @@
 package com.cognite.client;
 
 import com.cognite.client.config.AuthConfig;
+import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.util.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;

@@ -41,11 +41,11 @@ import java.util.stream.Collectors;
 @AutoValue
 public abstract class Datasets extends ApiBase {
 
+    protected static final Logger LOG = LoggerFactory.getLogger(Datasets.class);
+
     private static Builder builder() {
         return new AutoValue_Datasets.Builder();
     }
-
-    protected static final Logger LOG = LoggerFactory.getLogger(Datasets.class);
 
     /**
      * Construct a new {@link Datasets} object using the provided configuration.
@@ -60,6 +60,15 @@ public abstract class Datasets extends ApiBase {
         return Datasets.builder()
                 .setClient(client)
                 .build();
+    }
+
+    /**
+     * Returns all {@link DataSet} objects.
+     *
+     * @see #list(Request)
+     */
+    public Iterator<List<DataSet>> list() throws Exception {
+        return this.list(Request.create());
     }
 
     /**
@@ -92,7 +101,7 @@ public abstract class Datasets extends ApiBase {
      * to stream these results into your own data strcture.
      *
      * @param requestParameters The filters to use for retrieving the datasets
-     * @param partitions The partitions to include
+     * @param partitions        The partitions to include
      * @return An {@link Iterator} to page through the results set
      * @throws Exception
      */
@@ -107,10 +116,14 @@ public abstract class Datasets extends ApiBase {
      * @return The retrieved datasets.
      * @throws Exception
      */
-    public List<DataSet> retrieve(List<Item> items) throws Exception {
-        return retrieveJson(ResourceType.DATA_SET, items).stream()
-                .map(this::parseDatasets)
-                .collect(Collectors.toList());
+    public List<DataSet> retrieve(List<Item> items) {
+        try {
+            return retrieveJson(ResourceType.DATA_SET, items).stream()
+                    .map(this::parseDatasets)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /**
@@ -148,15 +161,29 @@ public abstract class Datasets extends ApiBase {
 
         UpsertItems<DataSet> upsertItems = UpsertItems.of(createItemWriter, this::toRequestInsertItem, getClient().buildAuthConfig())
                 .withUpdateItemWriter(updateItemWriter)
-                .withUpdateMappingFunction(this::toRequestUpdateItem);
+                .withUpdateMappingFunction(this::toRequestUpdateItem)
+                .withIdFunction(this::getDatasetId);
 
         if (getClient().getClientConfig().getUpsertMode() == UpsertMode.REPLACE) {
             upsertItems = upsertItems.withUpdateMappingFunction(this::toRequestReplaceItem);
         }
 
-        return upsertItems.upsertViaCreateAndUpdate(datasets).stream()
+        return upsertItems
+                .withRetrieveFunction(this::retrieve)
+                .withItemMappingFunction(this::toItem)  // used by upsertViaGetCreateAndUpdate
+                .withEqualFunction((DataSet a, DataSet b) ->
+                        a.getId() == b.getId() || (a.hasExternalId() && b.hasExternalId() && a.getExternalId().equals(b.getExternalId())))
+                .upsertViaGetCreateAndUpdate(datasets).stream()
                 .map(this::parseDatasets)
                 .collect(Collectors.toList());
+    }
+
+    /*
+    Returns an Item reflecting the input dataset. This will extract the dataset externalId
+    and populate the Item with it.
+     */
+    private Item toItem(DataSet dataSet) {
+        return Item.newBuilder().setExternalId(dataSet.getExternalId()).build();
     }
 
     /*
@@ -214,9 +241,9 @@ public abstract class Datasets extends ApiBase {
      */
     private Optional<String> getDatasetId(DataSet item) {
         if (item.hasExternalId()) {
-            return Optional.of(item.getExternalId().getValue());
+            return Optional.of(item.getExternalId());
         } else if (item.hasId()) {
-            return Optional.of(String.valueOf(item.getId().getValue()));
+            return Optional.of(String.valueOf(item.getId()));
         } else {
             return Optional.<String>empty();
         }

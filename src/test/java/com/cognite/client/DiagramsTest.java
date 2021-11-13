@@ -1,13 +1,12 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ClientConfig;
+import com.cognite.client.config.TokenUrl;
 import com.cognite.client.dto.*;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ListValue;
-import com.google.protobuf.StringValue;
 import com.google.protobuf.Struct;
-import com.google.protobuf.util.Structs;
 import com.google.protobuf.util.Values;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Tag;
@@ -24,22 +23,26 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class PnIDTest {
+class DiagramsTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
     static final String metaKey = "source";
     static final String metaValue = "unit_test";
 
     @Test
     @Tag("remoteCDP")
-    void createInteractivePnId() {
+    void createInteractiveDiagrams() throws Exception {
         Instant startInstant = Instant.now();
         ClientConfig config = ClientConfig.create()
                 .withNoWorkers(1)
                 .withNoListPartitions(1);
-        String loggingPrefix = "UnitTest - createInteractivePnId() -";
+        String loggingPrefix = "UnitTest - createInteractiveDiagrams() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -68,21 +71,21 @@ class PnIDTest {
                     .setExternalId(fileExtIdC)
                     .build();
             final FileMetadata fileMetadataA = FileMetadata.newBuilder()
-                    .setExternalId(StringValue.of(fileExtIdA))
-                    .setName(StringValue.of("Test_file_pnid"))
-                    .setMimeType(StringValue.of("application/pdf"))
+                    .setExternalId(fileExtIdA)
+                    .setName("Test_file_pnid")
+                    .setMimeType("application/pdf")
                     .putMetadata(metaKey, metaValue)
                     .build();
             final FileMetadata fileMetadataB = FileMetadata.newBuilder()
-                    .setExternalId(StringValue.of(fileExtIdB))
-                    .setName(StringValue.of("Test_file_pnid_2"))
-                    .setMimeType(StringValue.of("application/pdf"))
+                    .setExternalId(fileExtIdB)
+                    .setName("Test_file_pnid_2")
+                    .setMimeType("application/pdf")
                     .putMetadata(metaKey, metaValue)
                     .build();
             final FileMetadata fileMetadataC = FileMetadata.newBuilder()
-                    .setExternalId(StringValue.of(fileExtIdC))
-                    .setName(StringValue.of("Test_file_pnid_3"))
-                    .setMimeType(StringValue.of("application/pdf"))
+                    .setExternalId(fileExtIdC)
+                    .setName("Test_file_pnid_3")
+                    .setMimeType("application/pdf")
                     .putMetadata(metaKey, metaValue)
                     .build();
 
@@ -137,13 +140,13 @@ class PnIDTest {
 
             final List<Item> fileItems = uploadFilesResult.stream()
                     .map(metadata -> Item.newBuilder()
-                            .setExternalId(metadata.getExternalId().getValue())
+                            .setExternalId(metadata.getExternalId())
                             .build())
                     .collect(Collectors.toList());
 
-            List<PnIDResponse> detectResults = client.experimental()
-                    .pnid()
-                    .detectAnnotationsPnID(fileItems, entities, "searchText", true);
+            List<DiagramResponse> detectResults = client.experimental()
+                    .engineeringDiagrams()
+                    .detectAnnotations(fileItems, entities, "searchText", true);
 
             LOG.info(loggingPrefix + "Finished detect annotations and convert to SVG. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
@@ -151,16 +154,18 @@ class PnIDTest {
 
             LOG.info(loggingPrefix + "Start writing SVGs to local storage.");
             Path baseFilePath = Paths.get("./");
-            for (PnIDResponse response : detectResults) {
-                if (response.hasSvgBinary()) {
-                    java.nio.file.Files.write(
-                            baseFilePath.resolve("test-svg-" + RandomStringUtils.randomAlphanumeric(2) + ".svg"),
-                            response.getSvgBinary().getValue().toByteArray());
-                }
-                if (response.hasPngBinary()) {
-                    java.nio.file.Files.write(
-                            baseFilePath.resolve("test-png-" + RandomStringUtils.randomAlphanumeric(2) + ".png"),
-                            response.getPngBinary().getValue().toByteArray());
+            for (DiagramResponse response : detectResults) {
+                for (DiagramResponse.ConvertResult result : response.getConvertResultsList()) {
+                    if (result.hasSvgBinary()) {
+                        java.nio.file.Files.write(
+                                baseFilePath.resolve("test-svg-page" + result.getPage() + "-" + RandomStringUtils.randomAlphanumeric(2) + ".svg"),
+                                result.getSvgBinary().toByteArray());
+                    }
+                    if (result.hasPngBinary()) {
+                        java.nio.file.Files.write(
+                                baseFilePath.resolve("test-png-page" + result.getPage() + "-" + RandomStringUtils.randomAlphanumeric(2) + ".png"),
+                                result.getPngBinary().toByteArray());
+                    }
                 }
             }
 

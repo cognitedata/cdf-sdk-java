@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package com.cognite.beam.proto;
 
-import "google/protobuf/wrappers.proto";
-
 option java_package = "com.cognite.client.dto";
 option java_multiple_files = true;
 
@@ -12,5 +10,5 @@ message LoginStatus {
     bool logged_in = 2;
     string project = 3;
     int64 project_id = 4;
-    google.protobuf.Int64Value api_key_id = 5;
+    optional int64 api_key_id = 5;
 }

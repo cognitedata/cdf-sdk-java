@@ -22,8 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.Int64Value;
-import com.google.protobuf.StringValue;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -51,7 +49,7 @@ public class EventParser {
 
         // An event must contain an id.
         if (root.path("id").isIntegralNumber()) {
-            eventBuilder.setId(Int64Value.of(root.get("id").longValue()));
+            eventBuilder.setId(root.get("id").longValue());
         } else {
             String message = logPrefix + "Unable to parse attribute: id. Item excerpt: "
                     + json.substring(0, Math.min(json.length() - 1, MAX_LOG_ELEMENT_LENGTH));
@@ -60,36 +58,34 @@ public class EventParser {
 
         // The rest of the attributes are optional.
         if (root.path("externalId").isTextual()) {
-            eventBuilder.setExternalId(StringValue.of(root.get("externalId").textValue()));
+            eventBuilder.setExternalId(root.get("externalId").textValue());
         }
         if (root.path("startTime").isIntegralNumber()) {
-            eventBuilder.setStartTime(Int64Value.of(root.get("startTime").longValue()));
+            eventBuilder.setStartTime(root.get("startTime").longValue());
         }
         if (root.path("endTime").isIntegralNumber()) {
-            eventBuilder.setEndTime(Int64Value.of(root.get("endTime").longValue()));
+            eventBuilder.setEndTime(root.get("endTime").longValue());
         }
         if (root.path("description").isTextual()) {
-            eventBuilder.setDescription(
-                    StringValue.of(root.get("description").textValue()));
+            eventBuilder.setDescription(root.get("description").textValue());
         }
         if (root.path("type").isTextual()) {
-            eventBuilder.setType(StringValue.of(root.get("type").textValue()));
+            eventBuilder.setType(root.get("type").textValue());
         }
         if (root.path("subtype").isTextual()) {
-            eventBuilder
-                    .setSubtype(StringValue.of(root.get("subtype").textValue()));
+            eventBuilder.setSubtype(root.get("subtype").textValue());
         }
         if (root.path("source").isTextual()) {
-            eventBuilder.setSource(StringValue.of(root.get("source").textValue()));
+            eventBuilder.setSource(root.get("source").textValue());
         }
         if (root.path("createdTime").isIntegralNumber()) {
-            eventBuilder.setCreatedTime(Int64Value.of(root.get("createdTime").longValue()));
+            eventBuilder.setCreatedTime(root.get("createdTime").longValue());
         }
         if (root.path("lastUpdatedTime").isIntegralNumber()) {
-            eventBuilder.setLastUpdatedTime(Int64Value.of(root.get("lastUpdatedTime").longValue()));
+            eventBuilder.setLastUpdatedTime(root.get("lastUpdatedTime").longValue());
         }
         if (root.path("dataSetId").isIntegralNumber()) {
-            eventBuilder.setDataSetId(Int64Value.of(root.get("dataSetId").longValue()));
+            eventBuilder.setDataSetId(root.get("dataSetId").longValue());
         }
 
         if (root.path("assetIds").isArray()) {
@@ -101,13 +97,11 @@ public class EventParser {
         }
 
         if (root.path("metadata").isObject()) {
-            Iterator<Map.Entry<String, JsonNode>> fieldIterator = root
-                    .path("metadata").fields();
+            Iterator<Map.Entry<String, JsonNode>> fieldIterator = root.path("metadata").fields();
             while (fieldIterator.hasNext()) {
                 Map.Entry<String, JsonNode> entry = fieldIterator.next();
                 if (entry.getValue().isTextual()) {
-                    eventBuilder
-                            .putMetadata(entry.getKey(), entry.getValue().textValue());
+                    eventBuilder.putMetadata(entry.getKey(), entry.getValue().textValue());
                 }
             }
         }
@@ -129,23 +123,23 @@ public class EventParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
 
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         }
 
         if (element.hasStartTime()) {
-            mapBuilder.put("startTime", element.getStartTime().getValue());
+            mapBuilder.put("startTime", element.getStartTime());
         }
         if (element.hasEndTime()) {
-            mapBuilder.put("endTime", element.getEndTime().getValue());
+            mapBuilder.put("endTime", element.getEndTime());
         }
         if (element.hasDescription()) {
-            mapBuilder.put("description", element.getDescription().getValue());
+            mapBuilder.put("description", element.getDescription());
         }
         if (element.hasType()) {
-            mapBuilder.put("type", element.getType().getValue());
+            mapBuilder.put("type", element.getType());
         }
         if (element.hasSubtype()) {
-            mapBuilder.put("subtype", element.getSubtype().getValue());
+            mapBuilder.put("subtype", element.getSubtype());
         }
         if (element.getAssetIdsCount() > 0) {
             mapBuilder.put("assetIds", element.getAssetIdsList());
@@ -154,10 +148,10 @@ public class EventParser {
             mapBuilder.put("metadata", element.getMetadataMap());
         }
         if (element.hasSource()) {
-            mapBuilder.put("source", element.getSource().getValue());
+            mapBuilder.put("source", element.getSource());
         }
         if (element.hasDataSetId()) {
-            mapBuilder.put("dataSetId", element.getDataSetId().getValue());
+            mapBuilder.put("dataSetId", element.getDataSetId());
         }
 
         return mapBuilder.build();
@@ -179,25 +173,25 @@ public class EventParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            mapBuilder.put("id", element.getId().getValue());
+            mapBuilder.put("id", element.getId());
         }
 
         if (element.hasStartTime()) {
-            updateNodeBuilder.put("startTime", ImmutableMap.of("set", element.getStartTime().getValue()));
+            updateNodeBuilder.put("startTime", ImmutableMap.of("set", element.getStartTime()));
         }
         if (element.hasEndTime()) {
-            updateNodeBuilder.put("endTime", ImmutableMap.of("set", element.getEndTime().getValue()));
+            updateNodeBuilder.put("endTime", ImmutableMap.of("set", element.getEndTime()));
         }
         if (element.hasDescription()) {
-            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription().getValue()));
+            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
         }
         if (element.hasType()) {
-            updateNodeBuilder.put("type", ImmutableMap.of("set", element.getType().getValue()));
+            updateNodeBuilder.put("type", ImmutableMap.of("set", element.getType()));
         }
         if (element.hasSubtype()) {
-            updateNodeBuilder.put("subtype", ImmutableMap.of("set", element.getSubtype().getValue()));
+            updateNodeBuilder.put("subtype", ImmutableMap.of("set", element.getSubtype()));
         }
         if (element.getAssetIdsCount() > 0) {
             updateNodeBuilder.put("assetIds", ImmutableMap.of("set", element.getAssetIdsList()));
@@ -206,10 +200,10 @@ public class EventParser {
             updateNodeBuilder.put("metadata", ImmutableMap.of("add", element.getMetadataMap()));
         }
         if (element.hasSource()) {
-            updateNodeBuilder.put("source", ImmutableMap.of("set", element.getSource().getValue()));
+            updateNodeBuilder.put("source", ImmutableMap.of("set", element.getSource()));
         }
         if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
         mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();
@@ -230,37 +224,37 @@ public class EventParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
         if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId().getValue());
+            mapBuilder.put("externalId", element.getExternalId());
         } else {
-            mapBuilder.put("id", element.getId().getValue());
+            mapBuilder.put("id", element.getId());
         }
 
         if (element.hasStartTime()) {
-            updateNodeBuilder.put("startTime", ImmutableMap.of("set", element.getStartTime().getValue()));
+            updateNodeBuilder.put("startTime", ImmutableMap.of("set", element.getStartTime()));
         } else {
             updateNodeBuilder.put("startTime", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasEndTime()) {
-            updateNodeBuilder.put("endTime", ImmutableMap.of("set", element.getEndTime().getValue()));
+            updateNodeBuilder.put("endTime", ImmutableMap.of("set", element.getEndTime()));
         } else {
             updateNodeBuilder.put("endTime", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasDescription()) {
-            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription().getValue()));
+            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
         } else {
             updateNodeBuilder.put("description", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasType()) {
-            updateNodeBuilder.put("type", ImmutableMap.of("set", element.getType().getValue()));
+            updateNodeBuilder.put("type", ImmutableMap.of("set", element.getType()));
         } else {
             updateNodeBuilder.put("type", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasSubtype()) {
-            updateNodeBuilder.put("subtype", ImmutableMap.of("set", element.getSubtype().getValue()));
+            updateNodeBuilder.put("subtype", ImmutableMap.of("set", element.getSubtype()));
         } else {
             updateNodeBuilder.put("subtype", ImmutableMap.of("setNull", true));
         }
@@ -278,13 +272,13 @@ public class EventParser {
         }
 
         if (element.hasSource()) {
-            updateNodeBuilder.put("source", ImmutableMap.of("set", element.getSource().getValue()));
+            updateNodeBuilder.put("source", ImmutableMap.of("set", element.getSource()));
         } else {
             updateNodeBuilder.put("source", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         } else {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("setNull", true));
         }

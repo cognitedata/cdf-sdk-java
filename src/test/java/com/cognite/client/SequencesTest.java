@@ -1,13 +1,13 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ClientConfig;
+import com.cognite.client.config.TokenUrl;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.Item;
 import com.cognite.client.dto.SequenceBody;
 import com.cognite.client.dto.SequenceMetadata;
 import com.cognite.client.util.DataGenerator;
-import com.google.protobuf.StringValue;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -28,15 +28,19 @@ class SequencesTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeReadAndDeleteSequences() {
+    void writeReadAndDeleteSequences() throws Exception {
         Instant startInstant = Instant.now();
         ClientConfig config = ClientConfig.create()
                 .withNoWorkers(1)
                 .withNoListPartitions(1);
         String loggingPrefix = "UnitTest - writeReadAndDeleteSequences() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -64,7 +68,7 @@ class SequencesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listSequencesResults.stream()
                     .map(sequences -> Item.newBuilder()
-                            .setExternalId(sequences.getExternalId().getValue())
+                            .setExternalId(sequences.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -82,13 +86,17 @@ class SequencesTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeReadAndDeleteSequencesRows() {
+    void writeReadAndDeleteSequencesRows() throws Exception {
         Instant startInstant = Instant.now();
         String loggingPrefix = "UnitTest - writeReadAndDeleteSequencesRows() -";
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -133,7 +141,7 @@ class SequencesTest {
             LOG.info(loggingPrefix + "Start reading sequences rows.");
             List<SequenceBody> listSequencesRowsResults = new ArrayList<>();
             List<Item> sequenceBodyRequestItems = listSequencesResults.stream()
-                    .map(sequenceMetadata -> Item.newBuilder().setId(sequenceMetadata.getId().getValue()).build())
+                    .map(sequenceMetadata -> Item.newBuilder().setId(sequenceMetadata.getId()).build())
                     .collect(Collectors.toList());
             client.sequences().rows()
                     .retrieveComplete(sequenceBodyRequestItems)
@@ -155,7 +163,7 @@ class SequencesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listSequencesResults.stream()
                     .map(sequences -> Item.newBuilder()
-                            .setExternalId(sequences.getExternalId().getValue())
+                            .setExternalId(sequences.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -174,15 +182,19 @@ class SequencesTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeEditAndDeleteSequences() {
+    void writeEditAndDeleteSequences() throws Exception {
         Instant startInstant = Instant.now();
         ClientConfig config = ClientConfig.create()
                 .withNoWorkers(1)
                 .withNoListPartitions(1);
         String loggingPrefix = "UnitTest - writeEditAndDeleteSequences() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -200,7 +212,7 @@ class SequencesTest {
             LOG.info(loggingPrefix + "Start updating sequences.");
             List<SequenceMetadata> editedSequencesInput = upsertedTimeseries.stream()
                     .map(sequences -> sequences.toBuilder()
-                            .setDescription(StringValue.of("new-value"))
+                            .setDescription("new-value")
                             .clearMetadata()
                             .putMetadata("new-key", "new-value")
                             .build())
@@ -234,7 +246,7 @@ class SequencesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listSequencesResults.stream()
                     .map(sequences -> Item.newBuilder()
-                            .setExternalId(sequences.getExternalId().getValue())
+                            .setExternalId(sequences.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -244,7 +256,7 @@ class SequencesTest {
 
             BooleanSupplier updateCondition = () -> {
                 for (SequenceMetadata sequences : sequencesUpdateResults)  {
-                    if (sequences.getDescription().getValue().equals("new-value")
+                    if (sequences.getDescription().equals("new-value")
                             && sequences.containsMetadata("new-key")
                             && sequences.containsMetadata(DataGenerator.sourceKey)) {
                         // all good
@@ -257,7 +269,7 @@ class SequencesTest {
 
             BooleanSupplier replaceCondition = () -> {
                 for (SequenceMetadata sequences : sequencesReplaceResults)  {
-                    if (sequences.getDescription().getValue().equals("new-value")
+                    if (sequences.getDescription().equals("new-value")
                             && sequences.containsMetadata("new-key")
                             && !sequences.containsMetadata(DataGenerator.sourceKey)) {
                         // all good
@@ -281,12 +293,16 @@ class SequencesTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeRetrieveAndDeleteSequences() {
+    void writeRetrieveAndDeleteSequences() throws Exception {
         Instant startInstant = Instant.now();
         String loggingPrefix = "UnitTest - writeReadAndDeleteSequences() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -314,7 +330,7 @@ class SequencesTest {
             List<Item> sequencesItems = new ArrayList<>();
             listSequencesResults.stream()
                     .map(aequences -> Item.newBuilder()
-                            .setExternalId(aequences.getExternalId().getValue())
+                            .setExternalId(aequences.getExternalId())
                             .build())
                     .forEach(item -> sequencesItems.add(item));
 
@@ -326,7 +342,7 @@ class SequencesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             retrievedSequences.stream()
                     .map(sequences -> Item.newBuilder()
-                            .setExternalId(sequences.getExternalId().getValue())
+                            .setExternalId(sequences.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -345,14 +361,18 @@ class SequencesTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeAggregateAndDeleteSequences() {
+    void writeAggregateAndDeleteSequences() throws Exception {
         int noItems = 145;
         Instant startInstant = Instant.now();
 
         String loggingPrefix = "UnitTest - writeAggregateAndDeleteSequences() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
                 Duration.between(startInstant, Instant.now()));
@@ -387,7 +407,7 @@ class SequencesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listSequencesResults.stream()
                     .map(sequences -> Item.newBuilder()
-                            .setExternalId(sequences.getExternalId().getValue())
+                            .setExternalId(sequences.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 

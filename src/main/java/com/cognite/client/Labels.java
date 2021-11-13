@@ -17,6 +17,7 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
+import com.cognite.client.dto.Event;
 import com.cognite.client.dto.Label;
 import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
@@ -58,6 +59,15 @@ public abstract class Labels extends ApiBase {
         return Labels.builder()
                 .setClient(client)
                 .build();
+    }
+
+    /**
+     * Returns all {@link Label} objects.
+     *
+     * @see #list(Request)
+     */
+    public Iterator<List<Label>> list() throws Exception {
+        return this.list(Request.create());
     }
 
     /**

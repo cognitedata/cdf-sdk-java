@@ -1,10 +1,10 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ClientConfig;
+import com.cognite.client.config.TokenUrl;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.*;
 import com.cognite.client.util.DataGenerator;
-import com.google.protobuf.StringValue;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -25,15 +25,19 @@ class TimeseriesTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeReadAndDeleteTimeseries() {
+    void writeReadAndDeleteTimeseries() throws Exception {
         Instant startInstant = Instant.now();
         ClientConfig config = ClientConfig.create()
                 .withNoWorkers(1)
                 .withNoListPartitions(1);
         String loggingPrefix = "UnitTest - writeReadAndDeleteTimeseries() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -41,7 +45,7 @@ class TimeseriesTest {
 
         try {
             LOG.info(loggingPrefix + "Start upserting timeseries.");
-            List<TimeseriesMetadata> upsertTimeseriesList = DataGenerator.generateTsHeaderObjects(12800);
+            List<TimeseriesMetadata> upsertTimeseriesList = DataGenerator.generateTsHeaderObjects(9800);
             client.timeseries().upsert(upsertTimeseriesList);
             LOG.info(loggingPrefix + "Finished upserting timeseries. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
@@ -61,7 +65,7 @@ class TimeseriesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listTimeseriesResults.stream()
                     .map(timeseries -> Item.newBuilder()
-                            .setExternalId(timeseries.getExternalId().getValue())
+                            .setExternalId(timeseries.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -79,7 +83,7 @@ class TimeseriesTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeReadAndDeleteTimeseriesDataPoints() {
+    void writeReadAndDeleteTimeseriesDataPoints() throws Exception {
         Instant startInstant = Instant.now();
         final int noTsHeaders = 15;
         final int noTsPoints = 517893;
@@ -90,8 +94,12 @@ class TimeseriesTest {
         String loggingPrefix = "UnitTest - writeReadAndDeleteTimeseriesDataPoints() -";
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -112,7 +120,7 @@ class TimeseriesTest {
                     noTsPoints,
                     tsPointsFrequency,
                     upsertTimeseriesList.stream()
-                            .map(header -> header.getExternalId().getValue())
+                            .map(header -> header.getExternalId())
                             .collect(Collectors.toList()));
             client.timeseries().dataPoints().upsert(upsertDataPointsList);
             LOG.info(loggingPrefix + "Finished upserting data points. Duration: {}",
@@ -134,7 +142,7 @@ class TimeseriesTest {
             LOG.info(loggingPrefix + "Start reading data points.");
             List<Item> listDataPointsItems = upsertTimeseriesList.stream()
                     .map(header -> Item.newBuilder()
-                            .setExternalId(header.getExternalId().getValue())
+                            .setExternalId(header.getExternalId())
                             .build())
                     .collect(Collectors.toList());
             List<TimeseriesPoint> readDataPointsResults = new ArrayList<>();
@@ -148,7 +156,7 @@ class TimeseriesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listTimeseriesResults.stream()
                     .map(timeseries -> Item.newBuilder()
-                            .setExternalId(timeseries.getExternalId().getValue())
+                            .setExternalId(timeseries.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -168,12 +176,16 @@ class TimeseriesTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeEditAndDeleteTimeseries() {
+    void writeEditAndDeleteTimeseries() throws Exception {
         Instant startInstant = Instant.now();
         String loggingPrefix = "UnitTest - writeEditAndDeleteTimeseries() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -191,7 +203,7 @@ class TimeseriesTest {
             LOG.info(loggingPrefix + "Start updating timeseries.");
             List<TimeseriesMetadata> editedTimeseriesInput = upsertedTimeseries.stream()
                     .map(timeseries -> timeseries.toBuilder()
-                            .setDescription(StringValue.of("new-value"))
+                            .setDescription("new-value")
                             .clearMetadata()
                             .putMetadata("new-key", "new-value")
                             .build())
@@ -225,7 +237,7 @@ class TimeseriesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listTimeseriesResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -235,7 +247,7 @@ class TimeseriesTest {
 
             BooleanSupplier updateCondition = () -> {
                 for (TimeseriesMetadata timeseries : timeseriesUpdateResults)  {
-                    if (timeseries.getDescription().getValue().equals("new-value")
+                    if (timeseries.getDescription().equals("new-value")
                             && timeseries.containsMetadata("new-key")
                             && timeseries.containsMetadata(DataGenerator.sourceKey)) {
                         // all good
@@ -248,7 +260,7 @@ class TimeseriesTest {
 
             BooleanSupplier replaceCondition = () -> {
                 for (TimeseriesMetadata timeseries : timeseriesReplaceResults)  {
-                    if (timeseries.getDescription().getValue().equals("new-value")
+                    if (timeseries.getDescription().equals("new-value")
                             && timeseries.containsMetadata("new-key")
                             && !timeseries.containsMetadata(DataGenerator.sourceKey)) {
                         // all good
@@ -272,12 +284,16 @@ class TimeseriesTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeRetrieveAndDeleteTimeseries() {
+    void writeRetrieveAndDeleteTimeseries() throws Exception {
         Instant startInstant = Instant.now();
         String loggingPrefix = "UnitTest - writeReadAndDeleteTimeseries() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -305,7 +321,7 @@ class TimeseriesTest {
             List<Item> timeseriesItems = new ArrayList<>();
             listTimeseriesResults.stream()
                     .map(timeseries -> Item.newBuilder()
-                            .setExternalId(timeseries.getExternalId().getValue())
+                            .setExternalId(timeseries.getExternalId())
                             .build())
                     .forEach(item -> timeseriesItems.add(item));
 
@@ -317,7 +333,7 @@ class TimeseriesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             retrievedTimeseries.stream()
                     .map(timeseries -> Item.newBuilder()
-                            .setExternalId(timeseries.getExternalId().getValue())
+                            .setExternalId(timeseries.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -336,14 +352,18 @@ class TimeseriesTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeAggregateAndDeleteTimeseries() {
+    void writeAggregateAndDeleteTimeseries() throws Exception {
         int noItems = 745;
         Instant startInstant = Instant.now();
 
         String loggingPrefix = "UnitTest - writeAggregateAndDeleteTimeseries() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
                 Duration.between(startInstant, Instant.now()));
@@ -378,7 +398,7 @@ class TimeseriesTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listTimeseriesResults.stream()
                     .map(timeseries -> Item.newBuilder()
-                            .setExternalId(timeseries.getExternalId().getValue())
+                            .setExternalId(timeseries.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 

@@ -1,6 +1,7 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ClientConfig;
+import com.cognite.client.config.TokenUrl;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.Asset;
@@ -14,7 +15,9 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
@@ -26,43 +29,48 @@ class AssetsTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeReadAndDeleteAssets() {
+    void writeReadAndDeleteAssets() throws Exception {
         Instant startInstant = Instant.now();
         String loggingPrefix = "UnitTest - writeReadAndDeleteAssets() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
                 Duration.between(startInstant, Instant.now()));
 
         try {
             LOG.info(loggingPrefix + "Start upserting assets.");
-            List<Asset> upsertAssetsList = DataGenerator.generateAssetHierarchy(1280);
+            List<Asset> upsertAssetsList = DataGenerator.generateAssetHierarchy(1100);
+            upsertAssetsList.addAll(DataGenerator.generateAssetHierarchy(1100));
             client.assets().upsert(upsertAssetsList);
             LOG.info(loggingPrefix + "Finished upserting assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
-            Thread.sleep(15000); // wait for eventual consistency
+            Thread.sleep(20000); // wait for eventual consistency
 
             LOG.info(loggingPrefix + "Start reading assets.");
             List<Asset> listAssetsResults = new ArrayList<>();
             client.assets()
                     .list(Request.create()
                             .withFilterParameter("source", DataGenerator.sourceValue))
-                    .forEachRemaining(assets -> listAssetsResults.addAll(assets));
+                    .forEachRemaining(listAssetsResults::addAll);
             LOG.info(loggingPrefix + "Finished reading assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
-            LOG.info(loggingPrefix + "Start deleting events.");
+            LOG.info(loggingPrefix + "Start deleting assets.");
             List<Item> deleteItemsInput = new ArrayList<>();
             listAssetsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
-                    .forEach(item -> deleteItemsInput.add(item));
+                    .forEach(deleteItemsInput::add);
 
-            List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput, true);
             LOG.info(loggingPrefix + "Finished deleting assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
@@ -76,12 +84,167 @@ class AssetsTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeEditAndDeleteAssets() {
+    void synchronizeAssetHierarchy() throws Exception {
+        Instant startInstant = Instant.now();
+        String loggingPrefix = "UnitTest - synchronizeAssetHierarchy() -";
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
+                ;
+        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+                Duration.between(startInstant, Instant.now()));
+
+        try {
+            LOG.info(loggingPrefix + "Start first synch assets.");
+            List<Asset> originalAssetList = DataGenerator.generateAssetHierarchy(50);
+            List<Asset> upsertedAssets = client.assets().synchronizeHierarchy(originalAssetList);
+            LOG.info(loggingPrefix + "Finished first sync assets. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+
+            Thread.sleep(5000); // wait for eventual consistency
+
+            LOG.info(loggingPrefix + "Start second sync assets.");
+            List<Asset> editedAssetsInput = originalAssetList.stream()
+                    .map(asset -> {
+                        if (ThreadLocalRandom.current().nextBoolean()) {
+                            return asset.toBuilder()
+                                    .putMetadata("new-key", "new-value")
+                                    .build();
+                        } else {
+                            return asset;
+                        }
+                    })
+                    .collect(Collectors.toList());
+
+            List<Asset> assetsToRemove = identifyLeafAssets(editedAssetsInput).stream()
+                    .limit(10)
+                    .collect(Collectors.toList());
+
+            editedAssetsInput.removeAll(assetsToRemove);
+            client.assets().synchronizeHierarchy(editedAssetsInput);
+
+            LOG.info(loggingPrefix + "Finished second sync assets. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+
+            Thread.sleep(5000); // wait for eventual consistency
+
+            LOG.info(loggingPrefix + "Start deleting assets.");
+            List<Asset> listAssetsResults = new ArrayList<>();
+            client.assets()
+                    .list(Request.create()
+                            .withFilterParameter("source", DataGenerator.sourceValue))
+                    .forEachRemaining(listAssetsResults::addAll);
+            List<Item> deleteItemsInput = new ArrayList<>();
+            listAssetsResults.stream()
+                    .map(event -> Item.newBuilder()
+                            .setExternalId(event.getExternalId())
+                            .build())
+                    .forEach(deleteItemsInput::add);
+
+            List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput, true);
+            LOG.info(loggingPrefix + "Finished deleting assets. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+
+            assertEquals(editedAssetsInput.size(), listAssetsResults.size());
+            assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void synchronizeMultipleAssetHierarchies() throws Exception {
+        Instant startInstant = Instant.now();
+        String loggingPrefix = "UnitTest - synchronizeMultipleAssetHierarchies() -";
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
+                ;
+        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+                Duration.between(startInstant, Instant.now()));
+
+        try {
+            LOG.info(loggingPrefix + "Start first synch assets.");
+            List<Asset> originalAssetList = DataGenerator.generateAssetHierarchy(50);
+            originalAssetList.addAll(DataGenerator.generateAssetHierarchy(20));
+            List<Asset> upsertedAssets = client.assets().synchronizeMultipleHierarchies(originalAssetList);
+            LOG.info(loggingPrefix + "Finished first sync assets. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+
+            Thread.sleep(10000); // wait for eventual consistency
+
+            LOG.info(loggingPrefix + "Start second sync assets.");
+            List<Asset> editedAssetsInput = originalAssetList.stream()
+                    .map(asset -> {
+                        if (ThreadLocalRandom.current().nextBoolean()) {
+                            return asset.toBuilder()
+                                    .putMetadata("new-key", "new-value")
+                                    .build();
+                        } else {
+                            return asset;
+                        }
+                    })
+                    .collect(Collectors.toList());
+
+            List<Asset> assetsToRemove = identifyLeafAssets(editedAssetsInput).stream()
+                    .limit(10)
+                    .collect(Collectors.toList());
+
+            editedAssetsInput.removeAll(assetsToRemove);
+            client.assets().synchronizeMultipleHierarchies(editedAssetsInput);
+
+            LOG.info(loggingPrefix + "Finished second sync assets. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+
+            Thread.sleep(5000); // wait for eventual consistency
+
+            LOG.info(loggingPrefix + "Start deleting assets.");
+            List<Asset> listAssetsResults = new ArrayList<>();
+            client.assets()
+                    .list(Request.create()
+                            .withFilterParameter("source", DataGenerator.sourceValue))
+                    .forEachRemaining(listAssetsResults::addAll);
+            List<Item> deleteItemsInput = new ArrayList<>();
+            listAssetsResults.stream()
+                    .map(event -> Item.newBuilder()
+                            .setExternalId(event.getExternalId())
+                            .build())
+                    .forEach(deleteItemsInput::add);
+
+            List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput, true);
+            LOG.info(loggingPrefix + "Finished deleting assets. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+
+            assertEquals(editedAssetsInput.size(), listAssetsResults.size());
+            assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void writeEditAndDeleteAssets() throws Exception {
         Instant startInstant = Instant.now();
         String loggingPrefix = "UnitTest - writeEditAndDeleteAssets() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
                 Duration.between(startInstant, Instant.now()));
@@ -124,13 +287,13 @@ class AssetsTest {
             client.assets()
                     .list(Request.create()
                             .withFilterParameter("source", DataGenerator.sourceValue))
-                    .forEachRemaining(events -> listAssetsResults.addAll(events));
+                    .forEachRemaining(listAssetsResults::addAll);
             List<Item> deleteItemsInput = new ArrayList<>();
             listAssetsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
-                    .forEach(item -> deleteItemsInput.add(item));
+                    .forEach(deleteItemsInput::add);
 
             List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput);
             LOG.info(loggingPrefix + "Finished deleting assets. Duration: {}",
@@ -174,12 +337,16 @@ class AssetsTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeRetrieveAndDeleteAssets() {
+    void writeRetrieveAndDeleteAssets() throws Exception {
         Instant startInstant = Instant.now();
         String loggingPrefix = "UnitTest - writeRetrieveAndDeleteAssets() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
                 Duration.between(startInstant, Instant.now()));
@@ -198,7 +365,7 @@ class AssetsTest {
             client.assets()
                     .list(Request.create()
                             .withFilterParameter("source", DataGenerator.sourceValue))
-                    .forEachRemaining(events -> listAssetsResults.addAll(events));
+                    .forEachRemaining(listAssetsResults::addAll);
             LOG.info(loggingPrefix + "Finished listing assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
@@ -206,9 +373,9 @@ class AssetsTest {
             List<Item> assetItems = new ArrayList<>();
             listAssetsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
-                    .forEach(item -> assetItems.add(item));
+                    .forEach(assetItems::add);
 
             List<Asset> retrievedAssets = client.assets().retrieve(assetItems);
             LOG.info(loggingPrefix + "Finished retrieving assets. Duration: {}",
@@ -218,9 +385,9 @@ class AssetsTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listAssetsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
-                    .forEach(item -> deleteItemsInput.add(item));
+                    .forEach(deleteItemsInput::add);
 
             List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput, true);
             LOG.info(loggingPrefix + "Finished deleting assets. Duration: {}",
@@ -237,12 +404,16 @@ class AssetsTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeAggregateAndDeleteAssets() {
+    void writeAggregateAndDeleteAssets() throws Exception {
         Instant startInstant = Instant.now();
         String loggingPrefix = "UnitTest - writeAggregateAndDeleteAssets() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
                 Duration.between(startInstant, Instant.now()));
@@ -269,19 +440,19 @@ class AssetsTest {
             client.assets()
                     .list(Request.create()
                             .withFilterParameter("source", DataGenerator.sourceValue))
-                    .forEachRemaining(events -> listAssetsResults.addAll(events));
+                    .forEachRemaining(listAssetsResults::addAll);
             LOG.info(loggingPrefix + "Finished listing assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
-            LOG.info(loggingPrefix + "Start deleting events.");
+            LOG.info(loggingPrefix + "Start deleting assets.");
             List<Item> deleteItemsInput = new ArrayList<>();
             listAssetsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
-                    .forEach(item -> deleteItemsInput.add(item));
+                    .forEach(deleteItemsInput::add);
 
-            List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput, true);
             LOG.info(loggingPrefix + "Finished deleting assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
@@ -291,5 +462,21 @@ class AssetsTest {
             LOG.error(e.toString());
             e.printStackTrace();
         }
+    }
+
+    /*
+    Return the leaf asset nodes of an asset collection.
+     */
+    private List<Asset> identifyLeafAssets(Collection<Asset> assetCollection) {
+        List<String> parentRefs = assetCollection.stream()
+                .filter(Asset::hasParentExternalId)
+                .map(Asset::getParentExternalId)
+                .collect(Collectors.toList());
+
+        List<Asset> leafNodes = assetCollection.stream()
+                .filter(asset -> !parentRefs.contains(asset.getExternalId()))
+                .collect(Collectors.toList());
+
+        return leafNodes;
     }
 }

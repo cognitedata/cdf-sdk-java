@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.ByteString;
 import okhttp3.*;
+import okhttp3.internal.http2.StreamResetException;
 import okio.BufferedSink;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -32,6 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLProtocolException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -49,10 +52,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 
 /**
  * This request executor implements specific behavior to deal with very large request/response bodies when
@@ -81,13 +81,21 @@ public abstract class FileBinaryRequestExecutor {
             504     // gateway timeout
     );
 
-    private static final int DEFAULT_NUM_WORKERS = 10;
-    private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(DEFAULT_NUM_WORKERS);
+    private static final int DEFAULT_NUM_WORKERS = 8;
+    //private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(DEFAULT_NUM_WORKERS);
+    private static final ThreadPoolExecutor DEFAULT_POOL = new ThreadPoolExecutor(DEFAULT_NUM_WORKERS, DEFAULT_NUM_WORKERS,
+            2000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+
+    private static final int DATA_TRANSFER_BUFFER_SIZE = 1024 * 4;
 
     protected final static Logger LOG = LoggerFactory.getLogger(FileBinaryRequestExecutor.class);
 
     private final String randomIdString = RandomStringUtils.randomAlphanumeric(5);
     private final String loggingPrefix = "FileBinaryRequestExecutor [" + randomIdString + "] -";
+
+    static {
+        DEFAULT_POOL.allowCoreThreadTimeOut(true);
+    }
 
     private static Builder builder() {
         return new AutoValue_FileBinaryRequestExecutor.Builder()
@@ -223,7 +231,7 @@ public abstract class FileBinaryRequestExecutor {
      */
     public CompletableFuture<FileBinary> downloadBinaryAsync(Request request) {
         LOG.debug(loggingPrefix + "Executing request async. Detected {} CPUs. Default executor running with "
-                + "a target parallelism of {}", Runtime.getRuntime().availableProcessors(), DEFAULT_POOL.getParallelism());
+                + "a target parallelism of {}", Runtime.getRuntime().availableProcessors(), DEFAULT_NUM_WORKERS);
 
         CompletableFuture<FileBinary> completableFuture = new CompletableFuture<>();
         getExecutor().execute((Runnable & CompletableFuture.AsynchronousCompletionTask) () -> {
@@ -268,12 +276,18 @@ public abstract class FileBinaryRequestExecutor {
 
                 // if the call was not successful, throw an error
                 if (!response.isSuccessful() && !getValidResponseCodes().contains(responseCode)) {
-                    throw new Exception(loggingPrefix +
-                            "Unexpected response code when reading: " + responseCode + ". "
-                                    + response.toString() + System.lineSeparator()
-                                    + "Response content length: " + response.body().contentLength() + System.lineSeparator()
-                                    + "Response headers: " + response.headers().toString() + System.lineSeparator()
-                    );
+                    String errorMessage = "Downloading file binary: Unexpected response code: " + responseCode + ". "
+                            + response.toString() + System.lineSeparator()
+                            + "Response body: " + response.body().string() + System.lineSeparator()
+                            + "Response headers: " + response.headers().toString() + System.lineSeparator();
+
+                    if (responseCode >= 400 && responseCode < 500) {
+                        // a 400 range response code indicates an expired download URL. Will throw a special exception
+                        // so that it can be handled (i.e. retried) higher up in the caller stack.
+                        throw new ClientRequestException(errorMessage, responseCode);
+                    } else {
+                        throw new IOException(errorMessage);
+                    }
                 }
                 // check the response
                 if (response.body() == null) {
@@ -308,15 +322,19 @@ public abstract class FileBinaryRequestExecutor {
                 catchedExceptions.add(e);
 
                 // if we get a transient error, retry the call
-                if (e instanceof java.net.SocketTimeoutException || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
+                if (e instanceof java.net.SocketTimeoutException
+                        || e instanceof StreamResetException
+                        || e instanceof SSLProtocolException
+                        || e instanceof SSLException
+                        || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     LOG.warn(loggingPrefix + "Transient error when downloading file ("
-                            + ", response code: " + responseCode
+                            + "response code: " + responseCode
                             + "). Retrying...", e);
 
                 } else {
                     // not transient, just re-throw
                     LOG.error(loggingPrefix + "Non-transient error occurred when downloading file."
-                            + ", Response code: " + responseCode, e);
+                            + " Response code: " + responseCode, e);
                     throw e;
                 }
             }
@@ -329,7 +347,7 @@ public abstract class FileBinaryRequestExecutor {
             exceptionMessage += System.lineSeparator();
             exceptionMessage += catchedExceptions.get(catchedExceptions.size() -1).getMessage();
         }
-        Exception e = new Exception(exceptionMessage);
+        Exception e = new IOException(exceptionMessage);
         catchedExceptions.forEach(e::addSuppressed);
         throw e;
     }
@@ -347,7 +365,7 @@ public abstract class FileBinaryRequestExecutor {
      */
     public CompletableFuture<ResponseBinary> uploadBinaryAsync(FileBinary fileBinary, URL targetURL) {
         LOG.debug(loggingPrefix + "Executing request async. Detected {} CPUs. Default executor running with "
-                + "a target parallelism of {}", Runtime.getRuntime().availableProcessors(), DEFAULT_POOL.getParallelism());
+                + "a target parallelism of {}", Runtime.getRuntime().availableProcessors(), DEFAULT_NUM_WORKERS);
 
         CompletableFuture<ResponseBinary> completableFuture = new CompletableFuture<>();
         getExecutor().execute((Runnable & CompletableFuture.AsynchronousCompletionTask) () -> {
@@ -439,12 +457,12 @@ public abstract class FileBinaryRequestExecutor {
 
                 // if the call was not successful, throw an error
                 if (!response.isSuccessful() && !getValidResponseCodes().contains(responseCode)) {
-                    throw new IOException(
-                            "Uploading file binary: Unexpected response code: " + responseCode + ". "
+                    String errorMessage = "Uploading file binary: Unexpected response code: " + responseCode + ". "
                             + response.toString() + System.lineSeparator()
                             + "Response body: " + response.body().string() + System.lineSeparator()
-                            + "Response headers: " + response.headers().toString() + System.lineSeparator()
-                    );
+                            + "Response headers: " + response.headers().toString() + System.lineSeparator();
+
+                    throw new IOException(errorMessage);
                 }
                 // check the response
                 if (response.body() == null) {
@@ -454,8 +472,8 @@ public abstract class FileBinaryRequestExecutor {
                 }
 
                 // check the response content length. When downloading very large files this may exceed 4GB
-                // we put a limit of 500MiB on the response
-                if (response.body().contentLength() > (1024L * 1024L * 500L)) {
+                // we put a limit of 200MiB on the response
+                if (response.body().contentLength() > (1024L * 1024L * 200L)) {
                     String message = String.format("Response too large. "
                                     + "Content-length = [%d]. %n"
                                     + "Response headers: %s",
@@ -471,7 +489,11 @@ public abstract class FileBinaryRequestExecutor {
                 catchedExceptions.add(e);
 
                 // if we get a transient error, retry the call
-                if (e instanceof java.net.SocketTimeoutException || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
+                if (e instanceof java.net.SocketTimeoutException
+                        || e instanceof StreamResetException
+                        || e instanceof SSLProtocolException
+                        || e instanceof SSLException
+                        || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     apiRetryCounter++;
                     LOG.warn(loggingPrefix + "Transient error when reading from Fusion (request id: " + requestId
                             + ", response code: " + responseCode
@@ -493,7 +515,7 @@ public abstract class FileBinaryRequestExecutor {
             exceptionMessage += System.lineSeparator();
             exceptionMessage += catchedExceptions.get(catchedExceptions.size() -1).getMessage();
         }
-        Exception e = new Exception(exceptionMessage);
+        Exception e = new IOException(exceptionMessage);
         catchedExceptions.forEach(e::addSuppressed);
         throw e;
     }
@@ -506,11 +528,11 @@ public abstract class FileBinaryRequestExecutor {
         Preconditions.checkState(null != getTempStoragePath(),
                 "Invalid temp storage path");
         ZonedDateTime nowUTC = Instant.now().atZone(ZoneId.of("UTC"));
-        DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+        DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssSSS");
         String tempFileName = new StringBuilder(36)
-                .append("tempFile-")
+                .append("temp-")
                 .append(nowUTC.format(format) + "-")
-                .append(RandomStringUtils.randomAlphanumeric(7))
+                .append(RandomStringUtils.randomAlphanumeric(8))
                 .append(".tmp")
                 .toString();
 
@@ -533,9 +555,17 @@ public abstract class FileBinaryRequestExecutor {
             BlobInfo blobInfo = BlobInfo.newBuilder(blobId)
                     .setContentType("application/octet-stream")
                     .build();
-            FileBinaryRequestExecutor.transferBytes(response.body().source(),
-                    cloudStorage.writer(blobInfo),
-                    (1024 * 4));
+
+            try {
+                FileBinaryRequestExecutor.transferBytes(response.body().source(),
+                        cloudStorage.writer(blobInfo),
+                        (DATA_TRANSFER_BUFFER_SIZE));
+            } catch (Exception e) {
+                // remove the temp file
+                cloudStorage.delete(blobId);
+
+                throw e;
+            }
 
             URI fileURI = new URI("gs", bucketName, "/" + objectName, null);
             LOG.debug(loggingPrefix + "Finished downloading to GCS. Temp file URI: {}",
@@ -554,9 +584,16 @@ public abstract class FileBinaryRequestExecutor {
                     tempFilePath.toAbsolutePath().toString());
 
             Files.createFile(tempFilePath);
-            FileBinaryRequestExecutor.transferBytes(response.body().source(),
-                    Files.newByteChannel(tempFilePath, StandardOpenOption.WRITE),
-                    (1024 * 4));
+            try {
+                FileBinaryRequestExecutor.transferBytes(response.body().source(),
+                        Files.newByteChannel(tempFilePath, StandardOpenOption.WRITE),
+                        (DATA_TRANSFER_BUFFER_SIZE));
+            } catch (Exception e) {
+                // remove the temp file
+                Files.delete(tempFilePath);
+
+                throw e;
+            }
             LOG.debug(loggingPrefix + "Finished downloading to local storage. Temp file URI: {}",
                     tempFilePath.toUri().toString());
 
@@ -672,7 +709,7 @@ public abstract class FileBinaryRequestExecutor {
                 try {
                     FileBinaryRequestExecutor.transferBytes(tempFileChannel,
                             bufferedSink,
-                            (1024 * 4));
+                            (DATA_TRANSFER_BUFFER_SIZE));
                     if (deleteTempFile) {
                         Files.delete(Paths.get(fileURI));
                     }
@@ -727,6 +764,27 @@ public abstract class FileBinaryRequestExecutor {
                 cloudStorage = StorageOptions.getDefaultInstance().getService();
             }
             return cloudStorage;
+        }
+    }
+
+    /**
+     * Represents a request error caused by a client error. Typically this indicates a malformed file binary
+     * download URL. For example, an expired download URL.
+     */
+    public static class ClientRequestException extends IOException {
+        private int httpResponseCode;
+
+        ClientRequestException(String message, int httpResponseCode) {
+            super(message);
+            this.httpResponseCode = httpResponseCode;
+        }
+        ClientRequestException(Throwable cause, int httpResponseCode) {
+            super(cause);
+            this.httpResponseCode = httpResponseCode;
+        }
+
+        public int getHttpResponseCode() {
+            return httpResponseCode;
         }
     }
 

@@ -1,10 +1,16 @@
-## Authentication
+## Configure the client
+
+The `CogniteClient` is the entry point to all operations towards Cognite Data Fusion (CDF). The client object represents 
+an authenticated connection to a specific CDF project. If you operate towards multiple CDF projects, you need to 
+create a separate `CogniteClient` for each of them. 
+
+### Authentication
 
 There are two authentication options:
 - OpenID Connect.
 - API keys.
 
-### OpenID Connect
+#### OpenID Connect
 
 OpenID Connect tokens are access tokens provided by an identity provider (like Azure AD, Octa, etc.). This token 
 is then used to access Cognite Data Fusion. The flow can be as follows:
@@ -36,7 +42,7 @@ the `Authorization` header in each request. Your supplier needs to produce the e
 the header, including the `Bearer` prefix. That is, your supplier should produce a String
 of the following pattern: `Bearer <your-access-token>`.
 
-### API keys
+#### API keys
 
 Authentication via API key is the legacy method of authenticating services towards Cognite Data Fusion.
 You simply supply the API key when creating the client:

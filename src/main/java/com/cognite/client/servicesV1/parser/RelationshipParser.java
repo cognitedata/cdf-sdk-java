@@ -22,8 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.FloatValue;
-import com.google.protobuf.Int64Value;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +31,7 @@ import java.util.Optional;
 import static com.cognite.client.servicesV1.ConnectorConstants.MAX_LOG_ELEMENT_LENGTH;
 
 /**
- * This class contains a set of methods to help parsing file objects between Cognite api representations
+ * This class contains a set of methods to help parsing relationship objects between Cognite api representations
  * (json and proto) and typed objects.
  */
 public class RelationshipParser {
@@ -50,7 +48,7 @@ public class RelationshipParser {
             .build();
 
     /**
-     * Parses an relationship json string to {@link Relationship} proto object.
+     * Parses a relationship json string to {@link Relationship} proto object.
      *
      * @param json
      * @return
@@ -83,29 +81,67 @@ public class RelationshipParser {
             throw new Exception(RelationshipParser.buildParsingExceptionString("targetExternalId", jsonExcerpt));
         }
         if (root.path("targetType").isTextual() && resourceTypeMap.containsKey(root.get("targetType").textValue())) {
-            relationshipBuilder.setSourceType(resourceTypeMap.get(root.get("targetType").textValue()));
+            relationshipBuilder.setTargetType(resourceTypeMap.get(root.get("targetType").textValue()));
         } else {
             throw new Exception(RelationshipParser.buildParsingExceptionString("targetType", jsonExcerpt));
         }
 
         // The rest of the attributes are optional.
         if (root.path("startTime").isIntegralNumber()) {
-            relationshipBuilder.setStartTime(Int64Value.of(root.get("startTime").longValue()));
+            relationshipBuilder.setStartTime(root.get("startTime").longValue());
         }
         if (root.path("endTime").isIntegralNumber()) {
-            relationshipBuilder.setEndTime(Int64Value.of(root.get("endTime").longValue()));
+            relationshipBuilder.setEndTime(root.get("endTime").longValue());
         }
         if (root.path("confidence").isFloatingPointNumber()) {
-            relationshipBuilder.setConfidence(FloatValue.of(root.get("confidence").floatValue()));
+            relationshipBuilder.setConfidence(root.get("confidence").floatValue());
         }
         if (root.path("dataSetId").isIntegralNumber()) {
-            relationshipBuilder.setDataSetId(Int64Value.of(root.get("dataSetId").longValue()));
+            relationshipBuilder.setDataSetId(root.get("dataSetId").longValue());
         }
         if (root.path("createdTime").isIntegralNumber()) {
-            relationshipBuilder.setCreatedTime(Int64Value.of(root.get("createdTime").longValue()));
+            relationshipBuilder.setCreatedTime(root.get("createdTime").longValue());
         }
         if (root.path("lastUpdatedTime").isIntegralNumber()) {
-            relationshipBuilder.setLastUpdatedTime(Int64Value.of(root.get("lastUpdatedTime").longValue()));
+            relationshipBuilder.setLastUpdatedTime(root.get("lastUpdatedTime").longValue());
+        }
+        if (root.path("source").isObject()) {
+            switch (relationshipBuilder.getSourceType()) {
+                case ASSET:
+                    relationshipBuilder.setSourceAsset(AssetParser.parseAsset(root.get("source").toString()));
+                    break;
+                case FILE:
+                    relationshipBuilder.setSourceFile(FileParser.parseFileMetadata(root.get("source").toString()));
+                    break;
+                case EVENT:
+                    relationshipBuilder.setSourceEvent(EventParser.parseEvent(root.get("source").toString()));
+                    break;
+                case SEQUENCE:
+                    relationshipBuilder.setSourceSequence(SequenceParser.parseSequenceMetadata(root.get("source").toString()));
+                    break;
+                case TIME_SERIES:
+                    relationshipBuilder.setSourceTimeseries(TimeseriesParser.parseTimeseriesMetadata(root.get("source").toString()));
+                    break;
+            }
+        }
+        if (root.path("target").isObject()) {
+            switch (relationshipBuilder.getTargetType()) {
+                case ASSET:
+                    relationshipBuilder.setTargetAsset(AssetParser.parseAsset(root.get("target").toString()));
+                    break;
+                case FILE:
+                    relationshipBuilder.setTargetFile(FileParser.parseFileMetadata(root.get("target").toString()));
+                    break;
+                case EVENT:
+                    relationshipBuilder.setTargetEvent(EventParser.parseEvent(root.get("target").toString()));
+                    break;
+                case SEQUENCE:
+                    relationshipBuilder.setTargetSequence(SequenceParser.parseSequenceMetadata(root.get("target").toString()));
+                    break;
+                case TIME_SERIES:
+                    relationshipBuilder.setTargetTimeseries(TimeseriesParser.parseTimeseriesMetadata(root.get("target").toString()));
+                    break;
+            }
         }
 
         return relationshipBuilder.build();
@@ -121,6 +157,10 @@ public class RelationshipParser {
      */
     public static Map<String, Object> toRequestInsertItem(Relationship element) {
         Preconditions.checkNotNull(element, "Input cannot be null.");
+        Preconditions.checkArgument(element.hasSourceExternalId(),
+                "The relationship object must specify a source external id.");
+        Preconditions.checkArgument(element.hasTargetExternalId(),
+                "The relationship object must specify a target external id.");
 
         // Add all the mandatory attributes
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.<String, Object>builder()
@@ -132,16 +172,16 @@ public class RelationshipParser {
 
         // Add optional attributes
         if (element.hasStartTime()) {
-            mapBuilder.put("startTime", element.getStartTime().getValue());
+            mapBuilder.put("startTime", element.getStartTime());
         }
         if (element.hasEndTime()) {
-            mapBuilder.put("endTime", element.getEndTime().getValue());
+            mapBuilder.put("endTime", element.getEndTime());
         }
         if (element.hasConfidence()) {
-            mapBuilder.put("confidence", element.getConfidence().getValue());
+            mapBuilder.put("confidence", element.getConfidence());
         }
         if (element.hasDataSetId()) {
-            mapBuilder.put("dataSetId", element.getDataSetId().getValue());
+            mapBuilder.put("dataSetId", element.getDataSetId());
         }
         if (element.getLabelsCount() > 0) {
             List<Map<String, String>> labels = new ArrayList<>();
@@ -172,29 +212,30 @@ public class RelationshipParser {
         // Add id reference
         mapBuilder.put("externalId", element.getExternalId());
 
-        // Add all the mandatory attributes
-        updateNodeBuilder
-                .put("sourceExternalId", ImmutableMap.of("set", element.getSourceExternalId()))
-                .put("sourceType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getSourceType())))
-                .put("targetExternalId", ImmutableMap.of("set", element.getTargetExternalId()))
-                .put("targetType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getTargetType())));
-
-        // Add optional attributes
+        // Add the update fields
+        if (element.hasSourceExternalId()) {
+            updateNodeBuilder
+                    .put("sourceExternalId", ImmutableMap.of("set", element.getSourceExternalId()))
+                    .put("sourceType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getSourceType())));
+        }
+        if (element.hasTargetExternalId()) {
+            updateNodeBuilder
+                    .put("targetExternalId", ImmutableMap.of("set", element.getTargetExternalId()))
+                    .put("targetType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getTargetType())));
+        }
         if (element.hasStartTime()) {
-            updateNodeBuilder.put("startTime", ImmutableMap.of("set", element.getStartTime().getValue()));
+            updateNodeBuilder.put("startTime", ImmutableMap.of("set", element.getStartTime()));
         }
         if (element.hasEndTime()) {
-            updateNodeBuilder.put("endTime", ImmutableMap.of("set", element.getEndTime().getValue()));
+            updateNodeBuilder.put("endTime", ImmutableMap.of("set", element.getEndTime()));
         }
         if (element.hasConfidence()) {
-            updateNodeBuilder.put("confidence", ImmutableMap.of("set", element.getConfidence().getValue()));
+            updateNodeBuilder.put("confidence", ImmutableMap.of("set", element.getConfidence()));
         }
         if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
-        if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId().getValue()));
-        }
+
         if (element.getLabelsCount() > 0) {
             List<Map<String, String>> labels = new ArrayList<>();
             for (String label : element.getLabelsList()) {
@@ -202,6 +243,70 @@ public class RelationshipParser {
             }
             updateNodeBuilder.put("labels", ImmutableMap.of("add", labels));
         }
+        mapBuilder.put("update", updateNodeBuilder.build());
+        return mapBuilder.build();
+    }
+
+    /**
+     * Builds a request replace item object from {@link Relationship}.
+     *
+     * A replace item object replaces an existing event object with new values for all provided fields.
+     * Fields that are not in the update object are set to null.
+     *
+     * @param element
+     * @return
+     */
+    public static Map<String, Object> toRequestReplaceItem(Relationship element) {
+        Preconditions.checkNotNull(element, "Input cannot be null.");
+        Preconditions.checkArgument(element.hasSourceExternalId(),
+                "The relationship object must specify a source external id.");
+        Preconditions.checkArgument(element.hasTargetExternalId(),
+                "The relationship object must specify a target external id.");
+
+        ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
+        ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
+
+        // Add id reference
+        mapBuilder.put("externalId", element.getExternalId());
+
+        // Add the mandatory update replace fields
+        updateNodeBuilder
+                .put("sourceExternalId", ImmutableMap.of("set", element.getSourceExternalId()))
+                .put("sourceType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getSourceType())))
+                .put("targetExternalId", ImmutableMap.of("set", element.getTargetExternalId()))
+                .put("targetType", ImmutableMap.of("set", resourceTypeMap.inverse().get(element.getTargetType())));
+
+        // Add the optional update replace fields
+        if (element.hasStartTime()) {
+            updateNodeBuilder.put("startTime", ImmutableMap.of("set", element.getStartTime()));
+        } else {
+            updateNodeBuilder.put("startTime", ImmutableMap.of("setNull", true));
+        }
+
+        if (element.hasEndTime()) {
+            updateNodeBuilder.put("endTime", ImmutableMap.of("set", element.getEndTime()));
+        } else {
+            updateNodeBuilder.put("endTime", ImmutableMap.of("setNull", true));
+        }
+
+        if (element.hasConfidence()) {
+            updateNodeBuilder.put("confidence", ImmutableMap.of("set", element.getConfidence()));
+        } else {
+            updateNodeBuilder.put("confidence", ImmutableMap.of("setNull", true));
+        }
+
+        if (element.hasDataSetId()) {
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
+        } else {
+            updateNodeBuilder.put("dataSetId", ImmutableMap.of("setNull", true));
+        }
+
+        List<Map<String, String>> labels = new ArrayList<>();
+        for (String label : element.getLabelsList()) {
+            labels.add(ImmutableMap.of("externalId", label));
+        }
+        updateNodeBuilder.put("labels", ImmutableMap.of("set", labels));
+
         mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();
     }

@@ -42,6 +42,7 @@ import com.cognite.v1.timeseries.proto.DataPointListItem;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import okhttp3.ConnectionSpec;
 import okhttp3.HttpUrl;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
@@ -207,8 +208,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ResultFutureIterator<String> readEvents(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read events service.");
-
         PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
                 .setEndpoint("events/list")
                 .setRequest(queryParameters)
@@ -226,8 +225,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> readEventsAggregates() {
-        LOG.debug(loggingPrefix + "Initiating read events aggregates service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("events/aggregate")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -244,8 +241,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> readEventsById() {
-        LOG.debug(loggingPrefix + "Initiating read events service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("events/byids")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -263,8 +258,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter writeEvents() {
-        LOG.debug(loggingPrefix + "Initiating write events service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("events")
                 .setRequest(Request.create())
@@ -283,8 +276,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter updateEvents() {
-        LOG.debug(loggingPrefix + "Initiating update events service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("events/update")
                 .setRequest(Request.create())
@@ -303,8 +294,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter deleteEvents() {
-        LOG.debug(loggingPrefix + "Initiating delete events service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("events/delete")
                 .setRequest(Request.create())
@@ -323,8 +312,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ResultFutureIterator<String> readSequencesHeaders(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read sequences headers service.");
-
         PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
                 .setEndpoint("sequences/list")
                 .setRequest(queryParameters)
@@ -342,8 +329,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> readSequencesAggregates() {
-        LOG.debug(loggingPrefix + "Initiating read sequences aggregates service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("sequences/aggregate")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -946,7 +931,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
         Preconditions.checkArgument(!dbName.isEmpty(), "Database name cannot be empty.");
         LOG.debug(loggingPrefix + "Creating tables in database {}", dbName);
 
-        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+        RawWriteTablesRequestProvider requestProvider = RawWriteTablesRequestProvider.builder()
                 .setEndpoint("raw/dbs/" + dbName + "/tables")
                 .setRequest(Request.create())
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -1362,6 +1347,130 @@ public abstract class ConnectorServiceV1 implements Serializable {
     }
 
     /**
+     * Read extraction pipelines from Cognite.
+     *
+     * @param queryParameters The parameters for the events query.
+     * @return
+     */
+    public ResultFutureIterator<String> readExtractionPipelines(Request queryParameters) {
+        PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
+                .setEndpoint("extpipes/list")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    /**
+     * Read extraction pipelines by id from Cognite.
+     *
+     * @return
+     */
+    public ItemReader<String> readExtractionPipelinesById() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("extpipes/byids")
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    /**
+     * Write extraction pipelines to Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @return
+     */
+    public ItemWriter writeExtractionPipelines() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("extpipes")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Update extraction pipelines in Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @return
+     */
+    public ItemWriter updateExtractionPipelines() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("extpipes/update")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Delete extraction pipelines in Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @return
+     */
+    public ItemWriter deleteExtractionPipelines() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("extpipes/delete")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Read extraction pipeline runs from Cognite.
+     *
+     * @param queryParameters The parameters for the events query.
+     * @return
+     */
+    public ResultFutureIterator<String> readExtractionPipelineRuns(Request queryParameters) {
+        PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
+                .setEndpoint("extpipes/run/list")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    /**
+     * Write extraction pipeline runs to Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @return
+     */
+    public ItemWriter writeExtractionPipelineRuns() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("extpipes/runs")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
      * Read labels from Cognite.
      *
      * @param queryParameters The parameters for the data sets query.
@@ -1410,7 +1519,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
     public ItemWriter deleteLabels() {
         LOG.debug(loggingPrefix + "Initiating delete labels service.");
 
-        PostPlaygroundJsonRequestProvider requestProvider = PostPlaygroundJsonRequestProvider.builder()
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("labels/delete")
                 .setRequest(Request.create())
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -1482,18 +1591,16 @@ public abstract class ConnectorServiceV1 implements Serializable {
     }
 
     /**
-     * Detect references to assets and files in a P&ID and annotate the references with bounding boxes.
-     * Finds entities in the P&ID that match a list of entity names,
+     * Detect references to assets and files in an engineering diagram and annotate the references with bounding boxes.
+     * Finds entities in the engineering diagram that match a list of entity names,
      * for instance asset names. The P&ID must be a single-page PDF file.
      *
      * @return
      */
-    public ItemReader<String> detectAnnotationsPnid() {
-        LOG.debug(loggingPrefix + "Initiating the annotation detection service.");
-
+    public ItemReader<String> detectAnnotationsDiagrams() {
         PostPlaygroundJsonRequestProvider jobStartRequestProvider =
                 PostPlaygroundJsonRequestProvider.builder()
-                        .setEndpoint("context/pnid/detect")
+                        .setEndpoint("context/diagram/detect")
                         .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                         .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
                         .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
@@ -1502,29 +1609,27 @@ public abstract class ConnectorServiceV1 implements Serializable {
         RequestParametersResponseParser jobStartResponseParser = RequestParametersResponseParser.of(
                 ImmutableMap.of("jobId", "jobId"));
 
-        GetPlaygroundJobIdRequestProvider jobResultsRequestProvider = GetPlaygroundJobIdRequestProvider.of("context/pnid/detect")
+        GetPlaygroundJobIdRequestProvider jobResultsRequestProvider = GetPlaygroundJobIdRequestProvider.of("context/diagram/detect")
                 .toBuilder()
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
                 .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
                 .build();
 
-        return AsyncJobReader.of(getClient(), jobStartRequestProvider, jobResultsRequestProvider, JsonResponseParser.create())
+        return AsyncJobReader.of(getClient(), jobStartRequestProvider, jobResultsRequestProvider, JsonItemResponseParser.create())
                 .withJobStartResponseParser(jobStartResponseParser);
     }
 
     /**
-     * Convert a single-page P&ID in PDF format to an interactive SVG where
+     * Convert an engineering diagram in PDF format to an interactive SVG where
      * the provided annotations are highlighted.
      *
      * @return
      */
-    public ItemReader<String> convertPnid() {
-        LOG.debug(loggingPrefix + "Initiating the convert PDF service.");
-
+    public ItemReader<String> convertDiagrams() {
         PostPlaygroundJsonRequestProvider jobStartRequestProvider =
                 PostPlaygroundJsonRequestProvider.builder()
-                        .setEndpoint("context/pnid/convert")
+                        .setEndpoint("context/diagram/convert")
                         .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                         .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
                         .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
@@ -1533,14 +1638,14 @@ public abstract class ConnectorServiceV1 implements Serializable {
         RequestParametersResponseParser jobStartResponseParser = RequestParametersResponseParser.of(
                 ImmutableMap.of("jobId", "jobId"));
 
-        GetPlaygroundJobIdRequestProvider jobResultsRequestProvider = GetPlaygroundJobIdRequestProvider.of("context/pnid/convert")
+        GetPlaygroundJobIdRequestProvider jobResultsRequestProvider = GetPlaygroundJobIdRequestProvider.of("context/diagram/convert")
                 .toBuilder()
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
                 .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
                 .build();
 
-        return AsyncJobReader.of(getClient(), jobStartRequestProvider, jobResultsRequestProvider, JsonResponseParser.create())
+        return AsyncJobReader.of(getClient(), jobStartRequestProvider, jobResultsRequestProvider, JsonItemResponseParser.create())
                 .withJobStartResponseParser(jobStartResponseParser);
     }
 
@@ -1891,6 +1996,9 @@ public abstract class ConnectorServiceV1 implements Serializable {
      */
     @AutoValue
     public static abstract class AsyncJobReader<T> extends ConnectorBase implements Connector<T>, ItemReader<T> {
+        private static final int DEFAULT_MAX_WORKERS = 24;
+        private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(DEFAULT_MAX_WORKERS);
+
         // parsers for various job status attributes
         private static final JsonStringAttributeResponseParser jobStatusResponseParser =
                 JsonStringAttributeResponseParser.create().withAttributePath("status");
@@ -2049,7 +2157,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
          */
         public CompletableFuture<ResponseItems<T>> getItemsAsync(Request items) throws Exception {
             Preconditions.checkNotNull(items, "Input cannot be null.");
-            LOG.info(loggingPrefix + "Starting async api job.");
+            LOG.debug(loggingPrefix + "Starting async api job.");
 
             // Execute the request and get the response future
             CompletableFuture<ResponseItems<T>> responseItemsFuture = getRequestExecutor()
@@ -2060,7 +2168,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                             ResponseItems.of(getJobStartResponseParser(), responseBinary)
                                     .withErrorMessageResponseParser(errorMessageResponseParser)
                                     .withStatusResponseParser(jobStatusResponseParser))
-                    .thenCompose(responseItems -> {
+                    .thenApplyAsync(responseItems -> {
                         try {
                             List<String> responseStatus = responseItems.getStatus();
                             List<Request> resultsItems = responseItems.getResultsItems();
@@ -2080,7 +2188,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
 
                                 // Activate the get results loop and return the end result.
                                 // Must copy the project config (auth details) from the original request.
-                                return getJobResultAsync(resultsItems.get(0).withAuthConfig(items.getAuthConfig()),
+                                return getJobResult(resultsItems.get(0).withAuthConfig(items.getAuthConfig()),
                                         items);
                             } else {
                                 // The async job did not start successfully
@@ -2090,135 +2198,123 @@ public abstract class ConnectorServiceV1 implements Serializable {
                                         responseItems.getResponseBodyAsString(),
                                         responseItems.getResponseBinary().getResponse().headers());
 
-                                return CompletableFuture.completedFuture(
-                                        ResponseItems.of(getResponseParser(), responseItems.getResponseBinary())
-                                );
+                                return ResponseItems.of(getResponseParser(), responseItems.getResponseBinary());
                             }
                         } catch (Exception e) {
-                            String message = String.format(loggingPrefix + "The async api job failed to start. Response headers: %s%n"
+                            String message = String.format(loggingPrefix + "Error during async job execution. Response headers: %s%n"
                                     + "Response summary: %s%n"
                                     + " Exception: %s",
                                     responseItems.getResponseBinary().getResponse().headers().toString(),
                                     responseItems.getResponseBodyAsString(),
                                     e.getMessage());
                             LOG.error(message);
-                            CompletableFuture<ResponseItems<T>> exceptionally = new CompletableFuture<>();
-                            exceptionally.completeExceptionally(new Throwable(message, e));
-
-                            return exceptionally;
+                           throw new CompletionException(new Exception(message));
                         }
-                    })
+                    }, DEFAULT_POOL)
                     ;
 
             return responseItemsFuture;
         }
 
         /*
-        Get the job results via a polling loop.
+        Get the async job results via a polling loop.
          */
-        private CompletableFuture<ResponseItems<T>> getJobResultAsync(Request request,
-                                                                      Request jobStartRequest) {
-            Preconditions.checkNotNull(request, "Input cannot be null.");
+        private ResponseItems<T> getJobResult(Request request, Request jobStartRequest) {
+            Preconditions.checkNotNull(request, "Request cannot be null.");
+            Preconditions.checkNotNull(request, "jobStartRequest cannot be null.");
 
-            // Execute the request and get the response future
-            CompletableFuture<ResponseItems<T>> responseItemsFuture = CompletableFuture
-                    .supplyAsync(() -> {
-                        long timeStart = System.currentTimeMillis();
-                        long timeMax = System.currentTimeMillis() + getJobTimeoutDuration().toMillis();
-                        Map<String, Object> jobResultItems = null;
-                        ResponseBinary jobResultResponse = null;
-                        boolean jobComplete = false;
+            long timeStart = System.currentTimeMillis();
+            long timeMax = System.currentTimeMillis() + getJobTimeoutDuration().toMillis();
+            Map<String, Object> jobResultItems = null;
+            ResponseBinary jobResultResponse = null;
+            boolean jobComplete = false;
 
-                        LOG.info(loggingPrefix + "Start polling the async api for results.");
-                        while (!jobComplete && System.currentTimeMillis() < timeMax) {
-                            try {
-                                Thread.sleep(getPollingInterval().toMillis());
+            LOG.info(loggingPrefix + "Start polling the async api for results.");
+            while (!jobComplete && System.currentTimeMillis() < timeMax) {
+                try {
+                    Thread.sleep(getPollingInterval().toMillis());
 
-                                jobResultResponse = getRequestExecutor()
-                                        .executeRequestAsync(getJobResultRequestProvider()
-                                                .withRequest(request)
-                                                .buildRequest(Optional.empty()))
-                                        .join();
+                    jobResultResponse = getRequestExecutor()
+                            .executeRequest(getJobResultRequestProvider()
+                                    .withRequest(request)
+                                    .buildRequest(Optional.empty()));
 
-                                String payload = jobResultResponse.getResponseBodyBytes().toStringUtf8();
-                                jobResultItems = objectMapper
-                                        .readValue(payload, new TypeReference<Map<String, Object>>() {});
+                    String payload = jobResultResponse.getResponseBodyBytes().toStringUtf8();
+                    jobResultItems = objectMapper
+                            .readValue(payload, new TypeReference<Map<String, Object>>() {});
 
-                                if (jobResultItems.containsKey("errorMessage")
-                                        && ((String) jobResultItems.get("status")).equalsIgnoreCase("Failed")) {
-                                    // The api job has failed.
-                                    String message = String.format(loggingPrefix
-                                            + "Error occurred when completing the async api job. "
-                                            + "Status: Failed. Error message: %s %n"
-                                            + "Request: %s"
-                                            + "Response headers: %s"
-                                            + "Job start request: %s",
-                                            jobResultItems.get("errorMessage"),
-                                            request.getRequestParametersAsJson(),
-                                            jobResultResponse.getResponse().headers(),
-                                            jobStartRequest.getRequestParametersAsJson().substring(0,
-                                                    Math.min(300, jobStartRequest.getRequestParametersAsJson().length())));
-                                    LOG.error(message);
-                                    throw new Exception(message);
-                                }
+                    if (jobResultItems.containsKey("errorMessage")
+                            && ((String) jobResultItems.get("status")).equalsIgnoreCase("Failed")) {
+                        // The api job has failed.
+                        String message = String.format(loggingPrefix
+                                        + "Error occurred when completing the async api job. "
+                                        + "Status: Failed. Error message: %s %n"
+                                        + "Request: %s"
+                                        + "Response headers: %s"
+                                        + "Job start request: %s",
+                                jobResultItems.get("errorMessage"),
+                                request.getRequestParametersAsJson(),
+                                jobResultResponse.getResponse().headers(),
+                                jobStartRequest.getRequestParametersAsJson().substring(0,
+                                        Math.min(300, jobStartRequest.getRequestParametersAsJson().length())));
+                        LOG.error(message);
+                        throw new Exception(message);
+                    }
 
-                                if (((String) jobResultItems.get("status")).equalsIgnoreCase("Completed")) {
-                                    jobComplete = true;
-                                } else {
-                                    LOG.debug(loggingPrefix + "Async job not completed. Status : {}",
-                                            jobResultItems.get("status"));
-                                }
-                            } catch (Exception e) {
-                                LOG.error(loggingPrefix + "Failed to get async api job results. Exception: {}. ",
-                                        e.getMessage());
-                                throw new CompletionException(e);
-                            }
-                        }
+                    if (((String) jobResultItems.get("status")).equalsIgnoreCase("Completed")) {
+                        jobComplete = true;
+                    } else {
+                        LOG.debug(loggingPrefix + "Async job not completed. Status : {}",
+                                jobResultItems.get("status"));
+                    }
+                } catch (Exception e) {
+                    LOG.error(loggingPrefix + "Failed to get async api job results. Exception: {}. ",
+                            e.getMessage());
+                    throw new CompletionException(e);
+                }
+            }
 
-                        if (jobComplete) {
-                            LOG.info(loggingPrefix + "Job results received.");
-                            // Try to register job queue time
-                            if (null != jobResultItems
-                                    && jobResultItems.containsKey("requestTimestamp")
-                                    && null != jobResultItems.get("requestTimestamp")
-                                    && jobResultItems.containsKey("startTimestamp")
-                                    && null != jobResultItems.get("startTimestamp")) {
-                                long requestTimestamp = (Long) jobResultItems.get("requestTimestamp");
-                                long startTimestamp = (Long) jobResultItems.get("startTimestamp");
-                                jobResultResponse = jobResultResponse
-                                        .withApiJobQueueDuration(startTimestamp - requestTimestamp);
-                            }
-                            // Try to register job execution time
-                            if (null != jobResultItems
-                                    && jobResultItems.containsKey("startTimestamp")
-                                    && null != jobResultItems.get("startTimestamp")
-                                    && jobResultItems.containsKey("statusTimestamp")
-                                    && null != jobResultItems.get("statusTimestamp")) {
-                                long startTimestamp = (Long) jobResultItems.get("startTimestamp");
-                                long statusTimestamp = (Long) jobResultItems.get("statusTimestamp");
-                                jobResultResponse = jobResultResponse
-                                        .withApiJobDuration(statusTimestamp - startTimestamp);
-                            } else {
-                                // register job execution time using the local time registrations
-                                jobResultResponse = jobResultResponse
-                                        .withApiJobDuration(System.currentTimeMillis() - timeStart);
-                            }
-                        } else {
-                            String message = "The api job did not complete within the given timeout. Request parameters: "
-                                    + request.getRequestParameters().toString();
-                            LOG.error(loggingPrefix + message);
-                            throw new CompletionException(
-                                    new Throwable(message + " Job status: " + jobResultItems.get("status")));
-                        }
+            if (jobComplete) {
+                LOG.info(loggingPrefix + "Job results received.");
+                // Try to register job queue time
+                if (null != jobResultItems
+                        && jobResultItems.containsKey("requestTimestamp")
+                        && null != jobResultItems.get("requestTimestamp")
+                        && jobResultItems.containsKey("startTimestamp")
+                        && null != jobResultItems.get("startTimestamp")) {
+                    long requestTimestamp = (Long) jobResultItems.get("requestTimestamp");
+                    long startTimestamp = (Long) jobResultItems.get("startTimestamp");
+                    jobResultResponse = jobResultResponse
+                            .withApiJobQueueDuration(startTimestamp - requestTimestamp);
+                }
+                // Try to register job execution time
+                if (null != jobResultItems
+                        && jobResultItems.containsKey("startTimestamp")
+                        && null != jobResultItems.get("startTimestamp")
+                        && jobResultItems.containsKey("statusTimestamp")
+                        && null != jobResultItems.get("statusTimestamp")) {
+                    long startTimestamp = (Long) jobResultItems.get("startTimestamp");
+                    long statusTimestamp = (Long) jobResultItems.get("statusTimestamp");
+                    jobResultResponse = jobResultResponse
+                            .withApiJobDuration(statusTimestamp - startTimestamp);
+                } else {
+                    // register job execution time using the local time registrations
+                    jobResultResponse = jobResultResponse
+                            .withApiJobDuration(System.currentTimeMillis() - timeStart);
+                }
+            } else {
+                String message = "The api job did not complete within the given timeout. Request parameters: "
+                        + request.getRequestParameters().toString();
+                LOG.error(loggingPrefix + message);
+                throw new CompletionException(
+                        new Throwable(message + " Job status: " + jobResultItems.get("status")));
+            }
 
-                        ResponseItems<T> responseItems = ResponseItems.of(getResponseParser(), jobResultResponse)
-                                .withStatusResponseParser(jobStatusResponseParser)
-                                .withErrorMessageResponseParser(errorMessageResponseParser);
+            ResponseItems<T> responseItems = ResponseItems.of(getResponseParser(), jobResultResponse)
+                    .withStatusResponseParser(jobStatusResponseParser)
+                    .withErrorMessageResponseParser(errorMessageResponseParser);
 
-                        return responseItems;
-                    });
-
-            return responseItemsFuture;
+            return responseItems;
         }
 
         @AutoValue.Builder
@@ -2313,7 +2409,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      */
     @AutoValue
     public static abstract class FileBinaryReader extends ConnectorBase {
-        private static int DEFAULT_MAX_BATCH_SIZE_FILE_READ = 100;
         private final String randomIdString = RandomStringUtils.randomAlphanumeric(5);
         private final String loggingPrefix = "FileBinaryReader [" + randomIdString + "] -";
         private final ObjectMapper objectMapper = new ObjectMapper();
@@ -2359,7 +2454,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
          *
          * The following storage providers are supported:
          * - Google Cloud Storage. Specify the temp path as {@code gs://<my-storage-bucket>/<my-path>/}.
-         * - Local (network) storage.
+         * - Local (network) storage: {@code file://localhost/home/files/, file:///home/files/, file:///c:/temp/}
          *
          * @param path The URI to the temp storage
          * @return a {@FileBinaryReader} with temp storage configured.
@@ -2426,7 +2521,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
             LOG.info(loggingPrefix + "Received {} file download URLs.", fileItems.size());
 
             // Start download the file binaries on separate threads
-            List<CompletableFuture<ResponseItems<FileBinary>>> futuresList = new ArrayList<>(fileItems.size());
+            List<CompletableFuture<ResponseItems<FileBinary>>> futuresList = new ArrayList<>();
 
             for (String fileItem : fileItems) {
                 LOG.debug(loggingPrefix + "Building download request for file item: {}", fileItem);
@@ -2442,7 +2537,10 @@ public abstract class ConnectorServiceV1 implements Serializable {
                 String downloadUrl = (String) fileRequestItem.get("downloadUrl");
 
                 CompletableFuture<ResponseItems<FileBinary>> future = DownloadFileBinary
-                        .downloadFileBinaryFromURL(downloadUrl, getTempStoragePath(), isForceTempStorage())
+                        .downloadFileBinaryFromURL(downloadUrl,
+                                getClient().getClientConfig().getMaxRetries(),
+                                getTempStoragePath(),
+                                isForceTempStorage())
                         .thenApply(fileBinary -> {
                             // add the file id
                             if (!fileExternalId.isEmpty()) {
@@ -2497,6 +2595,14 @@ public abstract class ConnectorServiceV1 implements Serializable {
         private final String loggingPrefix = "FileWriter [" + randomIdString + "] -";
         private final ObjectMapper objectMapper = new ObjectMapper();
 
+        // Using a dedicated http client for bile binary
+        final static OkHttpClient httpClient = new OkHttpClient.Builder()
+                .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS))
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
+                .writeTimeout(20, TimeUnit.SECONDS)
+                .build();
+
         static Builder builder() {
             return new com.cognite.client.servicesV1.AutoValue_ConnectorServiceV1_FileWriter.Builder()
                     .setRequestProvider(PostJsonRequestProvider.builder()
@@ -2513,7 +2619,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                             .withExecutor(client.getExecutorService())
                             .withMaxRetries(client.getClientConfig().getMaxRetries())
                             .withValidResponseCodes(ImmutableList.of(400)))
-                    .setFileBinaryRequestExecutor(FileBinaryRequestExecutor.of(client.getHttpClient())
+                    .setFileBinaryRequestExecutor(FileBinaryRequestExecutor.of(httpClient)
                             .withExecutor(client.getExecutorService())
                             .withMaxRetries(client.getClientConfig().getMaxRetries()))
                     .build();
@@ -2576,14 +2682,14 @@ public abstract class ConnectorServiceV1 implements Serializable {
             Preconditions.checkArgument(fileContainerRequest.getProtoRequestBody() instanceof FileContainer,
                     "The protobuf request body is not of type FileContainer");
             Preconditions.checkArgument(!((FileContainer) fileContainerRequest.getProtoRequestBody())
-                    .getFileMetadata().getName().getValue().isEmpty(),
+                    .getFileMetadata().getName().isEmpty(),
                     "The request body must contain a file name in the file header section.");
             FileContainer fileContainer = (FileContainer) fileContainerRequest.getProtoRequestBody();
             boolean hasExtraAssetIds = false;
 
             LOG.info(loggingPrefix + "Received file container to write. Name: {}, Binary type: {}, Binary Size: {}MB, "
                     + "Binary URI: {}, Content lenght: {}, Number of asset links: {}, Number of metadata fields: {}",
-                    fileContainer.getFileMetadata().getName().getValue(),
+                    fileContainer.getFileMetadata().getName(),
                     fileContainer.getFileBinary().getBinaryTypeCase().toString(),
                     String.format("%.3f", fileContainer.getFileBinary().getBinary().size() / (1024d * 1024d)),
                     fileContainer.getFileBinary().getBinaryUri(),
@@ -2636,24 +2742,30 @@ public abstract class ConnectorServiceV1 implements Serializable {
             String jsonResponsePayload = fileUploadResponse.getResponseBodyBytes().toStringUtf8();
             Map<String, Object> fileUploadResponseItem = objectMapper
                     .readValue(jsonResponsePayload, new TypeReference<Map<String, Object>>(){});
-            LOG.info(loggingPrefix + "Posted file metadata for [{}]. Received file upload URL response.",
-                    fileContainer.getFileMetadata().getName().getValue());
+            LOG.debug(loggingPrefix + "Posted file metadata for [{}]. Received file upload URL response.",
+                    fileContainer.getFileMetadata().getName());
 
             Preconditions.checkState(fileUploadResponseItem.containsKey(uploadUrlKey),
                     "Unable to retrieve upload URL from the CogniteAPI: " + fileUploadResponseItem.toString());
             LOG.debug(loggingPrefix + "[{}] upload URL: {}",
-                    fileContainer.getFileMetadata().getName().getValue(),
+                    fileContainer.getFileMetadata().getName(),
                     fileUploadResponseItem.getOrDefault(uploadUrlKey, "No upload URL"));
 
             // Start upload of the file binaries on a separate thread
             URL fileUploadURL = new URL((String) fileUploadResponseItem.get(uploadUrlKey));
 
             CompletableFuture<ResponseItems<String>> future;
-            if (fileContainer.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY
-                    && fileContainer.getFileBinary().getBinary().isEmpty()) {
-                LOG.warn(loggingPrefix + "Binary is empty for file {}. File externalId = [{}]. Will skip upload.",
-                        fileContainer.getFileMetadata().getName().getValue(),
-                        fileContainer.getFileMetadata().getExternalId().getValue());
+            if ((fileContainer.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY
+                    && fileContainer.getFileBinary().getBinary().isEmpty())
+                    ||
+                    (fileContainer.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY_URI
+                    && fileContainer.getFileBinary().getBinaryUri().isBlank()
+                    ||
+                    !fileContainer.hasFileBinary())
+            ) {
+                LOG.warn(loggingPrefix + "Binary is empty for file {}. File externalId = [{}]. Will skip binary upload.",
+                        fileContainer.getFileMetadata().getName(),
+                        fileContainer.getFileMetadata().getExternalId());
 
                 future = CompletableFuture.completedFuture(
                         ResponseItems.of(JsonResponseParser.create(), fileUploadResponse));
@@ -2664,7 +2776,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                         .thenApply(responseBinary -> {
                             long requestDuration = System.currentTimeMillis() - responseBinary.getResponse().sentRequestAtMillis();
                             LOG.info(loggingPrefix + "Upload complete for file [{}], size {}MB in {}s at {}mb/s",
-                                    fileContainer.getFileMetadata().getName().getValue(),
+                                    fileContainer.getFileMetadata().getName(),
                                     String.format("%.2f", fileContainer.getFileBinary().getBinary().size() / (1024d * 1024d)),
                                     String.format("%.2f", requestDuration / 1000d),
                                     String.format("%.2f",
@@ -2746,8 +2858,9 @@ public abstract class ConnectorServiceV1 implements Serializable {
         final static Logger LOG = LoggerFactory.getLogger(DownloadFileBinary.class);
         final static String loggingPrefix = "DownloadFileBinary() - ";
         final static OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(90, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.MINUTES)
+                .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS))
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
                 .build();
 
         public static CompletableFuture<FileBinary> downloadFileBinaryFromURL(String downloadUrl) {
@@ -2788,7 +2901,8 @@ public abstract class ConnectorServiceV1 implements Serializable {
             Preconditions.checkArgument(!(null == tempStorageURI && forceTempStorage),
                     "Cannot force the use of temp storage without a valid temp storage URI.");
             HttpUrl url = HttpUrl.parse(downloadUrl);
-            Preconditions.checkState(null != url, "Download URL not valid: " + downloadUrl);
+            Preconditions.checkState(null != url,
+                    loggingPrefix + "Download URL is not valid: " + downloadUrl);
 
             okhttp3.Request FileBinaryBuilder = new okhttp3.Request.Builder()
                     .url(url)

@@ -7,7 +7,6 @@ import com.cognite.client.dto.Event;
 import com.cognite.client.dto.Item;
 import com.cognite.client.config.ClientConfig;
 import com.cognite.client.util.DataGenerator;
-import com.google.protobuf.StringValue;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -37,16 +36,11 @@ class EventsTest {
 
 
         try {
-            /*
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
-                //.withClientConfig(config)
-                ;
-         */
             CogniteClient client = CogniteClient.ofClientCredentials(
                     TestConfigProvider.getClientId(),
                     TestConfigProvider.getClientSecret(),
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost());
             LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
                     Duration.between(startInstant, Instant.now()));
@@ -72,12 +66,11 @@ class EventsTest {
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
             LOG.info(loggingPrefix + "Start deleting events.");
-            List<Item> deleteItemsInput = new ArrayList<>();
-            listEventsResults.stream()
+            List<Item> deleteItemsInput = listEventsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
-                    .forEach(item -> deleteItemsInput.add(item));
+                    .collect(Collectors.toList());
 
             List<Item> deleteItemsResults = client.events().delete(deleteItemsInput);
             LOG.info(loggingPrefix + "Finished deleting events. Duration: {}",
@@ -94,15 +87,19 @@ class EventsTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeEditAndDeleteEvents() {
+    void writeEditAndDeleteEvents() throws Exception {
         Instant startInstant = Instant.now();
         ClientConfig config = ClientConfig.create()
                 .withNoWorkers(1)
                 .withNoListPartitions(1);
         String loggingPrefix = "UnitTest - writeEditAndDeleteEvents() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -122,7 +119,7 @@ class EventsTest {
             LOG.info(loggingPrefix + "Start updating events.");
             List<Event> editedEventsInput = upsertedEvents.stream()
                     .map(event -> event.toBuilder()
-                            .setDescription(StringValue.of("new-value"))
+                            .setDescription("new-value")
                             .clearSubtype()
                             .clearMetadata()
                             .putMetadata("new-key", "new-value")
@@ -160,7 +157,7 @@ class EventsTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listEventsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -171,7 +168,7 @@ class EventsTest {
 
             BooleanSupplier updateCondition = () -> {
                 for (Event event : eventUpdateResults)  {
-                    if (event.getDescription().getValue().equals("new-value")
+                    if (event.getDescription().equals("new-value")
                             && event.hasSubtype()
                             && event.containsMetadata("new-key")
                             && event.containsMetadata(DataGenerator.sourceKey)) {
@@ -185,7 +182,7 @@ class EventsTest {
 
             BooleanSupplier replaceCondition = () -> {
                 for (Event event : eventReplaceResults)  {
-                    if (event.getDescription().getValue().equals("new-value")
+                    if (event.getDescription().equals("new-value")
                             && !event.hasSubtype()
                             && event.containsMetadata("new-key")
                             && !event.containsMetadata(DataGenerator.sourceKey)) {
@@ -210,12 +207,16 @@ class EventsTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeRetrieveAndDeleteEvents() {
+    void writeRetrieveAndDeleteEvents() throws Exception {
         Instant startInstant = Instant.now();
         String loggingPrefix = "UnitTest - writeReadAndDeleteEvents() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -243,7 +244,7 @@ class EventsTest {
             List<Item> eventItems = new ArrayList<>();
             listEventsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> eventItems.add(item));
 
@@ -255,7 +256,7 @@ class EventsTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             retrievedEvents.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 
@@ -274,14 +275,18 @@ class EventsTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeAggregateAndDeleteEvents() {
+    void writeAggregateAndDeleteEvents() throws Exception {
         int noItems = 745;
         Instant startInstant = Instant.now();
 
         String loggingPrefix = "UnitTest - writeAggregateAndDeleteEvents() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofKey(TestConfigProvider.getApiKey())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
                 Duration.between(startInstant, Instant.now()));
@@ -316,7 +321,7 @@ class EventsTest {
             List<Item> deleteItemsInput = new ArrayList<>();
             listEventsResults.stream()
                     .map(event -> Item.newBuilder()
-                            .setExternalId(event.getExternalId().getValue())
+                            .setExternalId(event.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
 

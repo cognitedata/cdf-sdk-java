@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package com.cognite.beam.proto;
+
+option java_package = "com.cognite.client.dto";
+option java_multiple_files = true;
+
+message ExtractionPipeline {
+    message RawTable {
+        string db_name = 1;
+        string table_name = 2;
+    }
+    message Contact {
+        optional string name = 1;
+        optional string email = 2;
+        optional string role = 3;
+        bool send_notification = 4;
+    }
+
+    optional int64 id = 1;
+    optional string external_id = 2;
+    optional string name = 3;
+    optional string description = 4;
+    optional int64 data_set_id = 5;
+    repeated RawTable raw_tables = 6;
+    optional string schedule = 7;
+    repeated Contact contacts = 8;
+    map<string, string> metadata = 9;
+    optional string source = 10;
+    optional string documentation = 11;
+    optional int64 last_success = 12;
+    optional int64 last_failure = 13;
+    optional string last_message = 14;
+    optional int64 last_seen = 15;
+    optional int64 created_time = 16;
+    optional int64 last_updated_time = 17;
+    optional string created_by = 18;
+}
+
+message ExtractionPipelineRun {
+    enum Status {
+        SUCCESS = 0;
+        FAILURE = 1;
+        SEEN = 2;
+    }
+    optional string external_id = 1;
+    optional int64 id = 2;
+    Status status = 3;
+    optional string message = 4;
+    optional int64 created_time = 5;
+}
