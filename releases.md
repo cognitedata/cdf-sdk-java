@@ -21,6 +21,10 @@ Changes are grouped as follows:
 
 ## [1.6.0-SNAPSHOT]
 
+### Fixed
+
+- Retry requests on `UnknownHostException`.
+
 ## [1.5.0] 2021-11-11
 
 ### Added 
