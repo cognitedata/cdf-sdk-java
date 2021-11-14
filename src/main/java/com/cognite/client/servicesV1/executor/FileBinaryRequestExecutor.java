@@ -81,6 +81,14 @@ public abstract class FileBinaryRequestExecutor {
             504     // gateway timeout
     );
 
+    private static final ImmutableList<Class> RETRYABLE_EXCEPTIONS = ImmutableList.of(
+            java.net.SocketTimeoutException.class,
+            java.net.UnknownHostException.class,
+            StreamResetException.class,
+            SSLException.class,
+            SSLProtocolException.class
+    );
+
     private static final int DEFAULT_NUM_WORKERS = 8;
     //private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(DEFAULT_NUM_WORKERS);
     private static final ThreadPoolExecutor DEFAULT_POOL = new ThreadPoolExecutor(DEFAULT_NUM_WORKERS, DEFAULT_NUM_WORKERS,
@@ -322,11 +330,7 @@ public abstract class FileBinaryRequestExecutor {
                 catchedExceptions.add(e);
 
                 // if we get a transient error, retry the call
-                if (e instanceof java.net.SocketTimeoutException
-                        || e instanceof StreamResetException
-                        || e instanceof SSLProtocolException
-                        || e instanceof SSLException
-                        || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
+                if (RETRYABLE_EXCEPTIONS.contains(e.getClass()) || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     LOG.warn(loggingPrefix + "Transient error when downloading file ("
                             + "response code: " + responseCode
                             + "). Retrying...", e);
@@ -489,11 +493,7 @@ public abstract class FileBinaryRequestExecutor {
                 catchedExceptions.add(e);
 
                 // if we get a transient error, retry the call
-                if (e instanceof java.net.SocketTimeoutException
-                        || e instanceof StreamResetException
-                        || e instanceof SSLProtocolException
-                        || e instanceof SSLException
-                        || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
+                if (RETRYABLE_EXCEPTIONS.contains(e.getClass()) || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     apiRetryCounter++;
                     LOG.warn(loggingPrefix + "Transient error when reading from Fusion (request id: " + requestId
                             + ", response code: " + responseCode
