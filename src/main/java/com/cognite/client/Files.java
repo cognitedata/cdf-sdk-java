@@ -955,18 +955,8 @@ public abstract class Files extends ApiBase {
 
             try {
                 responseMap.put(reader.readFileBinaries(request), batch);
-            } catch (CompletionException | FileBinaryRequestExecutor.ClientRequestException e) {
-                // First we need to find out the cause / which exception type is thrown
-                FileBinaryRequestExecutor.ClientRequestException requestException = null;
-                if (e instanceof FileBinaryRequestExecutor.ClientRequestException) {
-                    requestException = (FileBinaryRequestExecutor.ClientRequestException) e;
-                } else if (e instanceof CompletionException) {
-                    // Unwrap the completion exception to see if the underlying cause is a ClientRequestException
-                    requestException = ((CompletionException) e).getCause() instanceof FileBinaryRequestExecutor.ClientRequestException ?
-                            ((FileBinaryRequestExecutor.ClientRequestException) ((CompletionException) e).getCause()) : null;
-                }
-
-                if (null != requestException) {
+            } catch (CompletionException e) {
+                if (e.getCause() instanceof FileBinaryRequestExecutor.ClientRequestException) {
                     // This exception indicates a malformed download URL--typically an expired URL. This can be caused
                     // by the parallel downloads interfering with each other. Retry with the file items downloaded individually
                     LOG.warn(loggingPrefix + "Error when downloading a batch of file binaries. Will retry each file individually.");
