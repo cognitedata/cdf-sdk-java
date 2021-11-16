@@ -86,7 +86,8 @@ public abstract class FileBinaryRequestExecutor {
             java.net.UnknownHostException.class,
             StreamResetException.class,
             SSLException.class,
-            SSLProtocolException.class
+            SSLProtocolException.class,
+            com.google.cloud.storage.StorageException.class     // Timeout when using GCS as temp storage
     );
 
     private static final int DEFAULT_NUM_WORKERS = 8;
