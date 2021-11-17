@@ -24,6 +24,7 @@ Changes are grouped as follows:
 ### Fixed
 
 - Retry requests on `UnknownHostException`.
+- Retry requests on Google Cloud Storage timeouts.
 
 ## [1.5.0] 2021-11-11
 
