@@ -40,6 +40,7 @@ import com.cognite.client.servicesV1.response.*;
 import com.cognite.client.servicesV1.util.JsonUtil;
 import com.cognite.v1.timeseries.proto.DataPointListItem;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import okhttp3.ConnectionSpec;
@@ -2523,18 +2524,18 @@ public abstract class ConnectorServiceV1 implements Serializable {
             // Start download the file binaries on separate threads
             List<CompletableFuture<ResponseItems<FileBinary>>> futuresList = new ArrayList<>();
 
-            for (String fileItem : fileItems) {
-                LOG.debug(loggingPrefix + "Building download request for file item: {}", fileItem);
-                Map<String, Object> fileRequestItem = objectMapper.readValue(fileItem, new TypeReference<Map<String, Object>>(){});
-                Preconditions.checkState(fileRequestItem != null && fileRequestItem.containsKey("downloadUrl"),
+            for (String fileItemJson : fileItems) {
+                LOG.debug(loggingPrefix + "Building download request for file item: {}", fileItemJson);
+                JsonNode rootNode = objectMapper.readTree(fileItemJson);
+                Preconditions.checkState(rootNode.path("downloadUrl").isTextual(),
                         "File response does not contain a valid *downloadUrl* item.");
-                Preconditions.checkState(fileRequestItem.containsKey("externalId") || fileRequestItem.containsKey("id"),
+                Preconditions.checkState(rootNode.path("externalId").isTextual() || rootNode.path("id").isIntegralNumber(),
                         "File response does not contain a file id nor externalId.");
 
                 // build file id and url
-                String fileExternalId = (String) fileRequestItem.getOrDefault("externalId", "");
-                long fileId = (Long) fileRequestItem.getOrDefault("id", -1);
-                String downloadUrl = (String) fileRequestItem.get("downloadUrl");
+                String fileExternalId = rootNode.path("externalId").asText("");
+                long fileId = rootNode.path("id").asLong(0L);
+                String downloadUrl = rootNode.path("downloadUrl").textValue();
 
                 CompletableFuture<ResponseItems<FileBinary>> future = DownloadFileBinary
                         .downloadFileBinaryFromURL(downloadUrl,
