@@ -2533,7 +2533,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
 
                 // build file id and url
                 String fileExternalId = (String) fileRequestItem.getOrDefault("externalId", "");
-                long fileId = (Long) fileRequestItem.getOrDefault("id", -1);
+                long fileId = ((Number) fileRequestItem.getOrDefault("id", -1L)).longValue();
                 String downloadUrl = (String) fileRequestItem.get("downloadUrl");
 
                 CompletableFuture<ResponseItems<FileBinary>> future = DownloadFileBinary
