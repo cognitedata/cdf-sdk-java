@@ -19,6 +19,12 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [1.6.1] 2021-11-18
+
+### Fixed
+
+- Parsing error on file binary download using internal `id`.
+
 ## [1.6.0] 2021-11-17
 
 ### Fixed
