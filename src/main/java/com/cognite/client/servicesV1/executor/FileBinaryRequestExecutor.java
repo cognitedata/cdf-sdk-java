@@ -87,7 +87,7 @@ public abstract class FileBinaryRequestExecutor {
             StreamResetException.class,
             SSLException.class,
             SSLProtocolException.class,
-            com.google.cloud.storage.StorageException.class     // Timeout when using GCS as temp storage
+            com.google.cloud.storage.StorageException.class     // Timeout + stream reset when using GCS as temp storage
     );
 
     private static final int DEFAULT_NUM_WORKERS = 8;
@@ -346,7 +346,7 @@ public abstract class FileBinaryRequestExecutor {
         }
 
         // No results are produced. Throw the list of registered Exception.
-        String exceptionMessage = String.format("Unable to download file binary from %s.",
+        String exceptionMessage = String.format(loggingPrefix + "Unable to download file binary from %s.",
                 request.url().toString());
         if (catchedExceptions.size() > 0) { //add the details of the most recent exception.
             exceptionMessage += System.lineSeparator();
@@ -510,7 +510,7 @@ public abstract class FileBinaryRequestExecutor {
         }
 
         // No results are produced. Throw the list of registered Exception.
-        String exceptionMessage = String.format("Unable to upload file binary to %s.",
+        String exceptionMessage = String.format(loggingPrefix + "Unable to upload file binary to %s.",
                 request.url().toString());
         if (catchedExceptions.size() > 0) { //add the details of the most recent exception.
             exceptionMessage += System.lineSeparator();
