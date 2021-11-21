@@ -28,12 +28,15 @@ import com.cognite.client.util.Partition;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import okhttp3.internal.http2.StreamResetException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLProtocolException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.nio.file.Path;
@@ -56,6 +59,14 @@ public abstract class Files extends ApiBase {
     private static final int MAX_WRITE_REQUEST_BATCH_SIZE = 100;
     private static final int MAX_DOWNLOAD_BINARY_BATCH_SIZE = 10;
     private static final int MAX_UPLOAD_BINARY_BATCH_SIZE = 10;
+
+    // Retry upload batches with one item at a time when the following list of exceptions are observed
+    private static final ImmutableList<Class> RETRYABLE_EXCEPTIONS_BINARY_UPLOAD = ImmutableList.of(
+            java.net.SocketTimeoutException.class,
+            java.net.UnknownHostException.class,
+            StreamResetException.class,
+            com.google.cloud.storage.StorageException.class     // Timeout + stream reset when using GCS as temp storage
+    );
 
     private static Builder builder() {
         return new AutoValue_Files.Builder();
@@ -520,7 +531,7 @@ public abstract class Files extends ApiBase {
             try {
                 responseFileMetadata.addAll(uploadFileBinaries(uploadBatch, deleteTempFile));
             } catch (CompletionException e) {
-                if (e.getCause() instanceof SocketTimeoutException) {
+                if (RETRYABLE_EXCEPTIONS_BINARY_UPLOAD.contains(e.getCause().getClass())) {
                     // The API is most likely saturated. Retry the uploads one file at a time.
                     LOG.warn(batchLoggingPrefix + "Error when uploading the batch of file binaries. Will retry each file individually.");
                     for (FileContainer file : uploadBatch) {

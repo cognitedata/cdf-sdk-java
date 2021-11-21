@@ -19,6 +19,12 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [1.7.0-SNAPSHOT]
+
+### Added
+
+- Improved robustness for file binary upload. Add batch-level retries when the http2 stream is reset. 
+
 ## [1.6.1] 2021-11-18
 
 ### Fixed
