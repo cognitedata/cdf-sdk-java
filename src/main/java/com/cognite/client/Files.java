@@ -35,10 +35,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLProtocolException;
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -62,12 +59,14 @@ public abstract class Files extends ApiBase {
     private static final int MAX_UPLOAD_BINARY_BATCH_SIZE = 10;
 
     // Retry upload batches with one item at a time when the following list of exceptions are observed
-    private static final ImmutableList<Class> RETRYABLE_EXCEPTIONS_BINARY_UPLOAD = ImmutableList.of(
-            java.net.SocketTimeoutException.class,
-            java.net.UnknownHostException.class,
-            StreamResetException.class,
-            com.google.cloud.storage.StorageException.class     // Timeout + stream reset when using GCS as temp storage
-    );
+    private static final ImmutableList<Class<? extends Exception>> RETRYABLE_EXCEPTIONS_BINARY_UPLOAD =
+            ImmutableList.of(
+                    java.net.SocketTimeoutException.class,
+                    java.net.UnknownHostException.class,
+                    StreamResetException.class,
+                    IOException.class,                              // IOException worth set of retries
+                    com.google.cloud.storage.StorageException.class // Timeout + stream reset when using GCS as temp storage
+            );
 
     private static Builder builder() {
         return new AutoValue_Files.Builder();
@@ -533,15 +532,9 @@ public abstract class Files extends ApiBase {
                 responseFileMetadata.addAll(uploadFileBinaries(uploadBatch, deleteTempFile));
             } catch (CompletionException e) {
                 // Must unwrap the completion exception
-                Throwable t = e.getCause();
-                if (t instanceof IOException) {
-                    // The exception may have an underlying cause. Try to unwrap further.
-                    if (null != t.getCause()) {
-                        t = t.getCause();
-                    }
-                }
-
-                if (RETRYABLE_EXCEPTIONS_BINARY_UPLOAD.contains(t.getClass())) {
+                Throwable cause = e.getCause();
+                if (RETRYABLE_EXCEPTIONS_BINARY_UPLOAD.stream()
+                        .anyMatch(retryable -> retryable.isInstance(cause.getClass()))) {
                     // The API is most likely saturated. Retry the uploads one file at a time.
                     LOG.warn(batchLoggingPrefix + "Error when uploading the batch of file binaries. Will retry each file individually.");
                     for (FileContainer file : uploadBatch) {
