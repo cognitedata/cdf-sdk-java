@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLProtocolException;
+import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.URI;
 import java.nio.file.Path;
@@ -531,7 +532,16 @@ public abstract class Files extends ApiBase {
             try {
                 responseFileMetadata.addAll(uploadFileBinaries(uploadBatch, deleteTempFile));
             } catch (CompletionException e) {
-                if (RETRYABLE_EXCEPTIONS_BINARY_UPLOAD.contains(e.getCause().getClass())) {
+                // Must unwrap the completion exception
+                Throwable t = e.getCause();
+                if (t instanceof IOException) {
+                    // The exception may have an underlying cause. Try to unwrap further.
+                    if (null != t.getCause()) {
+                        t = t.getCause();
+                    }
+                }
+
+                if (RETRYABLE_EXCEPTIONS_BINARY_UPLOAD.contains(t.getClass())) {
                     // The API is most likely saturated. Retry the uploads one file at a time.
                     LOG.warn(batchLoggingPrefix + "Error when uploading the batch of file binaries. Will retry each file individually.");
                     for (FileContainer file : uploadBatch) {

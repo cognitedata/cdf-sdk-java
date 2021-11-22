@@ -19,6 +19,12 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [1.6.3-SNAPSHOT]
+
+### Fixed
+
+- Properly identify the root cause of a request error / exception.
+
 ## [1.6.2] 2021-11-21
 
 ### Added

@@ -263,11 +263,15 @@ public abstract class RequestExecutor {
 
         // No results are produced. Throw the list of registered Exception.
         String exceptionMessage = "Unable to produce a valid response from Cognite Fusion.";
+        IOException e;
         if (catchedExceptions.size() > 0) { //add the details of the most recent exception.
+            Exception mostRecentException = catchedExceptions.get(catchedExceptions.size() -1);
             exceptionMessage += System.lineSeparator();
-            exceptionMessage += catchedExceptions.get(catchedExceptions.size() -1).getMessage();
+            exceptionMessage += mostRecentException.getMessage();
+            e = new IOException(exceptionMessage, mostRecentException);
+        } else {
+            e = new IOException(exceptionMessage);
         }
-        Exception e = new Exception(exceptionMessage);
         catchedExceptions.forEach(e::addSuppressed);
         throw e;
     }
