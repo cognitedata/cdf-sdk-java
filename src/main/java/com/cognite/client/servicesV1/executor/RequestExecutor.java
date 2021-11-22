@@ -245,7 +245,7 @@ public abstract class RequestExecutor {
                 // 2. sync call (small file) throws a direct exception
                 final Throwable cause = e instanceof CompletionException ? e.getCause() : e;
                 // if we get a transient error, retry the call
-                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(cause.getClass()))
+                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(cause))
                         || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     apiRetryCounter++;
                     LOG.warn(loggingPrefix + "Transient error when reading from Fusion (request id: " + requestId
