@@ -19,11 +19,11 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
-## [1.6.3-SNAPSHOT]
+## [1.6.3] 2021-11-22
 
 ### Fixed
 
-- Properly identify the root cause of a request error / exception.
+- Improved robustness for file binary upload. Add batch-level retries on a broader set of exceptions.
 
 ## [1.6.2] 2021-11-21
 
