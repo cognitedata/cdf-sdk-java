@@ -241,7 +241,7 @@ public abstract class RequestExecutor {
             } catch (Exception e) {
                 catchedExceptions.add(e);
                 // depends on the execution path either of two may happen:
-                // 1. async call failed and cause is packed with CompleteException
+                // 1. async call failed and cause is packed with CompletionException
                 // 2. sync call (small file) throws a direct exception
                 final Throwable cause = e instanceof CompletionException ? e.getCause() : e;
                 // if we get a transient error, retry the call
