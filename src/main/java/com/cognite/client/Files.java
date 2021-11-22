@@ -530,16 +530,7 @@ public abstract class Files extends ApiBase {
                 responseFileMetadata.addAll(uploadFileBinaries(uploadBatch, deleteTempFile));
             } catch (CompletionException e) {
                 // Must unwrap the completion exception
-                Throwable t = e.getCause();
-                if (t instanceof IOException) {
-                    // The exception may have an underlying cause. Try to unwrap further.
-                    if (null != t.getCause()) {
-                        t = t.getCause();
-                    }
-                }
-
-                // Ugly workaround to address the lambda requirement of "effectively final"
-                final Throwable cause = t;
+                Throwable cause = e.getCause();
 
                 if (RETRYABLE_EXCEPTIONS_BINARY_UPLOAD.stream()
                         .anyMatch(retryable -> retryable.isInstance(cause.getClass()))) {
