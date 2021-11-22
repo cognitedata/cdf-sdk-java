@@ -33,8 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLProtocolException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -82,12 +80,8 @@ public abstract class FileBinaryRequestExecutor {
     );
 
     private static final ImmutableList<Class<? extends Exception>> RETRYABLE_EXCEPTIONS = ImmutableList.of(
-            java.net.SocketTimeoutException.class,
-            java.net.UnknownHostException.class,
             IOException.class,
             StreamResetException.class,
-            SSLException.class,
-            SSLProtocolException.class,
             com.google.cloud.storage.StorageException.class     // Timeout + stream reset when using GCS as temp storage
     );
 

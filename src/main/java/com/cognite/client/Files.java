@@ -61,8 +61,6 @@ public abstract class Files extends ApiBase {
     // Retry upload batches with one item at a time when the following list of exceptions are observed
     private static final ImmutableList<Class<? extends Exception>> RETRYABLE_EXCEPTIONS_BINARY_UPLOAD =
             ImmutableList.of(
-                    java.net.SocketTimeoutException.class,
-                    java.net.UnknownHostException.class,
                     StreamResetException.class,
                     IOException.class,                              // IOException worth set of retries
                     com.google.cloud.storage.StorageException.class // Timeout + stream reset when using GCS as temp storage
@@ -532,7 +530,17 @@ public abstract class Files extends ApiBase {
                 responseFileMetadata.addAll(uploadFileBinaries(uploadBatch, deleteTempFile));
             } catch (CompletionException e) {
                 // Must unwrap the completion exception
-                Throwable cause = e.getCause();
+                Throwable t = e.getCause();
+                if (t instanceof IOException) {
+                    // The exception may have an underlying cause. Try to unwrap further.
+                    if (null != t.getCause()) {
+                        t = t.getCause();
+                    }
+                }
+
+                // Ugly workaround to address the lambda requirement of "effectively final"
+                final Throwable cause = t;
+
                 if (RETRYABLE_EXCEPTIONS_BINARY_UPLOAD.stream()
                         .anyMatch(retryable -> retryable.isInstance(cause.getClass()))) {
                     // The API is most likely saturated. Retry the uploads one file at a time.

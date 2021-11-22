@@ -60,9 +60,8 @@ public abstract class RequestExecutor {
             504     // gateway timeout
     );
 
-    private static final ImmutableList<Class> RETRYABLE_EXCEPTIONS = ImmutableList.of(
-            java.net.SocketTimeoutException.class,
-            java.net.UnknownHostException.class
+    private static final ImmutableList<Class<? extends Exception>> RETRYABLE_EXCEPTIONS = ImmutableList.of(
+            IOException.class
     );
 
     private static final int DEFAULT_CPU_MULTIPLIER = 8;
@@ -246,7 +245,8 @@ public abstract class RequestExecutor {
                 catchedExceptions.add(e);
 
                 // if we get a transient error, retry the call
-                if (RETRYABLE_EXCEPTIONS.contains(e.getClass()) || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
+                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(e.getClass()))
+                        || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     apiRetryCounter++;
                     LOG.warn(loggingPrefix + "Transient error when reading from Fusion (request id: " + requestId
                             + ", response code: " + responseCode
