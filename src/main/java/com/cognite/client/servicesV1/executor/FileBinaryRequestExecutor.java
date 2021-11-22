@@ -425,13 +425,13 @@ public abstract class FileBinaryRequestExecutor {
             request = new Request.Builder()
                     .url(url)
                     .header("Content-length", String.valueOf(contentLength))
-                    .post(RequestBody.create(fileBinary.getBinary().toByteArray(), MediaType.get(mimeType)))
+                    .put(RequestBody.create(fileBinary.getBinary().toByteArray(), MediaType.get(mimeType)))
                     .build();
         } else {
             LOG.debug(loggingPrefix + "File binary sourced temporary blob storage: " + fileBinary.getBinaryUri());
             request = new Request.Builder()
                     .url(url)
-                    .post(new UploadFileBinaryRequestBody(fileBinary.getBinaryUri(),
+                    .put(new UploadFileBinaryRequestBody(fileBinary.getBinaryUri(),
                             MediaType.get(mimeType),
                             isDeleteTempFile()))
                     .build();
