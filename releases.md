@@ -19,6 +19,12 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [1.7.0-SNAPSHOT]
+
+### Fixed
+
+- File binary upload uses PUT instead of POST
+
 ## [1.6.3] 2021-11-22
 
 ### Fixed
