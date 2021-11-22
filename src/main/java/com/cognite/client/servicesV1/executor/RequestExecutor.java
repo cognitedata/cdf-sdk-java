@@ -33,10 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 
 /**
  * This class will execute an okhttp3 request on a separate thread and publish the result via a
@@ -243,9 +240,12 @@ public abstract class RequestExecutor {
                         .withApiRetryCounter(apiRetryCounter);
             } catch (Exception e) {
                 catchedExceptions.add(e);
-
+                // depends on the execution path either of two may happen:
+                // 1. async call failed and cause is packed with CompleteException
+                // 2. sync call (small file) throws a direct exception
+                final Throwable cause = e instanceof CompletionException ? e.getCause() : e;
                 // if we get a transient error, retry the call
-                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(e.getClass()))
+                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(cause.getClass()))
                         || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     apiRetryCounter++;
                     LOG.warn(loggingPrefix + "Transient error when reading from Fusion (request id: " + requestId

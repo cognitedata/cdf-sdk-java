@@ -50,6 +50,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.*;
 
 /**
@@ -282,7 +283,7 @@ public abstract class FileBinaryRequestExecutor {
                 if (!response.isSuccessful() && !getValidResponseCodes().contains(responseCode)) {
                     String errorMessage = "Downloading file binary: Unexpected response code: " + responseCode + ". "
                             + response.toString() + System.lineSeparator()
-                            + "Response body: " + response.body().string() + System.lineSeparator()
+                            + "Response body: " + Objects.requireNonNull(response.body()).string() + System.lineSeparator()
                             + "Response headers: " + response.headers().toString() + System.lineSeparator();
 
                     if (responseCode >= 400 && responseCode < 500) {
@@ -296,37 +297,41 @@ public abstract class FileBinaryRequestExecutor {
                 // check the response
                 if (response.body() == null) {
                     throw new Exception(loggingPrefix + "Successful response, but the body is null. "
-                                                + response.toString() + System.lineSeparator()
-                                                + "Response headers: " + response.headers().toString());
+                            + response.toString() + System.lineSeparator()
+                            + "Response headers: " + response.headers().toString());
                 }
 
                 // check the content length. When downloading files >200MiB we will use temp storage.
-                if (response.body().contentLength() > (1024L * 1024L * 200L) || isForceTempStorage()) {
+                final long contentLength = Objects.requireNonNull(response.body()).contentLength();
+                if (contentLength > (1024L * 1024L * 200L) || isForceTempStorage()) {
                     if (null == getTempStoragePath()) {
                         String message = String.format("File too large to download to memory. Consider configuring temp "
                                         + "storage on the file reader.%n"
                                         + "Content-length = [%d]. %n"
                                         + "Response headers: %s",
-                                response.body().contentLength(),
+                                contentLength,
                                 response.headers().toString());
                         throw new IOException(message);
                     }
                     LOG.info("Downloading {} MiB to temp storage binary.",
-                            String.format("%.2f", response.body().contentLength() / (1024d * 1024d)));
+                            String.format("%.2f", contentLength / (1024d * 1024d)));
                     return downloadBinaryToTempStorage(response);
                 } else {
                     LOG.info("Downloading {} MiB to memory-based binary.",
-                            String.format("%.2f", response.body().contentLength() / (1024d * 1024d)));
+                            String.format("%.2f", contentLength / (1024d * 1024d)));
                     return FileBinary.newBuilder()
-                            .setBinary(ByteString.readFrom(response.body().byteStream()))
-                            .setContentLength(response.body().contentLength())
+                            .setBinary(ByteString.readFrom(Objects.requireNonNull(response.body()).byteStream()))
+                            .setContentLength(contentLength)
                             .build();
                 }
             } catch (Exception e) {
                 catchedExceptions.add(e);
-
+                // depends on the execution path either of two may happen:
+                // 1. async call failed and cause is packed with CompleteException
+                // 2. sync call (small file) throws a direct exception
+                final Throwable cause = e instanceof CompletionException ? e.getCause() : e;
                 // if we get a transient error, retry the call
-                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(e.getClass()))
+                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(cause))
                         || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     LOG.warn(loggingPrefix + "Transient error when downloading file ("
                             + "response code: " + responseCode
@@ -464,7 +469,7 @@ public abstract class FileBinaryRequestExecutor {
                 if (!response.isSuccessful() && !getValidResponseCodes().contains(responseCode)) {
                     String errorMessage = "Uploading file binary: Unexpected response code: " + responseCode + ". "
                             + response.toString() + System.lineSeparator()
-                            + "Response body: " + response.body().string() + System.lineSeparator()
+                            + "Response body: " + Objects.requireNonNull(response.body()).string() + System.lineSeparator()
                             + "Response headers: " + response.headers().toString() + System.lineSeparator();
 
                     throw new IOException(errorMessage);
@@ -478,11 +483,12 @@ public abstract class FileBinaryRequestExecutor {
 
                 // check the response content length. When downloading very large files this may exceed 4GB
                 // we put a limit of 200MiB on the response
-                if (response.body().contentLength() > (1024L * 1024L * 200L)) {
+                final long contentLength = Objects.requireNonNull(response.body()).contentLength();
+                if (contentLength > (1024L * 1024L * 200L)) {
                     String message = String.format("Response too large. "
                                     + "Content-length = [%d]. %n"
                                     + "Response headers: %s",
-                            response.body().contentLength(),
+                            contentLength,
                             response.headers().toString());
                     throw new IOException(message);
                 }
@@ -492,9 +498,12 @@ public abstract class FileBinaryRequestExecutor {
                         .withApiRetryCounter(apiRetryCounter);
             } catch (Exception e) {
                 catchedExceptions.add(e);
-
+                // depends on the execution path either of two may happen:
+                // 1. async call failed and cause is packed with CompleteException
+                // 2. sync call (small file) throws a direct exception
+                final Throwable cause = e instanceof CompletionException ? e.getCause() : e;
                 // if we get a transient error, retry the call
-                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(e.getClass()))
+                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(cause.getClass()))
                         || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     apiRetryCounter++;
                     LOG.warn(loggingPrefix + "Transient error when reading from Fusion (request id: " + requestId
@@ -570,7 +579,6 @@ public abstract class FileBinaryRequestExecutor {
             } catch (Exception e) {
                 // remove the temp file
                 cloudStorage.delete(blobId);
-
                 throw e;
             }
 
