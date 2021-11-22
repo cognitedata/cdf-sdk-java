@@ -206,7 +206,7 @@ public abstract class RawPublisher {
      * @throws Exception
      */
     boolean run() throws Exception {
-        final String loggingPrefix = "streaming() [" + RandomStringUtils.randomAlphanumeric(6) + "] - ";
+        final String loggingPrefix = "streaming() [" + RandomStringUtils.randomAlphanumeric(4) + "] - ";
         Preconditions.checkNotNull(getConsumer(),
                 loggingPrefix + "You must specify a Consumer via withConsumer(Consumer<List<RawRow>>)");
         Preconditions.checkState(getStartTime().isBefore(getEndTime()),

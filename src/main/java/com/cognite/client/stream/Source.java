@@ -23,5 +23,5 @@ public interface Source<T> {
      * @param requestParameters the filters to use for retrieving the results objects
      * @return an {@link Iterator} to page through the results set.
      */
-    public Iterator<List<T>> list(Request requestParameters);
+    public Iterator<List<T>> list(Request requestParameters) throws Exception;
 }
