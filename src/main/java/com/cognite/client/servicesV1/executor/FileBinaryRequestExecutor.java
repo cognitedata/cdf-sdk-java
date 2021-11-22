@@ -431,7 +431,7 @@ public abstract class FileBinaryRequestExecutor {
             LOG.debug(loggingPrefix + "File binary sourced temporary blob storage: " + fileBinary.getBinaryUri());
             request = new Request.Builder()
                     .url(url)
-                    .post(new UploadFileBinaryRequestBody(fileBinary.getBinaryUri(),
+                    .put(new UploadFileBinaryRequestBody(fileBinary.getBinaryUri(),
                             MediaType.get(mimeType),
                             isDeleteTempFile()))
                     .build();
