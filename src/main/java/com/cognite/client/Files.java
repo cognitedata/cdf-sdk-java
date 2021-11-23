@@ -26,6 +26,7 @@ import com.cognite.client.servicesV1.parser.FileParser;
 import com.cognite.client.servicesV1.parser.ItemParser;
 import com.cognite.client.util.Partition;
 import com.google.auto.value.AutoValue;
+import com.google.cloud.Tuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import okhttp3.internal.http2.StreamResetException;
@@ -94,6 +95,11 @@ public abstract class Files extends ApiBase {
      */
     public Iterator<List<FileMetadata>> list() throws Exception {
         return this.list(Request.create());
+    }
+
+    public static Files create() {
+        return builder()
+                .build();
     }
 
     /**
@@ -202,7 +208,7 @@ public abstract class Files extends ApiBase {
             }
         }
 
-        // Check for files with >1k assets. Set the extra assets aside so we can add them in separate updates.
+        // Check for files with >1k assets. Set the extra assets aside, so we can add them in separate updates.
         for (Long key : internalIdUpdateMap.keySet()) {
             FileMetadata fileMetadata = internalIdUpdateMap.get(key);
             if (fileMetadata.getAssetIdsCount() > 1000) {
@@ -288,17 +294,7 @@ public abstract class Files extends ApiBase {
                         LOG.debug(loggingPrefix + "Number of missing entries reported by CDF: {}", missing.size());
 
                         // Move missing items from update to the create request
-                        Map<String, FileMetadata> itemsMap = mapToId(updateResponseMap.get(response));
-                        for (Item value : missing) {
-                            if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
-                                elementListCreate.add(itemsMap.get(value.getExternalId()));
-                                itemsMap.remove(value.getExternalId());
-                            } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
-                                elementListCreate.add(itemsMap.get(String.valueOf(value.getId())));
-                                itemsMap.remove(String.valueOf(value.getId()));
-                            }
-                        }
-                        elementListUpdate.addAll(itemsMap.values()); // Add remaining items to be re-updated
+                        repurposeMissingItems(elementListUpdate, elementListCreate, updateResponseMap, response, missing);
                     }
                 }
             }
@@ -309,7 +305,7 @@ public abstract class Files extends ApiBase {
             if (elementListCreate.isEmpty()) {
                 LOG.debug(loggingPrefix + "Create items list is empty. Skipping create.");
             } else {
-                Map<ResponseItems<String>, FileMetadata> createResponseMap =
+                Map<ResponseItems<String>, List<FileMetadata>> createResponseMap =
                         splitAndCreateFileMetadata(elementListCreate, createWriter);
                 LOG.debug(loggingPrefix + "Completed create items requests for {} items across {} batches at duration {}",
                         elementListCreate.size(),
@@ -334,17 +330,7 @@ public abstract class Files extends ApiBase {
                         LOG.debug(loggingPrefix + "Number of duplicate entries reported by CDF: {}", duplicates.size());
 
                         // Move duplicates from insert to the update request
-                        Map<String, FileMetadata> itemsMap = mapToId(ImmutableList.of(createResponseMap.get(response)));
-                        for (Item value : duplicates) {
-                            if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
-                                elementListUpdate.add(itemsMap.get(value.getExternalId()));
-                                itemsMap.remove(value.getExternalId());
-                            } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
-                                elementListUpdate.add(itemsMap.get(String.valueOf(value.getId())));
-                                itemsMap.remove(String.valueOf(value.getId()));
-                            }
-                        }
-                        elementListCreate.addAll(itemsMap.values()); // Add remaining items to be re-inserted
+                        repurposeMissingItems(elementListCreate, elementListUpdate, createResponseMap, response, duplicates);
                     }
                 }
             }
@@ -458,6 +444,24 @@ public abstract class Files extends ApiBase {
                 .collect(Collectors.toList());
     }
 
+    private void repurposeMissingItems(List<FileMetadata> elementListUpdate,
+                                       List<FileMetadata> elementListCreate,
+                                       Map<ResponseItems<String>, List<FileMetadata>> updateResponseMap,
+                                       ResponseItems<String> response,
+                                       List<Item> missing) {
+        Map<String, FileMetadata> itemsMap = mapToId(updateResponseMap.get(response));
+        for (Item value : missing) {
+            if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
+                elementListCreate.add(itemsMap.get(value.getExternalId()));
+                itemsMap.remove(value.getExternalId());
+            } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
+                elementListCreate.add(itemsMap.get(String.valueOf(value.getId())));
+                itemsMap.remove(String.valueOf(value.getId()));
+            }
+        }
+        elementListUpdate.addAll(itemsMap.values()); // Add remaining items to be re-updated
+    }
+
     /**
      * Uploads a set of file headers and binaries to Cognite Data Fusion.
      *
@@ -532,8 +536,7 @@ public abstract class Files extends ApiBase {
                 // Must unwrap the completion exception
                 Throwable cause = e.getCause();
 
-                if (RETRYABLE_EXCEPTIONS_BINARY_UPLOAD.stream()
-                        .anyMatch(retryable -> retryable.isInstance(cause))) {
+                if (RETRYABLE_EXCEPTIONS_BINARY_UPLOAD.stream().anyMatch(retryable -> retryable.isInstance(cause))) {
                     // The API is most likely saturated. Retry the uploads one file at a time.
                     LOG.warn(batchLoggingPrefix + "Error when uploading the batch of file binaries. Will retry each file individually.");
                     for (FileContainer file : uploadBatch) {
@@ -786,8 +789,8 @@ public abstract class Files extends ApiBase {
                     }
                     LOG.debug(loggingPrefix + "Removing duplicates and missing items and retrying the request");
                     List<Item> duplicates = ItemParser.parseItems(responseBatch.get(0).getDuplicateItems());
-                    List<Item> missing = new ArrayList(); // Must define this as an explicit List for it to be mutable
-                    missing.addAll(ItemParser.parseItems(responseBatch.get(0).getMissingItems()));
+                    // Must define this as an explicit List for it to be mutable
+                    List<Item> missing = new ArrayList(ItemParser.parseItems(responseBatch.get(0).getMissingItems()));
                     LOG.debug(loggingPrefix + "No of duplicates reported: {}", duplicates.size());
                     LOG.debug(loggingPrefix + "No of missing items reported: {}", missing.size());
 
@@ -987,32 +990,23 @@ public abstract class Files extends ApiBase {
         return responseMap;
     }
 
-    /**
-     * Update file metadata items.
-     *
-     * Submits a (large) batch of items by splitting it up into multiple, parallel create / insert requests.
-     * The response from each request is returned along with the items used as input.
-     *
-     * @param fileMetadataList the objects to create/insert.
-     * @param updateWriter the ItemWriter to use for sending update requests
-     * @return a {@link Map} with the responses and request inputs.
-     * @throws Exception
-     */
-    private Map<ResponseItems<String>, List<FileMetadata>> splitAndUpdateFileMetadata(List<FileMetadata> fileMetadataList,
-                                                                                ConnectorServiceV1.ItemWriter updateWriter) throws Exception {
+    private Map<ResponseItems<String>, List<FileMetadata>> splitAndAct(
+            List<FileMetadata> fileMetadataList,
+            ConnectorServiceV1.ItemWriter updateWriter,
+            FileAction action
+    ) throws Exception {
+
         Map<CompletableFuture<ResponseItems<String>>, List<FileMetadata>> responseMap = new HashMap<>();
         List<List<FileMetadata>> batches = Partition.ofSize(fileMetadataList, MAX_WRITE_REQUEST_BATCH_SIZE);
 
         // Submit all batches
         for (List<FileMetadata> fileBatch : batches) {
-            responseMap.put(updateFileMetadata(fileBatch, updateWriter), fileBatch);
+            responseMap.put(action.apply(fileBatch, updateWriter), fileBatch);
         }
 
         // Wait for all requests futures to complete
-        List<CompletableFuture<ResponseItems<String>>> futureList = new ArrayList<>();
-        responseMap.keySet().forEach(future -> futureList.add(future));
         CompletableFuture<Void> allFutures =
-                CompletableFuture.allOf(futureList.toArray(new CompletableFuture[futureList.size()]));
+                CompletableFuture.allOf(responseMap.keySet().toArray(new CompletableFuture[0]));
         allFutures.join(); // Wait for all futures to complete
 
         // Collect the responses from the futures
@@ -1025,40 +1019,37 @@ public abstract class Files extends ApiBase {
     }
 
     /**
+     * Update file metadata items.
+     *
+     * Submits a (large) batch of items by splitting it up into multiple, parallel create / insert requests.
+     * The response from each request is returned along with the items used as input.
+     *
+     * @param fileMetadataList the objects to create/insert.
+     * @param updateWriter     the ItemWriter to use for sending update requests
+     * @return a {@link Map} with the responses and request inputs.
+     * @throws Exception
+     */
+    private Map<ResponseItems<String>, List<FileMetadata>> splitAndUpdateFileMetadata(
+            List<FileMetadata> fileMetadataList,
+            ConnectorServiceV1.ItemWriter updateWriter) throws Exception {
+        return splitAndAct(fileMetadataList, updateWriter, this::updateFileMetadata);
+    }
+
+    /**
      * Adds asset ids to existing file metadata objects.
      *
      * Submits a (large) batch of items by splitting it up into multiple, parallel create / insert requests.
      * The response from each request is returned along with the items used as input.
      *
      * @param fileMetadataList the objects to create/insert.
-     * @param updateWriter the ItemWriter to use for sending update requests
+     * @param updateWriter     the ItemWriter to use for sending update requests
      * @return a {@link Map} with the responses and request inputs.
      * @throws Exception
      */
-    private Map<ResponseItems<String>, List<FileMetadata>> splitAndAddAssets(List<FileMetadata> fileMetadataList,
-                                                                                      ConnectorServiceV1.ItemWriter updateWriter) throws Exception {
-        Map<CompletableFuture<ResponseItems<String>>, List<FileMetadata>> responseMap = new HashMap<>();
-        List<List<FileMetadata>> batches = Partition.ofSize(fileMetadataList, MAX_WRITE_REQUEST_BATCH_SIZE);
-
-        // Submit all batches
-        for (List<FileMetadata> fileBatch : batches) {
-            responseMap.put(addFileAssets(fileBatch, updateWriter), fileBatch);
-        }
-
-        // Wait for all requests futures to complete
-        List<CompletableFuture<ResponseItems<String>>> futureList = new ArrayList<>();
-        responseMap.keySet().forEach(future -> futureList.add(future));
-        CompletableFuture<Void> allFutures =
-                CompletableFuture.allOf(futureList.toArray(new CompletableFuture[futureList.size()]));
-        allFutures.join(); // Wait for all futures to complete
-
-        // Collect the responses from the futures
-        Map<ResponseItems<String>, List<FileMetadata>> resultsMap = new HashMap<>(responseMap.size());
-        for (Map.Entry<CompletableFuture<ResponseItems<String>>, List<FileMetadata>> entry : responseMap.entrySet()) {
-            resultsMap.put(entry.getKey().join(), entry.getValue());
-        }
-
-        return resultsMap;
+    private Map<ResponseItems<String>, List<FileMetadata>> splitAndAddAssets(
+            List<FileMetadata> fileMetadataList,
+            ConnectorServiceV1.ItemWriter updateWriter) throws Exception {
+        return splitAndAct(fileMetadataList, updateWriter, this::addFileAssets);
     }
 
     /**
@@ -1072,29 +1063,10 @@ public abstract class Files extends ApiBase {
      * @return a {@link Map} with the responses and request inputs.
      * @throws Exception
      */
-    private Map<ResponseItems<String>, FileMetadata> splitAndCreateFileMetadata(List<FileMetadata> fileMetadataList,
-                                                                               ConnectorServiceV1.ItemWriter createWriter) throws Exception {
-        Map<CompletableFuture<ResponseItems<String>>, FileMetadata> responseMap = new HashMap<>();
-
-        // Submit all batches
-        for (FileMetadata file : fileMetadataList) {
-            responseMap.put(createFileMetadata(file, createWriter), file);
-        }
-
-        // Wait for all requests futures to complete
-        List<CompletableFuture<ResponseItems<String>>> futureList = new ArrayList<>();
-        responseMap.keySet().forEach(future -> futureList.add(future));
-        CompletableFuture<Void> allFutures =
-                CompletableFuture.allOf(futureList.toArray(new CompletableFuture[futureList.size()]));
-        allFutures.join(); // Wait for all futures to complete
-
-        // Collect the responses from the futures
-        Map<ResponseItems<String>, FileMetadata> resultsMap = new HashMap<>(responseMap.size());
-        for (Map.Entry<CompletableFuture<ResponseItems<String>>, FileMetadata> entry : responseMap.entrySet()) {
-            resultsMap.put(entry.getKey().join(), entry.getValue());
-        }
-
-        return resultsMap;
+    private Map<ResponseItems<String>, List<FileMetadata>> splitAndCreateFileMetadata(
+            List<FileMetadata> fileMetadataList,
+            ConnectorServiceV1.ItemWriter createWriter) throws Exception {
+        return splitAndAct(fileMetadataList, createWriter, this::createFileMetadata);
     }
 
     /**
@@ -1105,22 +1077,32 @@ public abstract class Files extends ApiBase {
      * split the input into multiple batches. If you have a large batch of {@link FileMetadata} that
      * you would like to split across multiple requests, use the {@code splitAndCreateFileMetadata} method.
      *
-     * @param fileMetadata
+     * @param filesBatch
      * @param fileWriter
      * @return
      * @throws Exception
      */
-    private CompletableFuture<ResponseItems<String>> createFileMetadata(FileMetadata fileMetadata,
-                                                                      ConnectorServiceV1.ItemWriter fileWriter) throws Exception {
+    private CompletableFuture<ResponseItems<String>> createFileMetadata(Collection<FileMetadata> filesBatch,
+                                                                        ConnectorServiceV1.ItemWriter fileWriter) throws Exception {
         String loggingPrefix = "createFileMetadata() - ";
         LOG.debug(loggingPrefix + "Received file metadata item / header to create.");
 
+        ImmutableList.Builder<Map<String, Object>> insertItemsBuilder = ImmutableList.builder();
+        for (FileMetadata fileMetadata : filesBatch) {
+            // build request object
+            insertItemsBuilder.add(toRequestInsertItem(fileMetadata));
+        }
         // build request object
         Request postSeqBody = addAuthInfo(Request.create()
-                .withRequestParameters(toRequestInsertItem(fileMetadata)));
+                .withItems(insertItemsBuilder.build()));
 
         // post write request
         return fileWriter.writeItemsAsync(postSeqBody);
+    }
+
+    @FunctionalInterface
+    public interface FileAction {
+        CompletableFuture<ResponseItems<String>> apply(Collection<FileMetadata> c, ConnectorServiceV1.ItemWriter w) throws Exception;
     }
 
     /**
@@ -1196,17 +1178,9 @@ public abstract class Files extends ApiBase {
      * @return
      */
     private Map<String, FileMetadata> mapToId(List<FileMetadata> fileMetadataList) {
-        Map<String, FileMetadata> idMap = new HashMap<>();
-        for (FileMetadata fileMetadata : fileMetadataList) {
-            if (fileMetadata.hasExternalId()) {
-                idMap.put(fileMetadata.getExternalId(), fileMetadata);
-            } else if (fileMetadata.hasId()) {
-                idMap.put(String.valueOf(fileMetadata.getId()), fileMetadata);
-            } else {
-                idMap.put("", fileMetadata);
-            }
-        }
-        return idMap;
+        return fileMetadataList.stream()
+                .map(fileMetadata -> Tuple.of(getFileId(fileMetadata).orElse(""), fileMetadata))
+                .collect(Collectors.toMap(Tuple::x, Tuple::y));
     }
 
     /*
