@@ -19,6 +19,12 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [1.7.1] 2021-11-23
+
+### Fixed
+
+- Request retries did not work properly in 1.7.0.
+
 ## [1.7.0] 2021-11-22
 
 ### Fixed
