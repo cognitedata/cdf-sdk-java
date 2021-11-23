@@ -326,7 +326,7 @@ public abstract class FileBinaryRequestExecutor {
                 catchedExceptions.add(e);
 
                 // if we get a transient error, retry the call
-                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(e.getClass()))
+                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(e))
                         || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     LOG.warn(loggingPrefix + "Transient error when downloading file ("
                             + "response code: " + responseCode
@@ -494,7 +494,7 @@ public abstract class FileBinaryRequestExecutor {
                 catchedExceptions.add(e);
 
                 // if we get a transient error, retry the call
-                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(e.getClass()))
+                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(e))
                         || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     apiRetryCounter++;
                     LOG.warn(loggingPrefix + "Transient error when reading from Fusion (request id: " + requestId
