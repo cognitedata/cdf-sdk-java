@@ -533,7 +533,7 @@ public abstract class Files extends ApiBase {
                 Throwable cause = e.getCause();
 
                 if (RETRYABLE_EXCEPTIONS_BINARY_UPLOAD.stream()
-                        .anyMatch(retryable -> retryable.isInstance(cause.getClass()))) {
+                        .anyMatch(retryable -> retryable.isInstance(cause))) {
                     // The API is most likely saturated. Retry the uploads one file at a time.
                     LOG.warn(batchLoggingPrefix + "Error when uploading the batch of file binaries. Will retry each file individually.");
                     for (FileContainer file : uploadBatch) {
