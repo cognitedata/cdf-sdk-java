@@ -29,6 +29,7 @@ import com.google.auto.value.AutoValue;
 import com.google.cloud.Tuple;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import okhttp3.internal.http2.StreamResetException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -193,56 +194,18 @@ public abstract class Files extends ApiBase {
         ConnectorServiceV1.ItemWriter updateWriter = getClient().getConnectorService().updateFileHeaders();
         ConnectorServiceV1.ItemWriter createWriter = getClient().getConnectorService().writeFileHeaders();
 
-        // naive de-duplication based on ids
-        Map<Long, FileMetadata> internalIdUpdateMap = new HashMap<>(1000);
-        Map<String, FileMetadata> externalIdUpdateMap = new HashMap<>(1000);
-        Map<Long, FileMetadata> internalIdAssetsMap = new HashMap<>(50);
-        Map<String, FileMetadata> externalIdAssetsMap = new HashMap<>(50);
-        for (FileMetadata value : fileMetadataList) {
-            if (value.hasExternalId()) {
-                externalIdUpdateMap.put(value.getExternalId(), value);
-            } else if (value.hasId()) {
-                internalIdUpdateMap.put(value.getId(), value);
-            } else {
-                throw new Exception("File metadata item does not contain id nor externalId: " + value.toString());
-            }
-        }
-
-        // Check for files with >1k assets. Set the extra assets aside, so we can add them in separate updates.
-        for (Long key : internalIdUpdateMap.keySet()) {
-            FileMetadata fileMetadata = internalIdUpdateMap.get(key);
-            if (fileMetadata.getAssetIdsCount() > 1000) {
-                internalIdUpdateMap.put(key, fileMetadata.toBuilder()
-                        .clearAssetIds()
-                        .addAllAssetIds(fileMetadata.getAssetIdsList().subList(0,1000))
-                        .build());
-                internalIdAssetsMap.put(key, FileMetadata.newBuilder()
-                        .setId(fileMetadata.getId())
-                        .addAllAssetIds(fileMetadata.getAssetIdsList().subList(1000, fileMetadata.getAssetIdsList().size()))
-                        .build());
-            }
-        }
-        for (String key : externalIdUpdateMap.keySet()) {
-            FileMetadata fileMetadata = externalIdUpdateMap.get(key);
-            if (fileMetadata.getAssetIdsCount() > 1000) {
-                externalIdUpdateMap.put(key, fileMetadata.toBuilder()
-                        .clearAssetIds()
-                        .addAllAssetIds(fileMetadata.getAssetIdsList().subList(0,1000))
-                        .build());
-                externalIdAssetsMap.put(key, FileMetadata.newBuilder()
-                        .setExternalId(fileMetadata.getExternalId())
-                        .addAllAssetIds(fileMetadata.getAssetIdsList().subList(1000, fileMetadata.getAssetIdsList().size()))
-                        .build());
-            }
-        }
+        // mapToId eliminates duplicates
+        final Collection<FileMetadata> uniqueFilesMetadata = mapToId(fileMetadataList).values();
 
         // Combine the input into list
-        List<FileMetadata> elementListUpdate = new ArrayList<>();
+        List<FileMetadata> elementListUpdate = uniqueFilesMetadata.stream()
+                .map(fileHeader -> fileHeader.toBuilder()
+                        .clearAssetIds()
+                        .addAllAssetIds(fileHeader.getAssetIdsList().subList(0, 1000))
+                        .build())
+                .collect(Collectors.toList());
         List<FileMetadata> elementListCreate = new ArrayList<>();
         List<String> elementListCompleted = new ArrayList<>();
-
-        elementListUpdate.addAll(externalIdUpdateMap.values());
-        elementListUpdate.addAll(internalIdUpdateMap.values());
 
         /*
         The upsert loop. If there are items left to insert or update:
@@ -342,63 +305,22 @@ public abstract class Files extends ApiBase {
         file create/update (all the code above) and subsequent update requests which add the remaining
         assetIds (code below).
          */
-        Map<Long, FileMetadata> internalIdTempMap = new HashMap<>();
-        Map<String, FileMetadata> externalIdTempMap = new HashMap<>();
-        List<FileMetadata> elementListAssetUpdate = new ArrayList<>();
-        while (internalIdAssetsMap.size() > 0 || externalIdAssetsMap.size() > 0) {
+        final List<FileMetadata> elementListAssetUpdate = uniqueFilesMetadata.stream()
+                .parallel()
+                .filter(fileMetadata -> fileMetadata.getAssetIdsList().size() > 1000)
+                .flatMap(fileMetadata -> Lists.partition(fileMetadata.getAssetIdsList(), 1000).stream()
+                        .skip(1) // first 1000 was written already
+                        .map(collection -> fileMetadata.toBuilder()
+                                .clearAssetIds()
+                                .addAllAssetIds(collection)
+                                .build())
+                )
+                .collect(Collectors.toList());
+
+        while (elementListAssetUpdate.size() > 0) {
             LOG.info(loggingPrefix + "Some files have very high assetId cardinality (+1k). Adding assetId to "
-                    + (internalIdAssetsMap.size() + externalIdAssetsMap.size())
+                    + elementListAssetUpdate.size()
                     + " file(s).");
-            internalIdUpdateMap.clear();
-            externalIdUpdateMap.clear();
-            internalIdTempMap.clear();
-            externalIdTempMap.clear();
-
-            // Check for files with >1k remaining assets
-            for (Long key : internalIdAssetsMap.keySet()) {
-                FileMetadata fileMetadata = internalIdAssetsMap.get(key);
-                if (fileMetadata.getAssetIdsCount() > 1000) {
-                    internalIdUpdateMap.put(key, fileMetadata.toBuilder()
-                            .clearAssetIds()
-                            .addAllAssetIds(fileMetadata.getAssetIdsList().subList(0,1000))
-                            .build());
-                    internalIdTempMap.put(key, FileMetadata.newBuilder()
-                            .setId(fileMetadata.getId())
-                            .addAllAssetIds(fileMetadata.getAssetIdsList().subList(1000, fileMetadata.getAssetIdsList().size()))
-                            .build());
-                } else {
-                    // The entire assetId list can be pushed in a single update
-                    internalIdUpdateMap.put(key, fileMetadata);
-                }
-            }
-            internalIdAssetsMap.clear();
-            internalIdAssetsMap.putAll(internalIdTempMap);
-
-            for (String key : externalIdAssetsMap.keySet()) {
-                FileMetadata fileMetadata = externalIdAssetsMap.get(key);
-                if (fileMetadata.getAssetIdsCount() > 1000) {
-                    externalIdUpdateMap.put(key, fileMetadata.toBuilder()
-                            .clearAssetIds()
-                            .addAllAssetIds(fileMetadata.getAssetIdsList().subList(0,1000))
-                            .build());
-                    externalIdTempMap.put(key, FileMetadata.newBuilder()
-                            .setExternalId(fileMetadata.getExternalId())
-                            .addAllAssetIds(fileMetadata.getAssetIdsList().subList(1000, fileMetadata.getAssetIdsList().size()))
-                            .build());
-                } else {
-                    // The entire assetId list can be pushed in a single update
-                    externalIdUpdateMap.put(key, fileMetadata);
-                }
-            }
-            externalIdAssetsMap.clear();
-            externalIdAssetsMap.putAll(externalIdTempMap);
-
-            // prepare the update and send request
-            LOG.info(loggingPrefix + "Building update request to add assetIds for {} files.",
-                    internalIdUpdateMap.size() + externalIdUpdateMap.size());
-            elementListAssetUpdate.clear();
-            elementListAssetUpdate.addAll(externalIdUpdateMap.values());
-            elementListAssetUpdate.addAll(internalIdUpdateMap.values());
 
             // should not happen, but need to check
             if (elementListAssetUpdate.isEmpty()) {
@@ -436,8 +358,6 @@ public abstract class Files extends ApiBase {
                     elementListCreate.size() + elementListUpdate.size(),
                     elementListCompleted.size()));
         }
-
-
 
         return elementListCompleted.stream()
                 .map(this::parseFileMetadata)
@@ -1182,7 +1102,7 @@ public abstract class Files extends ApiBase {
     private Map<String, FileMetadata> mapToId(List<FileMetadata> fileMetadataList) {
         return fileMetadataList.stream()
                 .map(fileMetadata -> Tuple.of(getFileId(fileMetadata).orElse(""), fileMetadata))
-                .collect(Collectors.toMap(Tuple::x, Tuple::y));
+                .collect(Collectors.toMap(Tuple::x, Tuple::y, (o1, o2) -> o1)); // remove duplicates by picking random
     }
 
     /*

@@ -1049,7 +1049,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
 
         FilesUploadRequestProvider requestProvider = FilesUploadRequestProvider.builder()
                 .setEndpoint("files")
-                .setRequest(Request.create())
+                .setRequest(Request.create().withRootParameter("overwrite", true))
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
                 .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
