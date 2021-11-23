@@ -494,9 +494,6 @@ public abstract class FileBinaryRequestExecutor {
                         .withApiRetryCounter(apiRetryCounter);
             } catch (Exception e) {
                 catchedExceptions.add(e);
-                // depends on the execution path either of two may happen:
-                // 1. async call failed and cause is packed with CompletionException (will be handled outside)
-                // 2. sync call (small file) throws a direct exception should be handled here.
                 // if we get a transient error, retry the call
                 if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(e))
                         || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
