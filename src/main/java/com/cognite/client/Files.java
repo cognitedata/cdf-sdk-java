@@ -1066,7 +1066,13 @@ public abstract class Files extends ApiBase {
     private Map<ResponseItems<String>, List<FileMetadata>> splitAndCreateFileMetadata(
             List<FileMetadata> fileMetadataList,
             ConnectorServiceV1.ItemWriter createWriter) throws Exception {
-        return splitAndAct(fileMetadataList, createWriter, this::createFileMetadata);
+
+        // files API doesn't have batching support and accept single item at a time
+        Map<ResponseItems<String>, List<FileMetadata>> output = new HashMap<>();
+        for(FileMetadata fileMetadata: fileMetadataList) {
+            output.putAll(splitAndAct(ImmutableList.of(fileMetadata), createWriter, this::createFileMetadata));
+        }
+        return output;
     }
 
     /**
@@ -1086,17 +1092,13 @@ public abstract class Files extends ApiBase {
                                                                         ConnectorServiceV1.ItemWriter fileWriter) throws Exception {
         String loggingPrefix = "createFileMetadata() - ";
         LOG.debug(loggingPrefix + "Received file metadata item / header to create.");
-
-        ImmutableList.Builder<Map<String, Object>> insertItemsBuilder = ImmutableList.builder();
-        for (FileMetadata fileMetadata : filesBatch) {
-            // build request object
-            insertItemsBuilder.add(toRequestInsertItem(fileMetadata));
-        }
+        // files endpoint doesn't support batching
+        Preconditions.checkArgument(filesBatch.size() == 1);
         // build request object
+        FileMetadata fileMetadata = filesBatch.stream().findFirst().orElseThrow();
         Request postSeqBody = addAuthInfo(Request.create()
-                .withItems(insertItemsBuilder.build()));
+                .withRequestParameters(toRequestInsertItem(fileMetadata)));
 
-        // post write request
         return fileWriter.writeItemsAsync(postSeqBody);
     }
 
