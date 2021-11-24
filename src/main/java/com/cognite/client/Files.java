@@ -317,17 +317,10 @@ public abstract class Files extends ApiBase {
                 )
                 .collect(Collectors.toList());
 
-        while (elementListAssetUpdate.size() > 0) {
+        if (elementListAssetUpdate.size() > 0) {
             LOG.info(loggingPrefix + "Some files have very high assetId cardinality (+1k). Adding assetId to "
                     + elementListAssetUpdate.size()
                     + " file(s).");
-
-            // should not happen, but need to check
-            if (elementListAssetUpdate.isEmpty()) {
-                String message = loggingPrefix + "Internal error. Not able to send assetId update. The payload is empty.";
-                LOG.error(message);
-                throw new Exception(message);
-            }
 
             Map<ResponseItems<String>, List<FileMetadata>> responseItemsAssets =
                     splitAndAddAssets(elementListAssetUpdate, updateWriter);
