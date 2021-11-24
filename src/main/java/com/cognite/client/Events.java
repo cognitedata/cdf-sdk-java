@@ -23,7 +23,7 @@ import com.cognite.client.config.ResourceType;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.EventParser;
 import com.cognite.client.config.UpsertMode;
-import com.cognite.client.stream.Source;
+import com.cognite.client.stream.ListSource;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * It provides methods for reading and writing {@link Event}.
  */
 @AutoValue
-public abstract class Events extends ApiBase implements Source<Event> {
+public abstract class Events extends ApiBase implements ListSource<Event> {
 
     private static Builder builder() {
         return new AutoValue_Events.Builder();

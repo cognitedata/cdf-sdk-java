@@ -214,7 +214,7 @@ class RawTest {
                     Duration.between(startInstant, Instant.now()));
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-            LOG.info(loggingPrefix + "Start creating raw rows.");
+            LOG.info(loggingPrefix + "Start creating publish raw rows async job.");
             AtomicInteger publishRowsCount = new AtomicInteger(0);
             CompletableFuture.runAsync(() -> {
                for (int i = 0; i < 6; i++) {
@@ -230,7 +230,7 @@ class RawTest {
                }
             });
 
-            LOG.info(loggingPrefix + "Finished creating raw rows. Duration: {}",
+            LOG.info(loggingPrefix + "Finished creating publish raw rows async job. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 

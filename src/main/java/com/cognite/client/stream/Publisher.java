@@ -1,7 +1,6 @@
 package com.cognite.client.stream;
 
 import com.cognite.client.Request;
-import com.cognite.client.dto.RawRow;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -31,15 +30,15 @@ public abstract class Publisher<T> extends AbstractPublisher {
                 ;
     }
 
-    public static <T> Publisher<T> of(Source<T> source) {
+    public static <T> Publisher<T> of(ListSource<T> listSource) {
         return Publisher.<T>builder()
-                .setSource(source)
+                .setSource(listSource)
                 .build();
     }
 
     abstract Builder<T> toBuilder();
 
-    abstract Source<T> getSource();
+    abstract ListSource<T> getSource();
     abstract Request getRequest();
     @Nullable
     abstract Consumer<List<T>> getConsumer();
@@ -128,6 +127,11 @@ public abstract class Publisher<T> extends AbstractPublisher {
      * @return The {@link Publisher} with the consumer configured.
      */
     public Publisher<T> withRequest(Request request) {
+        Preconditions.checkArgument(0 == request.getRequestParameters().keySet()
+                .stream()
+                .filter(key -> !key.equals("filter"))
+                .count(),
+                "The request can only contain a filter node.");
         return toBuilder().setRequest(request).build();
     }
 
@@ -200,7 +204,7 @@ public abstract class Publisher<T> extends AbstractPublisher {
 
     @AutoValue.Builder
     abstract static class Builder<T> extends AbstractPublisher.Builder<Builder<T>> {
-        abstract Builder<T> setSource(Source<T> value);
+        abstract Builder<T> setSource(ListSource<T> value);
         abstract Builder<T> setConsumer(Consumer<List<T>> value);
         abstract Builder<T> setRequest(Request value);
 

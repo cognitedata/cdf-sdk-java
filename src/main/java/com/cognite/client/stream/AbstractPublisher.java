@@ -21,7 +21,7 @@ public abstract class AbstractPublisher {
     protected static final Duration MAX_POLLING_INTERVAL = Duration.ofSeconds(60L);
 
     protected static final Duration MIN_POLLING_OFFSET = Duration.ofMillis(500L);
-    protected static final Duration DEFAULT_POLLING_OFFSET = Duration.ofSeconds(2L);
+    protected static final Duration DEFAULT_POLLING_OFFSET = Duration.ofSeconds(15L);
     protected static final Duration MAX_POLLING_OFFSET = Duration.ofDays(10L);
 
     protected static final Instant MIN_START_TIME = Instant.EPOCH;

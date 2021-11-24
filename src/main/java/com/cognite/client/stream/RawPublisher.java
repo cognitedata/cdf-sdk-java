@@ -6,8 +6,6 @@ import com.cognite.client.dto.RawRow;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.time.Duration;
@@ -15,7 +13,6 @@ import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /**
@@ -27,25 +24,10 @@ import java.util.function.Consumer;
  *
  */
 @AutoValue
-public abstract class RawPublisher {
-    protected static final Logger LOG = LoggerFactory.getLogger(RawPublisher.class);
+public abstract class RawPublisher extends AbstractPublisher {
 
     // Defaults and boundary values
-    private static final Duration MIN_POLLING_INTERVAL = Duration.ofMillis(500L);
-    private static final Duration DEFAULT_POLLING_INTERVAL = Duration.ofSeconds(5L);
-    private static final Duration MAX_POLLING_INTERVAL = Duration.ofSeconds(60L);
-
-    private static final Duration MIN_POLLING_OFFSET = Duration.ofMillis(500L);
     private static final Duration DEFAULT_POLLING_OFFSET = Duration.ofSeconds(2L);
-    private static final Duration MAX_POLLING_OFFSET = Duration.ofDays(10L);
-
-    private static final Instant MIN_START_TIME = Instant.EPOCH;
-    // Have to subtract to guard against overflow
-    private static final Instant MAX_END_TIME = Instant.MAX.minus(MAX_POLLING_OFFSET).minusSeconds(1);
-
-    // Internal state
-    private AtomicBoolean abortStream = new AtomicBoolean(false);
-    private State state = State.READY;
 
     private static Builder builder() {
         return new AutoValue_RawPublisher.Builder()
@@ -81,10 +63,6 @@ public abstract class RawPublisher {
     abstract RawRows getRawRows();
     abstract String getRawDbName();
     abstract String getRawTableName();
-    abstract Duration getPollingInterval();
-    abstract Duration getPollingOffset();
-    abstract Instant getStartTime();
-    abstract Instant getEndTime();
     @Nullable
     abstract Consumer<List<RawRow>> getConsumer();
 
@@ -183,22 +161,6 @@ public abstract class RawPublisher {
     }
 
     /**
-     * Aborts the current stream operation. It may take a few seconds for this operation to complete.
-     */
-    public void abort() {
-        abortStream.set(true);
-        while (State.RUNNING == state) {
-            // wait for the stream to close
-            try {
-                Thread.sleep(1000);
-            } catch (Exception e) {
-                break;
-            }
-        }
-        LOG.info("Publisher aborted.");
-    }
-
-    /**
      * Start the main polling loop for reading rows from a raw table.
      *
      * @return {@code true} when the polling loop completes (at the specified end time). {@code false} if the
@@ -264,22 +226,12 @@ public abstract class RawPublisher {
     }
 
     @AutoValue.Builder
-    abstract static class Builder {
+    abstract static class Builder extends AbstractPublisher.Builder<Builder> {
         abstract Builder setRawRows(RawRows value);
-        abstract Builder setPollingInterval(Duration value);
-        abstract Builder setPollingOffset(Duration value);
         abstract Builder setRawDbName(String value);
         abstract Builder setRawTableName(String value);
-        abstract Builder setStartTime(Instant value);
-        abstract Builder setEndTime(Instant value);
         abstract Builder setConsumer(Consumer<List<RawRow>> value);
 
         abstract RawPublisher build();
-    }
-
-    enum State {
-        READY,
-        RUNNING,
-        STOPPED
     }
 }

@@ -11,7 +11,7 @@ import java.util.List;
  *
  * @param <T> The type of the resulting object read from CDF.
  */
-public interface Source<T> {
+public interface ListSource<T> {
 
     /**
      * Returns all {@code T} objects that matches the filters set in the {@link Request}.
