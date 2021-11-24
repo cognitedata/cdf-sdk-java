@@ -695,7 +695,8 @@ public abstract class Files extends ApiBase {
                 } else if (responseBatch.size() > 0 && !responseBatch.get(0).isSuccessful()) {
                     // Batch failed. Most likely because of missing or duplicated items
                     exceptionMessage = responseBatch.get(0).getResponseBodyAsString();
-                    LOG.debug(loggingPrefix + "Download items request failed: {}", responseBatch.get(0).getResponseBodyAsString());
+                    LOG.warn(loggingPrefix + "Download items request failed. Will try to correct errors and retry: {}",
+                            responseBatch.get(0).getResponseBodyAsString());
                     if (i == MAX_RETRIES - 1) {
                         // Add the error message to std logging
                         LOG.error(loggingPrefix + "Download items request failed. {}", responseBatch.get(0).getResponseBodyAsString());
