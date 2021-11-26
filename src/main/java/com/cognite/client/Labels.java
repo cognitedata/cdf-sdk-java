@@ -17,9 +17,8 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
-import com.cognite.client.dto.Event;
-import com.cognite.client.dto.Label;
 import com.cognite.client.dto.Item;
+import com.cognite.client.dto.Label;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.LabelParser;
 import com.google.auto.value.AutoValue;
@@ -128,7 +127,11 @@ public abstract class Labels extends ApiBase {
                 .withItemMappingFunction(this::toItem)
                 .withIdFunction(this::getLabelId);
 
-        return upsertItems.upsertViaCreateAndDelete(labels).stream()
+        return upsertItems
+                .withRetrieveFunction(this::retrieve)
+                .withItemMappingFunction(this::toItem)  // used by upsertViaGetCreateAndUpdate
+                .withEqualFunction((Label a, Label b) -> a.getExternalId().equals(b.getExternalId()))
+                .upsertViaGetCreateAndUpdate(labels).stream()
                 .map(this::parseLabels)
                 .collect(Collectors.toList());
     }
@@ -194,6 +197,23 @@ public abstract class Labels extends ApiBase {
             return Optional.of(item.getExternalId());
         } catch (Exception e) {
             return Optional.<String>empty();
+        }
+    }
+
+
+    /**
+     * Retrieves labels by id.
+     *
+     * @param items The item(s) {@code externalId / id} to retrieve.
+     * @return The retrieved labels.
+     */
+    public List<Label> retrieve(List<Item> items) {
+        try {
+            return retrieveJson(ResourceType.LABEL, items).stream()
+                    .map(this::parseLabels)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         }
     }
 
