@@ -22,14 +22,13 @@ import com.cognite.client.dto.Label;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.LabelParser;
 import com.google.auto.value.AutoValue;
+import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * This class represents the Cognite labels api endpoint.
@@ -204,17 +203,27 @@ public abstract class Labels extends ApiBase {
     /**
      * Retrieves labels by id.
      *
-     * @param items The item(s) {@code externalId / id} to retrieve.
+     * Unfortunately reading by ID is not supported by APIs, so we have to rely on /list endpoint
+     * @param items The item(s) {@code externalId} to retrieve.
      * @return The retrieved labels.
      */
     public List<Label> retrieve(List<Item> items) {
+        // Labels do NOT support internal IDs from API
+        Preconditions.checkArgument(items.stream().allMatch(Item::hasExternalId));
+
+        List<Label> outcome = new ArrayList<>();
+        Set<String> externalIds = items.stream().map(Item::getExternalId).collect(Collectors.toSet());
         try {
-            return retrieveJson(ResourceType.LABEL, items).stream()
-                    .map(this::parseLabels)
-                    .collect(Collectors.toList());
+            list().forEachRemaining((List<Label> list) -> {
+                outcome.addAll(list.stream()
+                        .filter(item -> externalIds.contains(item.getExternalId()))
+                        .collect(Collectors.toList()));
+            });
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+            LOG.warn("Failed to retrieve labels from Cognite Data Fusion", e);
+            throw new IllegalStateException("Failed to retrieve labels from Cognite Data Fusion", e);
         }
+        return outcome;
     }
 
     @AutoValue.Builder
