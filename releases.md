@@ -24,6 +24,7 @@ Changes are grouped as follows:
 ### Added
 
 - Experimental streaming support for `events` and `assets`.
+- Added `login status` by api-key
 
 ## [1.7.1] 2021-11-23
 

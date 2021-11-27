@@ -337,6 +337,7 @@ public abstract class CogniteClient implements Serializable {
         return Assets.of(this);
     }
 
+
     /**
      * Returns {@link Timeseries} representing the Cognite timeseries api endpoint.
      *
@@ -443,6 +444,15 @@ public abstract class CogniteClient implements Serializable {
      */
     public Experimental experimental() {
         return Experimental.of(this);
+    }
+
+    /**
+     * Returns {@link LoginStatus} representing login status api endpoints.
+     *
+     * @return The LoginStatus api endpoints.
+     */
+    public Login login() throws Exception {
+        return Login.of(this);
     }
 
     /**
