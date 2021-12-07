@@ -343,4 +343,32 @@ public class DataGenerator {
     private static double customLog(double base, double logNumber) {
         return Math.log(logNumber) / Math.log(base);
     }
+
+//    public static List<ThreeDModel> generate3DModels(int noObjects, long dataSetId) {
+//        List<ThreeDModel> objects = new ArrayList<>();
+//        for (int i = 0; i < noObjects; i++) {
+//            ThreeDModel.Itens.Builder itensBuilder = ThreeDModel.Itens.newBuilder();
+//            itensBuilder.setName("generated-" + RandomStringUtils.randomAlphanumeric(5));
+//            //itensBuilder.setId();
+//            itensBuilder.setDataSetId(dataSetId);
+//            itensBuilder.setCreatedTime(1552566113 + ThreadLocalRandom.current().nextInt(10000));
+//
+//            ThreeDModel.Builder builder = ThreeDModel.newBuilder();
+//            builder.addItens(itensBuilder.build());
+//            objects.add(builder.build());
+//        }
+//        return objects;
+//    }
+
+    public static List<ThreeDModel> generate3DModels(int noObjects, long dataSetId) {
+        List<ThreeDModel> objects = new ArrayList<>();
+        for (int i = 0; i < noObjects; i++) {
+            ThreeDModel.Builder builder = ThreeDModel.newBuilder();
+            builder.setName("generated-" + RandomStringUtils.randomAlphanumeric(5));
+            builder.setDataSetId(dataSetId);
+            builder.setCreatedTime(1552566113 + ThreadLocalRandom.current().nextInt(10000));
+            objects.add(builder.build());
+        }
+        return objects;
+    }
 }

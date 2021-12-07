@@ -721,26 +721,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
     }
 
     /**
-     * Fetch 3d models from Cognite.
-     *
-     * @param queryParameters The parameters for the events query.
-     * @return
-     */
-    public Iterator<CompletableFuture<ResponseItems<String>>> read3dModels(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read 3d models service.");
-
-        GetSimpleListRequestProvider requestProvider = GetSimpleListRequestProvider.builder()
-                .setEndpoint("3d/models")
-                .setRequest(queryParameters)
-                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
-                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
-                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
-                .build();
-
-        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
-    }
-
-    /**
      * Fetch Raw rows from Cognite. This service can handle both single rows and
      * large collection of rows.
      *
@@ -1750,7 +1730,97 @@ public abstract class ConnectorServiceV1 implements Serializable {
                 .withJobStartResponseParser(jobStartResponseParser);
     }
 
-    // TODO 3d models, revisions and nodes
+    /**
+     * Fetch 3d models from Cognite.
+     *
+     * @param queryParameters The parameters for the events query.
+     * @return
+     */
+    public Iterator<CompletableFuture<ResponseItems<String>>> readThreeDModels(Request queryParameters) {
+        LOG.debug(loggingPrefix + "Initiating read 3d models service.");
+
+        GetSimpleListRequestProvider requestProvider = GetSimpleListRequestProvider.builder()
+                .setEndpoint("3d/models")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    /**
+     * Write 3D Models to Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @return
+     */
+    public ItemWriter writeThreeDModels() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("3d/models")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Update 3D Models in Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @return
+     */
+    public ItemWriter updateThreeDModels() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("3d/models/update")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Create a writer for deleting 3D Models.
+     *
+     * @return An {@link ItemWriter} for deleting the models
+     */
+    public ItemWriter deleteThreeDModels() {
+        LOG.debug(loggingPrefix + "Initiating delete 3D Models service.");
+
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("3d/models/delete")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Read 3D Models by id from Cognite.
+     *
+     * @return
+     */
+    public ItemReader<String> readThreeDModelsById() {
+        GetIdRequestProvider requestProvider =
+                GetIdRequestProvider.of("3d/models")
+                        .toBuilder()
+                        .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                        .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                        .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                        .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
 
 
     @AutoValue.Builder

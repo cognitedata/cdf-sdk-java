@@ -421,6 +421,9 @@ abstract class ApiBase {
             case EXTRACTION_PIPELINE_RUN:
                 results = connector.readExtractionPipelineRuns(requestParameters);
                 break;
+            case THREED_MODEL:
+                results = connector.readThreeDModels(requestParameters);
+                break;
             default:
                 throw new Exception("Not a supported resource type: " + resourceType);
         }
