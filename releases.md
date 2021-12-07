@@ -19,6 +19,11 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [1.10.0-SNAPSHOT]
+
+### Added
+
+- Added `3D Models Revisions`
 
 ## [1.9.0] 2022-01-04
 
