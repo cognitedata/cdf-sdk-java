@@ -31,6 +31,7 @@ Changes are grouped as follows:
 
 - Experimental streaming support for `events` and `assets`.
 - Added `login status` by api-key
+- Added `3D Models`
 
 ### Fixed
 
