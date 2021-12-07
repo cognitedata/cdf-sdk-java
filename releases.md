@@ -19,12 +19,14 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+
 ## [1.8.0-SNAPSHOT]
 
 ### Added
 
 - Experimental streaming support for `events` and `assets`.
 - Added `login status` by api-key
+- Added `3D Models`
 
 ## [1.7.1] 2021-11-23
 
