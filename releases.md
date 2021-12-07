@@ -48,6 +48,8 @@ Changes are grouped as follows:
 
 - Upsert of `sequenceMetadata` not respecting the max number of cells/columns per batch.
 
+- Support for 3D Models (2021-12-06)
+
 ## [1.7.1] 2021-11-23
 
 ### Fixed
