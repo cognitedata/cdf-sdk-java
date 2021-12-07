@@ -188,7 +188,7 @@ public class ThreeDModelsTest {
                         .build())
                 .forEach(item -> deleteItemsInput.add(item));
 
-         List<Item> deleteItemsResults = client.threeD().models().delete(deleteItemsInput);
+        List<Item> deleteItemsResults = client.threeD().models().delete(deleteItemsInput);
         LOG.info(loggingPrefix + "Finished deleting 3D Models. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
