@@ -189,7 +189,8 @@ public abstract class Publisher<T> extends AbstractPublisher {
                     endRange,
                     getPollingInterval().toString());
 
-            startRange = endRange + 1; // endRange is inclusive in the request, so we must bump the startRange
+            startRange = endRange + 1; // endRange is inclusive in the request, so we must bump the next startRange
+
             // Sleep for a polling interval
             try {
                 Thread.sleep(getPollingInterval().toMillis());
