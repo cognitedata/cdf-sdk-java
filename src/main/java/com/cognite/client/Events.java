@@ -24,6 +24,7 @@ import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.EventParser;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.stream.ListSource;
+import com.cognite.client.stream.Publisher;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,7 @@ import java.util.stream.Collectors;
 
 /**
  * This class represents the Cognite events api endpoint.
- *
+ * <p>
  * It provides methods for reading and writing {@link Event}.
  */
 @AutoValue
@@ -47,7 +48,7 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
 
     /**
      * Constructs a new {@link Events} object using the provided client configuration.
-     *
+     * <p>
      * This method is intended for internal use--SDK clients should always use {@link CogniteClient}
      * as the entry point to this class.
      *
@@ -71,11 +72,11 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
 
     /**
      * Returns all {@link Event} objects that matches the filters set in the {@link Request}.
-     *
+     * <p>
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
-     *
+     * <p>
      * The events are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
      *
@@ -93,18 +94,30 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      * Returns all {@link Event} objects that matches the filters set in the {@link Request} for the
      * specified partitions. This is method is intended for advanced use cases where you need direct control over
      * the individual partitions. For example, when using the SDK in a distributed computing environment.
-     *
+     * <p>
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
      * @param requestParameters the filters to use for retrieving the assets.
-     * @param partitions the partitions to include.
+     * @param partitions        the partitions to include.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
      */
     public Iterator<List<Event>> list(Request requestParameters, String... partitions) throws Exception {
         return AdapterIterator.of(listJson(ResourceType.EVENT, requestParameters, partitions), this::parseEvent);
+    }
+
+    /**
+     * Returns a {@link Publisher} that can stream {@link Event} from Cognite Data Fusion.
+     *
+     * When an {@link Event} is created or updated, it will be captured by the publisher and emitted to the registered
+     * consumer.
+     *
+     * @return The publisher producing the stream of events. Call {@code start()} to start the stream.
+     */
+    public Publisher<Event> stream() {
+        return Publisher.of(this);
     }
 
     /**
@@ -122,7 +135,7 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
 
     /**
      * Performs an item aggregation request to Cognite Data Fusion.
-     *
+     * <p>
      * The default aggregation is a total item count based on the (optional) filters in the request.
      * Multiple aggregation types are supported. Please refer to the Cognite API specification for more information
      * on the possible settings.
@@ -138,9 +151,9 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
 
     /**
      * Creates or updates a set of {@link Event} objects.
-     *
+     * <p>
      * If it is a new {@link Event} object (based on {@code id / externalId}, then it will be created.
-     *
+     * <p>
      * If an {@link Event} object already exists in Cognite Data Fusion, it will be updated. The update behavior
      * is specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
      *
@@ -169,7 +182,7 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
 
     /**
      * Deletes a set of Events.
-     *
+     * <p>
      * The events to delete are identified via their {@code externalId / id} by submitting a list of
      * {@link Item}.
      *
@@ -194,7 +207,7 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
     private Event parseEvent(String json) {
         try {
             return EventParser.parseEvent(json);
-        } catch (Exception e)  {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -206,7 +219,7 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
     private Map<String, Object> toRequestInsertItem(Event item) {
         try {
             return EventParser.toRequestInsertItem(item);
-        } catch (Exception e)  {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -218,7 +231,7 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
     private Map<String, Object> toRequestUpdateItem(Event item) {
         try {
             return EventParser.toRequestUpdateItem(item);
-        } catch (Exception e)  {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -230,7 +243,7 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
     private Map<String, Object> toRequestReplaceItem(Event item) {
         try {
             return EventParser.toRequestReplaceItem(item);
-        } catch (Exception e)  {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
