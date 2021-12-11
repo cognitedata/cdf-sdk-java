@@ -6,6 +6,7 @@ import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.Asset;
 import com.cognite.client.dto.Item;
+import com.cognite.client.stream.Publisher;
 import com.cognite.client.util.DataGenerator;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
@@ -51,7 +56,7 @@ class AssetsTest {
             LOG.info(loggingPrefix + "Finished upserting assets. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
-            Thread.sleep(20000); // wait for eventual consistency
+            Thread.sleep(25000); // wait for eventual consistency
 
             LOG.info(loggingPrefix + "Start reading assets.");
             List<Asset> listAssetsResults = new ArrayList<>();
@@ -458,6 +463,94 @@ class AssetsTest {
 
             assertEquals(upsertAssetsList.size(), listAssetsResults.size());
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void writeStreamAndDeleteAssets() throws Exception {
+        Instant startInstant = Instant.now();
+
+        String loggingPrefix = "UnitTest - writeStreamAndDeleteAssets() -";
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                        TestConfigProvider.getClientId(),
+                        TestConfigProvider.getClientSecret(),
+                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                .withProject(TestConfigProvider.getProject())
+                .withBaseUrl(TestConfigProvider.getHost())
+                //.withClientConfig(config)
+                ;
+        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        try {
+            LOG.info(loggingPrefix + "Setup the stream subscriber to the asset resource type.");
+            List<Asset> eventList = new CopyOnWriteArrayList<>();
+
+            Publisher<Asset> publisher = client.assets().stream()
+                    .withRequest(Request.create()
+                            .withFilterMetadataParameter(DataGenerator.sourceKey, DataGenerator.sourceValue))
+                    .withStartTime(Instant.now())
+                    .withEndTime(Instant.now().plusSeconds(25))
+                    .withPollingInterval(Duration.ofSeconds(2))
+                    .withPollingOffset(Duration.ofSeconds(15L))
+                    .withConsumer(batch -> {
+                        LOG.info(loggingPrefix + "Received a batch of {} assets.",
+                                batch.size());
+                        //receiveEventCount.addAndGet(batch.size());
+                        eventList.addAll(batch);
+                    });
+
+            Future<Boolean> streamer = publisher.start();
+            LOG.info(loggingPrefix + "Finished setup the stream subscriber. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            LOG.info(loggingPrefix + "Start creating assets as an async job.");
+            AtomicInteger publishItemsCount = new AtomicInteger(0);
+            CompletableFuture.runAsync(() -> {
+                for (int i = 0; i < 6; i++) {
+                    int noItems = 10;
+                    List<Asset> createItemsList = DataGenerator.generateAssets(noItems);
+                    publishItemsCount.addAndGet(noItems);
+                    try {
+                        client.assets().upsert(createItemsList);
+                        Thread.sleep(500L);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            LOG.info(loggingPrefix + "Finished creating publish events async job. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            LOG.info(loggingPrefix + "Wait for stream to finish.");
+
+            LOG.info(loggingPrefix + "Finished reading stream with result {}. Duration: {}",
+                    streamer.get(),
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            LOG.info(loggingPrefix + "Start deleting events.");
+            List<Item> deleteItemsList = eventList.stream()
+                    .map(resource -> Item.newBuilder()
+                            .setId(resource.getId())
+                            .build())
+                    .collect(Collectors.toList());
+            List<Item> deleteItemsReceipt = client.assets().delete(deleteItemsList);
+            LOG.info(loggingPrefix + "Finished deleting assets. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            assertEquals(eventList.size(), publishItemsCount.get());
+            assertEquals(eventList.size(), deleteItemsReceipt.size());
         } catch (Exception e) {
             LOG.error(e.toString());
             e.printStackTrace();
