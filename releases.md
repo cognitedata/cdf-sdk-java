@@ -19,6 +19,12 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [1.8.0-SNAPSHOT]
+
+### Added
+
+- Experimental streaming support for `events` and `assets`.
+
 ## [1.7.1] 2021-11-23
 
 ### Fixed

@@ -20,10 +20,11 @@ import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.Asset;
 import com.cognite.client.config.ResourceType;
-import com.cognite.client.dto.Event;
 import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.AssetParser;
+import com.cognite.client.stream.ListSource;
+import com.cognite.client.stream.Publisher;
 import com.cognite.client.util.Partition;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
@@ -49,7 +50,7 @@ import java.util.stream.Stream;
  * It provides methods for reading and writing {@link com.cognite.client.dto.Asset}.
  */
 @AutoValue
-public abstract class Assets extends ApiBase {
+public abstract class Assets extends ApiBase implements ListSource<Asset> {
     private final static int MAX_UPSERT_BATCH_SIZE = 200;
 
     private static Builder builder() {
@@ -118,6 +119,18 @@ public abstract class Assets extends ApiBase {
      */
     public Iterator<List<Asset>> list(Request requestParameters, String... partitions) throws Exception {
         return AdapterIterator.of(listJson(ResourceType.ASSET, requestParameters, partitions), this::parseAsset);
+    }
+
+    /**
+     * Returns a {@link Publisher} that can stream {@link Asset} from Cognite Data Fusion.
+     *
+     * When an {@link Asset} is created or updated, it will be captured by the publisher and emitted to the registered
+     * consumer.
+     *
+     * @return The publisher producing the stream of assets. Call {@code start()} to start the stream.
+     */
+    public Publisher<Asset> stream() {
+        return Publisher.of(this);
     }
 
     /**
