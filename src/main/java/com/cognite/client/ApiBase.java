@@ -738,7 +738,9 @@ abstract class ApiBase {
         private static <T extends Message> Builder<T> builder() {
             return new AutoValue_ApiBase_UpsertItems.Builder<T>()
                     .setMaxBatchSize(DEFAULT_MAX_BATCH_SIZE)
-                    .setIdFunction(UpsertItems::getId);
+                    .setIdFunction(UpsertItems::getId)
+                    .setBatchingFunction(UpsertItems::splitIntoBatches)
+                    ;
         }
 
         /**
@@ -772,6 +774,16 @@ abstract class ApiBase {
             return Optional.<String>empty();
         }
 
+        /**
+         * The default batching function, splitting items into batches based on a max count.
+         *
+         * @param items the items to be split into batches.
+         * @return The batches of items.
+         */
+        private static <T> List<List<T>> splitIntoBatches(List<T> items) {
+            return Partition.ofSize(items, DEFAULT_MAX_BATCH_SIZE);
+        }
+
         abstract Builder<T> toBuilder();
 
         abstract int getMaxBatchSize();
@@ -781,6 +793,15 @@ abstract class ApiBase {
         abstract Function<T, Optional<String>> getIdFunction();
 
         abstract Function<T, Map<String, Object>> getCreateMappingFunction();
+
+        /**
+         * Returns the function that controls the batching of items. The default batching function is based on
+         * splitting the items into batches based on the number of items (which can be controlled via the
+         * {@code maxBatchSize} parameter).
+         *
+         * @return The current batching function.
+         */
+        abstract Function<List<T>, List<List<T>>> getBatchingFunction();
 
         @Nullable
         abstract Function<T, Map<String, Object>> getUpdateMappingFunction();
@@ -903,7 +924,23 @@ abstract class ApiBase {
          * @return The {@link UpsertItems} object with the configuration applied.
          */
         public UpsertItems<T> withMaxBatchSize(int maxBatchSize) {
-            return toBuilder().setMaxBatchSize(maxBatchSize).build();
+            return toBuilder()
+                    .setMaxBatchSize(maxBatchSize)
+                    .setBatchingFunction((List<T> items) -> Partition.ofSize(items, maxBatchSize))
+                    .build();
+        }
+
+        /**
+         * Specifies a custom batching function.
+         *
+         * The default batching function is based on splitting the items into batches based on the number of
+         * items (which can be controlled via the {@code maxBatchSize} parameter).
+         *
+         * @param function The custom batching function
+         * @return The {@link UpsertItems} object with the configuration applied.
+         */
+        public UpsertItems<T> withBatchingFunction(Function<List<T>, List<List<T>>> function) {
+            return toBuilder().setBatchingFunction(function).build();
         }
 
         /**
@@ -1906,7 +1943,10 @@ abstract class ApiBase {
                 Function<List<T>, CompletableFuture<ResponseItems<String>>> doer
         ) {
             Map<CompletableFuture<ResponseItems<String>>, List<T>> responseMap = new HashMap<>();
-            List<List<T>> itemBatches = Partition.ofSize(items, getMaxBatchSize());
+
+            // Split into batches
+            //List<List<T>> itemBatches = Partition.ofSize(items, getMaxBatchSize());
+            List<List<T>> itemBatches = getBatchingFunction().apply(items);
 
             // Submit all batches
             for (List<T> batch : itemBatches) {
@@ -2036,6 +2076,8 @@ abstract class ApiBase {
             abstract Builder<T> setIdFunction(Function<T, Optional<String>> value);
 
             abstract Builder<T> setCreateMappingFunction(Function<T, Map<String, Object>> value);
+
+            abstract Builder<T> setBatchingFunction(Function<List<T>, List<List<T>>> value);
 
             abstract Builder<T> setUpdateMappingFunction(Function<T, Map<String, Object>> value);
 
