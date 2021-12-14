@@ -1945,7 +1945,6 @@ abstract class ApiBase {
             Map<CompletableFuture<ResponseItems<String>>, List<T>> responseMap = new HashMap<>();
 
             // Split into batches
-            //List<List<T>> itemBatches = Partition.ofSize(items, getMaxBatchSize());
             List<List<T>> itemBatches = getBatchingFunction().apply(items);
 
             // Submit all batches
