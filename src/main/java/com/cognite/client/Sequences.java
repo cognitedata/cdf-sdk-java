@@ -209,7 +209,7 @@ public abstract class Sequences extends ApiBase {
                     || (batchCellsCounter + sequenceMetadata.getColumnsCount()) > MAX_CELLS_PER_BATCH) {
                 // We cannot add more items to the current batch. Start a new batch
                 batchList.add(currentBatch);
-                currentBatch.clear();
+                currentBatch = new ArrayList<>();
                 batchCellsCounter = 0;
             }
             // Add item to batch and bump the cell counter.
