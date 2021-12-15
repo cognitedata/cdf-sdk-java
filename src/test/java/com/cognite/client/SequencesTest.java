@@ -48,7 +48,7 @@ class SequencesTest {
 
         try {
             LOG.info(loggingPrefix + "Start upserting sequences.");
-            List<SequenceMetadata> upsertSequencesList = DataGenerator.generateSequenceMetadata(128);
+            List<SequenceMetadata> upsertSequencesList = DataGenerator.generateSequenceMetadata(153);
             client.sequences().upsert(upsertSequencesList);
             LOG.info(loggingPrefix + "Finished upserting sequences. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
