@@ -36,7 +36,7 @@ Please check [the documentation](https://github.com/cognitedata/cdf-sdk-java/blo
 <dependency>    
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>1.7.1</version>
+    <version>1.8.0-SNAPSHOT</version>
 </dependency>
 ```
     
@@ -58,6 +58,9 @@ Please check [the documentation](https://github.com/cognitedata/cdf-sdk-java/blo
 #### Contextualization
 - Entity matching
 - Interactive P&ID (experimental)
+
+#### 3D Models
+- 3D Models
 
 ## Quickstart
 ```java
