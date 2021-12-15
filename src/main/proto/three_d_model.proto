@@ -7,17 +7,6 @@ option java_multiple_files = true;
 
 message ThreeDModel {
 
-//    message Itens {
-//      optional string name = 1;
-//      optional int64 id = 2;
-//      optional int64 created_time = 3;
-//      optional int64 data_set_id = 4;
-//      map<string, string> metadata = 5;
-//    }
-//
-//    optional string next_cursor = 1;
-//    repeated Itens itens = 2;
-
     optional int64 id = 2;
     optional string name = 1;
     optional int64 created_time = 3;

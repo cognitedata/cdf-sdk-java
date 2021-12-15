@@ -28,8 +28,6 @@ Changes are grouped as follows:
 - Added `login status` by api-key
 - Added `3D Models`
 
-- Support for 3D Models (2021-12-06)
-
 ## [1.7.1] 2021-11-23
 
 ### Fixed
