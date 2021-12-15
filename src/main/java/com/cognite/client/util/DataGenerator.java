@@ -344,7 +344,6 @@ public class DataGenerator {
         return Math.log(logNumber) / Math.log(base);
     }
 
-
     public static List<ThreeDModel> generate3DModels(int noObjects, long dataSetId) {
         List<ThreeDModel> objects = new ArrayList<>();
         for (int i = 0; i < noObjects; i++) {
