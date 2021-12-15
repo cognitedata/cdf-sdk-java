@@ -19,12 +19,16 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
-## [1.8.0-SNAPSHOT]
+## [1.8.0] 2021-12-15
 
 ### Added
 
 - Experimental streaming support for `events` and `assets`.
 - Added `login status` by api-key
+
+### Fixed
+
+- Upsert of `sequenceMetadata` not respecting the max number of cells/columns per batch.
 
 ## [1.7.1] 2021-11-23
 
