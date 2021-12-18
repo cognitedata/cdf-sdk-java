@@ -13,3 +13,23 @@ message ThreeDModel {
     optional int64 data_set_id = 4;
     map<string, string> metadata = 5;
 }
+
+message ThreeDModelRevision {
+
+    message Camera {
+        repeated double target = 1;
+        repeated double position = 2;
+    }
+
+    optional int64 id = 1;
+    optional int64 file_id = 2;
+    optional string status = 3;
+    optional int64 thumbnail_threed_file_id = 4;
+    optional string thumbnail_URL = 5;
+    optional int64 asset_mapping_count = 6;
+    optional int64 created_time = 7;
+    optional bool published = 8;
+    optional Camera camera = 9;
+    repeated double rotation = 10;
+    map<string, string> metadata = 11;
+}
