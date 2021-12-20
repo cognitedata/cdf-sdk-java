@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package com.cognite.beam.proto;
+
+option java_package = "com.cognite.client.dto";
+option java_multiple_files = true;
+
+message ThreeDModel {
+
+    optional int64 id = 2;
+    optional string name = 1;
+    optional int64 created_time = 3;
+    optional int64 data_set_id = 4;
+    map<string, string> metadata = 5;
+}
