@@ -140,7 +140,7 @@ public class ThreeDModelsTest {
                         .build())
                 .forEach(item -> tdList.add(item));
 
-        List<ThreeDModel> retrievedTD = client.threeDModels().retrieve(tdList);
+        List<ThreeDModel> retrievedTD = client.threeD().models().retrieve(tdList);
         LOG.info(loggingPrefix + "Finished retrieving 3D Models. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(listUpsert.size(), retrievedTD.size());
@@ -155,7 +155,7 @@ public class ThreeDModelsTest {
                 .withClientConfig(ClientConfig.create()
                         .withUpsertMode(UpsertMode.REPLACE));
 
-        List<ThreeDModel> tdReplaceResults = client.threeDModels().upsert(editedTdInput);
+        List<ThreeDModel> tdReplaceResults = client.threeD().models().upsert(editedTdInput);
         LOG.info(loggingPrefix + "Finished update replace 3D Models. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
         return client;
@@ -172,7 +172,7 @@ public class ThreeDModelsTest {
                         .build())
                 .collect(Collectors.toList());
 
-        List<ThreeDModel> tdUpdateResults = client.threeDModels().upsert(editedTdInput);
+        List<ThreeDModel> tdUpdateResults = client.threeD().models().upsert(editedTdInput);
         LOG.info(loggingPrefix + "Finished updating 3D Models. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(editedTdInput.size(), tdUpdateResults.size());
@@ -188,7 +188,7 @@ public class ThreeDModelsTest {
                         .build())
                 .forEach(item -> deleteItemsInput.add(item));
 
-        List<Item> deleteItemsResults = client.threeDModels().delete(deleteItemsInput);
+        List<Item> deleteItemsResults = client.threeD().models().delete(deleteItemsInput);
         LOG.info(loggingPrefix + "Finished deleting 3D Models. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
@@ -197,7 +197,7 @@ public class ThreeDModelsTest {
     private List<ThreeDModel> findList(Instant startInstant, String loggingPrefix, CogniteClient client, List<ThreeDModel> listUpsert) throws Exception {
         LOG.info(loggingPrefix + "Start reading 3D Models.");
         List<ThreeDModel> listResults = new ArrayList<>();
-        client.threeDModels().list().forEachRemaining(model -> listResults.addAll(model));
+        client.threeD().models().list().forEachRemaining(model -> listResults.addAll(model));
         LOG.info(loggingPrefix + "------------ Finished reading 3D Models. Duration: {} -----------",
                 Duration.between(startInstant, Instant.now()));
         assertTrue(listResults.containsAll(listUpsert));
@@ -209,7 +209,7 @@ public class ThreeDModelsTest {
         LOG.info(loggingPrefix + "------------ Start create 3D Models. ------------------");
         List<ThreeDModel> upsertThreeDModelsList = DataGenerator.generate3DModels(COUNT_TO_BE_CREATE_TD, dataSetId);
         List<ThreeDModel> listUpsert =
-                client.threeDModels().upsert(upsertThreeDModelsList);
+                client.threeD().models().upsert(upsertThreeDModelsList);
         LOG.info(loggingPrefix + "------------ Finished creating 3D Models. Duration: {} -----------",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(upsertThreeDModelsList.size(), listUpsert.size());
@@ -221,7 +221,7 @@ public class ThreeDModelsTest {
         LOG.info(loggingPrefix + "------------ Start upserting 3D Models. ------------------");
 
         List<ThreeDModel> listUpsert =
-                client.threeDModels().upsert(upsertThreeDModelsList);
+                client.threeD().models().upsert(upsertThreeDModelsList);
         LOG.info(loggingPrefix + "------------ Finished upserting 3D Models. Duration: {} -----------",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(upsertThreeDModelsList.size(), listUpsert.size());

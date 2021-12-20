@@ -456,12 +456,12 @@ public abstract class CogniteClient implements Serializable {
     }
 
     /**
-     * Returns {@link ThreeDModels} representing 3D Models api endpoints.
+     * Returns {@link ThreeD} representing 3D api endpoints.
      *
-     * @return The ThreeDModels api endpoints.
+     * @return The ThreeD api endpoints.
      */
-    public ThreeDModels threeDModels() {
-        return ThreeDModels.of(this);
+    public ThreeD threeD() {
+        return ThreeD.of(this);
     }
 
     /**
