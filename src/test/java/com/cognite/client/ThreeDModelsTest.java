@@ -208,8 +208,7 @@ public class ThreeDModelsTest {
     private List<ThreeDModel> createThreeDModel(Instant startInstant, String loggingPrefix, CogniteClient client, Long dataSetId) throws Exception {
         LOG.info(loggingPrefix + "------------ Start create 3D Models. ------------------");
         List<ThreeDModel> upsertThreeDModelsList = DataGenerator.generate3DModels(COUNT_TO_BE_CREATE_TD, dataSetId);
-        List<ThreeDModel> listUpsert =
-                client.threeD().models().upsert(upsertThreeDModelsList);
+        List<ThreeDModel> listUpsert = client.threeD().models().upsert(upsertThreeDModelsList);
         LOG.info(loggingPrefix + "------------ Finished creating 3D Models. Duration: {} -----------",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(upsertThreeDModelsList.size(), listUpsert.size());
@@ -220,8 +219,7 @@ public class ThreeDModelsTest {
     private List<ThreeDModel> upSertThreeDModel(List<ThreeDModel> upsertThreeDModelsList, Instant startInstant, String loggingPrefix, CogniteClient client, Long dataSetId) throws Exception {
         LOG.info(loggingPrefix + "------------ Start upserting 3D Models. ------------------");
 
-        List<ThreeDModel> listUpsert =
-                client.threeD().models().upsert(upsertThreeDModelsList);
+        List<ThreeDModel> listUpsert = client.threeD().models().upsert(upsertThreeDModelsList);
         LOG.info(loggingPrefix + "------------ Finished upserting 3D Models. Duration: {} -----------",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(upsertThreeDModelsList.size(), listUpsert.size());
