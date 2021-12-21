@@ -3,8 +3,10 @@ package com.cognite.client;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Item;
+import com.cognite.client.dto.ThreeDModel;
 import com.cognite.client.dto.ThreeDModelRevision;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
+import com.cognite.client.servicesV1.ItemReader;
 import com.cognite.client.servicesV1.ResponseItems;
 import com.cognite.client.servicesV1.parser.ThreeDModelRevisionParser;
 import com.google.auto.value.AutoValue;
@@ -17,6 +19,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 /**
  * This class represents the Cognite 3D models revisions api endpoint.
@@ -96,6 +99,7 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * @param modelId The id of ThreeDModels object
      * @param requestParameters the filters to use for retrieving the 3d models revisions.
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
@@ -104,6 +108,48 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
     public Iterator<List<ThreeDModelRevision>> list(Long modelId, Request requestParameters, String... partitions) throws Exception {
         Request request = requestParameters.withRootParameter("modelId", modelId);
         return AdapterIterator.of(listJson(ResourceType.THREED_MODEL_REVISION, request, partitions), this::parseThreeDModelRevision);
+    }
+
+    /**
+     * Retrieves 3D Models by id.
+     *
+     * @param modelId The id of ThreeDModels object
+     * @param items The item(s) {@code id} to retrieve.
+     * @return The retrieved 3D Models.
+     * @throws Exception
+     */
+    public List<ThreeDModelRevision> retrieve(Long modelId, List<Item> items) throws Exception {
+        String loggingPrefix = "retrieve() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        ConnectorServiceV1 connector = getClient().getConnectorService();
+        ItemReader<String> tdReader = connector.readThreeDModelsRevisionsById(modelId);
+
+        List<CompletableFuture<ResponseItems<String>>> resultFutures = new ArrayList<>();
+        for (Item item : items) {
+            Request request = Request.create().withRootParameter("id", item.getId());
+            resultFutures.add(tdReader.getItemsAsync(addAuthInfo(request)));
+        }
+        // Sync all downloads to a single future. It will complete when all the upstream futures have completed.
+        CompletableFuture<Void> allFutures = CompletableFuture.allOf(resultFutures.toArray(
+                new CompletableFuture[resultFutures.size()]));
+        // Wait until the uber future completes.
+        allFutures.join();
+
+        // Collect the response items
+        List<String> responseItems = new ArrayList<>();
+        for (CompletableFuture<ResponseItems<String>> responseItemsFuture : resultFutures) {
+            if (!responseItemsFuture.join().isSuccessful()) {
+                // something went wrong with the request
+                String message = loggingPrefix + "Retrieve 3d model failed: "
+                        + responseItemsFuture.join().getResponseBodyAsString();
+                LOG.error(message);
+                throw new Exception(message);
+            }
+            responseItems.add(responseItemsFuture.join().getResponseBodyAsString());
+        }
+
+        return responseItems.stream()
+                .map(this::parseThreeDModelRevision)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -176,6 +222,16 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
         return listResponse;
     }
 
+    /**
+     * Deletes a set of Sequences.
+     *
+     * The 3D Revisions to delete are identified via their {@code id} by submitting a list of {@link Item}.
+     *
+     * @param modelId The id of ThreeDModels object
+     * @param deleteItemsInput The 3D Model Revisions to delete
+     * @return
+     * @throws Exception
+     */
     public List<Item> delete(Long modelId, List<Item> deleteItemsInput) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteThreeDModelsRevisions(modelId);
