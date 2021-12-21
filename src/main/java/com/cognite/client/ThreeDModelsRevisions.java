@@ -3,6 +3,7 @@ package com.cognite.client;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Item;
+import com.cognite.client.dto.ThreeDModel;
 import com.cognite.client.dto.ThreeDModelRevision;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ItemReader;
@@ -19,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
-
 
 /**
  * This class represents the Cognite 3D models revisions api endpoint.
@@ -229,12 +229,20 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
     }
 
     /**
+<<<<<<< HEAD
      * Deletes 3D Revisions.
+=======
+     * Deletes a set of Sequences.
+>>>>>>> Add retriver 3d revisions
      *
      * The 3D Revisions to delete are identified via their {@code id} by submitting a list of {@link Item}.
      *
      * @param modelId The id of ThreeDModels object
+<<<<<<< HEAD
      * @param deleteItemsInput List of {@link Item} containing the ids of 3D Model Revisions to delete
+=======
+     * @param deleteItemsInput The 3D Model Revisions to delete
+>>>>>>> Add retriver 3d revisions
      * @return
      * @throws Exception
      */
