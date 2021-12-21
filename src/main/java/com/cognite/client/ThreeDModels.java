@@ -43,6 +43,15 @@ public abstract class ThreeDModels extends ApiBase {
                 .build();
     }
 
+    /**
+     * Returns {@link ThreeDModelsRevisions} representing 3D Models Revisions api endpoints.
+     *
+     * @return The ThreeDModelsRevisions api endpoints.
+     */
+    public ThreeDModelsRevisions revisions() {
+        return ThreeDModelsRevisions.of(getClient());
+    }
+
     private static ThreeDModels.Builder builder() {
         return new AutoValue_ThreeDModels.Builder();
     }

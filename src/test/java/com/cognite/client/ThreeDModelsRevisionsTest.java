@@ -40,7 +40,7 @@ public class ThreeDModelsRevisionsTest {
             CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
 
             List<ThreeDModelRevision> listResults = new ArrayList<>();
-            client.threeDModelsRevisions()
+            client.threeD().models().revisions()
                     .list(1690988571960158L)
                     .forEachRemaining(model -> listResults.addAll(model));
             LOG.info(loggingPrefix + "------------ Finished reading 3D Model Revisions. Duration: {} -----------",
@@ -138,8 +138,7 @@ public class ThreeDModelsRevisionsTest {
     private List<ThreeDModel> createThreeDModel(Instant startInstant, String loggingPrefix, CogniteClient client, Long dataSetId) throws Exception {
         LOG.info(loggingPrefix + "------------ Start create 3D Models. ------------------");
         List<ThreeDModel> upsertThreeDModelsList = DataGenerator.generate3DModels(1, dataSetId);
-        List<ThreeDModel> listUpsert =
-                client.threeDModels().upsert(upsertThreeDModelsList);
+        List<ThreeDModel> listUpsert = client.threeD().models().upsert(upsertThreeDModelsList);
         LOG.info(loggingPrefix + "------------ Finished creating 3D Models. Duration: {} -----------",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(upsertThreeDModelsList.size(), listUpsert.size());
@@ -196,7 +195,7 @@ public class ThreeDModelsRevisionsTest {
         LOG.info(loggingPrefix + "------------ Start create 3D Models Revisions. ------------------");
         List<ThreeDModelRevision> upsertThreeDModelsList = DataGenerator.generate3DModelsRevisions(COUNT_TO_BE_CREATE_TD_Revisions, file.getId());
         List<ThreeDModelRevision> listUpsert =
-                client.threeDModelsRevisions().upsert(threeDModel.getId(), upsertThreeDModelsList);
+                client.threeD().models().revisions().upsert(threeDModel.getId(), upsertThreeDModelsList);
         LOG.info(loggingPrefix + "------------ Finished creating 3D Models Revisions. Duration: {} -----------",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(upsertThreeDModelsList.size(), listUpsert.size());
@@ -206,7 +205,7 @@ public class ThreeDModelsRevisionsTest {
 
     private List<ThreeDModelRevision> findList(Instant startInstant, String loggingPrefix, CogniteClient client, List<ThreeDModelRevision> listUpsert, ThreeDModel threeDModel) throws Exception {
         List<ThreeDModelRevision> listResults = new ArrayList<>();
-        client.threeDModelsRevisions()
+        client.threeD().models().revisions()
                 .list(threeDModel.getId())
                 .forEachRemaining(model -> listResults.addAll(model));
         LOG.info(loggingPrefix + "------------ Finished reading 3D Model Revisions. Duration: {} -----------",
@@ -240,7 +239,7 @@ public class ThreeDModelsRevisionsTest {
                         .build())
                 .forEach(item -> deleteItemsInput.add(item));
 
-        List<Item> deleteItemsResults = client.threeDModelsRevisions().delete(threeDModel.getId(), deleteItemsInput);
+        List<Item> deleteItemsResults = client.threeD().models().revisions().delete(threeDModel.getId(), deleteItemsInput);
         LOG.info(loggingPrefix + "Finished deleting 3D Model Revisions. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
@@ -255,7 +254,7 @@ public class ThreeDModelsRevisionsTest {
                         .build())
                 .forEach(item -> deleteItemsInput.add(item));
 
-        List<Item> deleteItemsResults = client.threeDModels().delete(deleteItemsInput);
+        List<Item> deleteItemsResults = client.threeD().models().delete(deleteItemsInput);
         LOG.info(loggingPrefix + "Finished deleting 3D Models. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
@@ -267,7 +266,7 @@ public class ThreeDModelsRevisionsTest {
                 .withClientConfig(ClientConfig.create()
                         .withUpsertMode(UpsertMode.REPLACE));
 
-        List<ThreeDModelRevision> tdReplaceResults = client.threeDModelsRevisions().upsert(threeDModel.getId(), editedTdInput);
+        List<ThreeDModelRevision> tdReplaceResults = client.threeD().models().revisions().upsert(threeDModel.getId(), editedTdInput);
         LOG.info(loggingPrefix + "Finished update replace 3D Models Revisions. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(editedTdInput.size(), tdReplaceResults.size());
@@ -298,7 +297,7 @@ public class ThreeDModelsRevisionsTest {
         }
 
         List<ThreeDModelRevision> tdUpdateResults =
-                client.threeDModelsRevisions().upsert(threeDModel.getId(), editedTdInput);
+                client.threeD().models().revisions().upsert(threeDModel.getId(), editedTdInput);
         LOG.info(loggingPrefix + "Finished updating 3D Models Revisions. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(editedTdInput.size(), tdUpdateResults.size());

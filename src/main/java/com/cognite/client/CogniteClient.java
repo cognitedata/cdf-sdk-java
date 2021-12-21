@@ -465,15 +465,6 @@ public abstract class CogniteClient implements Serializable {
     }
 
     /**
-     * Returns {@link ThreeDModelsRevisions} representing 3D Models Revisions api endpoints.
-     *
-     * @return The ThreeDModelsRevisions api endpoints.
-     */
-    public ThreeDModelsRevisions threeDModelsRevisions() {
-        return ThreeDModelsRevisions.of(this);
-    }
-
-    /**
      * Returns the services layer mirroring the Cognite Data Fusion API.
      * @return
      */
