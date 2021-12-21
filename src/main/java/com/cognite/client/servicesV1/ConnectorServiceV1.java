@@ -1822,6 +1822,24 @@ public abstract class ConnectorServiceV1 implements Serializable {
     }
 
     /**
+     * Read 3d models revisions by id from Cognite.
+     *
+     * @return
+     */
+    public ItemReader<String> readThreeDModelsRevisionsById(Long modelId) {
+
+        GetIdRequestProvider requestProvider =
+                GetIdRequestProvider.of("3d/models/" + modelId + "/revisions")
+                        .toBuilder()
+                        .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                        .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                        .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                        .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    /**
      * Fetch 3d models revisions from Cognite.
      *
      * @param queryParameters
