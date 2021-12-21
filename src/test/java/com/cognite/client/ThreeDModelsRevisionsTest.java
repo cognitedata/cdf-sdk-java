@@ -100,6 +100,39 @@ public class ThreeDModelsRevisionsTest {
         deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
     }
 
+    @Test
+    @Tag("remoteCDP")
+    void writeRetrieveAndDeleteThreeDModelsRevisions() throws Exception {
+        Instant startInstant = Instant.now();
+        String loggingPrefix = "UnitTest - listThreeDModelsRevisions() -";
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+        CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
+
+        Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
+        List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
+        FileMetadata file = uploadFile();
+        List<ThreeDModelRevision> listUpsertRevisions = createThreeDModelRevisions(startInstant, loggingPrefix, client, listUpsert3D.get(0), file);
+
+        Thread.sleep(2000); // wait for eventual consistency
+
+        LOG.info(loggingPrefix + "Start retrieving 3D Models Revisions.");
+        List<Item> tdList = new ArrayList<>();
+        listUpsertRevisions.stream()
+                .map(td -> Item.newBuilder()
+                        .setId(td.getId())
+                        .build())
+                .forEach(item -> tdList.add(item));
+
+        List<ThreeDModelRevision> retrievedTD = client.threeD().models().revisions().retrieve(listUpsert3D.get(0).getId(), tdList);
+        LOG.info(loggingPrefix + "Finished retrieving 3D Models Revisions. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+        assertEquals(listUpsertRevisions.size(), retrievedTD.size());
+
+        delete(startInstant, loggingPrefix, client, listUpsertRevisions, listUpsert3D.get(0), file);
+
+        deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
+    }
+
 
     private CogniteClient getCogniteClient(Instant startInstant, String loggingPrefix) throws MalformedURLException {
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
