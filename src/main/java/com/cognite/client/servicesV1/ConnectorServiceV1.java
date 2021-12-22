@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 import com.cognite.client.CogniteClient;
 import com.cognite.client.Request;
+import com.cognite.client.ThreeDAvailableOutputs;
 import com.cognite.client.config.AuthConfig;
 import com.cognite.client.servicesV1.executor.FileBinaryRequestExecutor;
 import com.cognite.client.servicesV1.parser.ItemParser;
@@ -1866,7 +1867,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * Write 3D Models Revisions to Cognite.
      *
      * Calling this method will return an <code>ItemWriter</code>
-     * @param modelId The id of ThreeDModels object
+     * @param modelId The id of {@link ThreeDModel} object
      * @return
      */
     public ItemWriter writeThreeDModelsRevisions(Long modelId) {
@@ -1887,7 +1888,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * Update 3D Models Revisions in Cognite.
      *
      * Calling this method will return an <code>ItemWriter</code>
-     * @param modelId The id of ThreeDModels object
+     * @param modelId The id of {@link ThreeDModel} object
      * @return
      */
     public ItemWriter updateThreeDModelsRevisions(Long modelId) {
@@ -1905,7 +1906,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
     /**
      * Create a writer for deleting 3D Models Revisions.
      *
-     * @param modelId The id of ThreeDModels object
+     * @param modelId The id of {@link ThreeDModel} object
      * @return An {@link ItemWriter} for deleting the models
      */
     public ItemWriter deleteThreeDModelsRevisions(Long modelId) {
@@ -1918,6 +1919,23 @@ public abstract class ConnectorServiceV1 implements Serializable {
                 .build();
 
         return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Read 3d Available Outputs by modeId and revisionId from Cognite.
+     *
+     * @return
+     */
+    public ItemReader<String> readThreeDAvailableOutputs() {
+
+        ThreeDAvailableOutputsRequestProvider requestProvider = ThreeDAvailableOutputsRequestProvider.builder()
+                .setEndpoint("3d/models/")
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
     }
 
 
