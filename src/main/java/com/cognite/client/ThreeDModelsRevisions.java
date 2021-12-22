@@ -46,6 +46,15 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
                 .build();
     }
 
+    /**
+     * Returns {@link ThreeDAvailableOutputs} representing 3D Models available outputs api endpoints.
+     *
+     * @return The ThreeDAvailableOutputs api endpoints.
+     */
+    public ThreeDAvailableOutputs availableOutputs() {
+        return ThreeDAvailableOutputs.of(getClient());
+    }
+
     private static ThreeDModelsRevisions.Builder builder() {
         return new AutoValue_ThreeDModelsRevisions.Builder();
     }
