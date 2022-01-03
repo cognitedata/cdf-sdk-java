@@ -18,10 +18,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -29,27 +26,7 @@ public class ThreeDModelsRevisionsTest {
 
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
-    private static final Integer COUNT_TO_BE_CREATE_TD_Revisions = 1;
-
-    @Test
-    @Tag("remoteCDP")
-    void listThreeDModelsRevisions() throws MalformedURLException {
-        try {
-            Instant startInstant = Instant.now();
-            String loggingPrefix = "UnitTest - listThreeDModelsRevisions() -";
-            CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
-
-            List<ThreeDModelRevision> listResults = new ArrayList<>();
-            client.threeD().models().revisions()
-                    .list(1690988571960158L)
-                    .forEachRemaining(model -> listResults.addAll(model));
-            LOG.info(loggingPrefix + "------------ Finished reading 3D Model Revisions. Duration: {} -----------",
-                    Duration.between(startInstant, Instant.now()));
-        } catch (Exception e) {
-            LOG.error(e.toString());
-            e.printStackTrace();
-        }
-    }
+    private static final Integer COUNT_TO_BE_CREATE_TD_Revisions = 2;
 
     @Test
     @Tag("remoteCDP")
@@ -62,13 +39,22 @@ public class ThreeDModelsRevisionsTest {
         Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
         List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
         FileMetadata file = uploadFile();
-        List<ThreeDModelRevision> listUpsertRevisions = createThreeDModelRevisions(startInstant, loggingPrefix, client, listUpsert3D.get(0), file);
+
+        Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
+        List<ThreeDModelRevision> listUpsertRevisions = null;
+        List<ThreeDModelRevision> listAllRevisions = new ArrayList<>();
+        for (ThreeDModel model : listUpsert3D) {
+            listUpsertRevisions = new ArrayList<>();
+            listUpsertRevisions.addAll(createThreeDModelRevisions(startInstant, loggingPrefix, client, model, file));
+            listAllRevisions.addAll(listUpsertRevisions);
+            map.put(model, listUpsertRevisions);
+        }
 
         Thread.sleep(2000); // wait for eventual consistency
 
-        findList(startInstant, loggingPrefix, client, listUpsertRevisions, listUpsert3D.get(0));
+        findList(startInstant, loggingPrefix, client, listUpsert3D);
 
-        delete(startInstant, loggingPrefix, client, listUpsertRevisions, listUpsert3D.get(0), file);
+        delete(startInstant, loggingPrefix, client, map, file);
 
         deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
 
@@ -85,17 +71,26 @@ public class ThreeDModelsRevisionsTest {
         Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
         List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
         FileMetadata file = uploadFile();
-        List<ThreeDModelRevision> listUpsertRevisions = createThreeDModelRevisions(startInstant, loggingPrefix, client, listUpsert3D.get(0), file);
+
+        Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
+        List<ThreeDModelRevision> listUpsertRevisions = null;
+        List<ThreeDModelRevision> listAllRevisions = new ArrayList<>();
+        for (ThreeDModel model : listUpsert3D) {
+            listUpsertRevisions = new ArrayList<>();
+            listUpsertRevisions.addAll(createThreeDModelRevisions(startInstant, loggingPrefix, client, model, file));
+            listAllRevisions.addAll(listUpsertRevisions);
+            map.put(model, listUpsertRevisions);
+        }
 
         Thread.sleep(2000); // wait for eventual consistency
 
-        List<ThreeDModelRevision> editedTdInput = update(startInstant, loggingPrefix, client, listUpsertRevisions, listUpsert3D.get(0));
+        Map<ThreeDModel, List<ThreeDModelRevision>> editedTdInput = update(startInstant, loggingPrefix, client, map);
 
-        replace(startInstant, loggingPrefix, client, editedTdInput, listUpsert3D.get(0));
+        replace(startInstant, loggingPrefix, client, editedTdInput);
 
         Thread.sleep(3000); // wait for eventual consistency
 
-        delete(startInstant, loggingPrefix, client, listUpsertRevisions, listUpsert3D.get(0), file);
+        delete(startInstant, loggingPrefix, client, map, file);
 
         deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
     }
@@ -111,24 +106,42 @@ public class ThreeDModelsRevisionsTest {
         Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
         List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
         FileMetadata file = uploadFile();
-        List<ThreeDModelRevision> listUpsertRevisions = createThreeDModelRevisions(startInstant, loggingPrefix, client, listUpsert3D.get(0), file);
 
+        Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
+        List<ThreeDModelRevision> listUpsertRevisions = null;
+        List<ThreeDModelRevision> listAllRevisions = new ArrayList<>();
+        for (ThreeDModel model : listUpsert3D) {
+            listUpsertRevisions = new ArrayList<>();
+            listUpsertRevisions.addAll(createThreeDModelRevisions(startInstant, loggingPrefix, client, model, file));
+            listAllRevisions.addAll(listUpsertRevisions);
+            map.put(model, listUpsertRevisions);
+        }
         Thread.sleep(2000); // wait for eventual consistency
 
         LOG.info(loggingPrefix + "Start retrieving 3D Models Revisions.");
-        List<Item> tdList = new ArrayList<>();
-        listUpsertRevisions.stream()
-                .map(td -> Item.newBuilder()
-                        .setId(td.getId())
-                        .build())
-                .forEach(item -> tdList.add(item));
 
-        List<ThreeDModelRevision> retrievedTD = client.threeD().models().revisions().retrieve(listUpsert3D.get(0).getId(), tdList);
+        List<ThreeDModelRevision> listAllRevisionsRetrieve = new ArrayList<>();
+        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : map.entrySet()) {
+            ThreeDModel model = entry.getKey();
+            List<Item> tdList = new ArrayList<>();
+            entry.getValue().stream()
+                    .map(td -> Item.newBuilder()
+                            .setId(td.getId())
+                            .build())
+                    .forEach(item -> tdList.add(item));
+
+            listAllRevisionsRetrieve.addAll(
+                    client.threeD()
+                            .models().
+                            revisions()
+                            .retrieve(model.getId(), tdList));
+        }
+
         LOG.info(loggingPrefix + "Finished retrieving 3D Models Revisions. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
-        assertEquals(listUpsertRevisions.size(), retrievedTD.size());
+        assertEquals(listAllRevisions.size(), listAllRevisionsRetrieve.size());
 
-        delete(startInstant, loggingPrefix, client, listUpsertRevisions, listUpsert3D.get(0), file);
+        delete(startInstant, loggingPrefix, client, map, file);
 
         deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
     }
@@ -170,7 +183,7 @@ public class ThreeDModelsRevisionsTest {
     @NotNull
     private List<ThreeDModel> createThreeDModel(Instant startInstant, String loggingPrefix, CogniteClient client, Long dataSetId) throws Exception {
         LOG.info(loggingPrefix + "------------ Start create 3D Models. ------------------");
-        List<ThreeDModel> upsertThreeDModelsList = DataGenerator.generate3DModels(1, dataSetId);
+        List<ThreeDModel> upsertThreeDModelsList = DataGenerator.generate3DModels(COUNT_TO_BE_CREATE_TD_Revisions, dataSetId);
         List<ThreeDModel> listUpsert = client.threeD().models().upsert(upsertThreeDModelsList);
         LOG.info(loggingPrefix + "------------ Finished creating 3D Models. Duration: {} -----------",
                 Duration.between(startInstant, Instant.now()));
@@ -236,19 +249,24 @@ public class ThreeDModelsRevisionsTest {
 
     }
 
-    private List<ThreeDModelRevision> findList(Instant startInstant, String loggingPrefix, CogniteClient client, List<ThreeDModelRevision> listUpsert, ThreeDModel threeDModel) throws Exception {
+    private List<ThreeDModelRevision> findList(Instant startInstant, String loggingPrefix, CogniteClient client, List<ThreeDModel> listThreeDModel) throws Exception {
         List<ThreeDModelRevision> listResults = new ArrayList<>();
-        client.threeD().models().revisions()
-                .list(threeDModel.getId())
-                .forEachRemaining(model -> listResults.addAll(model));
+        for (ThreeDModel threeDModel : listThreeDModel) {
+            client.threeD()
+                    .models()
+                    .revisions()
+                    .list(threeDModel.getId())
+                    .forEachRemaining(model -> listResults.addAll(model));
+        }
+
         LOG.info(loggingPrefix + "------------ Finished reading 3D Model Revisions. Duration: {} -----------",
                 Duration.between(startInstant, Instant.now()));
         return listResults;
     }
 
-    private void delete(Instant startInstant, String loggingPrefix, CogniteClient client, List<ThreeDModelRevision> listUpsertRevisions, ThreeDModel threeDModel, FileMetadata file) throws Exception {
+    private void delete(Instant startInstant, String loggingPrefix, CogniteClient client, Map<ThreeDModel, List<ThreeDModelRevision>> map, FileMetadata file) throws Exception {
         deleteFile(startInstant, loggingPrefix, client, file);
-        deleteRevision(startInstant, loggingPrefix, client, listUpsertRevisions, threeDModel);
+        deleteRevision(startInstant, loggingPrefix, client, map);
     }
 
     private void deleteFile(Instant startInstant, String loggingPrefix, CogniteClient client, FileMetadata file) throws Exception {
@@ -263,19 +281,29 @@ public class ThreeDModelsRevisionsTest {
         assertEquals(itens.size(), deleteItemsResults.size());
     }
 
-    private void deleteRevision(Instant startInstant, String loggingPrefix, CogniteClient client, List<ThreeDModelRevision> listUpsertRevisions, ThreeDModel threeDModel) throws Exception {
+    private void deleteRevision(Instant startInstant, String loggingPrefix, CogniteClient client, Map<ThreeDModel, List<ThreeDModelRevision>> map) throws Exception {
         LOG.info(loggingPrefix + "Start deleting 3D Model Revisions.");
         List<Item> deleteItemsInput = new ArrayList<>();
-        listUpsertRevisions.stream()
-                .map(td -> Item.newBuilder()
-                        .setId(td.getId())
-                        .build())
-                .forEach(item -> deleteItemsInput.add(item));
 
-        List<Item> deleteItemsResults = client.threeD().models().revisions().delete(threeDModel.getId(), deleteItemsInput);
+        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : map.entrySet()) {
+            ThreeDModel model = entry.getKey();
+            List<ThreeDModelRevision> listUpsertRevisions = entry.getValue();
+            listUpsertRevisions.stream()
+                    .map(td -> Item.newBuilder()
+                            .setId(td.getId())
+                            .build())
+                    .forEach(item -> deleteItemsInput.add(item));
+            List<Item> deleteItemsResults = client
+                    .threeD()
+                    .models()
+                    .revisions()
+                    .delete(model.getId(), deleteItemsInput);
+            assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
+            deleteItemsInput.clear();
+        }
+
         LOG.info(loggingPrefix + "Finished deleting 3D Model Revisions. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
-        assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
     }
 
     private void deleteThreeDModel(Instant startInstant, String loggingPrefix, CogniteClient client, List<ThreeDModel> listUpsert) throws Exception {
@@ -293,47 +321,55 @@ public class ThreeDModelsRevisionsTest {
         assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
     }
 
-    private void replace(Instant startInstant, String loggingPrefix, CogniteClient client, List<ThreeDModelRevision> editedTdInput, ThreeDModel threeDModel) throws Exception {
+    private void replace(Instant startInstant, String loggingPrefix, CogniteClient client, Map<ThreeDModel, List<ThreeDModelRevision>> map) throws Exception {
         LOG.info(loggingPrefix + "Start update replace 3D Models Revisions.");
         client = client
                 .withClientConfig(ClientConfig.create()
                         .withUpsertMode(UpsertMode.REPLACE));
 
-        List<ThreeDModelRevision> tdReplaceResults = client.threeD().models().revisions().upsert(threeDModel.getId(), editedTdInput);
+        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : map.entrySet()) {
+            ThreeDModel model = entry.getKey();
+            List<ThreeDModelRevision> tdReplaceResults = client.threeD().models().revisions().upsert(model.getId(), entry.getValue());
+            assertEquals(entry.getValue().size(), tdReplaceResults.size());
+        }
         LOG.info(loggingPrefix + "Finished update replace 3D Models Revisions. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
-        assertEquals(editedTdInput.size(), tdReplaceResults.size());
     }
 
-    private List<ThreeDModelRevision> update(Instant startInstant, String loggingPrefix, CogniteClient client, List<ThreeDModelRevision> listUpsertRevisions, ThreeDModel threeDModel) throws Exception {
+    private Map<ThreeDModel, List<ThreeDModelRevision>> update(Instant startInstant, String loggingPrefix, CogniteClient client, Map<ThreeDModel, List<ThreeDModelRevision>> map) throws Exception {
         LOG.info(loggingPrefix + "Start updating 3D Models Revisions.");
         Random random = new Random();
+        Map<ThreeDModel, List<ThreeDModelRevision>> mapResult = new HashMap<>();
         List<ThreeDModelRevision> editedTdInput = new ArrayList<>();
-        for (ThreeDModelRevision revi : listUpsertRevisions) {
-            ThreeDModelRevision.Builder builder = revi.toBuilder();
-            ThreeDModelRevision.Camera.Builder cameraBuilder = ThreeDModelRevision.Camera.newBuilder();
-            cameraBuilder.addPosition(2.707411050796508);
-            cameraBuilder.addPosition(-4.514726638793944);
-            cameraBuilder.addPosition(1.5695604085922240);
-            cameraBuilder.addTarget(0.0);
-            cameraBuilder.addTarget(-0.002374999923631548);
-            cameraBuilder.addTarget(1.5695604085922240);
-            builder.setCamera(cameraBuilder.build());
-            builder.clearRotation();
-            builder.addRotation(random.nextInt(100) / 100.0);
-            builder.addRotation(random.nextInt(100) / 100.0);
-            builder.addRotation(random.nextInt(100) / 100.0);
-            builder.setPublished(false);
-            builder.setStatus("Done");
-            builder.putMetadata("new-key", "new-value");
-            editedTdInput.add(builder.build());
+        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : map.entrySet()) {
+            ThreeDModel model = entry.getKey();
+            for (ThreeDModelRevision revi : entry.getValue()) {
+                ThreeDModelRevision.Builder builder = revi.toBuilder();
+                ThreeDModelRevision.Camera.Builder cameraBuilder = ThreeDModelRevision.Camera.newBuilder();
+                cameraBuilder.addPosition(2.707411050796508);
+                cameraBuilder.addPosition(-4.514726638793944);
+                cameraBuilder.addPosition(1.5695604085922240);
+                cameraBuilder.addTarget(0.0);
+                cameraBuilder.addTarget(-0.002374999923631548);
+                cameraBuilder.addTarget(1.5695604085922240);
+                builder.setCamera(cameraBuilder.build());
+                builder.clearRotation();
+                builder.addRotation(random.nextInt(100) / 100.0);
+                builder.addRotation(random.nextInt(100) / 100.0);
+                builder.addRotation(random.nextInt(100) / 100.0);
+                builder.setPublished(false);
+                builder.setStatus("Done");
+                builder.putMetadata("new-key", "new-value");
+                editedTdInput.add(builder.build());
+            }
+            List<ThreeDModelRevision> tdUpdateResults = client.threeD().models().revisions().upsert(model.getId(), editedTdInput);
+            assertEquals(editedTdInput.size(), tdUpdateResults.size());
+            mapResult.put(model, tdUpdateResults);
+            editedTdInput.clear();
         }
-
-        List<ThreeDModelRevision> tdUpdateResults =
-                client.threeD().models().revisions().upsert(threeDModel.getId(), editedTdInput);
         LOG.info(loggingPrefix + "Finished updating 3D Models Revisions. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
-        assertEquals(editedTdInput.size(), tdUpdateResults.size());
-        return editedTdInput;
+
+        return mapResult;
     }
 }
