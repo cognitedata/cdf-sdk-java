@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -14,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ThreeDModelRevisionParser {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ThreeDModelRevisionParser.class);
 
     static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -41,6 +45,7 @@ public class ThreeDModelRevisionParser {
             for (JsonNode node : root.path("items")) {
                 extractNodes(tmBuilder, node);
                 list.add(tmBuilder.build());
+                tmBuilder.clear();
             }
         }else if (root.isObject()) {
             extractNodes(tmBuilder, root);
@@ -77,7 +82,18 @@ public class ThreeDModelRevisionParser {
         }
         if (node.path("camera").isObject()) {
             Iterator<Map.Entry<String, JsonNode>> tmterator = node.path("camera").fields();
-            //tmBuilder.setCamera(node.get("camera"));
+            ThreeDModelRevision.Camera.Builder builderCamera = ThreeDModelRevision.Camera.newBuilder();
+            while (tmterator.hasNext()) {
+                Map.Entry<String, JsonNode> entry = tmterator.next();
+                if (entry.getKey().equals("target")) {
+                    entry.getValue().forEach(value-> builderCamera.addTarget(value.doubleValue()));
+                } else if (entry.getKey().equals("position")) {
+                    entry.getValue().forEach(value-> builderCamera.addPosition(value.doubleValue()));
+                } else {
+                    LOG.warn("CAMERA PROPERTY {} IS NOT MAPPED IN OBJECT ThreeDModelRevision ", entry.getKey());
+                }
+            }
+            tmBuilder.setCamera(builderCamera.build());
         }
         if (node.path("rotation").isArray()) {
             JsonNode nodeRt = node.path("rotation");
