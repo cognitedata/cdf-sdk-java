@@ -56,6 +56,7 @@ information ([https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.m
 
 #### 3D
 - 3D Models
+- 3D Model Revisions
 
 ## Quickstart
 ```java
