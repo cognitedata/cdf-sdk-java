@@ -24,6 +24,7 @@ Changes are grouped as follows:
 ### Added
 
 - Added `3D Models`
+- Added `3D Models Revisions`
 
 ## [1.8.0] 2021-12-15
 

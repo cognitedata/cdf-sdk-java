@@ -64,6 +64,7 @@ Please check [the documentation](https://github.com/cognitedata/cdf-sdk-java/blo
 
 #### 3D
 - 3D Models
+- 3D Model Revisions
 
 ## Quickstart
 ```java
