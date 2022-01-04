@@ -37,8 +37,6 @@ public abstract class ThreeDAvailableOutputsRequestProvider extends GenericReque
         okhttp3.Request.Builder requestBuilder = buildGenericRequest();
         HttpUrl.Builder urlBuilder = buildGenericUrl();
 
-        //ImmutableList<Class> validClasses = ImmutableList.of(String.class, Integer.class, Long.class);
-
         // Build path
         urlBuilder.addPathSegment((String) requestParameters.getRequestParameters().get("modelId"));
         urlBuilder.addPathSegment("revisions");

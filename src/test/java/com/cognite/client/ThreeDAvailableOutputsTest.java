@@ -30,10 +30,10 @@ public class ThreeDAvailableOutputsTest {
 
     @Test
     @Tag("remoteCDP")
-    void retriverThreeDAvailableOutputs() throws MalformedURLException {
+    void retrieveThreeDAvailableOutputs() throws MalformedURLException {
         try {
             Instant startInstant = Instant.now();
-            String loggingPrefix = "UnitTest - retriverThreeDAvailableOutputs() -";
+            String loggingPrefix = "UnitTest - retrieveThreeDAvailableOutputs() -";
             CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
 
             Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
