@@ -21,14 +21,6 @@ Requirements:
 
 Please refer to [the documentation](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.md) for more
 information ([https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.md](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.md)).
-    
-## Breaking change in v0.9.9
-
-SDK v0.9.9 will introduce a breaking change in the definition of the data transfer objects 
-(`Asset`, `Event`, `File`, etc.). This is the carefully considered change, and the last big item before locking down 
-the SDK for v1 release.
-
-Please check [the documentation](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/readAndWriteData.md#migrating-from-sdk-099) for more information. 
 
 ### Installing the sdk
 
@@ -36,7 +28,7 @@ Please check [the documentation](https://github.com/cognitedata/cdf-sdk-java/blo
 <dependency>    
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>1.8.0</version>
+    <version>1.9.0</version>
 </dependency>
 ```
     

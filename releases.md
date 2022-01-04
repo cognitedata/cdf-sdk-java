@@ -20,13 +20,16 @@ Changes are grouped as follows:
 - Geo-location attribute and resource type.
 
 
-## [1.9.0-SNAPSHOT]
-
-- Increased read and write timeouts to match sever-side values
+## [1.9.0] 2022-01-04
 
 ### Added
 
 - Added `3D Models`
+- Increased read and write timeouts to match sever-side values
+
+### Fixed
+
+- Upsert of `sequenceMetadata` not identifying duplicate entries correctly.
 
 ## [1.8.0] 2021-12-15
 
