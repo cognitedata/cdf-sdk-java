@@ -40,3 +40,11 @@ message ThreeDAvailableOutput {
     optional int32 version = 2;
     optional int64 blobId = 3;
 }
+
+message ThreeDRevisionLog {
+
+    optional int64 timestamp = 1;
+    optional int32 severity = 2;
+    optional string type = 3;
+    optional string info = 4;
+}

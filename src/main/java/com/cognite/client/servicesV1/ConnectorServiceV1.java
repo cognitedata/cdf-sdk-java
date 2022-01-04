@@ -1938,6 +1938,17 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
     }
 
+    public ItemReader<String> readThreeDRevisionLogs() {
+        ThreeDRevisionLogsRequestProvider requestProvider = ThreeDRevisionLogsRequestProvider.builder()
+                .setEndpoint("3d/models/")
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
 
     @AutoValue.Builder
     public abstract static class Builder {
