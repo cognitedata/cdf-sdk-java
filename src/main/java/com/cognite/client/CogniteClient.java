@@ -83,7 +83,7 @@ public abstract class CogniteClient implements Serializable {
      */
     private static OkHttpClient.Builder getHttpClientBuilder() {
         /*
-        There is an assumption that all CDF resources (endpoints) have 90 seconds connection timeout.
+        There is an assumption that all CDF resources (endpoints) have 90 seconds read/write timeouts.
         In other words request must be completed within that 90 seconds timeout otherwise availability numbers will be
         breached. If our client drops connection before that, there is no possible way backend teams to detect that.
          */
