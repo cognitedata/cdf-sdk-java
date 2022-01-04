@@ -375,8 +375,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                 .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
                 .build();
 
-        return ItemWriter.of(getClient(), requestProvider)
-                .withDuplicatesResponseParser(JsonErrorMessageDuplicateResponseParser.builder().build());
+        return ItemWriter.of(getClient(), requestProvider);
     }
 
     /**
