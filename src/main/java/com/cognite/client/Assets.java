@@ -176,10 +176,11 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * @throws Exception
      */
     public List<Asset> synchronizeMultipleHierarchies(Collection<Asset> assetHierarchies) throws Exception {
-        String loggingPrefix = "synchronizeMultipleHierarchies() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        String loggingRandomString = RandomStringUtils.randomAlphanumeric(5);
+        String loggingPrefix = "synchronizeMultipleHierarchies() - " + loggingRandomString + " - ";
         Instant startInstant = Instant.now();
 
-        if (!checkExternalId(assetHierarchies)) {
+        if (!checkExternalId(assetHierarchies, loggingPrefix)) {
             String message = loggingPrefix + "Some input assets are missing externalId.";
             LOG.error(message);
             throw new Exception(message);
@@ -242,13 +243,14 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * @throws Exception
      */
     public List<Asset> synchronizeHierarchy(Collection<Asset> assetHierarchy) throws Exception {
-        String loggingPrefix = "synchronizeHierarchy() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        String loggingRandomString = RandomStringUtils.randomAlphanumeric(5);
+        String loggingPrefix = "synchronizeHierarchy() - " + loggingRandomString + " - ";
         Instant startInstant = Instant.now();
 
         LOG.info(loggingPrefix + "Start hierarchy synchronization. Received {} assets in the input collection",
                 assetHierarchy.size());
         LOG.debug(loggingPrefix + "Check input collection data integrity.");
-        if (!verifyAssetHierarchyIntegrity(assetHierarchy)) {
+        if (!verifyAssetHierarchyIntegrity(assetHierarchy, loggingRandomString)) {
             String message = loggingPrefix + "The input asset collection does not satisfy the integrity constraints.";
             LOG.error(message);
             throw new Exception(message);
@@ -423,7 +425,7 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      *
      * The following constraints will be evaluated:
      * - All assets must specify an {@code externalId}.
-     * - No duplicates (based on {@code externalId}.
+     * - No duplicates (based on {@code externalId}).
      * - The collection must contain one and only one asset object with no parent reference (representing the root node)
      * - All other assets must contain a valid {@code parentExternalId} reference (no self-references).
      * - No circular references.
@@ -432,11 +434,19 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * @return
      */
     public boolean verifyAssetHierarchyIntegrity(Collection<Asset> assets) {
-        if (!checkExternalId(assets)) return false;
-        if (!checkDuplicates(assets)) return false;
-        if (!checkSelfReference(assets)) return false;
-        if (!checkCircularReferences(assets)) return false;
-        if (!checkReferentialIntegrity(assets)) return false;
+        return verifyAssetHierarchyIntegrity(assets, RandomStringUtils.randomAlphanumeric(5));
+    }
+
+    /*
+    Private version of the verification logic which allows for setting a common logging identifier. This is useful in
+    debugging complex operations, like asset hierarchy synchronization.
+     */
+    private boolean verifyAssetHierarchyIntegrity(Collection<Asset> assets, String loggingIdentifier) {
+        if (!checkExternalId(assets, loggingIdentifier)) return false;
+        if (!checkDuplicates(assets, loggingIdentifier)) return false;
+        if (!checkSelfReference(assets, loggingIdentifier)) return false;
+        if (!checkCircularReferences(assets, loggingIdentifier)) return false;
+        if (!checkReferentialIntegrity(assets, loggingIdentifier)) return false;
 
         return true;
     }
@@ -581,14 +591,15 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      */
     private List<Asset> topologicalSort(Collection<Asset> assets) throws Exception {
         Instant startInstant = Instant.now();
-        String loggingPrefix = "sortAssetsForUpsert - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
-        Preconditions.checkArgument(checkExternalId(assets),
+        String loggingRandomString = RandomStringUtils.randomAlphanumeric(5);
+        String loggingPrefix = "sortAssetsForUpsert - " + loggingRandomString + " - ";
+        Preconditions.checkArgument(checkExternalId(assets, loggingRandomString),
                 "Some assets do not have externalId. Please check the log for more information.");
-        Preconditions.checkArgument(checkDuplicates(assets),
+        Preconditions.checkArgument(checkDuplicates(assets, loggingRandomString),
                 "Found duplicates in the input assets. Please check the log for more information.");
-        Preconditions.checkArgument(checkSelfReference(assets),
+        Preconditions.checkArgument(checkSelfReference(assets, loggingRandomString),
                 "Some assets contain a self-reference. Please check the log for more information.");
-        Preconditions.checkArgument(checkCircularReferences(assets),
+        Preconditions.checkArgument(checkCircularReferences(assets, loggingRandomString),
                 "Circular reference detected. Please check the log for more information.");
 
         LOG.debug(loggingPrefix + "Constraints check passed. Starting sort.");
@@ -635,8 +646,9 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * @param assets The assets to check.
      * @return true if all assets contain {@code externalId}. False if one or more assets do not have {@code externalId}.
      */
-    private boolean checkExternalId(Collection<Asset> assets) {
-        String loggingPrefix = "checkExternalId() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+    private boolean checkExternalId(Collection<Asset> assets, String loggingIdentifier) {
+        Preconditions.checkNotNull(loggingIdentifier);
+        String loggingPrefix = "checkExternalId() - " + loggingIdentifier + " - ";
         List<Asset> missingExternalIdList = new ArrayList<>();
 
         for (Asset asset : assets) {
@@ -675,8 +687,9 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * @param assets The assets to check.
      * @return true if no duplicates are detected. False if one or more duplicates are detected.
      */
-    private boolean checkDuplicates(Collection<Asset> assets) {
-        String loggingPrefix = "checkDuplicates() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+    private boolean checkDuplicates(Collection<Asset> assets, String loggingIdentifier) {
+        Preconditions.checkNotNull(loggingIdentifier);
+        String loggingPrefix = "checkDuplicates() - " + loggingIdentifier + " - ";
         List<Asset> duplicatesList = new ArrayList<>();
         Map<String, Asset> inputMap = new HashMap<>();
 
@@ -718,8 +731,9 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * @param assets The assets to check.
      * @return true if no self-references are detected. False if one or more self-reference are detected.
      */
-    private boolean checkSelfReference(Collection<Asset> assets) {
-        String loggingPrefix = "checkExternalId() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+    private boolean checkSelfReference(Collection<Asset> assets, String loggingIdentifier) {
+        Preconditions.checkNotNull(loggingIdentifier);
+        String loggingPrefix = "checkExternalId() - " + loggingIdentifier + " - ";
         List<Asset> selfReferenceList = new ArrayList<>(50);
 
         for (Asset asset : assets) {
@@ -761,8 +775,9 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * @param assets The assets to check.
      * @return True if circular references are detected. False if no circular references are detected.
      */
-    private boolean checkCircularReferences(Collection<Asset> assets) {
-        String loggingPrefix = "checkCircularReferences() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+    private boolean checkCircularReferences(Collection<Asset> assets, String loggingIdentifier) {
+        Preconditions.checkNotNull(loggingIdentifier);
+        String loggingPrefix = "checkCircularReferences() - " + loggingIdentifier + " - ";
         Map<String, Asset> assetMap = new HashMap<>();
         assets.forEach(asset -> assetMap.put(asset.getExternalId(), asset));
 
@@ -807,8 +822,9 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * @param assets The assets to check.
      * @return True if integrity is intact. False otherwise.
      */
-    private boolean checkReferentialIntegrity(Collection<Asset> assets) {
-        String loggingPrefix = "checkReferentialIntegrity() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+    private boolean checkReferentialIntegrity(Collection<Asset> assets, String loggingIdentifier) {
+        Preconditions.checkNotNull(loggingIdentifier);
+        String loggingPrefix = "checkReferentialIntegrity() - " + loggingIdentifier + " - ";
         Set<String> extIdSet = new HashSet<>();
         List<Asset> invalidReferenceList = new ArrayList<>();
         List<Asset> rootNodeList = new ArrayList<>();
