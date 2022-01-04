@@ -22,6 +22,8 @@ Changes are grouped as follows:
 
 ## [1.9.0-SNAPSHOT]
 
+- Increased read and write timeouts to match sever-side values
+
 ### Added
 
 - Added `3D Models`

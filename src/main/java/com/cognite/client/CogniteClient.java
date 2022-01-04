@@ -82,11 +82,16 @@ public abstract class CogniteClient implements Serializable {
     to add specific interceptor depending on the auth method used.
      */
     private static OkHttpClient.Builder getHttpClientBuilder() {
+        /*
+        There is an assumption that all CDF resources (endpoints) have 90 seconds connection timeout.
+        In other words request must be completed within that 90 seconds timeout otherwise availability numbers will be
+        breached. If our client drops connection before that, there is no possible way backend teams to detect that.
+         */
         return new OkHttpClient.Builder()
                 .connectionSpecs(DEFAULT_CONNECTION_SPECS)
                 .connectTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(15, TimeUnit.SECONDS)
-                .writeTimeout(20, TimeUnit.SECONDS);
+                .readTimeout(90, TimeUnit.SECONDS) // CDF has 90 seconds timeout
+                .writeTimeout(90, TimeUnit.SECONDS); // CDF has 90 seconds timeout
     }
 
     /**
