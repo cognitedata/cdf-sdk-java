@@ -30,50 +30,57 @@ public abstract class ThreeDBaseTest {
     protected Map<ThreeDModel, List<ThreeDModelRevision>> map3D = new HashMap<>();
     protected CogniteClient client = null;
     protected FileMetadata file3D = null;
+    private Instant startInstantAllTests = null;
 
     @BeforeAll
     public void init() throws Exception {
-        Instant startInstant = Instant.now();
-        String loggingPrefix = "UnitTest - Preparing basic framework for tests -";
-        client = getCogniteClient(loggingPrefix);
+        startInstantAllTests = Instant.now();
+        getLogger().info("------------ Preparing basics 3D object data for tests ------------ ");
 
-        Long dataSetId = getOrCreateDataSet(loggingPrefix, client);
-        List<ThreeDModel> listUpsert3D = createThreeDModel(loggingPrefix, client, dataSetId);
+        client = getCogniteClient();
+
+        Long dataSetId = getOrCreateDataSet(client);
+        List<ThreeDModel> listUpsert3D = createThreeDModel(client, dataSetId);
         file3D = uploadFile();
 
         List<ThreeDModelRevision> listUpsertRevisions = null;
         List<ThreeDModelRevision> listAllRevisions = new ArrayList<>();
         for (ThreeDModel model : listUpsert3D) {
             listUpsertRevisions = new ArrayList<>();
-            listUpsertRevisions.addAll(createThreeDModelRevisions(loggingPrefix, client, model, file3D));
+            listUpsertRevisions.addAll(createThreeDModelRevisions(client, model, file3D));
             listAllRevisions.addAll(listUpsertRevisions);
             map3D.put(model, listUpsertRevisions);
         }
+        getLogger().info("------------ Finished preparation of basics 3D object data for testing. Duration : {}",
+                Duration.between(startInstantAllTests, Instant.now()) + " ------------ ");
         Thread.sleep(2000); // wait for eventual consistency
     }
 
     @AfterAll
     public void end() throws Exception {
-        String loggingPrefix = "UnitTest - Finished basic framework for tests -";
-        delete(loggingPrefix, client, map3D, file3D);
+        getLogger().info("------------ Starting to delete basic 3D object data from tests ------------ ");
+        delete(client, map3D, file3D);
+        getLogger().info("------------ Finished preparation of basics 3D object data for testing. Duration : {}",
+                Duration.between(startInstantAllTests, Instant.now())+ " ------------ ");
     }
 
-    private CogniteClient getCogniteClient(String loggingPrefix) throws MalformedURLException {
+    private CogniteClient getCogniteClient() throws MalformedURLException {
         Instant startInstant = Instant.now();
-        getLogger().info(loggingPrefix + "Start test. Creating Cognite client.");
+        getLogger().info("------------ Start test. Creating Cognite client ------------");
         CogniteClient client = CogniteClient.ofClientCredentials(
                         TestConfigProvider.getClientId(),
                         TestConfigProvider.getClientSecret(),
                         TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
                 .withProject(TestConfigProvider.getProject())
                 .withBaseUrl(TestConfigProvider.getHost());
-        getLogger().info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
-                Duration.between(startInstant, Instant.now()));
+        getLogger().info("------------ Finished creating the Cognite client. Duration : {}",
+                Duration.between(startInstant, Instant.now()) + " ------------");
         return client;
     }
 
     @NotNull
-    private Long getOrCreateDataSet(String loggingPrefix, CogniteClient client) throws Exception {
+    private Long getOrCreateDataSet(CogniteClient client) throws Exception {
+        getLogger().info("------------ Start create or find one data set. ------------------");
         Instant startInstant = Instant.now();
         Request request = Request.create()
                 .withRootParameter("limit", 1);
@@ -83,29 +90,33 @@ public abstract class ThreeDBaseTest {
         if (list != null && list.size() > 0) {
             dataSetId = list.get(0).getId();
         } else {
-            getLogger().info(loggingPrefix + "------------ Start create or find one data set. ------------------");
+            getLogger().info("------------ Start upserting data set. ------------------");
             List<DataSet> upsertDataSetList = DataGenerator.generateDataSets(1);
             List<DataSet> upsertDataSetsResults = client.datasets().upsert(upsertDataSetList);
             dataSetId = upsertDataSetsResults.get(0).getId();
-            getLogger().info(loggingPrefix + "----------- Finished upserting data set. Duration: {} -------------",
-                    Duration.between(startInstant, Instant.now()));
+            getLogger().info("----------- Finished upserting data set. Duration: {} ",
+                    Duration.between(startInstant, Instant.now()) + " ------------");
         }
+        getLogger().info("----------- Finished create or find one data set. Duration: {} ",
+                Duration.between(startInstant, Instant.now()) + " ------------");
         return dataSetId;
     }
 
     @NotNull
-    private List<ThreeDModel> createThreeDModel(String loggingPrefix, CogniteClient client, Long dataSetId) throws Exception {
+    private List<ThreeDModel> createThreeDModel(CogniteClient client, Long dataSetId) throws Exception {
         Instant startInstant = Instant.now();
-        getLogger().info(loggingPrefix + "------------ Start create 3D Models. ------------------");
+        getLogger().info("------------ Start create 3D Models. ------------------");
         List<ThreeDModel> upsertThreeDModelsList = DataGenerator.generate3DModels(COUNT_TO_BE_CREATE, dataSetId);
         List<ThreeDModel> listUpsert = client.threeD().models().upsert(upsertThreeDModelsList);
-        getLogger().info(loggingPrefix + "------------ Finished creating 3D Models. Duration: {} -----------",
-                Duration.between(startInstant, Instant.now()));
+        getLogger().info("------------ Finished creating 3D Models. Duration: {} ",
+                Duration.between(startInstant, Instant.now()) + " ------------");
         assertEquals(upsertThreeDModelsList.size(), listUpsert.size());
         return listUpsert;
     }
 
     private FileMetadata uploadFile() throws MalformedURLException {
+        Instant startInstant = Instant.now();
+        getLogger().info("------------ Starting upload 3D file ------------------");
         Path fileAOriginal = Paths.get("./src/test/resources/CAMARO.obj");
         Path fileATemp = Paths.get("./tempA.tmp");
         byte[] fileByteA = new byte[0];
@@ -127,10 +138,6 @@ public abstract class ThreeDBaseTest {
                     .build();
             fileContainerInput.add(fileContainer);
 
-//            ClientConfig config = ClientConfig.create()
-//                    .withNoWorkers(1)
-//                    .withNoListPartitions(1);
-
             CogniteClient client = CogniteClient.ofClientCredentials(
                             TestConfigProvider.getClientId(),
                             TestConfigProvider.getClientSecret(),
@@ -140,6 +147,8 @@ public abstract class ThreeDBaseTest {
 
             try {
                 List<FileMetadata> uploadFileResult = client.files().upload(fileContainerInput);
+                getLogger().info("------------ Finished upload 3D file. Duration: {} ",
+                        Duration.between(startInstant, Instant.now()) + " ------------");
                 return uploadFileResult.get(0);
             } catch (Exception e) {
                 getLogger().error(e.toString());
@@ -150,43 +159,43 @@ public abstract class ThreeDBaseTest {
         return null;
     }
 
-    private List<ThreeDModelRevision> createThreeDModelRevisions(String loggingPrefix, CogniteClient client, ThreeDModel threeDModel, FileMetadata file) throws Exception {
+    private List<ThreeDModelRevision> createThreeDModelRevisions(CogniteClient client, ThreeDModel threeDModel, FileMetadata file) throws Exception {
         Instant startInstant = Instant.now();
-        getLogger().info(loggingPrefix + "------------ Start create 3D Models Revisions. ------------------");
+        getLogger().info("------------ Start create 3D Models Revisions. ------------------");
         List<ThreeDModelRevision> upsertThreeDModelsList = DataGenerator.generate3DModelsRevisions(COUNT_TO_BE_CREATE, file.getId());
         List<ThreeDModelRevision> listUpsert =
                 client.threeD().models().revisions().upsert(threeDModel.getId(), upsertThreeDModelsList);
-        getLogger().info(loggingPrefix + "------------ Finished creating 3D Models Revisions. Duration: {} -----------",
-                Duration.between(startInstant, Instant.now()));
+        getLogger().info("------------ Finished creating 3D Models Revisions. Duration: {} ",
+                Duration.between(startInstant, Instant.now()) + " ------------");
         assertEquals(upsertThreeDModelsList.size(), listUpsert.size());
         return listUpsert;
 
     }
 
-    private void delete(String loggingPrefix, CogniteClient client, Map<ThreeDModel, List<ThreeDModelRevision>> map, FileMetadata file) throws Exception {
-        deleteFile(loggingPrefix, client, file);
-        deleteRevision(loggingPrefix, client, map);
+    private void delete(CogniteClient client, Map<ThreeDModel, List<ThreeDModelRevision>> map, FileMetadata file) throws Exception {
+        deleteFile(client, file);
+        deleteRevision(client, map);
         List<ThreeDModel> listModels = map.keySet().stream()
                 .collect(Collectors.toList());
-        deleteThreeDModel(loggingPrefix, client, listModels);
+        deleteThreeDModel(client, listModels);
     }
 
-    private void deleteFile(String loggingPrefix, CogniteClient client, FileMetadata file) throws Exception {
+    private void deleteFile(CogniteClient client, FileMetadata file) throws Exception {
         Instant startInstant = Instant.now();
-        getLogger().info(loggingPrefix + "Start deleting files.");
+        getLogger().info("------------ Start deleting files ------------");
         Item item = Item.newBuilder()
                 .setExternalId(file.getExternalId())
                 .build();
         List<Item> itens = List.of(item);
         List<Item> deleteItemsResults = client.files().delete(itens);
-        getLogger().info(loggingPrefix + "Finished deleting files. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
+        getLogger().info("------------ Finished deleting files. Duration: {}",
+                Duration.between(startInstant, Instant.now()) + " ------------");
         assertEquals(itens.size(), deleteItemsResults.size());
     }
 
-    private void deleteRevision(String loggingPrefix, CogniteClient client, Map<ThreeDModel, List<ThreeDModelRevision>> map) throws Exception {
+    private void deleteRevision(CogniteClient client, Map<ThreeDModel, List<ThreeDModelRevision>> map) throws Exception {
         Instant startInstant = Instant.now();
-        getLogger().info(loggingPrefix + "Start deleting 3D Model Revisions.");
+        getLogger().info("------------ Start deleting 3D Model Revisions ------------");
         List<Item> deleteItemsInput = new ArrayList<>();
         for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : map.entrySet()) {
             ThreeDModel model = entry.getKey();
@@ -200,14 +209,14 @@ public abstract class ThreeDBaseTest {
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
             deleteItemsInput.clear();
         }
-        getLogger().info(loggingPrefix + "Finished deleting 3D Model Revisions. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
+        getLogger().info("----------- Finished deleting 3D Model Revisions. Duration: {}",
+                Duration.between(startInstant, Instant.now()) + " ------------");
 
     }
 
-    private void deleteThreeDModel(String loggingPrefix, CogniteClient client, List<ThreeDModel> listUpsert) throws Exception {
+    private void deleteThreeDModel(CogniteClient client, List<ThreeDModel> listUpsert) throws Exception {
         Instant startInstant = Instant.now();
-        getLogger().info(loggingPrefix + "Start deleting 3D Models.");
+        getLogger().info("----------- Start deleting 3D Models -----------");
         List<Item> deleteItemsInput = new ArrayList<>();
         listUpsert.stream()
                 .map(td -> Item.newBuilder()
@@ -216,8 +225,8 @@ public abstract class ThreeDBaseTest {
                 .forEach(item -> deleteItemsInput.add(item));
 
         List<Item> deleteItemsResults = client.threeD().models().delete(deleteItemsInput);
-        getLogger().info(loggingPrefix + "Finished deleting 3D Models. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
+        getLogger().info("----------- Finished deleting 3D Models. Duration: {}",
+                Duration.between(startInstant, Instant.now()) + " -----------");
         assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
     }
 }
