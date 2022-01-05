@@ -55,17 +55,17 @@ public abstract class ThreeDNodes extends ApiBase{
                 .withRootParameter("revisionId", String.valueOf(revisionId));
 
         CompletableFuture<ResponseItems<String>> itemsAsync = tdReader.getItemsAsync(addAuthInfo(request));
+        ResponseItems<String> responseItems = itemsAsync.join();
 
         List<ThreeDNode> listResponse = new ArrayList<>();
-        if (!itemsAsync.join().isSuccessful()) {
+        if (!responseItems.isSuccessful()) {
             // something went wrong with the request
             String message = loggingPrefix + "Retrieve 3d model failed: "
-                    + itemsAsync.join().getResponseBodyAsString();
+                    + responseItems.getResponseBodyAsString();
             LOG.error(message);
             throw new Exception(message);
         } else {
-            ResponseItems<String> response = itemsAsync.get();
-            listResponse.addAll(parseThreeDNodes(response.getResponseBodyAsString()));
+            listResponse.addAll(parseThreeDNodes(responseItems.getResponseBodyAsString()));
         }
 
         return listResponse;

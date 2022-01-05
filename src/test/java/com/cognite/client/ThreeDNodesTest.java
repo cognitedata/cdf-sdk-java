@@ -32,6 +32,7 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
     @Test
     @Tag("remoteCDP")
     void listThreeDNodes() throws Exception {
+        Instant startInstant = Instant.now();
         String loggingPrefix = "listThreeDNodes - ";
         LOG.info(loggingPrefix + "Start list 3D Nodes");
 
