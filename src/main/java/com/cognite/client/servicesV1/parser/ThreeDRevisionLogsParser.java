@@ -6,23 +6,29 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ThreeDRevisionLogsParser {
 
     static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static ThreeDRevisionLog parseThreeDRevisionLogs(String json) throws JsonProcessingException {
+    public static List<ThreeDRevisionLog> parseThreeDRevisionLogs(String json) throws JsonProcessingException {
+        List<ThreeDRevisionLog> list = new ArrayList<>();
         JsonNode root = objectMapper.readTree(json);
-
         ThreeDRevisionLog.Builder tmBuilder = ThreeDRevisionLog.newBuilder();
 
         if (root.path("items").isArray()) {
             for (JsonNode node : root.path("items")) {
                 extractNodes(tmBuilder, node);
+                list.add(tmBuilder.build());
+                tmBuilder.clear();
             }
         }else if (root.isObject()) {
             extractNodes(tmBuilder, root);
+            list.add(tmBuilder.build());
         }
-        return tmBuilder.build();
+        return list;
     }
 
     private static void extractNodes(ThreeDRevisionLog.Builder tmBuilder, JsonNode node) {
