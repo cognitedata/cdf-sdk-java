@@ -60,34 +60,26 @@ public abstract class ThreeDAvailableOutputs extends ApiBase {
                 .withRootParameter("revisionId", String.valueOf(revisionId));
         resultFutures.add(tdReader.getItemsAsync(addAuthInfo(request)));
         // Sync all downloads to a single future. It will complete when all the upstream futures have completed.
-        CompletableFuture<Void> allFutures = CompletableFuture.allOf(resultFutures.toArray(
-                new CompletableFuture[resultFutures.size()]));
-        // Wait until the uber future completes.
-        allFutures.join();
+        CompletableFuture<ResponseItems<String>> itemsAsync = tdReader.getItemsAsync(addAuthInfo(request));
+        itemsAsync.join();
 
         // Collect the response items
-        List<String> responseItems = new ArrayList<>();
-        for (CompletableFuture<ResponseItems<String>> responseItemsFuture : resultFutures) {
-            if (!responseItemsFuture.join().isSuccessful()) {
-                // something went wrong with the request
-                String message = loggingPrefix + "Retrieve 3d model failed: "
-                        + responseItemsFuture.join().getResponseBodyAsString();
-                LOG.error(message);
-                throw new Exception(message);
-            }
-            responseItems.add(responseItemsFuture.join().getResponseBodyAsString());
+        if (!itemsAsync.join().isSuccessful()) {
+            // something went wrong with the request
+            String message = loggingPrefix + "Retrieve 3D Available Outputs failed: "
+                    + itemsAsync.join().getResponseBodyAsString();
+            LOG.error(message);
+            throw new Exception(message);
         }
 
-        return responseItems.stream()
-                .map(this::parseThreeDAvailableOutputs)
-                .collect(Collectors.toList());
+        return parseThreeDAvailableOutputs(itemsAsync.join().getResponseBodyAsString());
     }
 
     /*
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
     deal very well with exceptions.
      */
-    private ThreeDAvailableOutput parseThreeDAvailableOutputs(String json) {
+    private List<ThreeDAvailableOutput> parseThreeDAvailableOutputs(String json) {
         try {
             return ThreeDAvailableOutputsParser.parseThreeDAvailableOutputs(json);
         } catch (Exception e)  {
