@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -84,19 +85,7 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
                                 .nodes()
                                 .retrieve(model.getId(), revision.getId());
                 assertNotNull(listResults);
-                listResults.forEach(node -> {
-                    assertNotNull(node);
-                    assertNotNull(node.getId());
-                    assertNotNull(node.getDepth());
-                    assertNotNull(node.getName());
-                    assertFalse(node.getName().equals(""));
-                    assertNotNull(node.getParentId());
-                    assertNotNull(node.getSubtreeSize());
-                    assertNotNull(node.getTreeIndex());
-                    assertNotNull(node.getBoundingBox());
-                    assertNotNull(node.getBoundingBox().getMaxList());
-                    assertNotNull(node.getBoundingBox().getMinList());
-                });
+                validateFields(listResults);
             }
         }
 
@@ -104,4 +93,55 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
                 Duration.between(startInstant, Instant.now()));
     }
 
+    @Test
+    @Tag("remoteCDP")
+    void listThreeDNodesAncestorNodes() throws Exception {
+        Instant startInstant = Instant.now();
+        String loggingPrefix = "listThreeDNodesAncestorNodes - ";
+        LOG.info(loggingPrefix + "Start list 3D Ancestor Nodes");
+
+        Random r = new Random();
+        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
+            ThreeDModel model = entry.getKey();
+            for (ThreeDModelRevision revision : entry.getValue()) {
+                List<ThreeDNode> listResults =
+                        client.threeD()
+                                .models()
+                                .revisions()
+                                .nodes()
+                                .retrieve(model.getId(), revision.getId());
+                assertNotNull(listResults);
+                validateFields(listResults);
+
+                Integer position = r.nextInt(listResults.size());
+                ThreeDNode nodeDrawn = listResults.get(position);
+                List<ThreeDNode> listResultsAncestorNodes =
+                        client.threeD()
+                                .models()
+                                .revisions()
+                                .nodes()
+                                .retrieve(model.getId(), revision.getId(), nodeDrawn.getId());
+                assertNotNull(listResultsAncestorNodes);
+                validateFields(listResultsAncestorNodes);
+            }
+        }
+        LOG.info(loggingPrefix + "Finished list 3D Ancestor Nodes. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+    }
+
+    private void validateFields(List<ThreeDNode> listResults) {
+        listResults.forEach(node -> {
+            assertNotNull(node);
+            assertNotNull(node.getId());
+            assertNotNull(node.getDepth());
+            assertNotNull(node.getName());
+            assertFalse(node.getName().equals(""));
+            assertNotNull(node.getParentId());
+            assertNotNull(node.getSubtreeSize());
+            assertNotNull(node.getTreeIndex());
+            assertNotNull(node.getBoundingBox());
+            assertNotNull(node.getBoundingBox().getMaxList());
+            assertNotNull(node.getBoundingBox().getMinList());
+        });
+    }
 }
