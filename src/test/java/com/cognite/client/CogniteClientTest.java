@@ -3,15 +3,17 @@ package com.cognite.client;
 import okhttp3.ConnectionSpec;
 import okhttp3.Interceptor;
 import org.junit.jupiter.api.Test;
+
 import java.net.URL;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class CogniteClientTest {
 
     @Test
-    void test_ofKey_config() {
+    void test_ofKey_config() throws Throwable {
         CogniteClient client = CogniteClient.ofKey("TEST").withBaseUrl("https://localhost");
         assertNotNull(client.getHttpClient());
         List<Interceptor> interceptorList = client.getHttpClient().interceptors();
@@ -35,7 +37,7 @@ class CogniteClientTest {
 
 
     @Test
-    void test_withHttp_config() {
+    void test_withHttp_config() throws Throwable {
         CogniteClient client = CogniteClient.ofKey("TEST").withBaseUrl("https://localhost").enableHttp(true);
         assertNotNull(client.getHttpClient());
         List<Interceptor> interceptorList = client.getHttpClient().interceptors();

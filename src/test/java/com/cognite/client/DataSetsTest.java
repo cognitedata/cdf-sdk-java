@@ -30,53 +30,50 @@ class DataSetsTest {
         String loggingPrefix = "UnitTest - listAndRetrieveDataSets() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofClientCredentials(
-                    TestConfigProvider.getClientId(),
-                    TestConfigProvider.getClientSecret(),
-                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
-                    .withBaseUrl(TestConfigProvider.getHost())
+                        TestConfigProvider.getClientId(),
+                        TestConfigProvider.getClientSecret(),
+                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                .withProject(TestConfigProvider.getProject())
+                .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
                 Duration.between(startInstant, Instant.now()));
 
-        try {
-            LOG.info(loggingPrefix + "Start listing data sets.");
-            List<DataSet> listDataSetsResults = new ArrayList<>();
-            client.datasets()
-                    .list(Request.create())
-                    .forEachRemaining(batch -> listDataSetsResults.addAll(batch));
-            LOG.info(loggingPrefix + "Finished listing data sets. No results: {}. Duration: {}",
-                    listDataSetsResults.size(),
-                    Duration.between(startInstant, Instant.now()));
+
+        LOG.info(loggingPrefix + "Start listing data sets.");
+        List<DataSet> listDataSetsResults = new ArrayList<>();
+        client.datasets()
+                .list(Request.create())
+                .forEachRemaining(batch -> listDataSetsResults.addAll(batch));
+        LOG.info(loggingPrefix + "Finished listing data sets. No results: {}. Duration: {}",
+                listDataSetsResults.size(),
+                Duration.between(startInstant, Instant.now()));
 
 
-            LOG.info(loggingPrefix + "Start retrieving data sets.");
-            List<Item> retrieveInput = listDataSetsResults.stream()
-                    .map(dataSet -> {
-                        if (dataSet.hasExternalId()) {
-                            return Item.newBuilder()
-                                    .setExternalId(dataSet.getExternalId())
-                                    .build();
-                        } else {
-                            return Item.newBuilder()
-                                    .setId(dataSet.getId())
-                                    .build();
-                        }
-                    })
-                    .collect(Collectors.toList());
-            List<DataSet> retrieveDataSetResults = client.datasets()
-                    .retrieve(retrieveInput);
-            LOG.info(loggingPrefix + "Finished retrieving data sets. No results: {}. Duration: {}",
-                    retrieveDataSetResults.size(),
-                    Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "Start retrieving data sets.");
+        List<Item> retrieveInput = listDataSetsResults.stream()
+                .map(dataSet -> {
+                    if (dataSet.hasExternalId()) {
+                        return Item.newBuilder()
+                                .setExternalId(dataSet.getExternalId())
+                                .build();
+                    } else {
+                        return Item.newBuilder()
+                                .setId(dataSet.getId())
+                                .build();
+                    }
+                })
+                .collect(Collectors.toList());
+        List<DataSet> retrieveDataSetResults = client.datasets()
+                .retrieve(retrieveInput);
+        LOG.info(loggingPrefix + "Finished retrieving data sets. No results: {}. Duration: {}",
+                retrieveDataSetResults.size(),
+                Duration.between(startInstant, Instant.now()));
 
 
-            assertEquals(listDataSetsResults.size(), retrieveDataSetResults.size());
-        } catch (Exception e) {
-            LOG.error(e.toString());
-            e.printStackTrace();
-        }
+        assertEquals(listDataSetsResults.size(), retrieveDataSetResults.size());
+
     }
 
 }
