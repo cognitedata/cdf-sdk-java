@@ -1972,6 +1972,18 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
     }
 
+    public ItemReader<String> readThreeDNodesById(Long modelId, Long revisionId) {
+
+        PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
+                .setEndpoint("3d/models/" + modelId + "/revisions/" + revisionId + "/nodes/byids")
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
     @AutoValue.Builder
     public abstract static class Builder {
         public abstract Builder setClient(CogniteClient value);

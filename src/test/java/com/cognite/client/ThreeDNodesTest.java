@@ -1,6 +1,6 @@
 package com.cognite.client;
 
-import com.cognite.client.dto.ThreeDAvailableOutput;
+import com.cognite.client.dto.Item;
 import com.cognite.client.dto.ThreeDModel;
 import com.cognite.client.dto.ThreeDModelRevision;
 import com.cognite.client.dto.ThreeDNode;
@@ -10,7 +10,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.MalformedURLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -33,6 +32,7 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
     @Test
     @Tag("remoteCDP")
     void listThreeDNodes() throws Exception {
+        Thread.sleep(5000); // wait for eventual consistency
         Instant startInstant = Instant.now();
         String loggingPrefix = "listThreeDNodes - ";
         LOG.info(loggingPrefix + "Start list 3D Nodes");
@@ -96,6 +96,7 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
     @Test
     @Tag("remoteCDP")
     void listThreeDNodesAncestorNodes() throws Exception {
+        Thread.sleep(5000); // wait for eventual consistency
         Instant startInstant = Instant.now();
         String loggingPrefix = "listThreeDNodesAncestorNodes - ";
         LOG.info(loggingPrefix + "Start list 3D Ancestor Nodes");
@@ -126,6 +127,50 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
             }
         }
         LOG.info(loggingPrefix + "Finished list 3D Ancestor Nodes. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void getThreeDNodesByIds() throws Exception {
+        Thread.sleep(5000); // wait for eventual consistency
+        Instant startInstant = Instant.now();
+        String loggingPrefix = "getThreeDNodesByIds - ";
+        LOG.info(loggingPrefix + "Start getting 3D Nodes by ids");
+
+        Random r = new Random();
+        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
+            ThreeDModel model = entry.getKey();
+            for (ThreeDModelRevision revision : entry.getValue()) {
+                List<ThreeDNode> listResults =
+                        client.threeD()
+                                .models()
+                                .revisions()
+                                .nodes()
+                                .retrieve(model.getId(), revision.getId());
+                assertNotNull(listResults);
+                validateFields(listResults);
+
+                List<Item> tdList = new ArrayList<>();
+                listResults.stream()
+                        .map(td -> Item.newBuilder()
+                                .setId(td.getId())
+                                .build())
+                        .forEach(item -> tdList.add(item));
+
+                List<ThreeDNode> nodesByIds =
+                        client.threeD()
+                                .models()
+                                .revisions()
+                                .nodes()
+                                .retrieve(model.getId(), revision.getId(), tdList);
+
+                assertEquals(listResults.size(), nodesByIds.size());
+                assertNotNull(nodesByIds);
+                validateFields(nodesByIds);
+            }
+        }
+        LOG.info(loggingPrefix + "Finished getting 3D Nodes by ids. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
     }
 

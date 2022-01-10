@@ -53,7 +53,7 @@ public abstract class PostJsonListRequestProvider extends GenericRequestProvider
 
         // Check for limit
         if (!requestParameters.getRequestParameters().containsKey("limit")) {
-            requestParameters = requestParameters.withRootParameter("limit", ConnectorConstants.DEFAULT_MAX_BATCH_SIZE);
+            //requestParameters = requestParameters.withRootParameter("limit", ConnectorConstants.DEFAULT_MAX_BATCH_SIZE);
         }
 
         if (cursor.isPresent()) {

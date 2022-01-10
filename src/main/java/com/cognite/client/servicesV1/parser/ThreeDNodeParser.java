@@ -40,7 +40,11 @@ public class ThreeDNodeParser {
     public static ThreeDNode parseThreeDNodes(String json) throws JsonProcessingException {
         JsonNode root = objectMapper.readTree(json);
         ThreeDNode.Builder builder = ThreeDNode.newBuilder();
-        extractNodes(builder, root);
+
+        if (root.isObject()) {
+            extractNodes(builder, root);
+        }
+
         return builder.build();
     }
 
