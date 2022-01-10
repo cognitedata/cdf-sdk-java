@@ -10,7 +10,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-class CogniteClientTest {
+class CogniteClientIntegrationTest {
 
     @Test
     void test_ofKey_config() throws Throwable {
