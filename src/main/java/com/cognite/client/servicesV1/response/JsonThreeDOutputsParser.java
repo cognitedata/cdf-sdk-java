@@ -1,6 +1,5 @@
 package com.cognite.client.servicesV1.response;
 
-import com.cognite.client.dto.ThreeDAvailableOutput;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
@@ -8,10 +7,10 @@ import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 
 @AutoValue
-public abstract class JsonThreeDAvailableOutputsParser extends DefaultResponseParser {
+public abstract class JsonThreeDOutputsParser extends DefaultResponseParser {
 
-    public static JsonThreeDAvailableOutputsParser.Builder builder() {
-        return new AutoValue_JsonThreeDAvailableOutputsParser.Builder();
+    public static JsonThreeDOutputsParser.Builder builder() {
+        return new AutoValue_JsonThreeDOutputsParser.Builder();
     }
 
     public abstract Builder toBuilder();
@@ -39,6 +38,6 @@ public abstract class JsonThreeDAvailableOutputsParser extends DefaultResponsePa
 
     @AutoValue.Builder
     public abstract static class Builder {
-        public abstract JsonThreeDAvailableOutputsParser build();
+        public abstract JsonThreeDOutputsParser build();
     }
 }

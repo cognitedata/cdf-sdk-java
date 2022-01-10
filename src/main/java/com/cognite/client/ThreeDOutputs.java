@@ -1,31 +1,27 @@
 package com.cognite.client;
 
-import com.cognite.client.dto.Item;
-import com.cognite.client.dto.ThreeDAvailableOutput;
-import com.cognite.client.dto.ThreeDModelRevision;
+import com.cognite.client.dto.ThreeDOutput;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ItemReader;
 import com.cognite.client.servicesV1.ResponseItems;
-import com.cognite.client.servicesV1.parser.ThreeDAvailableOutputsParser;
-import com.cognite.client.servicesV1.parser.ThreeDModelRevisionParser;
+import com.cognite.client.servicesV1.parser.ThreeDOutputsParser;
 import com.google.auto.value.AutoValue;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 /**
  * This class represents the Cognite 3D models available outputs api endpoint.
  *
- * It provides methods for reading {@link com.cognite.client.dto.ThreeDAvailableOutput}.
+ * It provides methods for reading {@link com.cognite.client.dto.ThreeDOutput}.
  */
 @AutoValue
-public abstract class ThreeDAvailableOutputs extends ApiBase {
+public abstract class ThreeDOutputs extends ApiBase {
 
     /**
-     * Constructs a new {@link ThreeDAvailableOutputs} object using the provided client configuration.
+     * Constructs a new {@link ThreeDOutputs} object using the provided client configuration.
      *
      * This method is intended for internal use--SDK clients should always use {@link CogniteClient}
      * as the entry point to this class.
@@ -33,14 +29,14 @@ public abstract class ThreeDAvailableOutputs extends ApiBase {
      * @param client The {@link CogniteClient} to use for configuration settings.
      * @return the 3D models available outputs api object.
      */
-    public static ThreeDAvailableOutputs of(CogniteClient client) {
-        return ThreeDAvailableOutputs.builder()
+    public static ThreeDOutputs of(CogniteClient client) {
+        return ThreeDOutputs.builder()
                 .setClient(client)
                 .build();
     }
 
-    private static ThreeDAvailableOutputs.Builder builder() {
-        return new AutoValue_ThreeDAvailableOutputs.Builder();
+    private static ThreeDOutputs.Builder builder() {
+        return new AutoValue_ThreeDOutputs.Builder();
     }
 
     /**
@@ -49,10 +45,10 @@ public abstract class ThreeDAvailableOutputs extends ApiBase {
      * @param modelId The id of ThreeDModel object
      * @param revisionId The id of ThreeDModelRevision object
      */
-    public List<ThreeDAvailableOutput> retrieve(Long modelId, Long revisionId) throws Exception {
+    public List<ThreeDOutput> retrieve(Long modelId, Long revisionId) throws Exception {
         String loggingPrefix = "retrieve() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         ConnectorServiceV1 connector = getClient().getConnectorService();
-        ItemReader<String> tdReader = connector.readThreeDAvailableOutputs();
+        ItemReader<String> tdReader = connector.readThreeDOutputs();
 
         List<CompletableFuture<ResponseItems<String>>> resultFutures = new ArrayList<>();
         Request request = Request.create()
@@ -72,23 +68,23 @@ public abstract class ThreeDAvailableOutputs extends ApiBase {
             throw new Exception(message);
         }
 
-        return parseThreeDAvailableOutputs(itemsAsync.join().getResponseBodyAsString());
+        return parseThreeDOutputs(itemsAsync.join().getResponseBodyAsString());
     }
 
     /*
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
     deal very well with exceptions.
      */
-    private List<ThreeDAvailableOutput> parseThreeDAvailableOutputs(String json) {
+    private List<ThreeDOutput> parseThreeDOutputs(String json) {
         try {
-            return ThreeDAvailableOutputsParser.parseThreeDAvailableOutputs(json);
+            return ThreeDOutputsParser.parseThreeDOutputs(json);
         } catch (Exception e)  {
             throw new RuntimeException(e);
         }
     }
 
     @AutoValue.Builder
-    abstract static class Builder extends ApiBase.Builder<ThreeDAvailableOutputs.Builder> {
-        abstract ThreeDAvailableOutputs build();
+    abstract static class Builder extends ApiBase.Builder<ThreeDOutputs.Builder> {
+        abstract ThreeDOutputs build();
     }
 }

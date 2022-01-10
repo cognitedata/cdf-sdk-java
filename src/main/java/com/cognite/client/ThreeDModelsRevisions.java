@@ -3,7 +3,6 @@ package com.cognite.client;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Item;
-import com.cognite.client.dto.ThreeDModel;
 import com.cognite.client.dto.ThreeDModelRevision;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ItemReader;
@@ -47,12 +46,12 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
     }
 
     /**
-     * Returns {@link ThreeDAvailableOutputs} representing 3D Models available outputs api endpoints.
+     * Returns {@link ThreeDOutputs} representing 3D Models available outputs api endpoints.
      *
-     * @return The ThreeDAvailableOutputs api endpoints.
+     * @return The ThreeDOutputs api endpoints.
      */
-    public ThreeDAvailableOutputs availableOutputs() {
-        return ThreeDAvailableOutputs.of(getClient());
+    public ThreeDOutputs outputs() {
+        return ThreeDOutputs.of(getClient());
     }
 
     private static ThreeDModelsRevisions.Builder builder() {
