@@ -1840,9 +1840,15 @@ public abstract class ConnectorServiceV1 implements Serializable {
     }
 
     /**
+<<<<<<< HEAD
      * Read 3D Models Revisions from Cognite.
      *
      * @param queryParameters The parameters for the events query.
+=======
+     * Fetch 3d models revisions from Cognite.
+     *
+     * @param queryParameters
+>>>>>>> bccfe90003a4b6868bd94da282fa43e92a6ea13c
      * @return
      */
     public Iterator<CompletableFuture<ResponseItems<String>>> readThreeDModelsRevisions(Request queryParameters) {

@@ -64,7 +64,6 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
     }
 
     /**
-     *
      * Returns all {@link ThreeDModelRevision} objects.
      *
      * @param modelId the id of 3d models
@@ -229,19 +228,27 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
 
     /**
 <<<<<<< HEAD
+<<<<<<< HEAD
      * Deletes 3D Revisions.
 =======
      * Deletes a set of Sequences.
 >>>>>>> Add retriver 3d revisions
+=======
+     * Deletes a set of Sequences.
+>>>>>>> bccfe90003a4b6868bd94da282fa43e92a6ea13c
      *
      * The 3D Revisions to delete are identified via their {@code id} by submitting a list of {@link Item}.
      *
      * @param modelId The id of ThreeDModels object
 <<<<<<< HEAD
+<<<<<<< HEAD
      * @param deleteItemsInput List of {@link Item} containing the ids of 3D Model Revisions to delete
 =======
      * @param deleteItemsInput The 3D Model Revisions to delete
 >>>>>>> Add retriver 3d revisions
+=======
+     * @param deleteItemsInput The 3D Model Revisions to delete
+>>>>>>> bccfe90003a4b6868bd94da282fa43e92a6ea13c
      * @return
      * @throws Exception
      */
