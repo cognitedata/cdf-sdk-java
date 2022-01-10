@@ -4,7 +4,6 @@ import com.cognite.client.Request;
 import com.cognite.client.servicesV1.ConnectorConstants;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import okhttp3.HttpUrl;
 
 import java.io.IOException;
@@ -12,10 +11,10 @@ import java.net.URISyntaxException;
 import java.util.Optional;
 
 @AutoValue
-public abstract class ThreeDAvailableOutputsRequestProvider extends GenericRequestProvider {
+public abstract class ThreeDOutputsRequestProvider extends GenericRequestProvider {
 
-    public static ThreeDAvailableOutputsRequestProvider.Builder builder() {
-        return new com.cognite.client.servicesV1.request.AutoValue_ThreeDAvailableOutputsRequestProvider.Builder()
+    public static ThreeDOutputsRequestProvider.Builder builder() {
+        return new com.cognite.client.servicesV1.request.AutoValue_ThreeDOutputsRequestProvider.Builder()
                 .setRequest(Request.create())
                 .setSdkIdentifier(ConnectorConstants.SDK_IDENTIFIER)
                 .setAppIdentifier(ConnectorConstants.DEFAULT_APP_IDENTIFIER)
@@ -23,9 +22,9 @@ public abstract class ThreeDAvailableOutputsRequestProvider extends GenericReque
                 .setBetaEnabled(ConnectorConstants.DEFAULT_BETA_ENABLED);
     }
 
-    public abstract ThreeDAvailableOutputsRequestProvider.Builder toBuilder();
+    public abstract ThreeDOutputsRequestProvider.Builder toBuilder();
 
-    public ThreeDAvailableOutputsRequestProvider withRequest(Request parameters) {
+    public ThreeDOutputsRequestProvider withRequest(Request parameters) {
         Preconditions.checkNotNull(parameters, "Request parameters cannot be null.");
         Preconditions.checkArgument(parameters.getRequestParameters().containsKey("modelId"));
         Preconditions.checkArgument(parameters.getRequestParameters().containsKey("revisionId"));
@@ -47,7 +46,7 @@ public abstract class ThreeDAvailableOutputsRequestProvider extends GenericReque
     }
 
     @AutoValue.Builder
-    public static abstract class Builder extends GenericRequestProvider.Builder<ThreeDAvailableOutputsRequestProvider.Builder> {
-        public abstract ThreeDAvailableOutputsRequestProvider build();
+    public static abstract class Builder extends GenericRequestProvider.Builder<ThreeDOutputsRequestProvider.Builder> {
+        public abstract ThreeDOutputsRequestProvider build();
     }
 }

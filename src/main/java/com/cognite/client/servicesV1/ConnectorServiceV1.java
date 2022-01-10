@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 
 import com.cognite.client.CogniteClient;
 import com.cognite.client.Request;
-import com.cognite.client.ThreeDAvailableOutputs;
 import com.cognite.client.config.AuthConfig;
 import com.cognite.client.servicesV1.executor.FileBinaryRequestExecutor;
 import com.cognite.client.servicesV1.parser.ItemParser;
@@ -1925,9 +1924,9 @@ public abstract class ConnectorServiceV1 implements Serializable {
      *
      * @return
      */
-    public ItemReader<String> readThreeDAvailableOutputs() {
+    public ItemReader<String> readThreeDOutputs() {
 
-        ThreeDAvailableOutputsRequestProvider requestProvider = ThreeDAvailableOutputsRequestProvider.builder()
+        ThreeDOutputsRequestProvider requestProvider = ThreeDOutputsRequestProvider.builder()
                 .setEndpoint("3d/models/")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())

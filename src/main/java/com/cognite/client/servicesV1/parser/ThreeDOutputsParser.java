@@ -1,7 +1,6 @@
 package com.cognite.client.servicesV1.parser;
 
-import com.cognite.client.ThreeDAvailableOutputs;
-import com.cognite.client.dto.ThreeDAvailableOutput;
+import com.cognite.client.dto.ThreeDOutput;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,14 +8,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ThreeDAvailableOutputsParser {
+public class ThreeDOutputsParser {
 
     static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static List<ThreeDAvailableOutput> parseThreeDAvailableOutputs(String json) throws JsonProcessingException {
-        List<ThreeDAvailableOutput> list = new ArrayList<>();
+    public static List<ThreeDOutput> parseThreeDOutputs(String json) throws JsonProcessingException {
+        List<ThreeDOutput> list = new ArrayList<>();
         JsonNode root = objectMapper.readTree(json);
-        ThreeDAvailableOutput.Builder builder = ThreeDAvailableOutput.newBuilder();
+        ThreeDOutput.Builder builder = ThreeDOutput.newBuilder();
 
         if (root.path("items").isArray()) {
             for (JsonNode node : root.path("items")) {
@@ -31,7 +30,7 @@ public class ThreeDAvailableOutputsParser {
         return list;
     }
 
-    private static void extractNodes(ThreeDAvailableOutput.Builder builder, JsonNode node) {
+    private static void extractNodes(ThreeDOutput.Builder builder, JsonNode node) {
         if (node.path("format").isTextual()) {
             builder.setFormat(node.get("format").textValue());
         }
