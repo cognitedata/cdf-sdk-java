@@ -16,7 +16,6 @@
 
 package com.cognite.client;
 
-import com.cognite.client.dto.Item;
 import com.cognite.client.dto.ThreeDFileBinary;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.google.auto.value.AutoValue;
@@ -38,14 +37,11 @@ import java.util.Objects;
  */
 @AutoValue
 public abstract class ThreeDFiles extends ApiBase {
-    private static final int MAX_DOWNLOAD_BINARY_BATCH_SIZE = 10;
 
     /**
      * Downloads 3D file binaries to a local / network path.
      *
-     * Downloads a set of 3D file binaries based on {@code externalId / id} in the {@link Item} list.
-     *
-     * Both the file header / metadata and the file binary will be returned.
+     * Downloads a set of 3D file binaries based on {@code id}.
      *
      * Supported destination file stores for the file binary:
      * - Local (network) disk. Specify the temp path as {@code file://<host>/<my-path>/}.
@@ -63,7 +59,7 @@ public abstract class ThreeDFiles extends ApiBase {
     /**
      * Downloads 3D file binaries.
      *
-     * Downloads a set of 3D file binaries based on {@code externalId / id} in the {@link Item} list. The file
+     * Downloads a set of 3D file binaries based on {@code id}. The file
      * binaries can be downloaded as files or byte streams. In case the file is very large (> 200MB) it has to
      * be streamed directly to the file system (i.e. downloaded as a file).
      *

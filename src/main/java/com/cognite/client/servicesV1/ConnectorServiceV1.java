@@ -29,7 +29,7 @@ import com.cognite.client.servicesV1.parser.ItemParser;
 import com.cognite.client.servicesV1.parser.LoginStatusParser;
 import com.cognite.client.servicesV1.request.*;
 import com.cognite.client.servicesV1.response.*;
-import com.cognite.client.servicesV1.util.CDFApiUtils;
+import com.cognite.client.servicesV1.util.ApiHttpUrlBuilderUtils;
 import com.cognite.client.servicesV1.util.JsonUtil;
 import com.cognite.v1.timeseries.proto.DataPointListItem;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -2772,7 +2772,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
             }
 
             // Start download the 3D file binaries
-            String downloadUrl = CDFApiUtils.defaultAPIEndpointBuilder(
+            String downloadUrl = ApiHttpUrlBuilderUtils.defaultAPIEndpointBuilder(
                     request, ENDPOINT, "v1").addPathSegment(threeDFileId.toString()).build().toString();
 
             CompletableFuture<ThreeDFileBinary> future =

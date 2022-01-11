@@ -6,7 +6,7 @@ import okhttp3.HttpUrl;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class CDFApiUtils {
+public class ApiHttpUrlBuilderUtils {
 
     /**
      * Returns a HttpUrl.Builder pre-filled with the host address.
