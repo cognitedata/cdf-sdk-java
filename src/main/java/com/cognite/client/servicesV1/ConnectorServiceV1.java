@@ -3133,15 +3133,9 @@ public abstract class ConnectorServiceV1 implements Serializable {
                     .url(url)
                     .build();
 
-            OkHttpClient.Builder builder = client.newBuilder();
+            OkHttpClient currentClient = getCurrentClient(interceptors);
 
-            if (Objects.nonNull(interceptors)) {
-                for (Interceptor interceptor: interceptors) {
-                    builder.addInterceptor(interceptor);
-                }
-            }
-
-            FileBinaryRequestExecutor requestExecutor = FileBinaryRequestExecutor.of(builder.build())
+            FileBinaryRequestExecutor requestExecutor = FileBinaryRequestExecutor.of(currentClient)
                     .withMaxRetries(maxRetries)
                     .enableForceTempStorage(forceTempStorage);
 
@@ -3174,6 +3168,19 @@ public abstract class ConnectorServiceV1 implements Serializable {
                         return fileBinary;
                     });
             return future;
+        }
+
+        private static OkHttpClient getCurrentClient(List<Interceptor> interceptors) {
+            OkHttpClient currentClient = client;
+
+            if (Objects.nonNull(interceptors)) {
+                OkHttpClient.Builder builder = client.newBuilder();
+                for (Interceptor interceptor: interceptors) {
+                    builder.addInterceptor(interceptor);
+                }
+                currentClient = builder.build();
+            }
+            return currentClient;
         }
     }
 }
