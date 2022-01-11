@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class DataSetsTest {
+class DataSetsIntegrationTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Test
@@ -75,7 +75,7 @@ class DataSetsTest {
             assertEquals(listDataSetsResults.size(), retrieveDataSetResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 

@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class FilesTest {
+class FilesIntegrationTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Test
@@ -42,7 +42,7 @@ class FilesTest {
             fileByteA = java.nio.file.Files.readAllBytes(fileAOriginal);
             fileByteB = java.nio.file.Files.readAllBytes(fileB);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         List<FileMetadata> fileMetadataList = DataGenerator.generateFileHeaderObjects(2);
         List<FileContainer> fileContainerInput = new ArrayList<>();
@@ -146,7 +146,7 @@ class FilesTest {
 
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -213,7 +213,7 @@ class FilesTest {
 
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }

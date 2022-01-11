@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class LabelsTest {
+class LabelsIntegrationTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Test
@@ -79,7 +79,7 @@ class LabelsTest {
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -183,7 +183,7 @@ class LabelsTest {
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 

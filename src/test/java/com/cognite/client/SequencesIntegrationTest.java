@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class SequencesTest {
+class SequencesIntegrationTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Test
@@ -80,7 +80,7 @@ class SequencesTest {
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -176,7 +176,7 @@ class SequencesTest {
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -287,7 +287,7 @@ class SequencesTest {
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -355,7 +355,7 @@ class SequencesTest {
             assertEquals(sequencesItems.size(), retrievedSequences.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -419,7 +419,7 @@ class SequencesTest {
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }

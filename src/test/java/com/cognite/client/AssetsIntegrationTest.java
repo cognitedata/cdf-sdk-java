@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class AssetsTest {
+class AssetsIntegrationTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Test
@@ -83,7 +83,7 @@ class AssetsTest {
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -158,7 +158,7 @@ class AssetsTest {
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -234,7 +234,7 @@ class AssetsTest {
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -336,7 +336,7 @@ class AssetsTest {
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -403,7 +403,7 @@ class AssetsTest {
             assertEquals(assetItems.size(), retrievedAssets.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -465,7 +465,7 @@ class AssetsTest {
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -522,7 +522,7 @@ class AssetsTest {
                         client.assets().upsert(createItemsList);
                         Thread.sleep(500L);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        throw new RuntimeException(e);
                     }
                 }
             });
@@ -553,7 +553,7 @@ class AssetsTest {
             assertEquals(eventList.size(), deleteItemsReceipt.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
