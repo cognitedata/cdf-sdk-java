@@ -16,7 +16,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class SecurityCategoriesIntegrationTest {
+class SecurityCategoriesTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Test

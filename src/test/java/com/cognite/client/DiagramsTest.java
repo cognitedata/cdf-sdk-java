@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class DiagramsIntegrationTest {
+class DiagramsTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
     static final String metaKey = "source";
     static final String metaValue = "unit_test";

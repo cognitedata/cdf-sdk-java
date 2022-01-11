@@ -21,7 +21,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class EntityMatchingIntegrationTest {
+class EntityMatchingTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Test

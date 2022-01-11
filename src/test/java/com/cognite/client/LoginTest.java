@@ -11,7 +11,7 @@ import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class LoginIntegrationTest {
+public class LoginTest {
 
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 

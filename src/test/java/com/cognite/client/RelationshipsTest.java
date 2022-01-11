@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class RelationshipsIntegrationTest {
+class RelationshipsTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Test

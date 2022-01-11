@@ -3,10 +3,7 @@ package com.cognite.client;
 import com.cognite.client.config.ClientConfig;
 import com.cognite.client.config.TokenUrl;
 import com.cognite.client.config.UpsertMode;
-import com.cognite.client.dto.Aggregate;
-import com.cognite.client.dto.Event;
-import com.cognite.client.dto.Item;
-import com.cognite.client.stream.Publisher;
+import com.cognite.client.dto.*;
 import com.cognite.client.util.DataGenerator;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -17,28 +14,21 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class EventsIntegrationTest {
+class ExtractionPipelinesTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Test
     @Tag("remoteCDP")
-    void writeReadAndDeleteEvents() throws Throwable {
+    void writeReadAndDeleteExtractionPipelines() throws Throwable {
         Instant startInstant = Instant.now();
-        ClientConfig config = ClientConfig.create()
-                .withNoWorkers(1)
-                .withNoListPartitions(1);
-        String loggingPrefix = "UnitTest - writeReadAndDeleteEvents() -";
-        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+        String loggingPrefix = "UnitTest - writeReadAndDeleteExtractionPipelines() -";
+        LOG.info(loggingPrefix + "---------------- Start test. Creating Cognite client. --------------------");
 
 
         CogniteClient client = CogniteClient.ofClientCredentials(
@@ -47,42 +37,56 @@ class EventsIntegrationTest {
                         TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
                 .withProject(TestConfigProvider.getProject())
                 .withBaseUrl(TestConfigProvider.getHost());
-        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+        LOG.info(loggingPrefix + "-------------- Finished creating the Cognite client. Duration : {} ---------------",
                 Duration.between(startInstant, Instant.now()));
-        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-        LOG.info(loggingPrefix + "Start upserting events.");
-        List<Event> upsertEventsList = DataGenerator.generateEvents(13800);
-        client.events().upsert(upsertEventsList);
-        LOG.info(loggingPrefix + "Finished upserting events. Duration: {}",
+        LOG.info(loggingPrefix + "------------ Start create data set. ------------------");
+        List<DataSet> upsertDataSetList = DataGenerator.generateDataSets(1);
+        List<DataSet> upsertDataSetsResults = client.datasets().upsert(upsertDataSetList);
+        long dataSetId = upsertDataSetsResults.get(0).getId();
+        LOG.info(loggingPrefix + "----------- Finished upserting data set. Duration: {} -------------",
                 Duration.between(startInstant, Instant.now()));
-        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-        Thread.sleep(20000); // wait for eventual consistency
+        LOG.info(loggingPrefix + "------------ Start upserting extraction pipelines. ------------------");
+        List<ExtractionPipeline> upsertPipelinesList = DataGenerator.generateExtractionPipelines(3, dataSetId);
+        client.extractionPipelines().upsert(upsertPipelinesList);
+        LOG.info(loggingPrefix + "------------ Finished upserting extraction pipelines. Duration: {} -----------",
+                Duration.between(startInstant, Instant.now()));
 
-        LOG.info(loggingPrefix + "Start reading events.");
-        List<Event> listEventsResults = new ArrayList<>();
-        client.events()
+        Thread.sleep(2000); // wait for eventual consistency
+
+        LOG.info(loggingPrefix + "------------ Start reading extraction pipelines. ------------------");
+        List<ExtractionPipeline> listPipelinesResults = new ArrayList<>();
+        client.extractionPipelines()
                 .list(Request.create()
-                        .withFilterParameter("source", DataGenerator.sourceValue))
-                .forEachRemaining(events -> listEventsResults.addAll(events));
-        LOG.info(loggingPrefix + "Finished reading events. Duration: {}",
+                        //        .withFilterParameter("source", DataGenerator.sourceValue)
+                )
+                .forEachRemaining(events -> listPipelinesResults.addAll(events));
+        LOG.info(loggingPrefix + "------------ Finished reading extraction pipelines. Duration: {} -----------",
                 Duration.between(startInstant, Instant.now()));
-        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-        LOG.info(loggingPrefix + "Start deleting events.");
-        List<Item> deleteItemsInput = listEventsResults.stream()
-                .map(event -> Item.newBuilder()
-                        .setExternalId(event.getExternalId())
+        LOG.info(loggingPrefix + "------------ Start creating extraction pipeline runs. ------------------");
+        List<ExtractionPipelineRun> upsertPipelineRunsList = new ArrayList<>();
+        listPipelinesResults.stream()
+                .map(extractionPipeline -> extractionPipeline.getExternalId())
+                .forEach(extId -> upsertPipelineRunsList.addAll(DataGenerator.generateExtractionPipelineRuns(3, extId)));
+
+        client.extractionPipelines().runs().create(upsertPipelineRunsList);
+        LOG.info(loggingPrefix + "------------ Finished upserting extraction pipeline runs. Duration: {} -----------",
+                Duration.between(startInstant, Instant.now()));
+
+        LOG.info(loggingPrefix + "------------ Start deleting extraction pipelines. ------------------");
+        List<Item> deleteItemsInput = listPipelinesResults.stream()
+                .map(pipeline -> Item.newBuilder()
+                        .setExternalId(pipeline.getExternalId())
                         .build())
                 .collect(Collectors.toList());
 
-        List<Item> deleteItemsResults = client.events().delete(deleteItemsInput);
-        LOG.info(loggingPrefix + "Finished deleting events. Duration: {}",
+        List<Item> deleteItemsResults = client.extractionPipelines().delete(deleteItemsInput);
+        LOG.info(loggingPrefix + "------------ Finished deleting extraction pipelines. Duration: {} -----------",
                 Duration.between(startInstant, Instant.now()));
-        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-        assertEquals(upsertEventsList.size(), listEventsResults.size());
+        assertEquals(upsertPipelinesList.size(), listPipelinesResults.size());
         assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
 
     }
@@ -266,152 +270,6 @@ class EventsIntegrationTest {
         assertEquals(upsertEventsList.size(), listEventsResults.size());
         assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
         assertEquals(eventItems.size(), retrievedEvents.size());
-
-    }
-
-    @Test
-    @Tag("remoteCDP")
-    void writeAggregateAndDeleteEvents() throws Exception {
-        int noItems = 745;
-        Instant startInstant = Instant.now();
-
-        String loggingPrefix = "UnitTest - writeAggregateAndDeleteEvents() -";
-        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofClientCredentials(
-                        TestConfigProvider.getClientId(),
-                        TestConfigProvider.getClientSecret(),
-                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                .withProject(TestConfigProvider.getProject())
-                .withBaseUrl(TestConfigProvider.getHost());
-        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
-                Duration.between(startInstant, Instant.now()));
-
-
-        LOG.info(loggingPrefix + "Start upserting events.");
-        List<Event> upsertEventsList = DataGenerator.generateEvents(noItems);
-        client.events().upsert(upsertEventsList);
-        LOG.info(loggingPrefix + "Finished upserting events. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
-
-        Thread.sleep(10000); // wait for eventual consistency
-
-        LOG.info(loggingPrefix + "Start aggregating events.");
-        Aggregate aggregateResult = client.events()
-                .aggregate(Request.create()
-                        .withFilterParameter("source", DataGenerator.sourceValue));
-        LOG.info(loggingPrefix + "Aggregate results: {}", aggregateResult);
-        LOG.info(loggingPrefix + "Finished aggregating events. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
-
-        LOG.info(loggingPrefix + "Start reading events.");
-        List<Event> listEventsResults = new ArrayList<>();
-        client.events()
-                .list(Request.create()
-                        .withFilterParameter("source", DataGenerator.sourceValue))
-                .forEachRemaining(events -> listEventsResults.addAll(events));
-        LOG.info(loggingPrefix + "Finished reading events. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
-
-        LOG.info(loggingPrefix + "Start deleting events.");
-        List<Item> deleteItemsInput = new ArrayList<>();
-        listEventsResults.stream()
-                .map(event -> Item.newBuilder()
-                        .setExternalId(event.getExternalId())
-                        .build())
-                .forEach(item -> deleteItemsInput.add(item));
-
-        List<Item> deleteItemsResults = client.events().delete(deleteItemsInput);
-        LOG.info(loggingPrefix + "Finished deleting events. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
-
-        assertEquals(upsertEventsList.size(), listEventsResults.size());
-        assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
-
-    }
-
-    @Test
-    @Tag("remoteCDP")
-    void writeStreamAndDeleteEvents() throws Exception {
-        Instant startInstant = Instant.now();
-
-        String loggingPrefix = "UnitTest - writeStreamAndDeleteEvents() -";
-        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofClientCredentials(
-                        TestConfigProvider.getClientId(),
-                        TestConfigProvider.getClientSecret(),
-                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                .withProject(TestConfigProvider.getProject())
-                .withBaseUrl(TestConfigProvider.getHost())
-                //.withClientConfig(config)
-                ;
-        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
-                Duration.between(startInstant, Instant.now()));
-        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
-
-
-        LOG.info(loggingPrefix + "Setup the stream subscriber to the event resource type.");
-        //AtomicInteger receiveEventCount = new AtomicInteger(0);
-        List<Event> eventList = new CopyOnWriteArrayList<>();
-
-        Publisher<Event> publisher = client.events().stream()
-                .withRequest(Request.create()
-                        .withFilterMetadataParameter(DataGenerator.sourceKey, DataGenerator.sourceValue))
-                .withStartTime(Instant.now())
-                .withEndTime(Instant.now().plusSeconds(20))
-                .withPollingInterval(Duration.ofSeconds(2))
-                .withPollingOffset(Duration.ofSeconds(10L))
-                .withConsumer(batch -> {
-                    LOG.info(loggingPrefix + "Received a batch of {} events.",
-                            batch.size());
-                    //receiveEventCount.addAndGet(batch.size());
-                    eventList.addAll(batch);
-                });
-
-        Future<Boolean> streamer = publisher.start();
-        LOG.info(loggingPrefix + "Finished setup the stream subscriber. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
-        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
-
-        LOG.info(loggingPrefix + "Start creating events as an async job.");
-        AtomicInteger publishItemsCount = new AtomicInteger(0);
-        CompletableFuture.runAsync(() -> {
-            for (int i = 0; i < 6; i++) {
-                int noItems = 10;
-                List<Event> createItemsList = DataGenerator.generateEvents(noItems);
-                publishItemsCount.addAndGet(noItems);
-                try {
-                    client.events().upsert(createItemsList);
-                    Thread.sleep(500L);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        LOG.info(loggingPrefix + "Finished creating publish events async job. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
-        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
-
-        LOG.info(loggingPrefix + "Wait for stream to finish.");
-
-        LOG.info(loggingPrefix + "Finished reading stream with result {}. Duration: {}",
-                streamer.get(),
-                Duration.between(startInstant, Instant.now()));
-        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
-
-        LOG.info(loggingPrefix + "Start deleting events.");
-        List<Item> deleteItemsList = eventList.stream()
-                .map(event -> Item.newBuilder()
-                        .setId(event.getId())
-                        .build())
-                .collect(Collectors.toList());
-        List<Item> deleteItemsReceipt = client.events().delete(deleteItemsList);
-        LOG.info(loggingPrefix + "Finished deleting events. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
-        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
-
-        assertEquals(eventList.size(), publishItemsCount.get());
-        assertEquals(eventList.size(), deleteItemsReceipt.size());
 
     }
 }
