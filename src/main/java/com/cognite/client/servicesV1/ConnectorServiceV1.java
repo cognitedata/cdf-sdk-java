@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import com.cognite.client.CogniteClient;
 import com.cognite.client.Request;
 import com.cognite.client.config.AuthConfig;
+import com.cognite.client.servicesV1.exception.MissingParameterExcetion;
 import com.cognite.client.servicesV1.executor.FileBinaryRequestExecutor;
 import com.cognite.client.servicesV1.parser.ItemParser;
 
@@ -37,14 +38,17 @@ import com.cognite.client.servicesV1.parser.FileParser;
 import com.cognite.client.servicesV1.parser.LoginStatusParser;
 import com.cognite.client.servicesV1.request.*;
 import com.cognite.client.servicesV1.response.*;
+import com.cognite.client.servicesV1.util.CDFApiUtils;
 import com.cognite.client.servicesV1.util.JsonUtil;
 import com.cognite.v1.timeseries.proto.DataPointListItem;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import okhttp3.ConnectionSpec;
 import okhttp3.HttpUrl;
+import okhttp3.Interceptor;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1014,6 +1018,19 @@ public abstract class ConnectorServiceV1 implements Serializable {
     }
 
     /**
+     * Read 3D file binaries from Cognite.
+     *
+     * Returns an <code>FileBinaryReader</code> which can be used to read 3D file binaries by id.
+     *
+     * @return
+     */
+    public ThreeDFileBinaryReader readThreeDFileBinariesById() {
+        LOG.debug(loggingPrefix + "Initiating read 3D File binaries by id service.");
+
+        return ThreeDFileBinaryReader.of(getClient());
+    }
+
+    /**
      * Write files to Cognite. This is a two-step request with 1) post the file metadata / header
      * and 2) post the file binary.
      *
@@ -1831,7 +1848,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
     /**
      * Base class for read and write requests.
      */
-    abstract static class ConnectorBase implements Serializable {
+    abstract public static class ConnectorBase implements Serializable {
         // Default response parsers
         static final ResponseParser<String> DEFAULT_RESPONSE_PARSER = JsonItemResponseParser.create();
         static final ResponseParser<String> DEFAULT_DUPLICATES_RESPONSE_PARSER = JsonErrorItemResponseParser.builder()
@@ -1847,7 +1864,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
         abstract CogniteClient getClient();
         abstract RequestExecutor getRequestExecutor();
 
-        abstract static class Builder<B extends Builder<B>> {
+        public abstract static class Builder<B extends Builder<B>> {
             abstract B setRequestProvider(RequestProvider value);
             abstract B setClient(CogniteClient value);
             abstract B setRequestExecutor(RequestExecutor value);
@@ -2655,6 +2672,136 @@ public abstract class ConnectorServiceV1 implements Serializable {
         }
     }
 
+   /**
+     * Reads 3D file binaries from the Cognite API.
+     */
+    @AutoValue
+    public static abstract class ThreeDFileBinaryReader extends ConnectorBase {
+        private final String randomIdString = RandomStringUtils.randomAlphanumeric(5);
+        private final String loggingPrefix = "ThreeDFileBinaryReader [" + randomIdString + "] -";
+        private final ObjectMapper objectMapper = new ObjectMapper();
+        private static final String ENDPOINT = "3d/files";
+
+        static Builder builder() {
+            return new com.cognite.client.servicesV1.AutoValue_ConnectorServiceV1_ThreeDFileBinaryReader.Builder()
+                    .setForceTempStorage(false)
+                    .setRequestProvider(PostJsonRequestProvider.builder()
+                            .setEndpoint(ENDPOINT)
+                            .setRequest(Request.create())
+                            .build());
+        }
+
+        static ThreeDFileBinaryReader of(CogniteClient client) {
+            return ThreeDFileBinaryReader.builder()
+                    .setClient(client)
+                    .setRequestExecutor(RequestExecutor.of(client.getHttpClient())
+                            .withExecutor(client.getExecutorService())
+                            .withMaxRetries(client.getClientConfig().getMaxRetries())
+                            .withValidResponseCodes(ImmutableList.of(400, 409, 422)))
+                    .build();
+        }
+
+        abstract Builder toBuilder();
+        abstract boolean isForceTempStorage();
+
+        @Nullable
+        abstract URI getTempStoragePath();
+
+        /**
+         * Forces the use of temp storage for all binaries--not just the >200MiB ones.
+         *
+         * @param enable
+         * @return
+         */
+        public ThreeDFileBinaryReader enableForceTempStorage(boolean enable) {
+            return toBuilder().setForceTempStorage(enable).build();
+        }
+
+        /**
+         * Sets the temporary storage path for storing large file binaries. If the binary is >200 MiB it will be
+         * stored in temp storage instead of in memory.
+         *
+         * The following storage providers are supported:
+         * - Google Cloud Storage. Specify the temp path as {@code gs://<my-storage-bucket>/<my-path>/}.
+         * - Local (network) storage: {@code file://localhost/home/files/, file:///home/files/, file:///c:/temp/}
+         *
+         * @param path The URI to the temp storage
+         * @return a {@ThreeDFileBinaryReader} with temp storage configured.
+         */
+        public ThreeDFileBinaryReader withTempStoragePath(URI path) {
+            Preconditions.checkArgument(null != path,
+                    "Temp storage path cannot be null or empty.");
+            return toBuilder().setTempStoragePath(path).build();
+        }
+
+        /**
+         * Executes an item-based request to get file binaries and blocks the thread until all files have been downloaded.
+         *
+         * We recommend reading a limited set of files per request, between 1 and 10--depending on the file size.
+         * If the request fails due to missing items, it will return a single <code>ResultsItems</code>.
+         *
+         * @param request
+         * @return
+         * @throws Exception
+         */
+        public FileBinary readThreeDFileBinaries(Request request) throws Exception {
+            return this.readThreeDFileBinariesAsync(request).join();
+        }
+
+        /**
+         * Executes an item-based request to get file binaries asynchronously.
+         *
+         * We recommend reading a limited set of files per request, between 1 and 10--depending on the file size.
+         * If the request fails due to missing items, it will return a single <code>ResultsItems</code>.
+         *
+         * @param request
+         * @return
+         * @throws Exception
+         */
+        public CompletableFuture<FileBinary> readThreeDFileBinariesAsync(Request request)
+                throws Exception {
+            Preconditions.checkNotNull(request, "Input cannot be null.");
+            LOG.debug(loggingPrefix + "Received {} 3D file requested to download.", request.getItems().size());
+
+            Long threeDFileId = (Long) request.getRequestParameters().get("id");
+
+            if (Objects.isNull(threeDFileId)) {
+                String errorMessage = String.format(
+                        "%s No 3D file id specified in the request. Will skip the download request.", loggingPrefix);
+                throw new MissingParameterExcetion(errorMessage);
+            }
+
+            // Start download the 3D file binaries
+            String downloadUrl = CDFApiUtils.defaultAPIEndpointBuilder(
+                    request, ENDPOINT, "v1").addPathSegment(threeDFileId.toString()).build().toString();
+
+            CompletableFuture<FileBinary> future =
+                    DownloadFileBinary.downloadFileBinaryFromURL(
+                                            downloadUrl,
+                                            getClient().getClientConfig().getMaxRetries(),
+                                            getTempStoragePath(),
+                                            isForceTempStorage(),
+                                            getClient().getHttpClient().interceptors()
+                                    )
+                                    .thenApply(fileBinary -> {
+                                        // add the file id
+                                        return fileBinary.toBuilder()
+                                                .setId(threeDFileId)
+                                                .build();
+                                    });
+
+            return future;
+        }
+
+        @AutoValue.Builder
+        abstract static class Builder extends ConnectorBase.Builder<Builder> {
+            abstract Builder setForceTempStorage(boolean value);
+            abstract Builder setTempStoragePath(URI value);
+
+            abstract ThreeDFileBinaryReader build();
+        }
+    }
+
     /**
      * Writes files (header + binary) to the Cognite API.
      *
@@ -2961,6 +3108,14 @@ public abstract class ConnectorServiceV1 implements Serializable {
                                                                               int maxRetries,
                                                                               @Nullable URI tempStorageURI,
                                                                               boolean forceTempStorage) {
+            return downloadFileBinaryFromURL(downloadUrl, maxRetries, tempStorageURI, forceTempStorage, null);
+        }
+
+        public static CompletableFuture<FileBinary> downloadFileBinaryFromURL(String downloadUrl,
+                                                                              int maxRetries,
+                                                                              @Nullable URI tempStorageURI,
+                                                                              boolean forceTempStorage,
+                                                                              List<Interceptor> interceptors) {
             String loggingPrefix = DownloadFileBinary.loggingPrefix +  RandomStringUtils.randomAlphanumeric(5) + " - ";
             LOG.debug(loggingPrefix + "Download URL received: {}. Max retries: {}. Temp storage: {}. "
                     + "Force temp storage: {}",
@@ -2978,7 +3133,15 @@ public abstract class ConnectorServiceV1 implements Serializable {
                     .url(url)
                     .build();
 
-            FileBinaryRequestExecutor requestExecutor = FileBinaryRequestExecutor.of(client)
+            OkHttpClient.Builder builder = client.newBuilder();
+
+            if (Objects.nonNull(interceptors)) {
+                for (Interceptor interceptor: interceptors) {
+                    builder.addInterceptor(interceptor);
+                }
+            }
+
+            FileBinaryRequestExecutor requestExecutor = FileBinaryRequestExecutor.of(builder.build())
                     .withMaxRetries(maxRetries)
                     .enableForceTempStorage(forceTempStorage);
 

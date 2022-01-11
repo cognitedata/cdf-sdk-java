@@ -33,6 +33,15 @@ public abstract class ThreeD extends ApiBase {
         return ThreeDModels.of(getClient());
     }
 
+    /**
+     * Returns {@link ThreeDFiles} 3D Files api endpoints.
+     *
+     * @return The ThreeDFiles api endpoints.
+     */
+    public ThreeDFiles files() {
+        return ThreeDFiles.of(getClient());
+    }
+
     @AutoValue.Builder
     abstract static class Builder extends ApiBase.Builder<ThreeD.Builder> {
         abstract ThreeD build();
