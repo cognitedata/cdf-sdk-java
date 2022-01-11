@@ -13,8 +13,7 @@ import com.google.protobuf.Value;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 class RequestParametersTest {
     final String key = RandomStringUtils.randomAlphanumeric(32);
@@ -33,7 +32,7 @@ class RequestParametersTest {
     }
 
     @Test
-    void getRequestParametersAsJson() throws Throwable {
+    void getRequestParametersAsJson() throws Exception {
         Request parameters = Request.create()
                 .withRequestParameters(generateRequestParameters());
 
@@ -42,13 +41,13 @@ class RequestParametersTest {
                         "description", "descriptionValue",
                         "metadata", ImmutableMap.<String, Object>of("metaA", "valueMetaA",
                                 "metaB", "valueMetaB"),
-                        "assetIds", ImmutableList.of(1L, 2L, 3L)))
+                        "assetIds", ImmutableList.<Long>of(1L, 2L, 3L)))
                 .withRootParameter("limit", 1000);
 
         Request parameters2 = Request.create()
                 .withFilterParameter("startTime", 12345432)
                 .withFilterParameter("description", "descriptionValue")
-                .withFilterParameter("assetIds", ImmutableList.of(1L, 2L, 3L))
+                .withFilterParameter("assetIds", ImmutableList.<Long>of(1L, 2L, 3L))
                 .withFilterMetadataParameter("metaA", "ValueMetaA")
                 .withRootParameter("limit", 100)
                 .withFilterMetadataParameter("metaB", "ValueMetaB");
@@ -65,7 +64,7 @@ class RequestParametersTest {
     }
 
     @Test
-    void getRequestParameters() throws Throwable {
+    void getRequestParameters() {
         Request parameters = Request.create()
                 .withRequestParameters(generateRequestParameters());
 
@@ -73,12 +72,12 @@ class RequestParametersTest {
                 .withRootParameter("filter", ImmutableMap.<String, Object>of("startTime", 123454321,
                         "metadata", ImmutableMap.<String, Object>of("metaA", "valueMetaA",
                                 "metaB", "valueMetaB"),
-                        "assetIds", ImmutableList.of(1L, 2L, 3L)))
+                        "assetIds", ImmutableList.<Long>of(1L, 2L, 3L)))
                 .withRootParameter("limit", 1000);
 
         Request parameters2 = Request.create()
                 .withFilterParameter("startTime", 123454321)
-                .withFilterParameter("assetIds", ImmutableList.of(1L, 2L, 3L))
+                .withFilterParameter("assetIds", ImmutableList.<Long>of(1L, 2L, 3L))
                 .withFilterMetadataParameter("metaA", "ValueMetaA")
                 .withRootParameter("limit", 1000)
                 .withFilterMetadataParameter("metaB", "ValueMetaB");
@@ -96,7 +95,7 @@ class RequestParametersTest {
      * Jackson.
      */
     @Test
-    void parseProtoItems() throws Throwable {
+    void parseProtoItems() {
         Struct entityA = Struct.newBuilder()
                 .putFields("name", Value.newBuilder().setStringValue("23-DB-9101").build())
                 .putFields("fooField", Value.newBuilder().setStringValue("bar").build())
@@ -115,24 +114,27 @@ class RequestParametersTest {
                 .withRootParameter("matchFrom", items)
                 .withRootParameter("numMatches", 4);
 
+        try {
+            JsonNode root = mapper.readTree(requestParameters.getRequestParametersAsJson());
+            assertEquals(root.path("modelId").longValue(), 1111L);
+            assertEquals(root.path("numMatches").intValue(), 4);
+            assertEquals(root.path("matchFrom").get(0).path("name").textValue(),
+                    entityA.getFieldsOrThrow("name").getStringValue());
+            assertEquals(root.path("matchFrom").get(1).path("name").textValue(),
+                    entityB.getFieldsOrThrow("name").getStringValue());
+            assertEquals(root.path("matchFrom").get(2).path("name").textValue(),
+                    entityC.getFieldsOrThrow("name").getStringValue());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-        JsonNode root = mapper.readTree(requestParameters.getRequestParametersAsJson());
-        assertEquals(root.path("modelId").longValue(), 1111L);
-        assertEquals(root.path("numMatches").intValue(), 4);
-        assertEquals(root.path("matchFrom").get(0).path("name").textValue(),
-                entityA.getFieldsOrThrow("name").getStringValue());
-        assertEquals(root.path("matchFrom").get(1).path("name").textValue(),
-                entityB.getFieldsOrThrow("name").getStringValue());
-        assertEquals(root.path("matchFrom").get(2).path("name").textValue(),
-                entityC.getFieldsOrThrow("name").getStringValue());
-}
-
-    private ImmutableMap<String, Object> generateRequestParameters() throws Throwable {
+    private ImmutableMap<String, Object> generateRequestParameters() {
         ImmutableMap<String, Object> root = ImmutableMap.<String, Object>builder()
                 .put("filter", ImmutableMap.<String, Object>of("startTime", 123454321,
                         "metadata", ImmutableMap.<String, Object>of("metaA", "valueMetaA",
                                 "metaB", "valueMetaB"),
-                        "assetIds", ImmutableList.of(1L, 2L, 3L)))
+                        "assetIds", ImmutableList.<Long>of(1L, 2L, 3L)))
                 .put("limit", 1000)
                 .build();
 

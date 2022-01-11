@@ -1,5 +1,4 @@
 package com.cognite.client.util;
-
 import com.google.protobuf.Struct;
 import com.google.protobuf.util.Structs;
 import com.google.protobuf.util.Values;
@@ -19,7 +18,7 @@ class ParseStructTest {
 
     @Test
     @Tag("remoteCDP")
-    void parseStruct() throws Throwable {
+    void parseStruct() {
         Instant startInstant = Instant.now();
 
         String loggingPrefix = "UnitTest - parseStruct() -";

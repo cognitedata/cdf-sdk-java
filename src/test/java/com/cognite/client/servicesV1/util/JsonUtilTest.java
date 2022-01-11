@@ -26,26 +26,29 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class JsonUtilTest {
     @Test
-    void deserializeProtoStruct() throws Throwable {
+    void deserializeProtoStruct() {
         Struct struct = Struct.newBuilder()
                 .putFields("FieldA", Value.newBuilder().setStringValue("StringValue").build())
                 .putFields("FieldB", Value.newBuilder().setBoolValue(true).build())
                 .putFields("FieldC", Value.newBuilder().setNumberValue(10d).build())
                 .build();
-
-        String directDeserialized = JsonFormat.printer().print(struct);
-        String deserialized = JsonUtil.getObjectMapperInstance().writeValueAsString(struct);
-        //System.out.printf("Direct: %s \n\r", directDeserialized);
-        //System.out.printf("Via ObjectMapper: %s \n\r", deserialized);
-        Assertions.assertEquals(deserialized, directDeserialized);
+        try {
+            String directDeserialized = JsonFormat.printer().print(struct);
+            String deserialized = JsonUtil.getObjectMapperInstance().writeValueAsString(struct);
+            //System.out.printf("Direct: %s \n\r", directDeserialized);
+            //System.out.printf("Via ObjectMapper: %s \n\r", deserialized);
+            Assertions.assertEquals(deserialized, directDeserialized);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
-    void deserializeCompositeObject() throws Throwable {
+    void deserializeCompositeObject() {
         Struct struct = Struct.newBuilder()
                 .putFields("FieldA", Value.newBuilder().setStringValue("StringValue").build())
                 .putFields("FieldB", Value.newBuilder().setBoolValue(true).build())
@@ -61,9 +64,12 @@ class JsonUtilTest {
                 "  \"FieldB\": true\n" +
                 "}]}";
 
-
-        String deserialized = JsonUtil.getObjectMapperInstance().writeValueAsString(request);
-        //System.out.printf("Request: %s \n\r", deserialized);
-        assertEquals(deserialized, expected);
+        try {
+            String deserialized = JsonUtil.getObjectMapperInstance().writeValueAsString(request);
+            //System.out.printf("Request: %s \n\r", deserialized);
+            assertEquals(deserialized, expected);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

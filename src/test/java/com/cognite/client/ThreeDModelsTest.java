@@ -3,9 +3,7 @@ package com.cognite.client;
 import com.cognite.client.config.ClientConfig;
 import com.cognite.client.config.TokenUrl;
 import com.cognite.client.config.UpsertMode;
-import com.cognite.client.dto.DataSet;
-import com.cognite.client.dto.Item;
-import com.cognite.client.dto.ThreeDModel;
+import com.cognite.client.dto.*;
 import com.cognite.client.util.DataGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Tag;
@@ -32,83 +30,92 @@ public class ThreeDModelsTest {
 
     @Test
     @Tag("remoteCDP")
-    void writeReadAndDeleteThreeDModels() throws Throwable {
+    void writeReadAndDeleteThreeDModels() throws MalformedURLException {
+         try {
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "UnitTest - listThreeDModels() -";
+            LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+            CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
 
-        Instant startInstant = Instant.now();
-        String loggingPrefix = "UnitTest - listThreeDModels() -";
-        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
+            Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
 
-        Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
+            List<ThreeDModel> listUpsert = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
 
-        List<ThreeDModel> listUpsert = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
+            Thread.sleep(2000); // wait for eventual consistency
 
-        Thread.sleep(2000); // wait for eventual consistency
+            findList(startInstant, loggingPrefix, client, listUpsert);
 
-        findList(startInstant, loggingPrefix, client, listUpsert);
+            delete(startInstant, loggingPrefix, client, listUpsert);
 
-        delete(startInstant, loggingPrefix, client, listUpsert);
-
-
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            e.printStackTrace();
+        }
     }
 
     @Test
     @Tag("remoteCDP")
-    void writeEditAndDeleteThreeDModels() throws Throwable {
+    void writeEditAndDeleteThreeDModels() throws MalformedURLException {
+        try {
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "UnitTest - listThreeDModels() -";
+            LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+            CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
 
-        Instant startInstant = Instant.now();
-        String loggingPrefix = "UnitTest - listThreeDModels() -";
-        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
+            Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
 
-        Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
+            List<ThreeDModel> listUpsert = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
 
-        List<ThreeDModel> listUpsert = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
+            Thread.sleep(2000); // wait for eventual consistency
 
-        Thread.sleep(2000); // wait for eventual consistency
+            List<ThreeDModel> editedTdInput = update(startInstant, loggingPrefix, client, listUpsert);
 
-        List<ThreeDModel> editedTdInput = update(startInstant, loggingPrefix, client, listUpsert);
+            replace(startInstant, loggingPrefix, client, editedTdInput);
 
-        replace(startInstant, loggingPrefix, client, editedTdInput);
+            Thread.sleep(3000); // wait for eventual consistency
 
-        Thread.sleep(3000); // wait for eventual consistency
+            delete(startInstant, loggingPrefix, client, listUpsert);
 
-        delete(startInstant, loggingPrefix, client, listUpsert);
-
-
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            e.printStackTrace();
+        }
     }
 
     @Test
     @Tag("remoteCDP")
-    void writeEditSameCallAndDeleteThreeDModels() throws Throwable {
+    void writeEditSameCallAndDeleteThreeDModels() throws MalformedURLException {
+        try {
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "UnitTest - listThreeDModels() -";
+            LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+            CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
 
-        Instant startInstant = Instant.now();
-        String loggingPrefix = "UnitTest - listThreeDModels() -";
-        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
+            Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
 
-        Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
+            List<ThreeDModel> listUpsert = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
 
-        List<ThreeDModel> listUpsert = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
+            List<ThreeDModel> editedTdInput = listUpsert.stream()
+                    .map(td -> td.toBuilder()
+                            .setName("new-value")
+                            .clearMetadata()
+                            .putMetadata("new-key", "new-value")
+                            .build())
+                    .collect(Collectors.toList());
 
-        List<ThreeDModel> editedTdInput = listUpsert.stream()
-                .map(td -> td.toBuilder()
-                        .setName("new-value")
-                        .clearMetadata()
-                        .putMetadata("new-key", "new-value")
-                        .build())
-                .collect(Collectors.toList());
+            List<ThreeDModel> listUpsertAndUpdate = DataGenerator.generate3DModels(COUNT_TO_BE_CREATE_TD, dataSetId);
+            listUpsertAndUpdate.addAll(editedTdInput);
 
-        List<ThreeDModel> listUpsertAndUpdate = DataGenerator.generate3DModels(COUNT_TO_BE_CREATE_TD, dataSetId);
-        listUpsertAndUpdate.addAll(editedTdInput);
+            List<ThreeDModel> listUpsertNews = upSertThreeDModel(listUpsertAndUpdate, startInstant, loggingPrefix, client, dataSetId);
 
-        List<ThreeDModel> listUpsertNews = upSertThreeDModel(listUpsertAndUpdate, startInstant, loggingPrefix, client, dataSetId);
+            Thread.sleep(2000); // wait for eventual consistency
 
-        Thread.sleep(2000); // wait for eventual consistency
+            delete(startInstant, loggingPrefix, client, listUpsertNews);
 
-        delete(startInstant, loggingPrefix, client, listUpsertNews);
-
-
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            e.printStackTrace();
+        }
     }
 
     @Test

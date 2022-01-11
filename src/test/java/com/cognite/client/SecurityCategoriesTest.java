@@ -29,43 +29,46 @@ class SecurityCategoriesTest {
         String loggingPrefix = "UnitTest - writeListAndDeleteSecurityCategories() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofClientCredentials(
-                        TestConfigProvider.getClientId(),
-                        TestConfigProvider.getClientSecret(),
-                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                .withProject(TestConfigProvider.getProject())
-                .withBaseUrl(TestConfigProvider.getHost())
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                    .withProject(TestConfigProvider.getProject())
+                    .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
                 Duration.between(startInstant, Instant.now()));
 
+        try {
+            LOG.info(loggingPrefix + "Start creating security categories.");
+            List<SecurityCategory> createSecurityCategoriesList = DataGenerator.generateSecurityGroups(20);
+            client.securityCategories().create(createSecurityCategoriesList);
+            LOG.info(loggingPrefix + "Finished creating labels. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
 
-        LOG.info(loggingPrefix + "Start creating security categories.");
-        List<SecurityCategory> createSecurityCategoriesList = DataGenerator.generateSecurityGroups(20);
-        client.securityCategories().create(createSecurityCategoriesList);
-        LOG.info(loggingPrefix + "Finished creating labels. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
+            Thread.sleep(5000); // wait for eventual consistency
 
-        Thread.sleep(5000); // wait for eventual consistency
+            LOG.info(loggingPrefix + "Start reading security categories.");
+            List<SecurityCategory> listSecurityCategoriesResults = new ArrayList<>();
+            client.securityCategories()
+                    .list(Request.create())
+                    .forEachRemaining(labels -> listSecurityCategoriesResults.addAll(labels));
+            LOG.info(loggingPrefix + "Finished reading security categories. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
 
-        LOG.info(loggingPrefix + "Start reading security categories.");
-        List<SecurityCategory> listSecurityCategoriesResults = new ArrayList<>();
-        client.securityCategories()
-                .list(Request.create())
-                .forEachRemaining(labels -> listSecurityCategoriesResults.addAll(labels));
-        LOG.info(loggingPrefix + "Finished reading security categories. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "Start deleting labels.");
 
-        LOG.info(loggingPrefix + "Start deleting labels.");
+            List<SecurityCategory> deleteItemsResults =
+                    client.securityCategories().delete(listSecurityCategoriesResults);
+            LOG.info(loggingPrefix + "Finished deleting security categories. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
 
-        List<SecurityCategory> deleteItemsResults =
-                client.securityCategories().delete(listSecurityCategoriesResults);
-        LOG.info(loggingPrefix + "Finished deleting security categories. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
-
-        assertEquals(createSecurityCategoriesList.size(), listSecurityCategoriesResults.size());
-        assertEquals(listSecurityCategoriesResults.size(), deleteItemsResults.size());
-
+            assertEquals(createSecurityCategoriesList.size(), listSecurityCategoriesResults.size());
+            assertEquals(listSecurityCategoriesResults.size(), deleteItemsResults.size());
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            e.printStackTrace();
+        }
     }
 
 }
