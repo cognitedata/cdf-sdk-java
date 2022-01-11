@@ -1,9 +1,6 @@
 package com.cognite.client;
 
 import com.cognite.client.config.TokenUrl;
-import com.cognite.client.dto.FileMetadata;
-import com.cognite.client.dto.ThreeDModel;
-import com.cognite.client.dto.ThreeDModelRevision;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -14,8 +11,6 @@ import java.net.MalformedURLException;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.Map;
 
 class ThreeDFilesTest {
     private static final Long _3D_FILE_ID = 4496458695968385L;
