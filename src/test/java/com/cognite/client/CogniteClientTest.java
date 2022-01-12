@@ -8,7 +8,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class CogniteClientIntegrationTest {
+class CogniteClientTest {
 
     @Test
     void test_ofKey_config() {
