@@ -133,7 +133,7 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
     @Test
     @Tag("remoteCDP")
     void getThreeDNodesByIds() throws Exception {
-        Thread.sleep(5000); // wait for eventual consistency
+        Thread.sleep(10000); // wait for eventual consistency
         Instant startInstant = Instant.now();
         String loggingPrefix = "getThreeDNodesByIds - ";
         LOG.info(loggingPrefix + "Start getting 3D Nodes by ids");

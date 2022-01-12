@@ -1,23 +1,23 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
-
 import com.cognite.client.dto.Item;
 import com.cognite.client.dto.ThreeDNode;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ItemReader;
 import com.cognite.client.servicesV1.ResponseItems;
 import com.cognite.client.servicesV1.parser.ThreeDNodeParser;
+import com.cognite.client.util.Partition;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auto.value.AutoValue;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import java.util.ArrayList;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * This class represents the Cognite 3D nodes api endpoint.
@@ -170,34 +170,38 @@ public abstract class ThreeDNodes extends ApiBase {
     /**
      * Retrieves 3D Nodes by ids.
      *
-     * @param items The item(s) {@code id} to retrieve.
-     * @return The retrieved 3D Nodes.
+     * @param modelId ID of ThreeDModel object
+     * @param revisionId ID of ThreeDModelRevision object
+     * @param items The item(s) {@code id} to retrieve
+     * @return LIst of retrieved 3D Nodes.
      * @throws Exception
      */
     public List<ThreeDNode> retrieve(Long modelId, Long revisionId, List<Item> items) throws Exception {
+
         String loggingPrefix = "retrieve() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ItemReader<String> tdReader = connector.readThreeDNodesById(modelId, revisionId);
 
-       if (items.size() < 100) {
+        List<List<Item>> itemBatches = Partition.ofSize(items, 1000);
+        Request requestTemplate = addAuthInfo(Request.create());
 
-        }
-        List<Item>[] list = split(items, 100);
+        List<CompletableFuture<ResponseItems<String>>> futureList = new ArrayList<>();
+        for (List<Item> batch : itemBatches) {
+            // build initial request object
+            Request request = requestTemplate
+                    .withItems(toRequestItems(batch));
 
-        List<CompletableFuture<ResponseItems<String>>> resultFutures = new ArrayList<>();
-        for (Item item : items) {
-            Request request = Request.create().withRootParameter("id", item.getId());
-            resultFutures.add(tdReader.getItemsAsync(addAuthInfo(request)));
+            futureList.add(tdReader.getItemsAsync(request));
         }
-        // Sync all downloads to a single future. It will complete when all the upstream futures have completed.
-        CompletableFuture<Void> allFutures = CompletableFuture.allOf(resultFutures.toArray(
-                new CompletableFuture[resultFutures.size()]));
-        // Wait until the uber future completes.
-        allFutures.join();
+
+        // Wait for all requests futures to complete
+        CompletableFuture<Void> allFutures =
+                CompletableFuture.allOf(futureList.toArray(new CompletableFuture[futureList.size()]));
+        allFutures.join(); // Wait for all futures to complete
 
         // Collect the response items
-        List<String> responseItems = new ArrayList<>();
-        for (CompletableFuture<ResponseItems<String>> responseItemsFuture : resultFutures) {
+        List<String> responseItems = new ArrayList<>(items.size());
+        for (CompletableFuture<ResponseItems<String>> responseItemsFuture : futureList) {
             if (!responseItemsFuture.join().isSuccessful()) {
                 // something went wrong with the request
                 String message = loggingPrefix + "Retrieve 3d nodes by id failed: "
@@ -205,7 +209,7 @@ public abstract class ThreeDNodes extends ApiBase {
                 LOG.error(message);
                 throw new Exception(message);
             }
-            responseItems.add(responseItemsFuture.join().getResponseBodyAsString());
+            responseItems.addAll(responseItemsFuture.join().getResultsItems());
         }
 
         return responseItems.stream()
@@ -235,19 +239,6 @@ public abstract class ThreeDNodes extends ApiBase {
         } catch (Exception e)  {
             throw new RuntimeException(e);
         }
-    }
-
-    private static <T> List<T>[] split(List<T> source, int numPartitions) {
-        if (numPartitions < 2)
-            return new List[]{source};
-
-        final int sourceSize = source.size(),
-                partitions = numPartitions > sourceSize ? sourceSize: numPartitions,
-                increments = sourceSize / partitions;
-
-        return IntStream.rangeClosed(0, partitions)
-                .mapToObj(i -> source.subList(i*increments, Math.min((i+1)*increments, sourceSize)))
-                .toArray(List[]::new);
     }
 
     @AutoValue.Builder
