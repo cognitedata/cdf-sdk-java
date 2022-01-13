@@ -1961,22 +1961,21 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
     }
 
-    public ItemReader<String> readThreeDAncestorNodes() {
+    public Iterator<CompletableFuture<ResponseItems<String>>> readThreeDAncestorNodes(Request queryParameters) {
         ThreeDAncestorNodesRequestProvider requestProvider = ThreeDAncestorNodesRequestProvider.builder()
                 .setEndpoint("3d/models/")
+                .setRequest(queryParameters)
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
                 .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
                 .build();
 
-        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
     }
 
-    public ItemReader<String> readThreeDNodesById(Map<String, Object> parameters) {
-        String modelId = parameters.get("modelId").toString();
-        String revisionId = parameters.get("revisionId").toString();
-        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
-                .setEndpoint("3d/models/" + modelId + "/revisions/" + revisionId + "/nodes/byids")
+    public ItemReader<String> readThreeDAncestorNodes() {
+        ThreeDAncestorNodesRequestProvider requestProvider = ThreeDAncestorNodesRequestProvider.builder()
+                .setEndpoint("3d/models/")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
                 .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())

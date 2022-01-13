@@ -98,6 +98,56 @@ public abstract class ThreeDNodes extends ApiBase {
     }
 
     /**
+     * Returns all ancestor {@link ThreeDNode} objects.
+     *
+     * @see #list(Long, Long, Request)
+     */
+    public Iterator<List<ThreeDNode>> list(Long modelId, Long revisionId, Long nodeId) throws Exception {
+        return this.list(modelId, revisionId, nodeId, Request.create());
+    }
+
+    /**
+     * Returns all ancestor {@link ThreeDNode} objects that matches the filters set in the {@link Request}.
+     *
+     * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
+     * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
+     * have to stream these results into your own data structure.
+     *
+     * The 3D nodes are retrieved using multiple, parallel request streams towards the Cognite api. The number of
+     * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * @param requestParameters the filters to use for retrieving the 3D nodes.
+     * @return an {@link Iterator} to page through the results set.
+     * @throws Exception
+     */
+    public Iterator<List<ThreeDNode>> list(Long modelId, Long revisionId, Long nodeId, Request requestParameters) throws Exception {
+        List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
+        return this.list(modelId, revisionId, nodeId, requestParameters, partitions.toArray(new String[partitions.size()]));
+    }
+
+    /**
+     * Returns all ancestor {@link ThreeDNode} objects that matches the filters set in the {@link Request} for the
+     * specified partitions. This is method is intended for advanced use cases where you need direct control over
+     * the individual partitions. For example, when using the SDK in a distributed computing environment.
+     *
+     * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
+     * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
+     * have to stream these results into your own data structure.
+     *
+     * @param requestParameters the filters to use for retrieving the 3D nodes..
+     * @param partitions the partitions to include.
+     * @return an {@link Iterator} to page through the results set.
+     * @throws Exception
+     */
+    public Iterator<List<ThreeDNode>> list(Long modelId, Long revisionId, Long nodeId, Request requestParameters, String... partitions) throws Exception {
+        Request request = requestParameters
+                .withRootParameter("modelId", String.valueOf(modelId))
+                .withRootParameter("revisionId", String.valueOf(revisionId))
+                .withRootParameter("nodeId", String.valueOf(nodeId));
+        return AdapterIterator.of(listJson(ResourceType.THREED_ANCESTOR_NODE, request, partitions), this::parseThreeDNodes);
+    }
+
+    /**
      * Retrieves 3D nodes by modeId and revisionId
      *
      * @param modelId The id of ThreeDModel object

@@ -48,19 +48,7 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
                                 .list(model.getId(), revision.getId())
                                 .forEachRemaining(val -> listResults.addAll(val));
                 assertNotNull(listResults);
-                listResults.forEach(node -> {
-                    assertNotNull(node);
-                    assertNotNull(node.getId());
-                    assertNotNull(node.getDepth());
-                    assertNotNull(node.getName());
-                    assertFalse(node.getName().equals(""));
-                    assertNotNull(node.getParentId());
-                    assertNotNull(node.getSubtreeSize());
-                    assertNotNull(node.getTreeIndex());
-                    assertNotNull(node.getBoundingBox());
-                    assertNotNull(node.getBoundingBox().getMaxList());
-                    assertNotNull(node.getBoundingBox().getMinList());
-                });
+                validateFields(listResults);
             }
         }
 
@@ -96,6 +84,45 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
     @Test
     @Tag("remoteCDP")
     void listThreeDNodesAncestorNodes() throws Exception {
+        Thread.sleep(5000); // wait for eventual consistency
+        Instant startInstant = Instant.now();
+        String loggingPrefix = "listThreeDNodesAncestorNodes - ";
+        LOG.info(loggingPrefix + "Start list 3D Ancestor Nodes");
+
+        Random r = new Random();
+        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
+            ThreeDModel model = entry.getKey();
+            for (ThreeDModelRevision revision : entry.getValue()) {
+                List<ThreeDNode> listResults = new ArrayList<>();
+                        client.threeD()
+                                .models()
+                                .revisions()
+                                .nodes()
+                                .list(model.getId(), revision.getId())
+                                .forEachRemaining(val -> listResults.addAll(val));
+                assertNotNull(listResults);
+                validateFields(listResults);
+
+                Integer position = r.nextInt(listResults.size());
+                ThreeDNode nodeDrawn = listResults.get(position);
+                List<ThreeDNode> listResultsAncestorNodes = new ArrayList<>();
+                        client.threeD()
+                                .models()
+                                .revisions()
+                                .nodes()
+                                .list(model.getId(), revision.getId(), nodeDrawn.getId())
+                                .forEachRemaining(val -> listResultsAncestorNodes.addAll(val));
+                assertNotNull(listResultsAncestorNodes);
+                validateFields(listResultsAncestorNodes);
+            }
+        }
+        LOG.info(loggingPrefix + "Finished list 3D Ancestor Nodes. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void retriveThreeDNodesAncestorNodes() throws Exception {
         Thread.sleep(5000); // wait for eventual consistency
         Instant startInstant = Instant.now();
         String loggingPrefix = "listThreeDNodesAncestorNodes - ";
