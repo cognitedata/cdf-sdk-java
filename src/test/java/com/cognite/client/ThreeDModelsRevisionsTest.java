@@ -21,8 +21,30 @@ import java.time.Instant;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ThreeDModelsRevisionsTest {
+
+    public enum FileType {
+        THREED_OBJ("./src/test/resources/CAMARO.obj", "CAMARO_TEST_SDK_JAVA.obj"),
+        THUMBNAIL("./src/test/resources/camaro_thumbnail.png", "CAMARO_THUMBNAIL_TEST_SDK_JAVA.png");
+
+        private String completePath;
+        private String name;
+
+        FileType(String completePath, String name) {
+            this.completePath = completePath;
+            this.name = name;
+        }
+
+        public String getCompletePath() {
+            return completePath;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
 
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
@@ -38,7 +60,7 @@ public class ThreeDModelsRevisionsTest {
 
         Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
         List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
-        FileMetadata file = uploadFile();
+        FileMetadata file = uploadFile(loggingPrefix, FileType.THREED_OBJ);
 
         Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
         List<ThreeDModelRevision> listUpsertRevisions = null;
@@ -70,7 +92,7 @@ public class ThreeDModelsRevisionsTest {
 
         Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
         List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
-        FileMetadata file = uploadFile();
+        FileMetadata file = uploadFile(loggingPrefix, FileType.THREED_OBJ);
 
         Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
         List<ThreeDModelRevision> listUpsertRevisions = null;
@@ -105,7 +127,7 @@ public class ThreeDModelsRevisionsTest {
 
         Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
         List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
-        FileMetadata file = uploadFile();
+        FileMetadata file = uploadFile(loggingPrefix, FileType.THREED_OBJ);
 
         Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
         List<ThreeDModelRevision> listUpsertRevisions = null;
@@ -144,6 +166,55 @@ public class ThreeDModelsRevisionsTest {
         delete(startInstant, loggingPrefix, client, map, file);
 
         deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void updateThreeDRevisionThumbnail() throws Exception {
+        Instant startInstant = Instant.now();
+        String loggingPrefix = "UnitTest - listThreeDModelsRevisions() -";
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+        CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
+
+        Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
+        List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
+        FileMetadata file = uploadFile(loggingPrefix, FileType.THREED_OBJ);
+
+        Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
+        List<ThreeDModelRevision> listUpsertRevisions = null;
+        List<ThreeDModelRevision> listAllRevisions = new ArrayList<>();
+        for (ThreeDModel model : listUpsert3D) {
+            listUpsertRevisions = new ArrayList<>();
+            listUpsertRevisions.addAll(createThreeDModelRevisions(startInstant, loggingPrefix, client, model, file));
+            listAllRevisions.addAll(listUpsertRevisions);
+            map.put(model, listUpsertRevisions);
+        }
+        Thread.sleep(2000); // wait for eventual consistency
+
+        LOG.info(loggingPrefix + "Start updating 3D Revision Thumbnail.");
+
+        FileMetadata fileThumbnail = uploadFile(loggingPrefix, FileType.THUMBNAIL);
+
+        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : map.entrySet()) {
+            ThreeDModel model = entry.getKey();
+            for (ThreeDModelRevision revision : entry.getValue()) {
+                Boolean updated = client.
+                        threeD()
+                        .models()
+                        .revisions()
+                        .updateThumbnail(model.getId(), revision.getId(), fileThumbnail.getId());
+                assertTrue(updated);
+            }
+
+        }
+
+        LOG.info(loggingPrefix + "Finished updating 3D Revision Thumbnail. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+
+        delete(startInstant, loggingPrefix, client, map, file);
+
+        deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
+
     }
 
 
@@ -191,9 +262,17 @@ public class ThreeDModelsRevisionsTest {
         return listUpsert;
     }
 
-    private FileMetadata uploadFile() throws MalformedURLException {
+    private FileMetadata uploadFile(String loggingPrefix, FileType type) throws Exception {
+
+        FileMetadata file = getExistingFile(type);
+
+        if (file != null) {
+            return file;
+        }
+
+        LOG.info(loggingPrefix + "------------ Start upload file {}. ------------------", type);
         Instant startInstant = Instant.now();
-        Path fileAOriginal = Paths.get("./src/test/resources/CAMARO.obj");
+        Path fileAOriginal = Paths.get(type.getCompletePath());
         Path fileATemp = Paths.get("./tempA.tmp");
         byte[] fileByteA = new byte[0];
         try {
@@ -204,7 +283,13 @@ public class ThreeDModelsRevisionsTest {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        List<FileMetadata> fileMetadataList = DataGenerator.generateFileHeader3DModelsRevisions(1);
+        List<FileMetadata> fileMetadataList = null;
+        if (type.equals(FileType.THREED_OBJ)) {
+            fileMetadataList = DataGenerator.generateFileHeader3DModelsRevisions(1);
+        } else {
+            fileMetadataList = DataGenerator.generateFile3DRevisionThumbnail(1);
+        }
+
         List<FileContainer> fileContainerInput = new ArrayList<>();
         for (FileMetadata fileMetadata:  fileMetadataList) {
             FileContainer fileContainer = FileContainer.newBuilder()
@@ -233,7 +318,29 @@ public class ThreeDModelsRevisionsTest {
                 e.printStackTrace();
             }
         }
+        LOG.info(loggingPrefix + "------------ Finished upload file {}. Duration: {} -----------",
+                type, Duration.between(startInstant, Instant.now()));
+        return null;
+    }
 
+    private FileMetadata getExistingFile(FileType type) throws Exception {
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                        TestConfigProvider.getClientId(),
+                        TestConfigProvider.getClientSecret(),
+                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                .withProject(TestConfigProvider.getProject())
+                .withBaseUrl(TestConfigProvider.getHost());
+
+        Iterator<List<FileMetadata>> it = client.files()
+                .list(Request.create()
+                        .withFilterParameter("name", type.getName()));
+        if (it.hasNext()) {
+            List<FileMetadata> list = it.next();
+            if (!list.isEmpty()) {
+                return list.get(0);
+            }
+            return null;
+        }
         return null;
     }
 

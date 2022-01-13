@@ -1942,6 +1942,26 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
     }
 
+    /**
+     * Update the Thumbnail of Revision
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @param modelId The id of {@link ThreeDModel} object
+     * @param revisionId The id of {@link ThreeDModelRevision} object
+     * @return
+     */
+    public ItemWriter updateThreeDTRevisionThumbnail(Long modelId, Long revisionId) {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("3d/models/" + modelId + "/revisions/" + revisionId + "/thumbnail")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
     @AutoValue.Builder
     public abstract static class Builder {
         public abstract Builder setClient(CogniteClient value);

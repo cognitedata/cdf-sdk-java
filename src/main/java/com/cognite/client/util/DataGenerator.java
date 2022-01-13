@@ -383,8 +383,24 @@ public class DataGenerator {
         for (int i = 0; i < noObjects; i++) {
             objects.add(FileMetadata.newBuilder()
                     .setExternalId(RandomStringUtils.randomAlphanumeric(10))
-                    .setName("test_file_" + RandomStringUtils.randomAlphanumeric(5) + ".obj")
+                    .setName("CAMARO_TEST_SDK_JAVA.obj")
                     .setSource(sourceValue)
+                    .putMetadata("type", DataGenerator.sourceValue)
+                    .putMetadata(sourceKey, DataGenerator.sourceValue)
+                    .build());
+        }
+        return objects;
+    }
+
+    public static List<FileMetadata> generateFile3DRevisionThumbnail(int noObjects) {
+        List<FileMetadata> objects = new ArrayList<>(noObjects);
+        for (int i = 0; i < noObjects; i++) {
+            objects.add(FileMetadata.newBuilder()
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(10))
+                    .setName("CAMARO_THUMBNAIL_TEST_SDK_JAVA.png")
+                    .setSource(sourceValue)
+                    .setUploaded(true)
+                    .setMimeType("image/png")
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)
                     .build());

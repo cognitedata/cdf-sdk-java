@@ -220,35 +220,18 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
                 LOG.debug(loggingPrefix + "Upsert items request success. Adding batch to result collection.");
             } else {
                 exceptionMessage = response.getResponseBodyAsString();
-                LOG.debug(loggingPrefix + "Upsert items request failed: {}", response.getResponseBodyAsString());
+                LOG.debug(loggingPrefix + "Upsert items request failed: {}", exceptionMessage);
             }
         }
         return listResponse;
     }
 
+
     /**
-<<<<<<< HEAD
-<<<<<<< HEAD
-     * Deletes 3D Revisions.
-=======
-     * Deletes a set of Sequences.
->>>>>>> Add retriver 3d revisions
-=======
-     * Deletes a set of Sequences.
->>>>>>> bccfe90003a4b6868bd94da282fa43e92a6ea13c
-     *
-     * The 3D Revisions to delete are identified via their {@code id} by submitting a list of {@link Item}.
+     *  Deletes 3D Revisions.
      *
      * @param modelId The id of ThreeDModels object
-<<<<<<< HEAD
-<<<<<<< HEAD
      * @param deleteItemsInput List of {@link Item} containing the ids of 3D Model Revisions to delete
-=======
-     * @param deleteItemsInput The 3D Model Revisions to delete
->>>>>>> Add retriver 3d revisions
-=======
-     * @param deleteItemsInput The 3D Model Revisions to delete
->>>>>>> bccfe90003a4b6868bd94da282fa43e92a6ea13c
      * @return
      * @throws Exception
      */
@@ -259,6 +242,34 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
         DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig());
 
         return deleteItems.deleteItems(deleteItemsInput);
+    }
+
+    /**
+     * Update the Thumbnail of Revision
+     *
+     * @param modelId The id of ThreeDModels object
+     * @param revisionId The id of ThreeDModelRevision object
+     * @param thumbnailId The id of Thumbnail file
+     * @return true if is updated or false to not updated
+     * @throws Exception
+     */
+    public Boolean updateThumbnail(Long modelId, Long revisionId, Long thumbnailId) throws Exception {
+        String loggingPrefix = "updateThumbnail() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        ConnectorServiceV1 connector = getClient().getConnectorService();
+        ConnectorServiceV1.ItemWriter updateItemWriter = connector.updateThreeDTRevisionThumbnail(modelId, revisionId);
+
+        Request request = Request.create().withRootParameter("fileId", thumbnailId);
+        CompletableFuture<ResponseItems<String>> responseFuture =
+                updateItemWriter.writeItemsAsync(addAuthInfo(request));
+        responseFuture.join();
+
+        ResponseItems<String> response = responseFuture.get();
+        if (!response.isSuccessful()) {
+            String exceptionMessage = response.getResponseBodyAsString();
+            LOG.debug(loggingPrefix + "Update thumbnail request failed: {}", exceptionMessage);
+            return false;
+        }
+        return true;
     }
 
     /*
