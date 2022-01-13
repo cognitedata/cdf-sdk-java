@@ -26,13 +26,18 @@ public abstract class ThreeDNodesRequestProvider extends GenericRequestProvider 
 
     public ThreeDNodesRequestProvider withRequest(Request parameters) {
         Preconditions.checkNotNull(parameters, "Request parameters cannot be null.");
-        Preconditions.checkArgument(parameters.getRequestParameters().containsKey("modelId"));
-        Preconditions.checkArgument(parameters.getRequestParameters().containsKey("revisionId"));
+        Preconditions.checkArgument(parameters.getRequestParameters().containsKey("modelId")
+                && parameters.getRequestParameters().get("modelId") instanceof String,
+                "Request parameters must include modelId with a string value");
+        Preconditions.checkArgument(parameters.getRequestParameters().containsKey("revisionId")
+                && parameters.getRequestParameters().get("revisionId") instanceof String,
+                "Request parameters must include revisionId with a string value");
         return toBuilder().setRequest(parameters).build();
     }
 
     public okhttp3.Request buildRequest(Optional<String> cursor) throws IOException, URISyntaxException {
         Request requestParameters = getRequest();
+        withRequest(requestParameters);
         okhttp3.Request.Builder requestBuilder = buildGenericRequest();
         HttpUrl.Builder urlBuilder = buildGenericUrl();
 

@@ -19,7 +19,7 @@ public class ThreeDNodeParser {
 
     static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static List<ThreeDNode> parseThreeDNodes(String json) throws JsonProcessingException {
+    public static List<ThreeDNode> parseThreeDNodesToList(String json) throws JsonProcessingException {
         List<ThreeDNode> list = new ArrayList<>();
         JsonNode root = objectMapper.readTree(json);
         ThreeDNode.Builder builder = ThreeDNode.newBuilder();
@@ -35,6 +35,13 @@ public class ThreeDNodeParser {
             list.add(builder.build());
         }
         return list;
+    }
+
+    public static ThreeDNode parseThreeDNodes(String json) throws JsonProcessingException {
+        JsonNode root = objectMapper.readTree(json);
+        ThreeDNode.Builder builder = ThreeDNode.newBuilder();
+        extractNodes(builder, root);
+        return builder.build();
     }
 
     private static void extractNodes(ThreeDNode.Builder builder, JsonNode node) {

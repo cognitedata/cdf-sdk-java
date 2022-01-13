@@ -1949,6 +1949,17 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
     }
 
+    public Iterator<CompletableFuture<ResponseItems<String>>> readThreeDNodes(Request queryParameters) {
+        ThreeDNodesRequestProvider requestProvider = ThreeDNodesRequestProvider.builder()
+                .setEndpoint("3d/models/")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
 
     @AutoValue.Builder
     public abstract static class Builder {

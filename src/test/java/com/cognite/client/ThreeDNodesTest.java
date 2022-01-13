@@ -39,6 +39,44 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
         for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
             ThreeDModel model = entry.getKey();
             for (ThreeDModelRevision revision : entry.getValue()) {
+                List<ThreeDNode> listResults = new ArrayList<>();
+                        client.threeD()
+                                .models()
+                                .revisions()
+                                .nodes()
+                                .list(model.getId(), revision.getId())
+                                .forEachRemaining(val -> listResults.addAll(val));
+                assertNotNull(listResults);
+                listResults.forEach(node -> {
+                    assertNotNull(node);
+                    assertNotNull(node.getId());
+                    assertNotNull(node.getDepth());
+                    assertNotNull(node.getName());
+                    assertFalse(node.getName().equals(""));
+                    assertNotNull(node.getParentId());
+                    assertNotNull(node.getSubtreeSize());
+                    assertNotNull(node.getTreeIndex());
+                    assertNotNull(node.getBoundingBox());
+                    assertNotNull(node.getBoundingBox().getMaxList());
+                    assertNotNull(node.getBoundingBox().getMinList());
+                });
+            }
+        }
+
+        LOG.info(loggingPrefix + "Finished list 3D Nodes. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void retriveThreeDNodes() throws Exception {
+        Instant startInstant = Instant.now();
+        String loggingPrefix = "listThreeDNodes - ";
+        LOG.info(loggingPrefix + "Start list 3D Nodes");
+
+        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
+            ThreeDModel model = entry.getKey();
+            for (ThreeDModelRevision revision : entry.getValue()) {
                 List<ThreeDNode> listResults =
                         client.threeD()
                                 .models()
@@ -65,4 +103,5 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
         LOG.info(loggingPrefix + "Finished list 3D Nodes. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
     }
+
 }
