@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class RawTest {
+class RawIntegrationTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Test
@@ -162,7 +162,7 @@ class RawTest {
             assertEquals(rowsToDelete.size(), deleteRowResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -225,7 +225,7 @@ class RawTest {
                        client.raw().rows().upsert(createRowsList, false);
                        Thread.sleep(500L);
                    } catch (Exception e) {
-                       e.printStackTrace();
+                       throw new RuntimeException(e);
                    }
                }
             });
@@ -251,7 +251,7 @@ class RawTest {
             assertEquals(receiveRowsCount.get(), publishRowsCount.get());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }

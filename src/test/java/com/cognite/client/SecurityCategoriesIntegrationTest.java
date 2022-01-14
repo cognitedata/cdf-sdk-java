@@ -16,7 +16,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class SecurityCategoriesTest {
+class SecurityCategoriesIntegrationTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Test
@@ -67,7 +67,7 @@ class SecurityCategoriesTest {
             assertEquals(listSecurityCategoriesResults.size(), deleteItemsResults.size());
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 

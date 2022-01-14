@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ThreeDModelsTest {
+public class ThreeDModelsIntegrationTest {
 
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
@@ -49,7 +49,7 @@ public class ThreeDModelsTest {
 
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -78,7 +78,7 @@ public class ThreeDModelsTest {
 
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -114,7 +114,7 @@ public class ThreeDModelsTest {
 
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
