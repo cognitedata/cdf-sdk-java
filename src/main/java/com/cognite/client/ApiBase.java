@@ -58,7 +58,7 @@ abstract class ApiBase {
     protected static final Logger LOG = LoggerFactory.getLogger(ApiBase.class);
     private static final ImmutableList<ResourceType> resourcesSupportingPartitions =
             ImmutableList.of(ResourceType.ASSET, ResourceType.EVENT, ResourceType.FILE_HEADER, ResourceType.TIMESERIES_HEADER,
-                    ResourceType.RAW_ROW, ResourceType.RELATIONSHIP, ResourceType.SEQUENCE_HEADER);
+                    ResourceType.RAW_ROW, ResourceType.RELATIONSHIP, ResourceType.SEQUENCE_HEADER, ResourceType.THREED_NODE);
 
     public abstract CogniteClient getClient();
 

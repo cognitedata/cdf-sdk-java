@@ -4,6 +4,10 @@ import com.cognite.client.dto.Item;
 import com.cognite.client.dto.ThreeDModel;
 import com.cognite.client.dto.ThreeDModelRevision;
 import com.cognite.client.dto.ThreeDNode;
+import com.cognite.client.util.DataGenerator;
+import com.google.protobuf.ListValue;
+import com.google.protobuf.Struct;
+import com.google.protobuf.Value;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -12,10 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -200,6 +201,121 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
         LOG.info(loggingPrefix + "Finished getting 3D Nodes by ids. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
     }
+
+    @Test
+    @Tag("remoteCDP")
+    void filterThreeDNodes() throws Exception {
+        Thread.sleep(5000); // wait for eventual consistency
+        Instant startInstant = Instant.now();
+        String loggingPrefix = "filterThreeDNodes - ";
+        LOG.info(loggingPrefix + "Start filter 3D Nodes");
+
+        Random r = new Random();
+        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
+            ThreeDModel model = entry.getKey();
+            for (ThreeDModelRevision revision : entry.getValue()) {
+
+                Request request = Request.create()
+                        .withFilterParameter("properties", createProperties());
+
+                List<ThreeDNode> listResults = new ArrayList<>();
+                client.threeD()
+                        .models()
+                        .revisions()
+                        .nodes()
+                        .filter(model.getId(), revision.getId(), request)
+                        .forEachRemaining(val -> listResults.addAll(val));
+                assertNotNull(listResults);
+                validateFields(listResults);
+            }
+        }
+        LOG.info(loggingPrefix + "Finished filter 3D Nodes. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+    }
+
+    private ThreeDNode.Properties createProperties() {
+        ListValue.Builder listBoxBu = ListValue.newBuilder();
+        listBoxBu.addValues(Value.newBuilder().setNumberValue(1).build());
+        listBoxBu.addValues(Value.newBuilder().setNumberValue(2).build());
+
+        ListValue.Builder listCatBu = ListValue.newBuilder();
+        listCatBu.addValues(Value.newBuilder().setStringValue("AB76").build());
+        listCatBu.addValues(Value.newBuilder().setStringValue("AB77").build());
+
+        Struct stBu = Struct.newBuilder()
+                .putFields("boundingBox", Value.newBuilder().setListValue(listBoxBu.build()).build())
+                .putFields("area", Value.newBuilder().setListValue(listCatBu.build()).build())
+                .build();
+
+        ThreeDNode.Properties.Builder propsBu = ThreeDNode.Properties.newBuilder();
+        propsBu.setValues(stBu);
+
+        return propsBu.build();
+    }
+
+//    private ThreeDNode.Properties createProperties() {
+//        ThreeDNode.Properties.MapFieldEntry.MapFieldEntryValue.Builder mpfv = ThreeDNode.Properties.MapFieldEntry.MapFieldEntryValue.newBuilder();
+//        mpfv.addValue("AB76");
+//        mpfv.addValue("AB77");
+//
+//        ThreeDNode.Properties.MapFieldEntry.Builder mapBu = ThreeDNode.Properties.MapFieldEntry.newBuilder();
+//        mapBu.putValues("Area", mpfv.build());
+//
+//        ThreeDNode.Properties.Builder propsBu = ThreeDNode.Properties.newBuilder();
+//        propsBu.putValues("PDMS", mapBu.build());
+//        return propsBu.build();
+//    }
+
+//    private ThreeDNode.Properties createProperties() {
+//        ThreeDNode.Properties.Categories.CategoriesValues.Builder catValBu = ThreeDNode.Properties.Categories.CategoriesValues.newBuilder();
+//        catValBu.addValue("AB76");
+//
+//        ThreeDNode.Properties.Categories.Builder categBu = ThreeDNode.Properties.Categories.newBuilder();
+//        categBu.addValue(catValBu.build());
+//
+//        ThreeDNode.Properties.Builder propsBu = ThreeDNode.Properties.newBuilder();
+//        propsBu.addCategories(categBu.build());
+//        return propsBu.build();
+//    }
+
+//    private ThreeDNode.Properties createProperties() {
+//        ThreeDNode.Categories.Builder catValBu = ThreeDNode.Categories.newBuilder();
+//        catValBu.addValue("value1");
+//
+//        ThreeDNode.Properties.Builder propsBu = ThreeDNode.Properties.newBuilder();
+//        propsBu.putCategories("cat1", catValBu.build());
+//        return propsBu.build();
+//    }
+
+//    private ThreeDNode.Properties createProperties() {
+//        ThreeDNode.Categories.Builder catValBu = ThreeDNode.Categories.newBuilder();
+//        catValBu.addValue("");
+//
+//        ThreeDNode.Properties.Builder propsBu = ThreeDNode.Properties.newBuilder();
+//        propsBu.addCategories(catValBu.build());
+//        return propsBu.build();
+//    }
+
+//    private ThreeDNode.Properties createProperties() {
+//        ThreeDNode.Categories.Builder catValBu = ThreeDNode.Categories.newBuilder();
+//        catValBu.putValues("property1", "value1");
+//
+//        ThreeDNode.Properties.Builder propsBu = ThreeDNode.Properties.newBuilder();
+//        propsBu.addCategories(catValBu.build());
+//        return propsBu.build();
+//    }
+
+//    private ThreeDNode.Properties createProperties() {
+//        ThreeDNode.Categories.CategoriesValues.Builder catValBu = ThreeDNode.Categories.CategoriesValues.newBuilder();
+//        catValBu.putCategoriesValues("Type", "PIPE");
+//
+//        ThreeDNode.Categories.Builder catBu = ThreeDNode.Categories.newBuilder();
+//        catBu.putValues("PDMS",catValBu.build());
+//
+//        ThreeDNode.Properties.Builder propsBu = ThreeDNode.Properties.newBuilder();
+//        propsBu.addCategories(catBu.build());
+//        return propsBu.build();
+//    }
 
     private void validateFields(List<ThreeDNode> listResults) {
         listResults.forEach(node -> {

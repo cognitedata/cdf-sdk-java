@@ -1961,6 +1961,19 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
     }
 
+    public Iterator<CompletableFuture<ResponseItems<String>>> filterThreeDNodes(Long modelId, Long revisionId, Request queryParameters) {
+
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("3d/models/" + modelId + "/revisions/" + revisionId + "/nodes/list")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
     public Iterator<CompletableFuture<ResponseItems<String>>> readThreeDAncestorNodes(Request queryParameters) {
         ThreeDAncestorNodesRequestProvider requestProvider = ThreeDAncestorNodesRequestProvider.builder()
                 .setEndpoint("3d/models/")

@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package com.cognite.beam.proto;
 
+import "google/protobuf/struct.proto";
+
 option java_package = "com.cognite.client.dto";
 option java_multiple_files = true;
 
@@ -49,15 +51,7 @@ message ThreeDNode {
     }
 
     message Properties {
-        repeated Categories categories = 1;
-    }
-
-    message Categories {
-        message CategoriesValues {
-            map<string, string> categoriesValues = 1;
-        }
-
-        map<string, CategoriesValues> values = 1;
+        google.protobuf.Struct values = 1;
     }
 
     optional int64 id = 1;
