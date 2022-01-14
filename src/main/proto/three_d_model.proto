@@ -13,3 +13,15 @@ message ThreeDModel {
     optional int64 data_set_id = 4;
     map<string, string> metadata = 5;
 }
+
+message ThreeDFileBinary {
+    oneof idType {
+        int64 id = 1;
+    }
+
+    oneof binaryType {
+        bytes binary = 3;
+        string binary_uri = 4;
+    }
+    int64 content_length = 5;
+}
