@@ -19,6 +19,11 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [1.10.0] 2022-01-14
+
+### Added
+
+- Added `3D File Download`
 
 ## [1.9.0] 2022-01-04
 
