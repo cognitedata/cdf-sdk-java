@@ -53,31 +53,6 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
                 Duration.between(startInstant, Instant.now()));
     }
 
-//    @Test
-//    @Tag("remoteCDP")
-//    void retriveThreeDNodes() throws Exception {
-//        Instant startInstant = Instant.now();
-//        String loggingPrefix = "listThreeDNodes - ";
-//        LOG.info(loggingPrefix + "Start list 3D Nodes");
-//
-//        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
-//            ThreeDModel model = entry.getKey();
-//            for (ThreeDModelRevision revision : entry.getValue()) {
-//                List<ThreeDNode> listResults =
-//                        client.threeD()
-//                                .models()
-//                                .revisions()
-//                                .nodes()
-//                                .retrieve(model.getId(), revision.getId());
-//                validateList(listResults);
-//                validateFields(listResults);
-//            }
-//        }
-//
-//        LOG.info(loggingPrefix + "Finished list 3D Nodes. Duration: {}",
-//                Duration.between(startInstant, Instant.now()));
-//    }
-
     @Test
     @Tag("remoteCDP")
     void listThreeDNodesAncestorNodes() throws Exception {
@@ -116,43 +91,6 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
         LOG.info(loggingPrefix + "Finished list 3D Ancestor Nodes. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
     }
-
-//    @Test
-//    @Tag("remoteCDP")
-//    void retriveThreeDNodesAncestorNodes() throws Exception {
-//        Thread.sleep(5000); // wait for eventual consistency
-//        Instant startInstant = Instant.now();
-//        String loggingPrefix = "listThreeDNodesAncestorNodes - ";
-//        LOG.info(loggingPrefix + "Start list 3D Ancestor Nodes");
-//
-//        Random r = new Random();
-//        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
-//            ThreeDModel model = entry.getKey();
-//            for (ThreeDModelRevision revision : entry.getValue()) {
-//                List<ThreeDNode> listResults =
-//                        client.threeD()
-//                                .models()
-//                                .revisions()
-//                                .nodes()
-//                                .retrieve(model.getId(), revision.getId());
-//                validateList(listResults);
-//                validateFields(listResults);
-//
-//                Integer position = r.nextInt(listResults.size());
-//                ThreeDNode nodeDrawn = listResults.get(position);
-//                List<ThreeDNode> listResultsAncestorNodes =
-//                        client.threeD()
-//                                .models()
-//                                .revisions()
-//                                .nodes()
-//                                .retrieve(model.getId(), revision.getId(), nodeDrawn.getId());
-//                validateList(listResultsAncestorNodes);
-//                validateFields(listResultsAncestorNodes);
-//            }
-//        }
-//        LOG.info(loggingPrefix + "Finished list 3D Ancestor Nodes. Duration: {}",
-//                Duration.between(startInstant, Instant.now()));
-//    }
 
     @Test
     @Tag("remoteCDP")
