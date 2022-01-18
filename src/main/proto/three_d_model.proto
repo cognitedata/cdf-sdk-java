@@ -51,7 +51,26 @@ message ThreeDNode {
     }
 
     message Properties {
-        google.protobuf.Struct values = 1;
+        repeated Categories categories = 1;
+    }
+
+    message Categories {
+        optional string name = 1;
+        map<string, string> values = 2;
+    }
+
+    message PropertiesFilter {
+
+        message Categories {
+            message CategoriesValues {
+                repeated string valuesString = 1;
+            }
+
+            optional string name = 1;
+            map<string, CategoriesValues> values = 2;
+        }
+
+        repeated Categories categories = 1;
     }
 
     optional int64 id = 1;

@@ -89,18 +89,41 @@ public class ThreeDNodeParser {
             builder.setBoundingBox(builderBound.build());
         }
 
-        //TODO review
         if (node.path("properties").isObject()) {
             ThreeDNode.Properties.Builder builderProps = ThreeDNode.Properties.newBuilder();
+            Iterator<Map.Entry<String, JsonNode>> it = node.path("properties").fields();
+
             int count = 0;
-            Struct.Builder structBuilder = Struct.newBuilder();
-            for (JsonNode nodeProps : node.path("properties")) {
-                if (nodeProps.isObject()) {
-                    JsonFormat.parser().merge(node.path(count).toString(), structBuilder);
+            while (it.hasNext()) {
+                ThreeDNode.Categories.Builder builderCat = ThreeDNode.Categories.newBuilder();
+                Map.Entry<String, JsonNode> entry = it.next();
+                JsonNode jsonNode = entry.getValue();
+                Iterator<String> itFileNames = jsonNode.fieldNames();
+                while(itFileNames.hasNext()) {
+                    String fileName = itFileNames.next();
+                    JsonNode value = jsonNode.get(fileName);
+                    builderCat.putValues(fileName, value.textValue());
                 }
+                builderCat.setName(entry.getKey());
+                builderProps.addCategories(builderCat.build());
                 count++;
             }
             builder.setProperties(builderProps.build());
         }
+
+//        //TODO review
+//        if (node.path("properties").isObject()) {
+//            ThreeDNode.Properties.Builder builderProps = ThreeDNode.Properties.newBuilder();
+//            int count = 0;
+//            Struct.Builder structBuilder = Struct.newBuilder();
+//            for (JsonNode nodeProps : node.path("properties")) {
+//                JsonFormat.parser().merge(node.path(count).toString(), structBuilder);
+////                if (nodeProps.isObject()) {
+////                    JsonFormat.parser().merge(node.path(count).toString(), structBuilder);
+////                }
+//                count++;
+//            }
+//            builder.setProperties(builderProps.build());
+//        }
     }
 }

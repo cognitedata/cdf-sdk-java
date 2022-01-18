@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 
 import com.cognite.client.CogniteClient;
 import com.cognite.client.Request;
-import com.cognite.client.ThreeDAvailableOutputs;
 import com.cognite.client.config.AuthConfig;
 import com.cognite.client.servicesV1.executor.FileBinaryRequestExecutor;
 import com.cognite.client.servicesV1.parser.ItemParser;
@@ -1962,8 +1961,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
     }
 
     public Iterator<CompletableFuture<ResponseItems<String>>> filterThreeDNodes(Long modelId, Long revisionId, Request queryParameters) {
-
-        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+        ThreeDNodesFilterRequestProvider requestProvider = ThreeDNodesFilterRequestProvider.builder()
                 .setEndpoint("3d/models/" + modelId + "/revisions/" + revisionId + "/nodes/list")
                 .setRequest(queryParameters)
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -1972,6 +1970,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                 .build();
 
         return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+
     }
 
     public Iterator<CompletableFuture<ResponseItems<String>>> readThreeDAncestorNodes(Request queryParameters) {
