@@ -102,20 +102,5 @@ public class ThreeDNodeParser {
             }
             builder.setProperties(builderProps.build());
         }
-
-//        //TODO review
-//        if (node.path("properties").isObject()) {
-//            ThreeDNode.Properties.Builder builderProps = ThreeDNode.Properties.newBuilder();
-//            int count = 0;
-//            Struct.Builder structBuilder = Struct.newBuilder();
-//            for (JsonNode nodeProps : node.path("properties")) {
-//                JsonFormat.parser().merge(node.path(count).toString(), structBuilder);
-////                if (nodeProps.isObject()) {
-////                    JsonFormat.parser().merge(node.path(count).toString(), structBuilder);
-////                }
-//                count++;
-//            }
-//            builder.setProperties(builderProps.build());
-//        }
     }
 }

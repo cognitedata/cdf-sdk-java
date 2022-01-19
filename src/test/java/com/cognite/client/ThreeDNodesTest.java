@@ -19,6 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ThreeDNodesTest extends ThreeDBaseTest {
 
+    public static final long PUBLIC_DATA_MODEL_ID = 3356984403684032l;
+    public static final long PUBLIC_DATA_REVISION_ID = 6664823881595566l;
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Override
@@ -180,7 +182,7 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
                 .models()
                 .revisions()
                 .nodes()
-                .list(3356984403684032l, 6664823881595566l);
+                .list(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID);
         List<ThreeDNode> listResults = it.next();
         assertNotNull(listResults);
     }
@@ -196,7 +198,7 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
                 .models()
                 .revisions()
                 .nodes()
-                .filter(3356984403684032l, 6664823881595566l, request);
+                .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request);
         List<ThreeDNode> listResults = itFilter.next();
         assertNotNull(listResults);
         assertTrue(listResults.size() > 0);
@@ -213,7 +215,7 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
                 .models()
                 .revisions()
                 .nodes()
-                .filter(3356984403684032l, 6664823881595566l, request);
+                .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request);
         List<ThreeDNode> listResults = itFilter.next();
         assertNotNull(listResults);
         assertTrue(listResults.size() > 0);
@@ -231,7 +233,7 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
                 .models()
                 .revisions()
                 .nodes()
-                .filter(3356984403684032l, 6664823881595566l, request);
+                .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request);
         List<ThreeDNode> listResults = itFilter.next();
         assertNotNull(listResults);
         assertTrue(listResults.size() > 0);
@@ -249,7 +251,7 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
                 .models()
                 .revisions()
                 .nodes()
-                .filter(3356984403684032l, 6664823881595566l, request);
+                .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request);
         List<ThreeDNode> listResults = itFilter.next();
         assertNotNull(listResults);
         assertTrue(listResults.size() > 0);
@@ -264,7 +266,7 @@ public class ThreeDNodesTest extends ThreeDBaseTest {
                 .models()
                 .revisions()
                 .nodes()
-                .filter(3356984403684032l, 6664823881595566l);
+                .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID);
         List<ThreeDNode> listResults = itFilter.next();
         assertNotNull(listResults);
         assertTrue(listResults.size() > 0);
