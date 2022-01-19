@@ -1993,6 +1993,41 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
     }
 
+    public Iterator<CompletableFuture<ResponseItems<String>>> readThreeDAncestorNodes(Request queryParameters) {
+        ThreeDAncestorNodesRequestProvider requestProvider = ThreeDAncestorNodesRequestProvider.builder()
+                .setEndpoint("3d/models/")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    public ItemReader<String> readThreeDAncestorNodes() {
+        ThreeDAncestorNodesRequestProvider requestProvider = ThreeDAncestorNodesRequestProvider.builder()
+                .setEndpoint("3d/models/")
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    public ItemReader<String> readThreeDNodesById(Long modelId, Long revisionId) {
+
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("3d/models/" + modelId + "/revisions/" + revisionId + "/nodes/byids")
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
     @AutoValue.Builder
     public abstract static class Builder {
         public abstract Builder setClient(CogniteClient value);
