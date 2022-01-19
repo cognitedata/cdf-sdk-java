@@ -218,7 +218,6 @@ public class ThreeDModelsIntegrationTest {
     @NotNull
     private List<ThreeDModel> upSertThreeDModel(List<ThreeDModel> upsertThreeDModelsList, Instant startInstant, String loggingPrefix, CogniteClient client, Long dataSetId) throws Exception {
         LOG.info(loggingPrefix + "------------ Start upserting 3D Models. ------------------");
-
         List<ThreeDModel> listUpsert = client.threeD().models().upsert(upsertThreeDModelsList);
         LOG.info(loggingPrefix + "------------ Finished upserting 3D Models. Duration: {} -----------",
                 Duration.between(startInstant, Instant.now()));

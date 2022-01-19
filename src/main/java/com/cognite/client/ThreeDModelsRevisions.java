@@ -2,34 +2,36 @@ package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
-import com.cognite.client.dto.*;
+import com.cognite.client.dto.Item;
+import com.cognite.client.dto.ThreeDModelRevision;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ItemReader;
 import com.cognite.client.servicesV1.ResponseItems;
-import com.cognite.client.servicesV1.parser.ThreeDModelParser;
+import com.cognite.client.servicesV1.parser.ThreeDModelRevisionParser;
 import com.google.auto.value.AutoValue;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
- * This class represents the Cognite 3D models api endpoint.
+ * This class represents the Cognite 3D models revisions api endpoint.
  *
- * It provides methods for reading and writing {@link com.cognite.client.dto.ThreeDModel}.
+ * It provides methods for reading and writing {@link com.cognite.client.dto.ThreeDModelRevision}.
  */
 @AutoValue
-public abstract class ThreeDModels extends ApiBase {
+public abstract class ThreeDModelsRevisions extends ApiBase {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(ThreeDModels.class);
-
-    private final static int MAX_UPSERT_BATCH_SIZE = 200;
+    protected static final Logger LOG = LoggerFactory.getLogger(ThreeDModelsRevisions.class);
 
     /**
-     * Constructs a new {@link ThreeDModels} object using the provided client configuration.
+     * Constructs a new {@link ThreeDModelsRevisions} object using the provided client configuration.
      *
      * This method is intended for internal use--SDK clients should always use {@link CogniteClient}
      * as the entry point to this class.
@@ -37,41 +39,43 @@ public abstract class ThreeDModels extends ApiBase {
      * @param client The {@link CogniteClient} to use for configuration settings.
      * @return the 3D models api object.
      */
-    public static ThreeDModels of(CogniteClient client) {
-        return ThreeDModels.builder()
+    public static ThreeDModelsRevisions of(CogniteClient client) {
+        return ThreeDModelsRevisions.builder()
                 .setClient(client)
                 .build();
     }
 
     /**
-     * Returns {@link ThreeDModelsRevisions} representing 3D Models Revisions api endpoints.
+     * Returns {@link ThreeDOutputs} representing 3D Models available outputs api endpoints.
      *
-     * @return The ThreeDModelsRevisions api endpoints.
+     * @return The ThreeDOutputs api endpoints.
      */
-    public ThreeDModelsRevisions revisions() {
-        return ThreeDModelsRevisions.of(getClient());
+    public ThreeDOutputs outputs() {
+        return ThreeDOutputs.of(getClient());
     }
 
-    private static ThreeDModels.Builder builder() {
-        return new AutoValue_ThreeDModels.Builder();
+    private static ThreeDModelsRevisions.Builder builder() {
+        return new AutoValue_ThreeDModelsRevisions.Builder();
     }
 
     @AutoValue.Builder
-    abstract static class Builder extends ApiBase.Builder<Builder> {
-        abstract ThreeDModels build();
+    abstract static class Builder extends ApiBase.Builder<ThreeDModelsRevisions.Builder> {
+        abstract ThreeDModelsRevisions build();
     }
 
     /**
-     * Returns all {@link ThreeDModel} objects.
+     * Returns all {@link ThreeDModelRevision} objects.
      *
-     * @see #list(Request)
+     * @param modelId the id of 3d models
+     * @return an {@link Iterator} to page through the results set.
+     * @throws Exception
      */
-    public Iterator<List<ThreeDModel>> list() throws Exception {
-        return this.list(Request.create());
+    public Iterator<List<ThreeDModelRevision>> list(Long modelId) throws Exception {
+        return this.list(modelId, Request.create());
     }
 
     /**
-     * Returns all {@link ThreeDModel} objects that matches the filters set in the {@link Request}.
+     * Returns all {@link ThreeDModelRevision} objects that matches the filters set in the {@link Request}.
      *
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
@@ -80,18 +84,18 @@ public abstract class ThreeDModels extends ApiBase {
      * The 3D models are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
      *
-     * @param requestParameters the filters to use for retrieving the 3D models.
+     * @param requestParameters the filters to use for retrieving the 3D models revisions.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
      */
-    public Iterator<List<ThreeDModel>> list(Request requestParameters) throws Exception {
+    public Iterator<List<ThreeDModelRevision>> list(Long modelId, Request requestParameters) throws Exception {
         List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
 
-        return this.list(requestParameters, partitions.toArray(new String[0]));
+        return this.list(modelId, requestParameters, partitions.toArray(new String[0]));
     }
 
     /**
-     * Returns all {@link ThreeDModel} objects that matches the filters set in the {@link Request} for the
+     * Returns all {@link ThreeDModelRevision} objects that matches the filters set in the {@link Request} for the
      * specified partitions. This is method is intended for advanced use cases where you need direct control over
      * the individual partitions. For example, when using the SDK in a distributed computing environment.
      *
@@ -99,26 +103,29 @@ public abstract class ThreeDModels extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
-     * @param requestParameters the filters to use for retrieving the 3d models.
+     * @param modelId The id of ThreeDModels object
+     * @param requestParameters the filters to use for retrieving the 3d models revisions.
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
      */
-    public Iterator<List<ThreeDModel>> list(Request requestParameters, String... partitions) throws Exception {
-        return AdapterIterator.of(listJson(ResourceType.THREED_MODEL, requestParameters, partitions), this::parseThreeDModel);
+    public Iterator<List<ThreeDModelRevision>> list(Long modelId, Request requestParameters, String... partitions) throws Exception {
+        Request request = requestParameters.withRootParameter("modelId", modelId);
+        return AdapterIterator.of(listJson(ResourceType.THREED_MODEL_REVISION, request, partitions), this::parseThreeDModelRevision);
     }
 
     /**
      * Retrieves 3D Models by id.
      *
+     * @param modelId The id of ThreeDModels object
      * @param items The item(s) {@code id} to retrieve.
      * @return The retrieved 3D Models.
      * @throws Exception
      */
-    public List<ThreeDModel> retrieve(List<Item> items) throws Exception {
+    public List<ThreeDModelRevision> retrieve(Long modelId, List<Item> items) throws Exception {
         String loggingPrefix = "retrieve() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         ConnectorServiceV1 connector = getClient().getConnectorService();
-        ItemReader<String> tdReader = connector.readThreeDModelsById();
+        ItemReader<String> tdReader = connector.readThreeDModelsRevisionsById(modelId);
 
         List<CompletableFuture<ResponseItems<String>>> resultFutures = new ArrayList<>();
         for (Item item : items) {
@@ -145,32 +152,33 @@ public abstract class ThreeDModels extends ApiBase {
         }
 
         return responseItems.stream()
-                .map(this::parseThreeDModel)
+                .map(this::parseThreeDModelRevision)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Creates or update a set of {@link ThreeDModel} objects.
+     * Creates or update a set of {@link ThreeDModelRevision} objects.
      *
-     * If it is a new {@link ThreeDModel} object (based on the {@code id}, then it will be created.
+     * If it is a new {@link ThreeDModelRevision} object (based on the {@code id}, then it will be created.
      *
-     * If an {@link ThreeDModel} object already exists in Cognite Data Fusion, it will be updated. The update
+     * If an {@link ThreeDModelRevision} object already exists in Cognite Data Fusion, it will be updated. The update
      * behaviour is specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
      *
-     * @param threeDModels The 3D Models to upsert
-     * @return The upserted 3D Models
+     * @param modelId The id of ThreeDModels object
+     * @param threeDModelRevisions The 3D Model Revisions to upsert
+     * @return The upserted 3D Models Revisions
      * @throws Exception
      */
-    public List<ThreeDModel> upsert(List<ThreeDModel> threeDModels) throws Exception {
+    public List<ThreeDModelRevision> upsert(Long modelId, List<ThreeDModelRevision> threeDModelRevisions) throws Exception {
         String loggingPrefix = "upsert() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         ConnectorServiceV1 connector = getClient().getConnectorService();
-        ConnectorServiceV1.ItemWriter createItemWriter = connector.writeThreeDModels();
-        ConnectorServiceV1.ItemWriter updateItemWriter = connector.updateThreeDModels();
+        ConnectorServiceV1.ItemWriter createItemWriter = connector.writeThreeDModelsRevisions(modelId);
+        ConnectorServiceV1.ItemWriter updateItemWriter = connector.updateThreeDModelsRevisions(modelId);
 
         List<Map<String, Object>> insertItems = new ArrayList<>();
         List<Map<String, Object>> updateItems = new ArrayList<>();
 
-        threeDModels.forEach(td-> {
+        threeDModelRevisions.forEach(td-> {
             if (td.getId() == 0) {
                 insertItems.add(toRequestInsertItem(td));
             } else {
@@ -197,13 +205,13 @@ public abstract class ThreeDModels extends ApiBase {
         if (updateItems.size() > 0) {
             futureList.add(responseUpdate);
         }
+
         CompletableFuture<Void> allFutures =
                 CompletableFuture.allOf(futureList.toArray(new CompletableFuture[futureList.size()]));
         allFutures.join(); // Wait for all futures to complete
 
-
         //Collect the responses from the futures
-        List<ThreeDModel> listResponse = new ArrayList<>();
+        List<ThreeDModelRevision> listResponse = new ArrayList<>();
         String exceptionMessage = "";
         for (CompletableFuture<ResponseItems<String>> future : futureList) {
             ResponseItems<String> response = future.get();
@@ -218,59 +226,48 @@ public abstract class ThreeDModels extends ApiBase {
         return listResponse;
     }
 
-    public List<Item> delete(List<Item> threeDModels) throws Exception {
+    /**
+<<<<<<< HEAD
+<<<<<<< HEAD
+     * Deletes 3D Revisions.
+=======
+     * Deletes a set of Sequences.
+>>>>>>> Add retriver 3d revisions
+=======
+     * Deletes a set of Sequences.
+>>>>>>> bccfe90003a4b6868bd94da282fa43e92a6ea13c
+     *
+     * The 3D Revisions to delete are identified via their {@code id} by submitting a list of {@link Item}.
+     *
+     * @param modelId The id of ThreeDModels object
+<<<<<<< HEAD
+<<<<<<< HEAD
+     * @param deleteItemsInput List of {@link Item} containing the ids of 3D Model Revisions to delete
+=======
+     * @param deleteItemsInput The 3D Model Revisions to delete
+>>>>>>> Add retriver 3d revisions
+=======
+     * @param deleteItemsInput The 3D Model Revisions to delete
+>>>>>>> bccfe90003a4b6868bd94da282fa43e92a6ea13c
+     * @return
+     * @throws Exception
+     */
+    public List<Item> delete(Long modelId, List<Item> deleteItemsInput) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
-        ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteThreeDModels();
+        ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteThreeDModelsRevisions(modelId);
 
         DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig());
 
-        return deleteItems.deleteItems(threeDModels);
+        return deleteItems.deleteItems(deleteItemsInput);
     }
 
     /*
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
     deal very well with exceptions.
      */
-    private ThreeDModel parseThreeDModel(String json) {
+    private ThreeDModelRevision parseThreeDModelRevision(String json) {
         try {
-            return ThreeDModelParser.parseThreeDModel(json);
-        } catch (Exception e)  {
-            throw new RuntimeException(e);
-        }
-    }
-
-
-    /*
-    Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
-    deal very well with exceptions.
-     */
-    private List<ThreeDModel> parseThreeDModelToList(String json) {
-        try {
-            return ThreeDModelParser.parseThreeDModelToList(json);
-        } catch (Exception e)  {
-            throw new RuntimeException(e);
-        }
-    }
-
-//    /*
-//    Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
-//    deal very well with exceptions.
-//     */
-//    private List<ThreeDModel> parseThreeDModelToList(String json) {
-//        try {
-//            return ThreeDModelParser.parseThreeDModelToList(json);
-//        } catch (Exception e)  {
-//            throw new RuntimeException(e);
-//        }
-//    }
-
-    /*
-   Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
-   deal very well with exceptions.
-    */
-    private Map<String, Object> toRequestInsertItem(ThreeDModel element) {
-        try {
-            return ThreeDModelParser.toRequestInsertItem(element);
+            return ThreeDModelRevisionParser.parseThreeDModelRevision(json);
         } catch (Exception e)  {
             throw new RuntimeException(e);
         }
@@ -280,24 +277,35 @@ public abstract class ThreeDModels extends ApiBase {
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
     deal very well with exceptions.
      */
-    private Map<String, Object> toRequestUpdateItem(ThreeDModel item) {
+    private List<ThreeDModelRevision> parseThreeDModelToList(String json) {
         try {
-            return ThreeDModelParser.toRequestUpdateItem(item);
+            return ThreeDModelRevisionParser.parseThreeDModelToList(json);
         } catch (Exception e)  {
             throw new RuntimeException(e);
         }
     }
 
-    /*
-    Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
-    deal very well with exceptions.
-     */
-    private Map<String, Object> toRequestReplaceItem(ThreeDModel item) {
+    private Map<String, Object> toRequestInsertItem(ThreeDModelRevision element) {
         try {
-            return ThreeDModelParser.toRequestReplaceItem(item);
+            return ThreeDModelRevisionParser.toRequestInsertItem(element);
         } catch (Exception e)  {
             throw new RuntimeException(e);
         }
     }
 
+    private Map<String, Object> toRequestUpdateItem(ThreeDModelRevision element) {
+        try {
+            return ThreeDModelRevisionParser.toRequestUpdateItem(element);
+        } catch (Exception e)  {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Map<String, Object> toRequestReplaceItem(ThreeDModelRevision element) {
+        try {
+            return ThreeDModelRevisionParser.toRequestReplaceItem(element);
+        } catch (Exception e)  {
+            throw new RuntimeException(e);
+        }
+    }
 }
