@@ -148,76 +148,6 @@ public abstract class ThreeDNodes extends ApiBase {
     }
 
     /**
-     * Retrieves 3D nodes by modeId and revisionId
-     *
-     * @param modelId The id of ThreeDModel object
-     * @param revisionId The id of ThreeDModelRevision object
-     * @return The retrieved 3D Nodes.
-     * @throws Exception
-     */
-    public List<ThreeDNode> retrieve(Long modelId, Long revisionId) throws Exception {
-        String loggingPrefix = "retrieve() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
-        ConnectorServiceV1 connector = getClient().getConnectorService();
-        ItemReader<String> tdReader = connector.readThreeDNodes();
-
-        Request request = Request.create()
-                .withRootParameter("modelId", String.valueOf(modelId))
-                .withRootParameter("revisionId", String.valueOf(revisionId));
-
-        CompletableFuture<ResponseItems<String>> itemsAsync = tdReader.getItemsAsync(addAuthInfo(request));
-        ResponseItems<String> responseItems = itemsAsync.join();
-
-        List<ThreeDNode> listResponse = new ArrayList<>();
-        if (!responseItems.isSuccessful()) {
-            // something went wrong with the request
-            String message = loggingPrefix + "Retrieve 3d model failed: "
-                    + responseItems.getResponseBodyAsString();
-            LOG.error(message);
-            throw new Exception(message);
-        } else {
-            listResponse.addAll(parseThreeDNodesToList(responseItems.getResponseBodyAsString()));
-        }
-
-        return listResponse;
-    }
-
-    /**
-     * Retrieve 3D Ancestor Nodes by modelId, revisionId and nodeId
-     *
-     * @param modelId ID of ThreeDModel object
-     * @param revisionId ID of ThreeDModelRevision object
-     * @param nodeId ID of the node to get the ancestors of.
-     * @return The retrieved 3D Nodes.
-     * @throws Exception
-     */
-    public List<ThreeDNode> retrieve(Long modelId, Long revisionId, Long nodeId) throws Exception {
-        String loggingPrefix = "retrieve() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
-        ConnectorServiceV1 connector = getClient().getConnectorService();
-        ItemReader<String> tdReader = connector.readThreeDAncestorNodes();
-
-        Request request = Request.create()
-                .withRootParameter("modelId", String.valueOf(modelId))
-                .withRootParameter("revisionId", String.valueOf(revisionId))
-                .withRootParameter("nodeId", String.valueOf(nodeId));
-
-        CompletableFuture<ResponseItems<String>> itemsAsync = tdReader.getItemsAsync(addAuthInfo(request));
-        ResponseItems<String> responseItems = itemsAsync.join();
-
-        List<ThreeDNode> listResponse = new ArrayList<>();
-        if (!responseItems.isSuccessful()) {
-            // something went wrong with the request
-            String message = loggingPrefix + "Retrieve 3d Ancestor Nodes failed: "
-                    + responseItems.getResponseBodyAsString();
-            LOG.error(message);
-            throw new Exception(message);
-        } else {
-            listResponse.addAll(parseThreeDNodesToList(responseItems.getResponseBodyAsString()));
-        }
-
-        return listResponse;
-    }
-
-    /**
      * Retrieves 3D Nodes by ids.
      *
      * @param modelId ID of ThreeDModel object
@@ -265,6 +195,94 @@ public abstract class ThreeDNodes extends ApiBase {
         return responseItems.stream()
                 .map(this::parseThreeDNodes)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns all {@link ThreeDNode} objects that matches the filters set in the {@link Request}.
+     *
+     * Endpoint is nodes/list
+     *
+     * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
+     * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
+     * have to stream these results into your own data structure.
+     *
+     * The 3D nodes are retrieved using multiple, parallel request streams towards the Cognite api. The number of
+     * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * @param modelId ID of ThreeDModel object
+     * @param revisionId ID of ThreeDModelRevision object
+     * @return an {@link Iterator} to page through the results set.
+     * @throws Exception
+     */
+    public Iterator<List<ThreeDNode>> filter(Long modelId, Long revisionId) throws Exception {
+        List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
+        return this.filter(modelId, revisionId, Request.create(), partitions.toArray(new String[partitions.size()]));
+    }
+
+    /**
+     * Returns all {@link ThreeDNode} objects that matches the filters set in the {@link Request}.
+     *
+     * Endpoint is nodes/list
+     *
+     * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
+     * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
+     * have to stream these results into your own data structure.
+     *
+     * The 3D nodes are retrieved using multiple, parallel request streams towards the Cognite api. The number of
+     * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * @param modelId ID of ThreeDModel object
+     * @param revisionId ID of ThreeDModelRevision object
+     * @param requestParameters the filters to use for retrieving the 3D nodes.
+     * @return an {@link Iterator} to page through the results set.
+     * @throws Exception
+     */
+    public Iterator<List<ThreeDNode>> filter(Long modelId, Long revisionId, Request requestParameters) throws Exception {
+        List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
+        return this.filter(modelId, revisionId, requestParameters, partitions.toArray(new String[partitions.size()]));
+    }
+
+    /**
+     * Returns all {@link ThreeDNode} objects that matches the filters set in the {@link Request}.
+     *
+     * Endpoint is nodes/list
+     *
+     * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
+     * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
+     * have to stream these results into your own data structure.
+     *
+     * The 3D nodes are retrieved using multiple, parallel request streams towards the Cognite api. The number of
+     * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * @param modelId ID of ThreeDModel object
+     * @param revisionId ID of ThreeDModelRevision object
+     * @param requestParameters the filters to use for retrieving the 3D nodes.
+     * @param partitions the partitions to include.
+     * @return an {@link Iterator} to page through the results set.
+     * @throws Exception
+     */
+    public Iterator<List<ThreeDNode>> filter(Long modelId, Long revisionId, Request requestParameters, String... partitions) throws Exception {
+        String loggingPrefix = "filter() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        ConnectorServiceV1 connector = getClient().getConnectorService();
+        Request requestParams = addAuthInfo(requestParameters);
+
+        // Build the api iterators.
+        List<Iterator<CompletableFuture<ResponseItems<String>>>> iterators = new ArrayList<>();
+        if (partitions.length < 1) {
+            // No partitions specified. Just pass on the request parameters without any modification
+            LOG.debug("No partitions specified. Will use a single read iterator stream.");
+            iterators.add(connector.filterThreeDNodes(modelId, revisionId, requestParams));
+        } else {
+            // We have some partitions. Add them to the request parameters and get the iterators
+            LOG.debug(String.format("Identified %d partitions. Will use a separate iterator stream per partition.",
+                    partitions.length));
+            for (String partition : partitions) {
+                Request requestWithParticion = requestParams.withRootParameter("partition", partition);
+                iterators.add(connector.filterThreeDNodes(modelId, revisionId, requestWithParticion));
+            }
+        }
+
+        return AdapterIterator.of(FanOutIterator.of(iterators), this::parseThreeDNodes);
     }
 
     /*

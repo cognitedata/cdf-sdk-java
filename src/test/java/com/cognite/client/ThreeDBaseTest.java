@@ -1,6 +1,5 @@
 package com.cognite.client;
 
-import com.cognite.client.config.ClientConfig;
 import com.cognite.client.config.TokenUrl;
 import com.cognite.client.dto.*;
 import com.cognite.client.util.DataGenerator;
@@ -22,6 +21,8 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public abstract class ThreeDBaseTest {
+
+    private static final String PUBLIC_DATA_API_KEY = "OWIyZWEwNjctMDFmNy00MjI0LWE5NDctYmRjMTcwYTU0Y2Jj";
 
     private static final Integer COUNT_TO_BE_CREATE = 2;
 
@@ -64,17 +65,36 @@ public abstract class ThreeDBaseTest {
                 Duration.between(startInstantAllTests, Instant.now())+ " ------------ ");
     }
 
-    private CogniteClient getCogniteClient() throws MalformedURLException {
+    protected CogniteClient getCogniteClient() throws MalformedURLException {
         Instant startInstant = Instant.now();
-        getLogger().info("------------ Start test. Creating Cognite client ------------");
+        getLogger().info("------------ Start test. Creating Cognite client - Client Credential ------------");
+        CogniteClient client = getClientCredential();
+        getLogger().info("------------ Finished creating the Cognite client - Client Credential. Duration : {}",
+                Duration.between(startInstant, Instant.now()) + " ------------");
+        return client;
+    }
+
+    protected CogniteClient getCogniteClientAPIKey() throws MalformedURLException {
+        Instant startInstant = Instant.now();
+        getLogger().info("------------ Start test. Creating Cognite client - API-KEY------------");
+        CogniteClient client = getClienteOfApiKey();
+        getLogger().info("------------ Finished creating the Cognite client - API-KEY. Duration : {}",
+                Duration.between(startInstant, Instant.now()) + " ------------");
+        return client;
+    }
+
+    private CogniteClient getClienteOfApiKey() {
+        return CogniteClient.ofKey(PUBLIC_DATA_API_KEY);
+    }
+
+    private CogniteClient getClientCredential() throws MalformedURLException {
         CogniteClient client = CogniteClient.ofClientCredentials(
                         TestConfigProvider.getClientId(),
                         TestConfigProvider.getClientSecret(),
                         TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
                 .withProject(TestConfigProvider.getProject())
                 .withBaseUrl(TestConfigProvider.getHost());
-        getLogger().info("------------ Finished creating the Cognite client. Duration : {}",
-                Duration.between(startInstant, Instant.now()) + " ------------");
+
         return client;
     }
 
