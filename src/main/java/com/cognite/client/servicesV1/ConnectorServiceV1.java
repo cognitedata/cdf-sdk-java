@@ -1959,6 +1959,18 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
     }
 
+    public ItemReader<String> readThreeDRevisionLogs() {
+        ThreeDRevisionLogsRequestProvider requestProvider = ThreeDRevisionLogsRequestProvider.builder()
+                .setEndpoint("3d/models/")
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+
     @AutoValue.Builder
     public abstract static class Builder {
         public abstract Builder setClient(CogniteClient value);
@@ -3280,7 +3292,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
             return future;
         }
     }
-    
+
     public static class DownloadThreeDFileBinary {
         final static Logger LOG = LoggerFactory.getLogger(DownloadThreeDFileBinary.class);
         final static String loggingPrefix = "DownloadThreeDFileBinary() - ";

@@ -41,6 +41,14 @@ message ThreeDOutput {
     optional int64 blobId = 3;
 }
 
+message ThreeDRevisionLog {
+
+    optional int64 timestamp = 1;
+    optional int32 severity = 2;
+    optional string type = 3;
+    optional string info = 4;
+}
+
 message ThreeDFileBinary {
     oneof idType {
         int64 id = 1;

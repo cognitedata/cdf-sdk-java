@@ -146,7 +146,6 @@ public class ThreeDModelsRevisionsTest {
         deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
     }
 
-
     private CogniteClient getCogniteClient(Instant startInstant, String loggingPrefix) throws MalformedURLException {
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofClientCredentials(

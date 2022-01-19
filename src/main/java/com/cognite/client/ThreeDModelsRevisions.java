@@ -54,6 +54,15 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
         return ThreeDOutputs.of(getClient());
     }
 
+    /**
+     * Returns {@link ThreeDRevisionLogs} representing 3D Revision Logs api endpoints.
+     *
+     * @return The ThreeDRevisionLogs api endpoints.
+     */
+    public ThreeDRevisionLogs revisionLogs() {
+        return ThreeDRevisionLogs.of(getClient());
+    }
+
     private static ThreeDModelsRevisions.Builder builder() {
         return new AutoValue_ThreeDModelsRevisions.Builder();
     }
