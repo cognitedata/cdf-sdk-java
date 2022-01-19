@@ -1,15 +1,9 @@
 package com.cognite.client.servicesV1.parser;
 
-import com.cognite.client.dto.ThreeDAvailableOutput;
 import com.cognite.client.dto.ThreeDNode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.ListValue;
-import com.google.protobuf.Struct;
-import com.google.protobuf.Value;
-import com.google.protobuf.util.JsonFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +18,7 @@ public class ThreeDNodeParser {
 
     static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static List<ThreeDNode> parseThreeDNodesToList(String json) throws JsonProcessingException, InvalidProtocolBufferException {
+    public static List<ThreeDNode> parseThreeDNodesToList(String json) throws JsonProcessingException {
         List<ThreeDNode> list = new ArrayList<>();
         JsonNode root = objectMapper.readTree(json);
         ThreeDNode.Builder builder = ThreeDNode.newBuilder();
@@ -42,7 +36,7 @@ public class ThreeDNodeParser {
         return list;
     }
 
-    public static ThreeDNode parseThreeDNodes(String json) throws JsonProcessingException, InvalidProtocolBufferException {
+    public static ThreeDNode parseThreeDNodes(String json) throws JsonProcessingException {
         JsonNode root = objectMapper.readTree(json);
         ThreeDNode.Builder builder = ThreeDNode.newBuilder();
 
@@ -53,7 +47,7 @@ public class ThreeDNodeParser {
         return builder.build();
     }
 
-    private static void extractNodes(ThreeDNode.Builder builder, JsonNode node) throws InvalidProtocolBufferException {
+    private static void extractNodes(ThreeDNode.Builder builder, JsonNode node) {
         if (node.path("id").isIntegralNumber()) {
             builder.setId(node.get("id").longValue());
         }
@@ -93,7 +87,6 @@ public class ThreeDNodeParser {
             ThreeDNode.Properties.Builder builderProps = ThreeDNode.Properties.newBuilder();
             Iterator<Map.Entry<String, JsonNode>> it = node.path("properties").fields();
 
-            int count = 0;
             while (it.hasNext()) {
                 ThreeDNode.Categories.Builder builderCat = ThreeDNode.Categories.newBuilder();
                 Map.Entry<String, JsonNode> entry = it.next();
@@ -106,7 +99,6 @@ public class ThreeDNodeParser {
                 }
                 builderCat.setName(entry.getKey());
                 builderProps.addCategories(builderCat.build());
-                count++;
             }
             builder.setProperties(builderProps.build());
         }
