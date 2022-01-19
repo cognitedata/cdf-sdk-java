@@ -427,6 +427,9 @@ abstract class ApiBase {
             case THREED_MODEL_REVISION:
                 results = connector.readThreeDModelsRevisions(requestParameters);
                 break;
+            case THREED_NODE:
+                results = connector.readThreeDNodes(requestParameters);
+                break;
             default:
                 throw new Exception("Not a supported resource type: " + resourceType);
         }

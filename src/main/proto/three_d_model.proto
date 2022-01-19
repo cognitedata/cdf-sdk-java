@@ -60,3 +60,33 @@ message ThreeDFileBinary {
     }
     int64 content_length = 5;
 }
+
+message ThreeDNode {
+
+    message BoundingBox {
+        repeated double max = 1;
+        repeated double min = 2;
+    }
+
+    message Properties {
+        repeated Categories categories = 1;
+    }
+
+    message Categories {
+        message CategoriesValues {
+            map<string, string> categoriesValues = 1;
+        }
+
+        map<string, CategoriesValues> values = 1;
+    }
+
+    optional int64 id = 1;
+    optional int64 treeIndex = 2;
+    optional int64 parentId = 3;
+    optional int64 depth = 4;
+    optional string name = 5;
+    optional int64 subtreeSize = 6;
+    optional Properties properties = 7;
+    optional BoundingBox boundingBox = 8;
+}
+
