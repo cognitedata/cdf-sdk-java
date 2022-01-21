@@ -433,6 +433,9 @@ abstract class ApiBase {
             case THREED_ANCESTOR_NODE:
                 results = connector.readThreeDAncestorNodes(requestParameters);
                 break;
+            case THREED_ASSET_MAPPINGS:
+                results = connector.readThreeDAssetMappings(requestParameters);
+                break;
             default:
                 throw new Exception("Not a supported resource type: " + resourceType);
         }

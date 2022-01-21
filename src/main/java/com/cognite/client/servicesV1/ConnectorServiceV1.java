@@ -2056,6 +2056,18 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return ItemWriter.of(getClient(), requestProvider);
     }
 
+    public Iterator<CompletableFuture<ResponseItems<String>>> readThreeDAssetMappings(Request requestParameters) {
+        ThreeDAssetMappingsRequestProvider requestProvider = ThreeDAssetMappingsRequestProvider.builder()
+                .setEndpoint("3d/models/")
+                .setRequest(requestParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
     @AutoValue.Builder
     public abstract static class Builder {
         public abstract Builder setClient(CogniteClient value);
