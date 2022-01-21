@@ -1838,6 +1838,223 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
     }
 
+    /**
+     * Read 3d models revisions by id from Cognite.
+     *
+     * @return
+     */
+    public ItemReader<String> readThreeDModelsRevisionsById(Long modelId) {
+
+        GetIdRequestProvider requestProvider =
+                GetIdRequestProvider.of("3d/models/" + modelId + "/revisions")
+                        .toBuilder()
+                        .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                        .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                        .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                        .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    /**
+     * Read 3D Models Revisions from Cognite.
+     *
+     * @param queryParameters The parameters for the events query.
+     *
+     * @return
+     */
+    public Iterator<CompletableFuture<ResponseItems<String>>> readThreeDModelsRevisions(Request queryParameters) {
+        LOG.debug(loggingPrefix + "Initiating read 3d models revisions service.");
+
+        Long modelId = (Long) queryParameters.getRequestParameters().get("modelId");
+
+        GetSimpleListRequestProvider requestProvider = GetSimpleListRequestProvider.builder()
+                .setEndpoint("3d/models/" + modelId + "/revisions")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    /**
+     * Write 3D Models Revisions to Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @param modelId The id of {@link ThreeDModel} object
+     * @return
+     */
+    public ItemWriter writeThreeDModelsRevisions(Long modelId) {
+        LOG.debug(loggingPrefix + "Initiating write 3d models revisions service.");
+
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("3d/models/" + modelId + "/revisions")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Update 3D Models Revisions in Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @param modelId The id of {@link ThreeDModel} object
+     * @return
+     */
+    public ItemWriter updateThreeDModelsRevisions(Long modelId) {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("3d/models/" + modelId + "/revisions/update")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Create a writer for deleting 3D Models Revisions.
+     *
+     * @param modelId The id of {@link ThreeDModel} object
+     * @return An {@link ItemWriter} for deleting the models
+     */
+    public ItemWriter deleteThreeDModelsRevisions(Long modelId) {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("3d/models/" + modelId + "/revisions/delete")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Read 3d Available Outputs by modeId and revisionId from Cognite.
+     *
+     * @return
+     */
+    public ItemReader<String> readThreeDOutputs() {
+
+        ThreeDOutputsRequestProvider requestProvider = ThreeDOutputsRequestProvider.builder()
+                .setEndpoint("3d/models/")
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    public ItemReader<String> readThreeDRevisionLogs() {
+        ThreeDRevisionLogsRequestProvider requestProvider = ThreeDRevisionLogsRequestProvider.builder()
+                .setEndpoint("3d/models/")
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    public ItemReader<String> readThreeDNodes() {
+        ThreeDNodesRequestProvider requestProvider = ThreeDNodesRequestProvider.builder()
+                .setEndpoint("3d/models/")
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    public Iterator<CompletableFuture<ResponseItems<String>>> readThreeDNodes(Request queryParameters) {
+        ThreeDNodesRequestProvider requestProvider = ThreeDNodesRequestProvider.builder()
+                .setEndpoint("3d/models/")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    public Iterator<CompletableFuture<ResponseItems<String>>> filterThreeDNodes(Long modelId, Long revisionId, Request queryParameters) {
+        ThreeDNodesFilterRequestProvider requestProvider = ThreeDNodesFilterRequestProvider.builder()
+                .setEndpoint("3d/models/" + modelId + "/revisions/" + revisionId + "/nodes/list")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+
+    }
+
+    public Iterator<CompletableFuture<ResponseItems<String>>> readThreeDAncestorNodes(Request queryParameters) {
+        ThreeDAncestorNodesRequestProvider requestProvider = ThreeDAncestorNodesRequestProvider.builder()
+                .setEndpoint("3d/models/")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    public ItemReader<String> readThreeDAncestorNodes() {
+        ThreeDAncestorNodesRequestProvider requestProvider = ThreeDAncestorNodesRequestProvider.builder()
+                .setEndpoint("3d/models/")
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    public ItemReader<String> readThreeDNodesById(Long modelId, Long revisionId) {
+
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("3d/models/" + modelId + "/revisions/" + revisionId + "/nodes/byids")
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    /**
+     * Update the Thumbnail of Revision
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @param modelId The id of {@link ThreeDModel} object
+     * @param revisionId The id of {@link ThreeDModelRevision} object
+     * @return
+     */
+    public ItemWriter updateThreeDTRevisionThumbnail(Long modelId, Long revisionId) {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("3d/models/" + modelId + "/revisions/" + revisionId + "/thumbnail")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
 
     @AutoValue.Builder
     public abstract static class Builder {
@@ -3160,7 +3377,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
             return future;
         }
     }
-    
+
     public static class DownloadThreeDFileBinary {
         final static Logger LOG = LoggerFactory.getLogger(DownloadThreeDFileBinary.class);
         final static String loggingPrefix = "DownloadThreeDFileBinary() - ";

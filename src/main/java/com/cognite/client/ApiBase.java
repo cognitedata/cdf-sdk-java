@@ -58,7 +58,7 @@ abstract class ApiBase {
     protected static final Logger LOG = LoggerFactory.getLogger(ApiBase.class);
     private static final ImmutableList<ResourceType> resourcesSupportingPartitions =
             ImmutableList.of(ResourceType.ASSET, ResourceType.EVENT, ResourceType.FILE_HEADER, ResourceType.TIMESERIES_HEADER,
-                    ResourceType.RAW_ROW, ResourceType.RELATIONSHIP, ResourceType.SEQUENCE_HEADER);
+                    ResourceType.RAW_ROW, ResourceType.RELATIONSHIP, ResourceType.SEQUENCE_HEADER, ResourceType.THREED_NODE);
 
     public abstract CogniteClient getClient();
 
@@ -423,6 +423,15 @@ abstract class ApiBase {
                 break;
             case THREED_MODEL:
                 results = connector.readThreeDModels(requestParameters);
+                break;
+            case THREED_MODEL_REVISION:
+                results = connector.readThreeDModelsRevisions(requestParameters);
+                break;
+            case THREED_NODE:
+                results = connector.readThreeDNodes(requestParameters);
+                break;
+            case THREED_ANCESTOR_NODE:
+                results = connector.readThreeDAncestorNodes(requestParameters);
                 break;
             default:
                 throw new Exception("Not a supported resource type: " + resourceType);
