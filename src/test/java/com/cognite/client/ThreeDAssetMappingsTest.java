@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -132,6 +133,128 @@ public class ThreeDAssetMappingsTest extends ThreeDBaseTest {
         listResults = itFilter.next();
         assertNotNull(listResults);
         assertTrue(listResults.size() > 0);
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    public void testFilterPublicData() throws Exception {
+        CogniteClient client = getCogniteClientAPIKey();
+        Iterator<List<ThreeDAssetMapping>> itFilter = client.threeD()
+                .models()
+                .revisions()
+                .assetMappings()
+                .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID);
+        List<ThreeDAssetMapping> listResults = itFilter.next();
+        assertNotNull(listResults);
+        assertTrue(listResults.size() > 0);
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    public void testFilterWithAssetIdsPublicData() throws Exception {
+        Request request = Request.create()
+                .withRootParameter("limit", 100);
+        CogniteClient client = getCogniteClientAPIKey();
+        Iterator<List<ThreeDAssetMapping>> itFilter = client.threeD()
+                .models()
+                .revisions()
+                .assetMappings()
+                .list(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request);
+        List<ThreeDAssetMapping> listResults = itFilter.next();
+        assertNotNull(listResults);
+        assertTrue(listResults.size() > 0);
+
+        Random r = new Random();
+        Integer position = r.nextInt(listResults.size());
+        ThreeDAssetMapping assetMapping = listResults.get(position);
+        Integer position2 = r.nextInt(listResults.size());
+        ThreeDAssetMapping assetMapping2 = listResults.get(position2);
+
+        Request request1 = Request.create()
+                .withFilterParameter("assetIds", List.of(assetMapping.getAssetId(), assetMapping2.getAssetId()));
+        Iterator<List<ThreeDAssetMapping>> itFilter1 = client.threeD()
+                .models()
+                .revisions()
+                .assetMappings()
+                .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request1);
+        List<ThreeDAssetMapping> listResults1 = itFilter1.next();
+        assertNotNull(listResults1);
+        assertTrue(listResults1.size() > 0);
+        listResults1.forEach(item -> {
+            assertTrue(validate((v1) -> v1.equals(assetMapping.getAssetId()) || v1.equals(assetMapping2.getAssetId()), item.getAssetId()));
+        });
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    public void testFilterWithNodeIdsPublicData() throws Exception {
+        Request request = Request.create()
+                .withRootParameter("limit", 100);
+        CogniteClient client = getCogniteClientAPIKey();
+        Iterator<List<ThreeDAssetMapping>> itFilter = client.threeD()
+                .models()
+                .revisions()
+                .assetMappings()
+                .list(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request);
+        List<ThreeDAssetMapping> listResults = itFilter.next();
+        assertNotNull(listResults);
+        assertTrue(listResults.size() > 0);
+
+        Random r = new Random();
+        Integer position = r.nextInt(listResults.size());
+        ThreeDAssetMapping assetMapping = listResults.get(position);
+        Integer position2 = r.nextInt(listResults.size());
+        ThreeDAssetMapping assetMapping2 = listResults.get(position2);
+
+        Request request1 = Request.create()
+                .withFilterParameter("nodeIds", List.of(assetMapping.getNodeId(), assetMapping2.getNodeId()));
+        Iterator<List<ThreeDAssetMapping>> itFilter1 = client.threeD()
+                .models()
+                .revisions()
+                .assetMappings()
+                .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request1);
+        List<ThreeDAssetMapping> listResults1 = itFilter1.next();
+        assertNotNull(listResults1);
+        assertTrue(listResults1.size() > 0);
+        assertTrue(listResults1.containsAll(List.of(assetMapping, assetMapping2)));
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    public void testFilterWithTreeIndexesPublicData() throws Exception {
+        Request request = Request.create()
+                .withRootParameter("limit", 100);
+        CogniteClient client = getCogniteClientAPIKey();
+        Iterator<List<ThreeDAssetMapping>> itFilter = client.threeD()
+                .models()
+                .revisions()
+                .assetMappings()
+                .list(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request);
+        List<ThreeDAssetMapping> listResults = itFilter.next();
+        assertNotNull(listResults);
+        assertTrue(listResults.size() > 0);
+
+        Random r = new Random();
+        Integer position = r.nextInt(listResults.size());
+        ThreeDAssetMapping assetMapping = listResults.get(position);
+        Integer position2 = r.nextInt(listResults.size());
+        ThreeDAssetMapping assetMapping2 = listResults.get(position2);
+
+        Request request1 = Request.create()
+                .withFilterParameter("treeIndexes", List.of(assetMapping.getTreeIndex(), assetMapping2.getTreeIndex()));
+        Iterator<List<ThreeDAssetMapping>> itFilter1 = client.threeD()
+                .models()
+                .revisions()
+                .assetMappings()
+                .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request1);
+        List<ThreeDAssetMapping> listResults1 = itFilter1.next();
+        assertNotNull(listResults1);
+        assertTrue(listResults1.size() > 0);
+        assertTrue(listResults1.containsAll(List.of(assetMapping, assetMapping2)));
+    }
+
+    private Boolean validate(Function<Long, Boolean> function, Long value) {
+        return function.apply(value);
     }
 
     public ThreeDNode.BoundingBox createBoundingBox() {

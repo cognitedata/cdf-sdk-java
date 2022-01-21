@@ -101,7 +101,7 @@ public abstract class ThreeDAssetMappings extends ApiBase {
      * @see #filter(Long, Long, Request)
      */
     public Iterator<List<ThreeDAssetMapping>> filter(Long modelId, Long revisionId) throws Exception {
-        return this.list(modelId, revisionId, Request.create());
+        return this.filter(modelId, revisionId, Request.create());
     }
 
     /**
@@ -119,16 +119,14 @@ public abstract class ThreeDAssetMappings extends ApiBase {
      * @throws Exception
      */
     public Iterator<List<ThreeDAssetMapping>> filter(Long modelId, Long revisionId, Request requestParameters) throws Exception {
-        Request request = requestParameters
-                .withRootParameter("modelId", String.valueOf(modelId))
-                .withRootParameter("revisionId", String.valueOf(revisionId));
         String loggingPrefix = "filter() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         ConnectorServiceV1 connector = getClient().getConnectorService();
         Request requestParams = addAuthInfo(requestParameters);
 
         // Build the api iterators.
-        Iterator<CompletableFuture<ResponseItems<String>>> iterator = connector.readThreeDAssetMappings(request);
-        return null;
+        List<Iterator<CompletableFuture<ResponseItems<String>>>> iterators = new ArrayList<>();
+        iterators.add(connector.filterThreeDAssetMappings(modelId, revisionId, requestParams));
+        return AdapterIterator.of(FanOutIterator.of(iterators), this::parseThreeDAssetMapping);
     }
 
     /*
