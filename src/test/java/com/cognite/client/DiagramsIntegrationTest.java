@@ -144,7 +144,7 @@ class DiagramsIntegrationTest {
                             .build())
                     .collect(Collectors.toList());
 
-            List<DiagramResponse> detectResults = client.experimental()
+            List<DiagramResponse> detectResults = client.contextualization()
                     .engineeringDiagrams()
                     .detectAnnotations(fileItems, entities, "searchText", true);
 
