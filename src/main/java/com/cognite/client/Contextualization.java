@@ -54,6 +54,15 @@ public abstract class Contextualization extends ApiBase {
         return EntityMatching.of(getClient());
     }
 
+    /**
+     * Returns {@link EngineeringDiagrams} representing the engineering diagrams api services.
+     *
+     * @return The engineering diagrams api object.
+     */
+    public EngineeringDiagrams engineeringDiagrams() {
+        return EngineeringDiagrams.of(getClient());
+    }
+
     @AutoValue.Builder
     abstract static class Builder extends ApiBase.Builder<Builder> {
         abstract Contextualization build();
