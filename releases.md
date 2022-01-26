@@ -26,6 +26,16 @@ Changes are grouped as follows:
 - Added `3D Models Revisions`
 - Added `3D File Download`
 - Added `3D Asset Mapping`
+- `EngineeringDiagrams` promoted from experimental to stable. It has the same signature and behavior as before and is 
+located under the `contextualization` family: `CogniteClient.contextualization().engineeringDiagrams()`.
+
+### Deprecated
+
+- The experimental version of `EngineeringDiagrams` is deprecated given the new, stable version.
+
+### Removed
+
+- The old, experimental `pnid` api. This api has been replaced by the `EngineeringDiagrams` api.
 
 ## [1.9.0] 2022-01-04
 

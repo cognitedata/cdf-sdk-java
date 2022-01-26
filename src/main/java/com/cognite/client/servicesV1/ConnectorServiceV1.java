@@ -1595,8 +1595,8 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> detectAnnotationsDiagrams() {
-        PostPlaygroundJsonRequestProvider jobStartRequestProvider =
-                PostPlaygroundJsonRequestProvider.builder()
+        PostJsonRequestProvider jobStartRequestProvider =
+                PostJsonRequestProvider.builder()
                         .setEndpoint("context/diagram/detect")
                         .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                         .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
@@ -1606,7 +1606,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
         RequestParametersResponseParser jobStartResponseParser = RequestParametersResponseParser.of(
                 ImmutableMap.of("jobId", "jobId"));
 
-        GetPlaygroundJobIdRequestProvider jobResultsRequestProvider = GetPlaygroundJobIdRequestProvider.of("context/diagram/detect")
+        GetJobIdRequestProvider jobResultsRequestProvider = GetJobIdRequestProvider.of("context/diagram/detect")
                 .toBuilder()
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
@@ -1624,8 +1624,8 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> convertDiagrams() {
-        PostPlaygroundJsonRequestProvider jobStartRequestProvider =
-                PostPlaygroundJsonRequestProvider.builder()
+        PostJsonRequestProvider jobStartRequestProvider =
+                PostJsonRequestProvider.builder()
                         .setEndpoint("context/diagram/convert")
                         .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                         .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
@@ -1635,7 +1635,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
         RequestParametersResponseParser jobStartResponseParser = RequestParametersResponseParser.of(
                 ImmutableMap.of("jobId", "jobId"));
 
-        GetPlaygroundJobIdRequestProvider jobResultsRequestProvider = GetPlaygroundJobIdRequestProvider.of("context/diagram/convert")
+        GetJobIdRequestProvider jobResultsRequestProvider = GetJobIdRequestProvider.of("context/diagram/convert")
                 .toBuilder()
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
@@ -1701,10 +1701,10 @@ public abstract class ConnectorServiceV1 implements Serializable {
                         .build();
 
         RequestParametersResponseParser jobStartResponseParser = RequestParametersResponseParser
-                .of(ImmutableMap.of("jobId", "id"));
+                .of(ImmutableMap.of("jobId", "jobId"));
 
-        GetIdRequestProvider jobResultsRequestProvider =
-                GetIdRequestProvider.of("context/entitymatching/jobs")
+        GetJobIdRequestProvider jobResultsRequestProvider =
+                GetJobIdRequestProvider.of("context/entitymatching/jobs")
                 .toBuilder()
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
