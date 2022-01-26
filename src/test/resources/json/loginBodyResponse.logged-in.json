@@ -1,0 +1,9 @@
+{
+  "data": {
+    "user": "tom@example.com",
+    "loggedIn": true,
+    "project": "digitalrevolution",
+    "projectId": 137238723719,
+    "apiKeyId": 0
+  }
+}

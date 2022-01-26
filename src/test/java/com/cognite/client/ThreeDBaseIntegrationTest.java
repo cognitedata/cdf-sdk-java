@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public abstract class ThreeDBaseTest {
+public abstract class ThreeDBaseIntegrationTest {
 
     private static final String PUBLIC_DATA_API_KEY = "OWIyZWEwNjctMDFmNy00MjI0LWE5NDctYmRjMTcwYTU0Y2Jj";
 
