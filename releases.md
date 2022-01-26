@@ -25,6 +25,7 @@ Changes are grouped as follows:
 
 - Added `3D Models Revisions`
 - Added `3D File Download`
+- Added `3D Asset Mapping`
 
 ## [1.9.0] 2022-01-04
 
