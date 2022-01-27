@@ -71,6 +71,41 @@ public abstract class ThreeDRevisionLogs extends ApiBase {
         return parseThreeDRevisionLog(responseItems.getResponseBodyAsString());
     }
 
+    /**
+     *
+     * Retrieves 3D Revision Logs by modeId and revisionId
+     *
+     * @param modelId The id of ThreeDModel object
+     * @param revisionId The id of ThreeDModelRevision object
+     * @param requestParameters The filters to use for retrieving the 3D Revision Logs.
+     * @return
+     * @throws Exception
+     */
+    public List<ThreeDRevisionLog> retrieve(Long modelId, Long revisionId, Request requestParameters) throws Exception {
+        String loggingPrefix = "retrieve() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        ConnectorServiceV1 connector = getClient().getConnectorService();
+        ItemReader<String> tdReader = connector.readThreeDRevisionLogs();
+
+        List<CompletableFuture<ResponseItems<String>>> resultFutures = new ArrayList<>();
+        Request request = requestParameters.withRootParameter("modelId", String.valueOf(modelId))
+                .withRootParameter("revisionId", String.valueOf(revisionId));
+        resultFutures.add(tdReader.getItemsAsync(addAuthInfo(request)));
+        // Sync all downloads to a single future. It will complete when all the upstream futures have completed.
+        CompletableFuture<ResponseItems<String>> itemsAsync = tdReader.getItemsAsync(addAuthInfo(request));
+        ResponseItems<String> responseItems = itemsAsync.join();
+
+        // Collect the response items
+        if (!responseItems.isSuccessful()) {
+            // something went wrong with the request
+            String message = loggingPrefix + "Retrieve 3d revision logs failed: "
+                    + itemsAsync.join().getResponseBodyAsString();
+            LOG.error(message);
+            throw new Exception(message);
+        }
+
+        return parseThreeDRevisionLog(responseItems.getResponseBodyAsString());
+    }
+
     /*
    Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
    deal very well with exceptions.

@@ -42,6 +42,10 @@ public abstract class ThreeDRevisionLogsRequestProvider extends GenericRequestPr
         urlBuilder.addPathSegment((String) requestParameters.getRequestParameters().get("revisionId"));
         urlBuilder.addPathSegment("logs");
 
+        if (requestParameters.getRequestParameters().containsKey("severity")) {
+            urlBuilder.addQueryParameter("severity", requestParameters.getRequestParameters().get("severity").toString());
+        }
+
         return requestBuilder.url(urlBuilder.build()).build();
     }
 
