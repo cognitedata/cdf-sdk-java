@@ -46,29 +46,7 @@ public abstract class ThreeDRevisionLogs extends ApiBase {
      * @param revisionId The id of ThreeDModelRevision object
      */
     public List<ThreeDRevisionLog> retrieve(Long modelId, Long revisionId) throws Exception {
-        String loggingPrefix = "retrieve() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
-        ConnectorServiceV1 connector = getClient().getConnectorService();
-        ItemReader<String> tdReader = connector.readThreeDRevisionLogs();
-
-        List<CompletableFuture<ResponseItems<String>>> resultFutures = new ArrayList<>();
-        Request request = Request.create()
-                .withRootParameter("modelId", String.valueOf(modelId))
-                .withRootParameter("revisionId", String.valueOf(revisionId));
-        resultFutures.add(tdReader.getItemsAsync(addAuthInfo(request)));
-        // Sync all downloads to a single future. It will complete when all the upstream futures have completed.
-        CompletableFuture<ResponseItems<String>> itemsAsync = tdReader.getItemsAsync(addAuthInfo(request));
-        ResponseItems<String> responseItems = itemsAsync.join();
-
-        // Collect the response items
-        if (!responseItems.isSuccessful()) {
-            // something went wrong with the request
-            String message = loggingPrefix + "Retrieve 3d revision logs failed: "
-                    + itemsAsync.join().getResponseBodyAsString();
-            LOG.error(message);
-            throw new Exception(message);
-        }
-
-        return parseThreeDRevisionLog(responseItems.getResponseBodyAsString());
+       return retrieve(modelId, revisionId, Request.create());
     }
 
     /**
