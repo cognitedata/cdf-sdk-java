@@ -1,20 +1,22 @@
 package com.cognite.client;
 
-
-import com.cognite.client.dto.*;
+import com.cognite.client.dto.ThreeDModel;
+import com.cognite.client.dto.ThreeDModelRevision;
+import com.cognite.client.dto.ThreeDRevisionLog;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.MalformedURLException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ThreeDOutputsTest extends ThreeDBaseTest{
+public class ThreeDRevisionLogIntegrationTest extends ThreeDBaseIntegrationTest {
 
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
@@ -25,30 +27,36 @@ public class ThreeDOutputsTest extends ThreeDBaseTest{
 
     @Test
     @Tag("remoteCDP")
-    void retrieveThreeDOutputs() throws MalformedURLException {
+    void listThreeDRevisionLogs() throws Exception {
         try {
             Instant startInstant = Instant.now();
-            String loggingPrefix = "retrieveThreeDOutputs - ";
-            LOG.info(loggingPrefix + "Start retrieving 3D Available Outputs.");
+            String loggingPrefix = "UnitTest - listThreeDModelsRevisions() - ";
 
-            List<ThreeDOutput> listResultsOutputs = new ArrayList<>();
+            LOG.info(loggingPrefix + "Start list 3D Revision Logs.");
+
+            List<ThreeDRevisionLog> listResultsLogs = new ArrayList<>();
             for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
                 ThreeDModel model = entry.getKey();
                 for (ThreeDModelRevision revision : entry.getValue()) {
-                    List<ThreeDOutput> listResults =
+                    List<ThreeDRevisionLog> listResults =
                             client.threeD()
                                     .models()
                                     .revisions()
-                                    .outputs()
+                                    .revisionLogs()
                                     .retrieve(model.getId(), revision.getId());
-                    listResultsOutputs.addAll(listResults);
+                    listResultsLogs.addAll(listResults);
                 }
             }
-            LOG.info(loggingPrefix + "Finished retrieving 3D Available Outputs. Duration : {}",
+
+            LOG.info(loggingPrefix + "Finished list 3D Revision Logs. Duration : {}",
                     Duration.between(startInstant, Instant.now()));
         } catch (Exception e) {
             LOG.error(e.toString());
             e.printStackTrace();
         }
+
     }
+
+
+
 }

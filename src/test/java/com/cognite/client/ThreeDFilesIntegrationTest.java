@@ -12,7 +12,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 
-class ThreeDFilesTest {
+class ThreeDFilesIntegrationTest {
     private static final Long _3D_FILE_ID = 4496458695968385L;
 
     final Logger LOG = LoggerFactory.getLogger(this.getClass());

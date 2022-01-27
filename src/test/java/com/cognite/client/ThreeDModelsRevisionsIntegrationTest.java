@@ -23,7 +23,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ThreeDModelsRevisionsTest {
+public class ThreeDModelsRevisionsIntegrationTest {
 
     public enum FileType {
         THREED_OBJ("./src/test/resources/CAMARO.obj", "CAMARO_TEST_SDK_JAVA.obj"),
