@@ -46,12 +46,16 @@ public abstract class ThreeDOutputs extends ApiBase {
      * @param revisionId The id of ThreeDModelRevision object
      */
     public List<ThreeDOutput> retrieve(Long modelId, Long revisionId) throws Exception {
+        return retrieve(modelId, revisionId, Request.create());
+    }
+
+    public List<ThreeDOutput> retrieve(Long modelId, Long revisionId, Request requestParameters) throws Exception {
         String loggingPrefix = "retrieve() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ItemReader<String> tdReader = connector.readThreeDOutputs();
 
         List<CompletableFuture<ResponseItems<String>>> resultFutures = new ArrayList<>();
-        Request request = Request.create()
+        Request request = requestParameters
                 .withRootParameter("modelId", String.valueOf(modelId))
                 .withRootParameter("revisionId", String.valueOf(revisionId));
         resultFutures.add(tdReader.getItemsAsync(addAuthInfo(request)));

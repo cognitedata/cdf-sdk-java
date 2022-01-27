@@ -51,4 +51,35 @@ public class ThreeDOutputsIntegrationTest extends ThreeDBaseTest{
             e.printStackTrace();
         }
     }
+
+    @Test
+    @Tag("remoteCDP")
+    void retrieveThreeDOutputsWithFormatFilter() throws MalformedURLException {
+        try {
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "retrieveThreeDOutputs - ";
+            LOG.info(loggingPrefix + "Start retrieving 3D Available Outputs.");
+
+            Request request = Request.create().withRootParameter("format", "ept-pointcloud");
+
+            List<ThreeDOutput> listResultsOutputs = new ArrayList<>();
+            for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
+                ThreeDModel model = entry.getKey();
+                for (ThreeDModelRevision revision : entry.getValue()) {
+                    List<ThreeDOutput> listResults =
+                            client.threeD()
+                                    .models()
+                                    .revisions()
+                                    .outputs()
+                                    .retrieve(model.getId(), revision.getId(), request);
+                    listResultsOutputs.addAll(listResults);
+                }
+            }
+            LOG.info(loggingPrefix + "Finished retrieving 3D Available Outputs. Duration : {}",
+                    Duration.between(startInstant, Instant.now()));
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            e.printStackTrace();
+        }
+    }
 }

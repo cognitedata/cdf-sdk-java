@@ -42,6 +42,10 @@ public abstract class ThreeDOutputsRequestProvider extends GenericRequestProvide
         urlBuilder.addPathSegment((String) requestParameters.getRequestParameters().get("revisionId"));
         urlBuilder.addPathSegment("outputs");
 
+        if (requestParameters.getRequestParameters().containsKey("format")) {
+            urlBuilder.addQueryParameter("format", requestParameters.getRequestParameters().get("format").toString());
+        }
+
         return requestBuilder.url(urlBuilder.build()).build();
     }
 
