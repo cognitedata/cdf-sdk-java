@@ -17,7 +17,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ThreeDNodesIntegrationTest extends ThreeDBaseTest {
+public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
 
     public static final long PUBLIC_DATA_MODEL_ID = 3356984403684032l;
     public static final long PUBLIC_DATA_REVISION_ID = 6664823881595566l;
@@ -194,12 +194,12 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseTest {
                                     .nodes()
                                     .retrieve(model.getId(), revision.getId(), tdList);
 
-                    assertEquals(listResults.size(), nodesByIds.size());
-                    validateList(nodesByIds);
-                    validateFields(nodesByIds);
+                        assertEquals(listResults.size(), nodesByIds.size());
+                        validateList(nodesByIds);
+                        validateFields(nodesByIds);
+                    }
                 }
-            }
-            LOG.info(loggingPrefix + "Finished getting 3D Nodes by ids. Duration: {}",
+                LOG.info(loggingPrefix + "Finished getting 3D Nodes by ids. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
         } catch (Exception e) {
             LOG.error(e.toString());

@@ -52,6 +52,7 @@
         <commons.lang.version>3.12.0</commons.lang.version>
         <logback.classic.version>1.2.8</logback.classic.version>
         <junit.version>5.7.2</junit.version>
+        <mockito.version>4.3.1</mockito.version>
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-exec-plugin.version>3.0.0</maven-exec-plugin.version>
@@ -118,7 +119,7 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
-          </dependency>
+        </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
@@ -151,23 +152,35 @@
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
         </dependency>
-       <dependency>
-           <groupId>ch.qos.logback</groupId>
-           <artifactId>logback-classic</artifactId>
-           <version>${logback.classic.version}</version>
-           <scope>test</scope>
-       </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.classic.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
-   </dependencies>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
-   <build>
-       <extensions>
-                   <!-- provides os.detected.classifier (i.e. linux-x86_64, osx-x86_64) property -->
+    <build>
+        <extensions>
+            <!-- provides os.detected.classifier (i.e. linux-x86_64, osx-x86_64) property -->
             <extension>
                 <groupId>kr.motd.maven</groupId>
                 <artifactId>os-maven-plugin</artifactId>
@@ -337,27 +350,27 @@
                                     <include>com.squareup.okio:okio</include>
                                 </includes>
                             </artifactSet>
-                        <relocations>
-                            <relocation>
-                                <pattern>okhttp3</pattern>
-                                <shadedPattern>shaded.okhttp3</shadedPattern>
-                            </relocation>
-                            <relocation>
-                                <pattern>okio</pattern>
-                                <shadedPattern>shaded.okio</shadedPattern>
-                            </relocation>
-                        </relocations>
-                    </configuration>
-                </execution>
-            </executions>
-        </plugin>
-        <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <version>${maven-surefire-plugin.version}</version>
-            <configuration>
-                <skipTests>true</skipTests>
-                <!--<excludedGroups>RemoteCDP, RemoteCDF</excludedGroups>-->
+                            <relocations>
+                                <relocation>
+                                    <pattern>okhttp3</pattern>
+                                    <shadedPattern>shaded.okhttp3</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>okio</pattern>
+                                    <shadedPattern>shaded.okio</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+                <configuration>
+                    <excludes>*IntegrationTest.java</excludes>
+                    <!--<excludedGroups>RemoteCDP, RemoteCDF</excludedGroups>-->
                 </configuration>
             </plugin>
             <plugin>
@@ -384,7 +397,9 @@
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <version>1.4.1</version>
                 <configuration>
-                    <rules><dependencyConvergence/></rules>
+                    <rules>
+                        <dependencyConvergence/>
+                    </rules>
                 </configuration>
             </plugin>
         </plugins>
