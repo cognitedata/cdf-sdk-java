@@ -16,7 +16,7 @@ import java.util.function.Function;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ThreeDAssetMappingsIntegrationTest extends ThreeDBaseTest {
+public class ThreeDAssetMappingsIntegrationTest extends ThreeDBaseIntegrationTest {
 
     public static final long PUBLIC_DATA_MODEL_ID = 3356984403684032l;
     public static final long PUBLIC_DATA_REVISION_ID = 6664823881595566l;
