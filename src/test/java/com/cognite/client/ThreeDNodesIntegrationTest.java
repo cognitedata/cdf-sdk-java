@@ -110,6 +110,55 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseTest {
 
     @Test
     @Tag("remoteCDP")
+    void listThreeDNodesAncestorNodesWithFilter() throws Exception {
+        try {
+            Thread.sleep(5000); // wait for eventual consistency
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "listThreeDNodesAncestorNodes - ";
+            LOG.info(loggingPrefix + "Start list 3D Ancestor Nodes");
+
+            Request request = Request.create().withRootParameter("limit", 300);
+
+            Random r = new Random();
+            for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
+                ThreeDModel model = entry.getKey();
+                for (ThreeDModelRevision revision : entry.getValue()) {
+                    List<ThreeDNode> listResults = new ArrayList<>();
+                    while(listResults.size() == 0) {
+                        client.threeD()
+                                .models()
+                                .revisions()
+                                .nodes()
+                                .list(model.getId(), revision.getId())
+                                .forEachRemaining(val -> listResults.addAll(val));
+                    }
+                    validateList(listResults);
+                    validateFields(listResults);
+
+                    Integer position = r.nextInt(listResults.size());
+                    ThreeDNode nodeDrawn = listResults.get(position);
+                    List<ThreeDNode> listResultsAncestorNodes = new ArrayList<>();
+                    client.threeD()
+                            .models()
+                            .revisions()
+                            .nodes()
+                            .list(model.getId(), revision.getId(), nodeDrawn.getId(), request)
+                            .forEachRemaining(val -> listResultsAncestorNodes.addAll(val));
+                    validateList(listResultsAncestorNodes);
+                    validateFields(listResultsAncestorNodes);
+                }
+            }
+            LOG.info(loggingPrefix + "Finished list 3D Ancestor Nodes. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    @Test
+    @Tag("remoteCDP")
     void getThreeDNodesByIds() throws Exception {
         try {
             Thread.sleep(10000); // wait for eventual consistency

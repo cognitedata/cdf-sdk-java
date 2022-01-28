@@ -52,6 +52,18 @@ public abstract class ThreeDAncestorNodesRequestProvider extends GenericRequestP
         urlBuilder.addPathSegment((String) requestParameters.getRequestParameters().get("nodeId"));
         urlBuilder.addPathSegment("ancestors");
 
+        String limit = "";
+        if (!requestParameters.getRequestParameters().containsKey("limit")) {
+            limit = String.valueOf(ConnectorConstants.DEFAULT_MAX_BATCH_SIZE);
+        } else {
+            limit = requestParameters.getRequestParameters().get("limit").toString();
+        }
+        urlBuilder.addQueryParameter("limit", limit);
+
+        if (cursor.isPresent()) {
+            urlBuilder.addQueryParameter("cursor", cursor.get());
+        }
+
         return requestBuilder.url(urlBuilder.build()).build();
     }
 
