@@ -55,7 +55,6 @@ public class ThreeDModelsRevisionsIntegrationTest {
     void writeThreeDModelsRevisions() throws Exception {
         try {
 
-
             Instant startInstant = Instant.now();
             String loggingPrefix = "UnitTest - listThreeDModelsRevisions() -";
             LOG.info(loggingPrefix + "Start test. Creating Cognite client.");

@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ThreeDRevisionLogIntegrationTest extends ThreeDBaseTest {
+public class ThreeDRevisionLogIntegrationTest extends ThreeDBaseIntegrationTest {
 
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 

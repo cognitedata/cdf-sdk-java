@@ -14,7 +14,7 @@ import java.time.Instant;
 import java.util.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ThreeDOutputsIntegrationTest extends ThreeDBaseTest{
+public class ThreeDOutputsIntegrationTest extends ThreeDBaseIntegrationTest {
 
     private final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
