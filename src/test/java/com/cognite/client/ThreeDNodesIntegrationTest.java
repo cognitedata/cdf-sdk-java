@@ -31,143 +31,169 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
     @Test
     @Tag("remoteCDP")
     void listThreeDNodes() throws Exception {
-        Thread.sleep(5000); // wait for eventual consistency
-        Instant startInstant = Instant.now();
-        String loggingPrefix = "listThreeDNodes - ";
-        LOG.info(loggingPrefix + "Start list 3D Nodes");
+        try {
 
-        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
-            ThreeDModel model = entry.getKey();
-            for (ThreeDModelRevision revision : entry.getValue()) {
-                List<ThreeDNode> listResults = new ArrayList<>();
-                        client.threeD()
-                                .models()
-                                .revisions()
-                                .nodes()
-                                .list(model.getId(), revision.getId())
-                                .forEachRemaining(val -> listResults.addAll(val));
-                validateList(listResults);
-                validateFields(listResults);
+            Thread.sleep(5000); // wait for eventual consistency
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "listThreeDNodes - ";
+            LOG.info(loggingPrefix + "Start list 3D Nodes");
+
+            for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
+                ThreeDModel model = entry.getKey();
+                for (ThreeDModelRevision revision : entry.getValue()) {
+                    List<ThreeDNode> listResults = new ArrayList<>();
+                    client.threeD()
+                            .models()
+                            .revisions()
+                            .nodes()
+                            .list(model.getId(), revision.getId())
+                            .forEachRemaining(val -> listResults.addAll(val));
+                    validateList(listResults);
+                    validateFields(listResults);
+                }
             }
+
+            LOG.info(loggingPrefix + "Finished list 3D Nodes. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
         }
 
-        LOG.info(loggingPrefix + "Finished list 3D Nodes. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
     }
 
     @Test
     @Tag("remoteCDP")
     void listThreeDNodesAncestorNodes() throws Exception {
-        Thread.sleep(5000); // wait for eventual consistency
-        Instant startInstant = Instant.now();
-        String loggingPrefix = "listThreeDNodesAncestorNodes - ";
-        LOG.info(loggingPrefix + "Start list 3D Ancestor Nodes");
+        try {
+            Thread.sleep(5000); // wait for eventual consistency
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "listThreeDNodesAncestorNodes - ";
+            LOG.info(loggingPrefix + "Start list 3D Ancestor Nodes");
 
-        Random r = new Random();
-        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
-            ThreeDModel model = entry.getKey();
-            for (ThreeDModelRevision revision : entry.getValue()) {
-                List<ThreeDNode> listResults = new ArrayList<>();
-                        client.threeD()
-                                .models()
-                                .revisions()
-                                .nodes()
-                                .list(model.getId(), revision.getId())
-                                .forEachRemaining(val -> listResults.addAll(val));
-                validateList(listResults);
-                validateFields(listResults);
+            Random r = new Random();
+            for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
+                ThreeDModel model = entry.getKey();
+                for (ThreeDModelRevision revision : entry.getValue()) {
+                    List<ThreeDNode> listResults = new ArrayList<>();
+                    client.threeD()
+                            .models()
+                            .revisions()
+                            .nodes()
+                            .list(model.getId(), revision.getId())
+                            .forEachRemaining(val -> listResults.addAll(val));
+                    validateList(listResults);
+                    validateFields(listResults);
 
-                Integer position = r.nextInt(listResults.size());
-                ThreeDNode nodeDrawn = listResults.get(position);
-                List<ThreeDNode> listResultsAncestorNodes = new ArrayList<>();
-                        client.threeD()
-                                .models()
-                                .revisions()
-                                .nodes()
-                                .list(model.getId(), revision.getId(), nodeDrawn.getId())
-                                .forEachRemaining(val -> listResultsAncestorNodes.addAll(val));
-                validateList(listResultsAncestorNodes);
-                validateFields(listResultsAncestorNodes);
+                    Integer position = r.nextInt(listResults.size());
+                    ThreeDNode nodeDrawn = listResults.get(position);
+                    List<ThreeDNode> listResultsAncestorNodes = new ArrayList<>();
+                    client.threeD()
+                            .models()
+                            .revisions()
+                            .nodes()
+                            .list(model.getId(), revision.getId(), nodeDrawn.getId())
+                            .forEachRemaining(val -> listResultsAncestorNodes.addAll(val));
+                    validateList(listResultsAncestorNodes);
+                    validateFields(listResultsAncestorNodes);
+                }
             }
+            LOG.info(loggingPrefix + "Finished list 3D Ancestor Nodes. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
         }
-        LOG.info(loggingPrefix + "Finished list 3D Ancestor Nodes. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
+
     }
 
     @Test
     @Tag("remoteCDP")
     void getThreeDNodesByIds() throws Exception {
-        Thread.sleep(10000); // wait for eventual consistency
-        Instant startInstant = Instant.now();
-        String loggingPrefix = "getThreeDNodesByIds - ";
-        LOG.info(loggingPrefix + "Start getting 3D Nodes by ids");
+        try {
+            Thread.sleep(10000); // wait for eventual consistency
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "getThreeDNodesByIds - ";
+            LOG.info(loggingPrefix + "Start getting 3D Nodes by ids");
 
-        Random r = new Random();
-        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
-            ThreeDModel model = entry.getKey();
-            for (ThreeDModelRevision revision : entry.getValue()) {
-                List<ThreeDNode> listResults = new ArrayList<>();
-                client.threeD()
-                        .models()
-                        .revisions()
-                        .nodes()
-                        .list(model.getId(), revision.getId())
-                        .forEachRemaining(val -> listResults.addAll(val));
-                validateList(listResults);
-                validateFields(listResults);
+            Random r = new Random();
+            for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
+                ThreeDModel model = entry.getKey();
+                for (ThreeDModelRevision revision : entry.getValue()) {
+                    List<ThreeDNode> listResults = new ArrayList<>();
+                    client.threeD()
+                            .models()
+                            .revisions()
+                            .nodes()
+                            .list(model.getId(), revision.getId())
+                            .forEachRemaining(val -> listResults.addAll(val));
+                    validateList(listResults);
+                    validateFields(listResults);
 
-                List<Item> tdList = new ArrayList<>();
-                listResults.stream()
-                        .map(td -> Item.newBuilder()
-                                .setId(td.getId())
-                                .build())
-                        .forEach(item -> tdList.add(item));
+                    List<Item> tdList = new ArrayList<>();
+                    listResults.stream()
+                            .map(td -> Item.newBuilder()
+                                    .setId(td.getId())
+                                    .build())
+                            .forEach(item -> tdList.add(item));
 
-                List<ThreeDNode> nodesByIds =
-                        client.threeD()
-                                .models()
-                                .revisions()
-                                .nodes()
-                                .retrieve(model.getId(), revision.getId(), tdList);
+                    List<ThreeDNode> nodesByIds =
+                            client.threeD()
+                                    .models()
+                                    .revisions()
+                                    .nodes()
+                                    .retrieve(model.getId(), revision.getId(), tdList);
 
-                assertEquals(listResults.size(), nodesByIds.size());
-                validateList(nodesByIds);
-                validateFields(nodesByIds);
+                    assertEquals(listResults.size(), nodesByIds.size());
+                    validateList(nodesByIds);
+                    validateFields(nodesByIds);
+                }
             }
+            LOG.info(loggingPrefix + "Finished getting 3D Nodes by ids. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
         }
-        LOG.info(loggingPrefix + "Finished getting 3D Nodes by ids. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
+
     }
 
     @Test
     @Tag("remoteCDP")
     void filterThreeDNodes() throws Exception {
-        Thread.sleep(5000); // wait for eventual consistency
-        Instant startInstant = Instant.now();
-        String loggingPrefix = "filterThreeDNodes - ";
-        LOG.info(loggingPrefix + "Start filter 3D Nodes");
+        try {
+            Thread.sleep(5000); // wait for eventual consistency
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "filterThreeDNodes - ";
+            LOG.info(loggingPrefix + "Start filter 3D Nodes");
 
-        Random r = new Random();
-        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
-            ThreeDModel model = entry.getKey();
-            for (ThreeDModelRevision revision : entry.getValue()) {
+            Random r = new Random();
+            for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
+                ThreeDModel model = entry.getKey();
+                for (ThreeDModelRevision revision : entry.getValue()) {
 
-                Request request = Request.create()
-                        .withFilterParameter("properties", createFilterPropertiesWithCategories());
+                    Request request = Request.create()
+                            .withFilterParameter("properties", createFilterPropertiesWithCategories());
 
-                List<ThreeDNode> listResults = new ArrayList<>();
-                client.threeD()
-                        .models()
-                        .revisions()
-                        .nodes()
-                        .filter(model.getId(), revision.getId(), request)
-                        .forEachRemaining(val -> listResults.addAll(val));
-                assertNotNull(listResults);
-                validateFields(listResults);
+                    List<ThreeDNode> listResults = new ArrayList<>();
+                    client.threeD()
+                            .models()
+                            .revisions()
+                            .nodes()
+                            .filter(model.getId(), revision.getId(), request)
+                            .forEachRemaining(val -> listResults.addAll(val));
+                    assertNotNull(listResults);
+                    validateFields(listResults);
+                }
             }
+            LOG.info(loggingPrefix + "Finished filter 3D Nodes. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
         }
-        LOG.info(loggingPrefix + "Finished filter 3D Nodes. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
+
     }
 
 
@@ -177,99 +203,133 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
     @Test
     @Tag("remoteCDP")
     public void testListPublicData() throws Exception {
-        client = getCogniteClientAPIKey();
-        Iterator<List<ThreeDNode>> it = client.threeD()
-                .models()
-                .revisions()
-                .nodes()
-                .list(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID);
-        List<ThreeDNode> listResults = it.next();
-        assertNotNull(listResults);
+        try {
+            client = getCogniteClientAPIKey();
+            Iterator<List<ThreeDNode>> it = client.threeD()
+                    .models()
+                    .revisions()
+                    .nodes()
+                    .list(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID);
+            List<ThreeDNode> listResults = it.next();
+            assertNotNull(listResults);
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Test
     @Tag("remoteCDP")
     public void testFilterPublicData() throws Exception {
-        client = getCogniteClientAPIKey();
-        Request request = Request.create()
-                .withFilterParameter("properties", createFilterPropertiesWithCategories());
+        try {
+            client = getCogniteClientAPIKey();
+            Request request = Request.create()
+                    .withFilterParameter("properties", createFilterPropertiesWithCategories());
 
-        Iterator<List<ThreeDNode>> itFilter = client.threeD()
-                .models()
-                .revisions()
-                .nodes()
-                .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request);
-        List<ThreeDNode> listResults = itFilter.next();
-        assertNotNull(listResults);
-        assertTrue(listResults.size() > 0);
+            Iterator<List<ThreeDNode>> itFilter = client.threeD()
+                    .models()
+                    .revisions()
+                    .nodes()
+                    .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request);
+            List<ThreeDNode> listResults = itFilter.next();
+            assertNotNull(listResults);
+            assertTrue(listResults.size() > 0);
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Test
     @Tag("remoteCDP")
     public void testFilter1CategorieAnd2ItemsPublicData() throws Exception {
-        client = getCogniteClientAPIKey();
-        Request request = Request.create()
-                .withFilterParameter("properties", createFilterProperties1CategoriesAnd2Items());
+        try {
+            client = getCogniteClientAPIKey();
+            Request request = Request.create()
+                    .withFilterParameter("properties", createFilterProperties1CategoriesAnd2Items());
 
-        Iterator<List<ThreeDNode>> itFilter = client.threeD()
-                .models()
-                .revisions()
-                .nodes()
-                .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request);
-        List<ThreeDNode> listResults = itFilter.next();
-        assertNotNull(listResults);
-        assertTrue(listResults.size() > 0);
+            Iterator<List<ThreeDNode>> itFilter = client.threeD()
+                    .models()
+                    .revisions()
+                    .nodes()
+                    .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request);
+            List<ThreeDNode> listResults = itFilter.next();
+            assertNotNull(listResults);
+            assertTrue(listResults.size() > 0);
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Test
     @Tag("remoteCDP")
     public void testFilterWith2ICategoriesPublicData() throws Exception {
-        client = getCogniteClientAPIKey();
-        Request request = Request.create()
-                .withRootParameter("limit", 1)
-                .withFilterParameter("properties", createFilterPropertiesWith2Categories());
+        try {
+            client = getCogniteClientAPIKey();
+            Request request = Request.create()
+                    .withRootParameter("limit", 1)
+                    .withFilterParameter("properties", createFilterPropertiesWith2Categories());
 
-        Iterator<List<ThreeDNode>> itFilter = client.threeD()
-                .models()
-                .revisions()
-                .nodes()
-                .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request);
-        List<ThreeDNode> listResults = itFilter.next();
-        assertNotNull(listResults);
-        assertTrue(listResults.size() > 0);
+            Iterator<List<ThreeDNode>> itFilter = client.threeD()
+                    .models()
+                    .revisions()
+                    .nodes()
+                    .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request);
+            List<ThreeDNode> listResults = itFilter.next();
+            assertNotNull(listResults);
+            assertTrue(listResults.size() > 0);
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Test
     @Tag("remoteCDP")
     public void testFilterWith2ICategoriesAnd2ItemsPublicData() throws Exception {
-        client = getCogniteClientAPIKey();
-        Request request = Request.create()
-                .withRootParameter("limit", 1)
-                .withFilterParameter("properties", createFilterPropertiesWith2CategoriesANd2Items());
+        try {
+            client = getCogniteClientAPIKey();
+            Request request = Request.create()
+                    .withRootParameter("limit", 1)
+                    .withFilterParameter("properties", createFilterPropertiesWith2CategoriesANd2Items());
 
-        Iterator<List<ThreeDNode>> itFilter = client.threeD()
-                .models()
-                .revisions()
-                .nodes()
-                .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request);
-        List<ThreeDNode> listResults = itFilter.next();
-        assertNotNull(listResults);
-        assertTrue(listResults.size() > 0);
+            Iterator<List<ThreeDNode>> itFilter = client.threeD()
+                    .models()
+                    .revisions()
+                    .nodes()
+                    .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID, request);
+            List<ThreeDNode> listResults = itFilter.next();
+            assertNotNull(listResults);
+            assertTrue(listResults.size() > 0);
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
     @Tag("remoteCDP")
     public void testFilterEmptyPublicData() throws Exception {
-        client = getCogniteClientAPIKey();
+        try {
+            client = getCogniteClientAPIKey();
 
-        Iterator<List<ThreeDNode>> itFilter = client.threeD()
-                .models()
-                .revisions()
-                .nodes()
-                .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID);
-        List<ThreeDNode> listResults = itFilter.next();
-        assertNotNull(listResults);
-        assertTrue(listResults.size() > 0);
+            Iterator<List<ThreeDNode>> itFilter = client.threeD()
+                    .models()
+                    .revisions()
+                    .nodes()
+                    .filter(PUBLIC_DATA_MODEL_ID, PUBLIC_DATA_REVISION_ID);
+            List<ThreeDNode> listResults = itFilter.next();
+            assertNotNull(listResults);
+            assertTrue(listResults.size() > 0);
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
     }
 
     private ThreeDNode.PropertiesFilter createFilterPropertiesWith2Categories() {

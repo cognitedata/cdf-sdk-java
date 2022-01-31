@@ -66,10 +66,19 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
     /**
      * Returns {@link ThreeDNodes} representing 3D nodes api endpoints.
      *
-     * @return The ThreeDAvailableOutputs api endpoints.
+     * @return The ThreeDNodes api endpoints.
      */
     public ThreeDNodes nodes() {
         return ThreeDNodes.of(getClient());
+    }
+
+    /**
+     * Returns {@link ThreeDAssetMappings} representing 3D nodes api endpoints.
+     *
+     * @return The ThreeDAssetMappings api endpoints.
+     */
+    public ThreeDAssetMappings assetMappings() {
+        return ThreeDAssetMappings.of(getClient());
     }
 
     private static ThreeDModelsRevisions.Builder builder() {

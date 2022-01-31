@@ -2056,6 +2056,55 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return ItemWriter.of(getClient(), requestProvider);
     }
 
+    public Iterator<CompletableFuture<ResponseItems<String>>> readThreeDAssetMappings(Request requestParameters) {
+        ThreeDAssetMappingsRequestProvider requestProvider = ThreeDAssetMappingsRequestProvider.builder()
+                .setEndpoint("3d/models/")
+                .setRequest(requestParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    public Iterator<CompletableFuture<ResponseItems<String>>> filterThreeDAssetMappings(Long modelId, Long revisionId, Request requestParameters) {
+        ThreeDAssetMappingsFilterRequestProvider requestProvider = ThreeDAssetMappingsFilterRequestProvider.builder()
+                .setEndpoint("3d/models/" + modelId + "/revisions/" + revisionId + "/mappings/list")
+                .setRequest(requestParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    public ItemWriter writeThreeDAssetMappings(Long modelId, Long revisionId) {
+        LOG.debug(loggingPrefix + "Initiating write 3d asset mappings service.");
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("3d/models/" + modelId + "/revisions/" + revisionId + "/mappings")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    public ItemWriter deleteThreeDAssetMappings(Long modelId, Long revisionId) {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("3d/models/" + modelId + "/revisions/" + revisionId + "/mappings/delete")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
     @AutoValue.Builder
     public abstract static class Builder {
         public abstract Builder setClient(CogniteClient value);

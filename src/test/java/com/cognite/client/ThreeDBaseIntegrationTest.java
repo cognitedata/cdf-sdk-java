@@ -24,7 +24,7 @@ public abstract class ThreeDBaseIntegrationTest {
 
     private static final String PUBLIC_DATA_API_KEY = "OWIyZWEwNjctMDFmNy00MjI0LWE5NDctYmRjMTcwYTU0Y2Jj";
 
-    private static final Integer COUNT_TO_BE_CREATE = 2;
+    protected static final Integer COUNT_TO_BE_CREATE = 2;
 
     abstract Logger getLogger();
 

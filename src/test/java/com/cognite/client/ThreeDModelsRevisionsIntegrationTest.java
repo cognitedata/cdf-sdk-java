@@ -53,167 +53,188 @@ public class ThreeDModelsRevisionsIntegrationTest {
     @Test
     @Tag("remoteCDP")
     void writeThreeDModelsRevisions() throws Exception {
-        Instant startInstant = Instant.now();
-        String loggingPrefix = "UnitTest - listThreeDModelsRevisions() -";
-        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
+        try {
 
-        Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
-        List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
-        FileMetadata file = uploadFile(loggingPrefix, FileType.THREED_OBJ);
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "UnitTest - listThreeDModelsRevisions() -";
+            LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+            CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
 
-        Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
-        List<ThreeDModelRevision> listUpsertRevisions = null;
-        List<ThreeDModelRevision> listAllRevisions = new ArrayList<>();
-        for (ThreeDModel model : listUpsert3D) {
-            listUpsertRevisions = new ArrayList<>();
-            listUpsertRevisions.addAll(createThreeDModelRevisions(startInstant, loggingPrefix, client, model, file));
-            listAllRevisions.addAll(listUpsertRevisions);
-            map.put(model, listUpsertRevisions);
+            Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
+            List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
+            FileMetadata file = uploadFile(loggingPrefix, FileType.THREED_OBJ);
+
+            Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
+            List<ThreeDModelRevision> listUpsertRevisions = null;
+            List<ThreeDModelRevision> listAllRevisions = new ArrayList<>();
+            for (ThreeDModel model : listUpsert3D) {
+                listUpsertRevisions = new ArrayList<>();
+                listUpsertRevisions.addAll(createThreeDModelRevisions(startInstant, loggingPrefix, client, model, file));
+                listAllRevisions.addAll(listUpsertRevisions);
+                map.put(model, listUpsertRevisions);
+            }
+
+            Thread.sleep(2000); // wait for eventual consistency
+
+            findList(startInstant, loggingPrefix, client, listUpsert3D);
+
+            delete(startInstant, loggingPrefix, client, map, file);
+
+            deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
         }
-
-        Thread.sleep(2000); // wait for eventual consistency
-
-        findList(startInstant, loggingPrefix, client, listUpsert3D);
-
-        delete(startInstant, loggingPrefix, client, map, file);
-
-        deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
 
     }
 
     @Test
     @Tag("remoteCDP")
     void writeEditAndDeleteThreeDModelsRevisions() throws Exception {
-        Instant startInstant = Instant.now();
-        String loggingPrefix = "UnitTest - listThreeDModelsRevisions() -";
-        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
+        try {
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "UnitTest - listThreeDModelsRevisions() -";
+            LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+            CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
 
-        Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
-        List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
-        FileMetadata file = uploadFile(loggingPrefix, FileType.THREED_OBJ);
+            Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
+            List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
+            FileMetadata file = uploadFile(loggingPrefix, FileType.THREED_OBJ);
 
-        Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
-        List<ThreeDModelRevision> listUpsertRevisions = null;
-        List<ThreeDModelRevision> listAllRevisions = new ArrayList<>();
-        for (ThreeDModel model : listUpsert3D) {
-            listUpsertRevisions = new ArrayList<>();
-            listUpsertRevisions.addAll(createThreeDModelRevisions(startInstant, loggingPrefix, client, model, file));
-            listAllRevisions.addAll(listUpsertRevisions);
-            map.put(model, listUpsertRevisions);
+            Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
+            List<ThreeDModelRevision> listUpsertRevisions = null;
+            List<ThreeDModelRevision> listAllRevisions = new ArrayList<>();
+            for (ThreeDModel model : listUpsert3D) {
+                listUpsertRevisions = new ArrayList<>();
+                listUpsertRevisions.addAll(createThreeDModelRevisions(startInstant, loggingPrefix, client, model, file));
+                listAllRevisions.addAll(listUpsertRevisions);
+                map.put(model, listUpsertRevisions);
+            }
+
+            Thread.sleep(2000); // wait for eventual consistency
+
+            Map<ThreeDModel, List<ThreeDModelRevision>> editedTdInput = update(startInstant, loggingPrefix, client, map);
+
+            replace(startInstant, loggingPrefix, client, editedTdInput);
+
+            Thread.sleep(3000); // wait for eventual consistency
+
+            delete(startInstant, loggingPrefix, client, map, file);
+
+            deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
         }
-
-        Thread.sleep(2000); // wait for eventual consistency
-
-        Map<ThreeDModel, List<ThreeDModelRevision>> editedTdInput = update(startInstant, loggingPrefix, client, map);
-
-        replace(startInstant, loggingPrefix, client, editedTdInput);
-
-        Thread.sleep(3000); // wait for eventual consistency
-
-        delete(startInstant, loggingPrefix, client, map, file);
-
-        deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
     }
 
     @Test
     @Tag("remoteCDP")
     void writeRetrieveAndDeleteThreeDModelsRevisions() throws Exception {
-        Instant startInstant = Instant.now();
-        String loggingPrefix = "UnitTest - listThreeDModelsRevisions() -";
-        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
+        try {
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "UnitTest - listThreeDModelsRevisions() -";
+            LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+            CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
 
-        Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
-        List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
-        FileMetadata file = uploadFile(loggingPrefix, FileType.THREED_OBJ);
+            Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
+            List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
+            FileMetadata file = uploadFile(loggingPrefix, FileType.THREED_OBJ);
 
-        Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
-        List<ThreeDModelRevision> listUpsertRevisions = null;
-        List<ThreeDModelRevision> listAllRevisions = new ArrayList<>();
-        for (ThreeDModel model : listUpsert3D) {
-            listUpsertRevisions = new ArrayList<>();
-            listUpsertRevisions.addAll(createThreeDModelRevisions(startInstant, loggingPrefix, client, model, file));
-            listAllRevisions.addAll(listUpsertRevisions);
-            map.put(model, listUpsertRevisions);
+            Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
+            List<ThreeDModelRevision> listUpsertRevisions = null;
+            List<ThreeDModelRevision> listAllRevisions = new ArrayList<>();
+            for (ThreeDModel model : listUpsert3D) {
+                listUpsertRevisions = new ArrayList<>();
+                listUpsertRevisions.addAll(createThreeDModelRevisions(startInstant, loggingPrefix, client, model, file));
+                listAllRevisions.addAll(listUpsertRevisions);
+                map.put(model, listUpsertRevisions);
+            }
+            Thread.sleep(2000); // wait for eventual consistency
+
+            LOG.info(loggingPrefix + "Start retrieving 3D Models Revisions.");
+
+            List<ThreeDModelRevision> listAllRevisionsRetrieve = new ArrayList<>();
+            for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : map.entrySet()) {
+                ThreeDModel model = entry.getKey();
+                List<Item> tdList = new ArrayList<>();
+                entry.getValue().stream()
+                        .map(td -> Item.newBuilder()
+                                .setId(td.getId())
+                                .build())
+                        .forEach(item -> tdList.add(item));
+
+                listAllRevisionsRetrieve.addAll(
+                        client.threeD()
+                                .models().
+                                revisions()
+                                .retrieve(model.getId(), tdList));
+            }
+
+            LOG.info(loggingPrefix + "Finished retrieving 3D Models Revisions. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            assertEquals(listAllRevisions.size(), listAllRevisionsRetrieve.size());
+
+            delete(startInstant, loggingPrefix, client, map, file);
+
+            deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
         }
-        Thread.sleep(2000); // wait for eventual consistency
-
-        LOG.info(loggingPrefix + "Start retrieving 3D Models Revisions.");
-
-        List<ThreeDModelRevision> listAllRevisionsRetrieve = new ArrayList<>();
-        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : map.entrySet()) {
-            ThreeDModel model = entry.getKey();
-            List<Item> tdList = new ArrayList<>();
-            entry.getValue().stream()
-                    .map(td -> Item.newBuilder()
-                            .setId(td.getId())
-                            .build())
-                    .forEach(item -> tdList.add(item));
-
-            listAllRevisionsRetrieve.addAll(
-                    client.threeD()
-                            .models().
-                            revisions()
-                            .retrieve(model.getId(), tdList));
-        }
-
-        LOG.info(loggingPrefix + "Finished retrieving 3D Models Revisions. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
-        assertEquals(listAllRevisions.size(), listAllRevisionsRetrieve.size());
-
-        delete(startInstant, loggingPrefix, client, map, file);
-
-        deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
     }
 
     @Test
     @Tag("remoteCDP")
     void updateThreeDRevisionThumbnail() throws Exception {
-        Instant startInstant = Instant.now();
-        String loggingPrefix = "UnitTest - listThreeDModelsRevisions() -";
-        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
+        try {
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "UnitTest - listThreeDModelsRevisions() -";
+            LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+            CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
 
-        Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
-        List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
-        FileMetadata file = uploadFile(loggingPrefix, FileType.THREED_OBJ);
+            Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
+            List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
+            FileMetadata file = uploadFile(loggingPrefix, FileType.THREED_OBJ);
 
-        Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
-        List<ThreeDModelRevision> listUpsertRevisions = null;
-        List<ThreeDModelRevision> listAllRevisions = new ArrayList<>();
-        for (ThreeDModel model : listUpsert3D) {
-            listUpsertRevisions = new ArrayList<>();
-            listUpsertRevisions.addAll(createThreeDModelRevisions(startInstant, loggingPrefix, client, model, file));
-            listAllRevisions.addAll(listUpsertRevisions);
-            map.put(model, listUpsertRevisions);
-        }
-        Thread.sleep(2000); // wait for eventual consistency
+            Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
+            List<ThreeDModelRevision> listUpsertRevisions = null;
+            List<ThreeDModelRevision> listAllRevisions = new ArrayList<>();
+            for (ThreeDModel model : listUpsert3D) {
+                listUpsertRevisions = new ArrayList<>();
+                listUpsertRevisions.addAll(createThreeDModelRevisions(startInstant, loggingPrefix, client, model, file));
+                listAllRevisions.addAll(listUpsertRevisions);
+                map.put(model, listUpsertRevisions);
+            }
+            Thread.sleep(2000); // wait for eventual consistency
 
-        LOG.info(loggingPrefix + "Start updating 3D Revision Thumbnail.");
+            LOG.info(loggingPrefix + "Start updating 3D Revision Thumbnail.");
 
-        FileMetadata fileThumbnail = uploadFile(loggingPrefix, FileType.THUMBNAIL);
+            FileMetadata fileThumbnail = uploadFile(loggingPrefix, FileType.THUMBNAIL);
 
-        for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : map.entrySet()) {
-            ThreeDModel model = entry.getKey();
-            for (ThreeDModelRevision revision : entry.getValue()) {
-                Boolean updated = client.
-                        threeD()
-                        .models()
-                        .revisions()
-                        .updateThumbnail(model.getId(), revision.getId(), fileThumbnail.getId());
-                assertTrue(updated);
+            for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : map.entrySet()) {
+                ThreeDModel model = entry.getKey();
+                for (ThreeDModelRevision revision : entry.getValue()) {
+                    Boolean updated = client.
+                            threeD()
+                            .models()
+                            .revisions()
+                            .updateThumbnail(model.getId(), revision.getId(), fileThumbnail.getId());
+                    assertTrue(updated);
+                }
+
             }
 
+            LOG.info(loggingPrefix + "Finished updating 3D Revision Thumbnail. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+
+            delete(startInstant, loggingPrefix, client, map, file);
+
+            deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
         }
-
-        LOG.info(loggingPrefix + "Finished updating 3D Revision Thumbnail. Duration: {}",
-                Duration.between(startInstant, Instant.now()));
-
-        delete(startInstant, loggingPrefix, client, map, file);
-
-        deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
 
     }
 

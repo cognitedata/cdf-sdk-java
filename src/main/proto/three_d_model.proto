@@ -101,3 +101,11 @@ message ThreeDNode {
     optional BoundingBox boundingBox = 8;
 }
 
+message ThreeDAssetMapping {
+
+    int64 nodeId = 1;
+    int64 assetId = 2;
+    optional int64 treeIndex = 3;
+    optional int64 subtreeSize = 4;
+}
+

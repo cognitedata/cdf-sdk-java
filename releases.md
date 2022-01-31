@@ -25,6 +25,7 @@ Changes are grouped as follows:
 
 - Added `3D Models Revisions`
 - Added `3D File Download`
+- Added `3D Asset Mapping`
 - `EngineeringDiagrams` promoted from experimental to stable. It has the same signature and behavior as before and is 
 located under the `contextualization` family: `CogniteClient.contextualization().engineeringDiagrams()`.
 

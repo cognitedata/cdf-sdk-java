@@ -28,7 +28,7 @@ information ([https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.m
 <dependency>    
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>1.9.0</version>
+    <version>1.10.0-SNAPSHOT</version>
 </dependency>
 ```
     
@@ -58,6 +58,7 @@ information ([https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.m
 - 3D Models
 - 3D Model Revisions
 - 3D File Download
+- 3D Asset Mapping
 
 ## Quickstart
 ```java
