@@ -205,7 +205,6 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
             LOG.error(e.toString());
             throw new RuntimeException(e);
         }
-
     }
 
     @Test
