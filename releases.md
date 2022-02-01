@@ -28,10 +28,15 @@ Changes are grouped as follows:
 - Added `3D Asset Mapping`
 - `EngineeringDiagrams` promoted from experimental to stable. It has the same signature and behavior as before and is 
 located under the `contextualization` family: `CogniteClient.contextualization().engineeringDiagrams()`.
+- Added convenience methods to `Request` for easier handling of items (by `externalId` or `id`). You can use 
+`Request.withItemExternalIds(String... externalId)` and `Request.withItemInternalIds(Long... externalId)` to add multiple 
+items to the request.
 
 ### Deprecated
 
 - The experimental version of `EngineeringDiagrams` is deprecated given the new, stable version.
+- The single item methods `Request.withItemExternalId(String externalId)` and `Request.withItemInternalId(Long externalId)` 
+have been deprecated in favour of the new multi-item versions.
 
 ### Removed
 
