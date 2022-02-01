@@ -25,7 +25,7 @@ public class ThreeDOutputsIntegrationTest extends ThreeDBaseIntegrationTest {
 
     @Test
     @Tag("remoteCDP")
-    void retrieveThreeDOutputs() throws MalformedURLException {
+    void retrieveThreeDOutputs() throws Exception {
         try {
             Instant startInstant = Instant.now();
             String loggingPrefix = "retrieveThreeDOutputs - ";
@@ -48,13 +48,13 @@ public class ThreeDOutputsIntegrationTest extends ThreeDBaseIntegrationTest {
                     Duration.between(startInstant, Instant.now()));
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw e;
         }
     }
 
     @Test
     @Tag("remoteCDP")
-    void retrieveThreeDOutputsWithFormatFilter() throws MalformedURLException {
+    void retrieveThreeDOutputsWithFormatFilter() throws Exception {
         try {
             Instant startInstant = Instant.now();
             String loggingPrefix = "retrieveThreeDOutputs - ";
@@ -79,7 +79,7 @@ public class ThreeDOutputsIntegrationTest extends ThreeDBaseIntegrationTest {
                     Duration.between(startInstant, Instant.now()));
         } catch (Exception e) {
             LOG.error(e.toString());
-            e.printStackTrace();
+            throw e;
         }
     }
 }

@@ -65,8 +65,9 @@ public abstract class ThreeDRevisionLogs extends ApiBase {
         ItemReader<String> tdReader = connector.readThreeDRevisionLogs();
 
         List<CompletableFuture<ResponseItems<String>>> resultFutures = new ArrayList<>();
-        Request request = requestParameters.withRootParameter("modelId", String.valueOf(modelId))
-                .withRootParameter("revisionId", String.valueOf(revisionId));
+        Request request = requestParameters
+                .withRootParameter("modelId", modelId)
+                .withRootParameter("revisionId", revisionId);
         resultFutures.add(tdReader.getItemsAsync(addAuthInfo(request)));
         // Sync all downloads to a single future. It will complete when all the upstream futures have completed.
         CompletableFuture<ResponseItems<String>> itemsAsync = tdReader.getItemsAsync(addAuthInfo(request));

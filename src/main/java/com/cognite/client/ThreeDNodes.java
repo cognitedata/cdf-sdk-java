@@ -92,8 +92,8 @@ public abstract class ThreeDNodes extends ApiBase {
      */
     public Iterator<List<ThreeDNode>> list(Long modelId, Long revisionId, Request requestParameters, String... partitions) throws Exception {
         Request request = requestParameters
-                .withRootParameter("modelId", String.valueOf(modelId))
-                .withRootParameter("revisionId", String.valueOf(revisionId));
+                .withRootParameter("modelId", modelId)
+                .withRootParameter("revisionId", revisionId);
         return AdapterIterator.of(listJson(ResourceType.THREED_NODE, request, partitions), this::parseThreeDNodes);
     }
 
@@ -141,9 +141,9 @@ public abstract class ThreeDNodes extends ApiBase {
      */
     public Iterator<List<ThreeDNode>> list(Long modelId, Long revisionId, Long nodeId, Request requestParameters, String... partitions) throws Exception {
         Request request = requestParameters
-                .withRootParameter("modelId", String.valueOf(modelId))
-                .withRootParameter("revisionId", String.valueOf(revisionId))
-                .withRootParameter("nodeId", String.valueOf(nodeId));
+                .withRootParameter("modelId", modelId)
+                .withRootParameter("revisionId", revisionId)
+                .withRootParameter("nodeId", nodeId);
         return AdapterIterator.of(listJson(ResourceType.THREED_ANCESTOR_NODE, request, partitions), this::parseThreeDNodes);
     }
 
