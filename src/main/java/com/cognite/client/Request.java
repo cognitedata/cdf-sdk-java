@@ -214,7 +214,6 @@ public abstract class Request implements Serializable {
      */
     public Request withItems(List<? extends Map<String, Object>> items) {
         checkNotNull(items, "Items cannot be null.");
-        checkArgument(items.size() <= 10000, "Number of items cannot exceed 10k.");
 
         HashMap<String, Object> tempMapRoot = new HashMap<>();
         tempMapRoot.putAll(getRequestParameters());
