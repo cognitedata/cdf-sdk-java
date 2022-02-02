@@ -25,6 +25,7 @@ import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.AssetParser;
 import com.cognite.client.stream.ListSource;
 import com.cognite.client.stream.Publisher;
+import com.cognite.client.util.Items;
 import com.cognite.client.util.Partition;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
@@ -134,10 +135,32 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
     }
 
     /**
-     * Retrieve assets by id.
+     * Retrieve assets by {@code externalId}.
+     *
+     * @param externalId The {@code externalIds} to retrieve
+     * @return The retrieved assets.
+     * @throws Exception
+     */
+    public List<Asset> retrieve(String... externalId) throws Exception {
+        return retrieve(Items.parseItems(externalId));
+    }
+
+    /**
+     * Retrieve assets by {@code internal id}.
+     *
+     * @param id The {@code ids} to retrieve
+     * @return The retrieved assets.
+     * @throws Exception
+     */
+    public List<Asset> retrieve(long... id) throws Exception {
+        return retrieve(Items.parseItems(id));
+    }
+
+    /**
+     * Retrieve assets by {@code externalId / id}.
      *
      * @param items The item(s) {@code externalId / id} to retrieve.
-     * @return The retrieved events.
+     * @return The retrieved assets.
      * @throws Exception
      */
     public List<Asset> retrieve(List<Item> items) throws Exception {

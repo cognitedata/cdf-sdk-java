@@ -251,7 +251,7 @@ class EventsIntegrationTest {
                     .collect(Collectors.toList());
 
 
-            List<Event> retrievedEvents = client.events().retrieve(eventItems);
+            List<Event> retrievedEvents = client.events().retrieve(eventExternalIds.toArray(String[]::new));
             LOG.info(loggingPrefix + "Finished retrieving events. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
@@ -269,7 +269,7 @@ class EventsIntegrationTest {
 
             assertEquals(upsertEventsList.size(), listEventsResults.size());
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
-            assertEquals(eventItems.size(), retrievedEvents.size());
+            assertEquals(eventExternalIds.size(), retrievedEvents.size());
         } catch (Exception e) {
             LOG.error(e.toString());
             throw new RuntimeException(e);

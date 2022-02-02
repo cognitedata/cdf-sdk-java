@@ -19,11 +19,11 @@ package com.cognite.client;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Aggregate;
-import com.cognite.client.dto.Event;
 import com.cognite.client.dto.SequenceMetadata;
 import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.SequenceParser;
+import com.cognite.client.util.Items;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,7 +117,29 @@ public abstract class Sequences extends ApiBase {
     }
 
     /**
-     * Retrieve sequences by id.
+     * Retrieve sequences by {@code externalId}.
+     *
+     * @param externalId The {@code externalIds} to retrieve
+     * @return The retrieved sequences.
+     * @throws Exception
+     */
+    public List<SequenceMetadata> retrieve(String... externalId) throws Exception {
+        return retrieve(Items.parseItems(externalId));
+    }
+
+    /**
+     * Retrieve sequences by {@code internal id}.
+     *
+     * @param id The {@code ids} to retrieve
+     * @return The retrieved sequences.
+     * @throws Exception
+     */
+    public List<SequenceMetadata> retrieve(long... id) throws Exception {
+        return retrieve(Items.parseItems(id));
+    }
+
+    /**
+     * Retrieve sequences by {@code externalId / id}.
      *
      * @param items The item(s) {@code externalId / id} to retrieve
      * @return The retrieved sequences

@@ -23,14 +23,13 @@ import com.cognite.client.servicesV1.ItemReader;
 import com.cognite.client.servicesV1.ResponseItems;
 import com.cognite.client.servicesV1.parser.TimeseriesParser;
 import com.cognite.client.servicesV1.util.TSIterationUtilities;
+import com.cognite.client.util.Items;
 import com.cognite.client.util.Partition;
 import com.cognite.v1.timeseries.proto.*;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.Int64Value;
-import com.google.protobuf.StringValue;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -145,13 +144,37 @@ public abstract class DataPoints extends ApiBase {
     }
 
     /**
+     * Retrieve all {@link TimeseriesPoint}/data points for the specified time series ({@code externalId}).
+     * Refer to {@link #retrieveComplete(List)} for more information.
+     *
+     * @param externalId The {@code externalIds} of the time series to retrieve
+     * @return The time series data points.
+     * @throws Exception
+     */
+    public Iterator<List<TimeseriesPoint>> retrieveComplete(String... externalId) throws Exception {
+        return retrieveComplete(Items.parseItems(externalId));
+    }
+
+    /**
+     * Retrieve all {@link TimeseriesPoint}/data points for the specified time series ({@code id}).
+     * Refer to {@link #retrieveComplete(List)} for more information.
+     *
+     * @param id The {@code ids} of the time series to retrieve
+     * @return The time series data points.
+     * @throws Exception
+     */
+    public Iterator<List<TimeseriesPoint>> retrieveComplete(long... id) throws Exception {
+        return retrieveComplete(Items.parseItems(id));
+    }
+
+    /**
      * Returns all {@link TimeseriesPoint} objects that matches the item specifications (externalId / id).
      *
      * the results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      * @param items
-     * @return
+     * @return The time series data points.
      * @throws Exception
      */
     public Iterator<List<TimeseriesPoint>> retrieveComplete(List<Item> items) throws Exception {
@@ -326,6 +349,30 @@ public abstract class DataPoints extends ApiBase {
 
     /**
      * Retrieves the latest (newest) data point for a time series.
+     * Refer to {@link #retrieveLatest(List)} for more information.
+     *
+     * @param externalId The {@code externalIds} of the time series to retrieve
+     * @return The time series data points.
+     * @throws Exception
+     */
+    public List<TimeseriesPoint> retrieveLatest(String... externalId) throws Exception {
+        return retrieveLatest(Items.parseItems(externalId));
+    }
+
+    /**
+     * Retrieves the latest (newest) data point for a time series.
+     * Refer to {@link #retrieveLatest(List)} for more information.
+     *
+     * @param id The {@code ids} of the time series to retrieve
+     * @return The time series data points.
+     * @throws Exception
+     */
+    public List<TimeseriesPoint> retrieveLatest(long... id) throws Exception {
+        return retrieveLatest(Items.parseItems(id));
+    }
+
+    /**
+     * Retrieves the latest (newest) data point for a time series.
      *
      * The {@link Item} must specify the externalId / id of the time series.
      *
@@ -424,6 +471,30 @@ public abstract class DataPoints extends ApiBase {
                 .map(this::parseDataPointJsonItem)
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieve the first (eldest) data point for a time series.
+     * Refer to {@link #retrieveFirst(List)} for more information.
+     *
+     * @param externalId The {@code externalIds} of the time series to retrieve
+     * @return The time series data points.
+     * @throws Exception
+     */
+    public List<TimeseriesPoint> retrieveFirst(String... externalId) throws Exception {
+        return retrieveFirst(Items.parseItems(externalId));
+    }
+
+    /**
+     * Retrieve the first (eldest) data point for a time series.
+     * Refer to {@link #retrieveFirst(List)} for more information.
+     *
+     * @param id The {@code ids} of the time series to retrieve
+     * @return The time series data points.
+     * @throws Exception
+     */
+    public List<TimeseriesPoint> retrieveFirst(long... id) throws Exception {
+        return retrieveFirst(Items.parseItems(id));
     }
 
     /**

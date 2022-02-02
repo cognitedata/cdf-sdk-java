@@ -59,8 +59,8 @@ client.events()
 
 #### Retrieve
 
-The `retrieve` operation returns objects based on `externalId` and/or `id`. You provide the ids as input via the 
-`Item` object (). All matching objects are returned as a single batch to you, but behind the scenes the SDK may break 
+The `retrieve` operation returns objects based on `externalId` and/or `id`. You provide the ids as direct input or via the 
+`Item` object. All matching objects are returned as a single batch to you, but behind the scenes the SDK may break 
 the request up into multiple, parallel operations for improved performance. 
 
 ```java
@@ -72,13 +72,21 @@ CogniteClient client = CogniteClient.ofClientCredentials(
         .withProject("myCdfProject")
         .withBaseUrl("https://yourBaseURL.cognitedata.com"); //optional parameter
 
-// Retrieve assets by externalId
+// Retrieve assets by externalId (strings)
+List<Asset> results = client.assets()
+        .retrieve("externalId-1", "externalId-2");
+
+// Retrieve assets by internal id (longs)
+        List<Asset> results = client.assets()
+        .retrieve(234095872309485L, 239461956407L);
+
+// Retrieve assets via Item objects (which can host both externalId and in)
 Item assetA = Item.newBuilder()
         .setExternalId("assetAExternalId")
         .build();
 
 Item assetB = Item.newBuilder()
-        .setExternalId("assetBExternalId")
+        .setId(3425927865928L)
         .build();
 
 List<Asset> results = client.assets()
