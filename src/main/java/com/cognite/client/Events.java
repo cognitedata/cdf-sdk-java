@@ -25,6 +25,7 @@ import com.cognite.client.servicesV1.parser.EventParser;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.stream.ListSource;
 import com.cognite.client.stream.Publisher;
+import com.cognite.client.util.Items;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,7 +122,29 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
     }
 
     /**
-     * Retrieve events by id.
+     * Retrieve events by {@code externalId}.
+     *
+     * @param externalId The {@code externalIds} to retrieve
+     * @return The retrieved events.
+     * @throws Exception
+     */
+    public List<Event> retrieve(String... externalId) throws Exception {
+        return retrieve(Items.parseItems(externalId));
+    }
+
+    /**
+     * Retrieve events by {@code internal id}.
+     *
+     * @param id The {@code ids} to retrieve
+     * @return The retrieved events.
+     * @throws Exception
+     */
+    public List<Event> retrieve(long... id) throws Exception {
+        return retrieve(Items.parseItems(id));
+    }
+
+    /**
+     * Retrieve events by {@code externalId / id}.
      *
      * @param items The item(s) {@code externalId / id} to retrieve.
      * @return The retrieved events.
