@@ -23,6 +23,7 @@ import com.cognite.client.dto.ExtractionPipeline;
 import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.ExtractionPipelineParser;
+import com.cognite.client.util.Items;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,6 +121,28 @@ public abstract class ExtractionPipelines extends ApiBase {
      */
     public Iterator<List<ExtractionPipeline>> list(Request requestParameters, String... partitions) throws Exception {
         return AdapterIterator.of(listJson(ResourceType.EXTRACTION_PIPELINE, requestParameters, partitions), this::parseExtractionPipeline);
+    }
+
+    /**
+     * Retrieve extraction pipelines by {@code externalId}.
+     *
+     * @param externalId The {@code externalIds} to retrieve
+     * @return The retrieved extraction pipelines.
+     * @throws Exception
+     */
+    public List<ExtractionPipeline> retrieve(String... externalId) throws Exception {
+        return retrieve(Items.parseItems(externalId));
+    }
+
+    /**
+     * Retrieve extraction pipelines by {@code internal id}.
+     *
+     * @param id The {@code ids} to retrieve
+     * @return The retrieved extraction pipelines.
+     * @throws Exception
+     */
+    public List<ExtractionPipeline> retrieve(long... id) throws Exception {
+        return retrieve(Items.parseItems(id));
     }
 
     /**

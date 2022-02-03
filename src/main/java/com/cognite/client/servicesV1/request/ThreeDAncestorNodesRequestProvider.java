@@ -27,14 +27,14 @@ public abstract class ThreeDAncestorNodesRequestProvider extends GenericRequestP
     public ThreeDAncestorNodesRequestProvider withRequest(Request parameters) {
         Preconditions.checkNotNull(parameters, "Request parameters cannot be null.");
         Preconditions.checkArgument(parameters.getRequestParameters().containsKey("modelId")
-                        && parameters.getRequestParameters().get("modelId") instanceof String,
-                "Request parameters must include modelId with a string value");
+                        && parameters.getRequestParameters().get("modelId") instanceof Long,
+                "Request parameters must include modelId with a Long value");
         Preconditions.checkArgument(parameters.getRequestParameters().containsKey("revisionId")
-                        && parameters.getRequestParameters().get("revisionId") instanceof String,
-                "Request parameters must include revisionId with a string value");
+                        && parameters.getRequestParameters().get("revisionId") instanceof Long,
+                "Request parameters must include revisionId with a Long value");
         Preconditions.checkArgument(parameters.getRequestParameters().containsKey("nodeId")
-                        && parameters.getRequestParameters().get("nodeId") instanceof String,
-                "Request parameters must include nodeId with a string value");
+                        && parameters.getRequestParameters().get("nodeId") instanceof Long,
+                "Request parameters must include nodeId with a Long value");
         return toBuilder().setRequest(parameters).build();
     }
 
@@ -45,11 +45,11 @@ public abstract class ThreeDAncestorNodesRequestProvider extends GenericRequestP
         HttpUrl.Builder urlBuilder = buildGenericUrl();
 
         // Build path
-        urlBuilder.addPathSegment((String) requestParameters.getRequestParameters().get("modelId"));
+        urlBuilder.addPathSegment(String.valueOf(requestParameters.getRequestParameters().get("modelId")));
         urlBuilder.addPathSegment("revisions");
-        urlBuilder.addPathSegment((String) requestParameters.getRequestParameters().get("revisionId"));
+        urlBuilder.addPathSegment(String.valueOf(requestParameters.getRequestParameters().get("revisionId")));
         urlBuilder.addPathSegment("nodes");
-        urlBuilder.addPathSegment((String) requestParameters.getRequestParameters().get("nodeId"));
+        urlBuilder.addPathSegment(String.valueOf(requestParameters.getRequestParameters().get("nodeId")));
         urlBuilder.addPathSegment("ancestors");
 
         String limit = "";

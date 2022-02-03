@@ -1,6 +1,6 @@
 ## 3D 
 
-PS: For create client see the file `clientSetup.md`
+PS: To create client see the file `clientSetup.md`
 
 ### Models
 

@@ -35,11 +35,11 @@ public abstract class ThreeDAssetMappingsRequestProvider extends GenericRequestP
     public ThreeDAssetMappingsRequestProvider withRequest(Request parameters) {
         Preconditions.checkNotNull(parameters, "Request parameters cannot be null.");
         Preconditions.checkArgument(parameters.getRequestParameters().containsKey("modelId")
-                        && parameters.getRequestParameters().get("modelId") instanceof String,
-                "Request parameters must include modelId with a string value");
+                        && parameters.getRequestParameters().get("modelId") instanceof Long,
+                "Request parameters must include modelId with a Long value");
         Preconditions.checkArgument(parameters.getRequestParameters().containsKey("revisionId")
-                        && parameters.getRequestParameters().get("revisionId") instanceof String,
-                "Request parameters must include revisionId with a string value");
+                        && parameters.getRequestParameters().get("revisionId") instanceof Long,
+                "Request parameters must include revisionId with a Long value");
 
         if (parameters.getRequestParameters().containsKey("intersectsBoundingBox")) {
             ThreeDNode.BoundingBox paramBoundingBox = (ThreeDNode.BoundingBox) parameters.getRequestParameters().get("intersectsBoundingBox");
@@ -60,9 +60,9 @@ public abstract class ThreeDAssetMappingsRequestProvider extends GenericRequestP
         HttpUrl.Builder urlBuilder = buildGenericUrl();
 
         // Build path
-        urlBuilder.addPathSegment((String) requestParameters.getRequestParameters().get("modelId"));
+        urlBuilder.addPathSegment(String.valueOf(requestParameters.getRequestParameters().get("modelId")));
         urlBuilder.addPathSegment("revisions");
-        urlBuilder.addPathSegment((String) requestParameters.getRequestParameters().get("revisionId"));
+        urlBuilder.addPathSegment(String.valueOf(requestParameters.getRequestParameters().get("revisionId")));
         urlBuilder.addPathSegment("mappings");
 
         String limit = "";
@@ -78,9 +78,9 @@ public abstract class ThreeDAssetMappingsRequestProvider extends GenericRequestP
         }
 
         if (requestParameters.getRequestParameters().containsKey("nodeId")) {
-            urlBuilder.addQueryParameter("nodeId", requestParameters.getRequestParameters().get("nodeId").toString());
+            urlBuilder.addQueryParameter("nodeId", String.valueOf(requestParameters.getRequestParameters().get("nodeId")));
         } else if (requestParameters.getRequestParameters().containsKey("assetId")) {
-            urlBuilder.addQueryParameter("assetId", requestParameters.getRequestParameters().get("assetId").toString());
+            urlBuilder.addQueryParameter("assetId", String.valueOf(requestParameters.getRequestParameters().get("assetId")));
         } else if (requestParameters.getRequestParameters().containsKey("intersectsBoundingBox")) {
             ThreeDNode.BoundingBox paramBoundingBox = (ThreeDNode.BoundingBox) requestParameters.getRequestParameters().get("intersectsBoundingBox");
             Map<String, List<Double>> values = new HashMap<>();

@@ -42,12 +42,14 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
                 ThreeDModel model = entry.getKey();
                 for (ThreeDModelRevision revision : entry.getValue()) {
                     List<ThreeDNode> listResults = new ArrayList<>();
-                    client.threeD()
-                            .models()
-                            .revisions()
-                            .nodes()
-                            .list(model.getId(), revision.getId())
-                            .forEachRemaining(val -> listResults.addAll(val));
+                    while(listResults.size() == 0) {
+                        client.threeD()
+                                .models()
+                                .revisions()
+                                .nodes()
+                                .list(model.getId(), revision.getId())
+                                .forEachRemaining(val -> listResults.addAll(val));
+                    }
                     validateList(listResults);
                     validateFields(listResults);
                 }
@@ -77,12 +79,14 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
                 ThreeDModel model = entry.getKey();
                 for (ThreeDModelRevision revision : entry.getValue()) {
                     List<ThreeDNode> listResults = new ArrayList<>();
-                    client.threeD()
-                            .models()
-                            .revisions()
-                            .nodes()
-                            .list(model.getId(), revision.getId())
-                            .forEachRemaining(val -> listResults.addAll(val));
+                    while(listResults.size() == 0) {
+                        client.threeD()
+                                .models()
+                                .revisions()
+                                .nodes()
+                                .list(model.getId(), revision.getId())
+                                .forEachRemaining(val -> listResults.addAll(val));
+                    }
                     validateList(listResults);
                     validateFields(listResults);
 
@@ -94,6 +98,55 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
                             .revisions()
                             .nodes()
                             .list(model.getId(), revision.getId(), nodeDrawn.getId())
+                            .forEachRemaining(val -> listResultsAncestorNodes.addAll(val));
+                    validateList(listResultsAncestorNodes);
+                    validateFields(listResultsAncestorNodes);
+                }
+            }
+            LOG.info(loggingPrefix + "Finished list 3D Ancestor Nodes. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void listThreeDNodesAncestorNodesWithFilter() throws Exception {
+        try {
+            Thread.sleep(5000); // wait for eventual consistency
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "listThreeDNodesAncestorNodes - ";
+            LOG.info(loggingPrefix + "Start list 3D Ancestor Nodes");
+
+            Request request = Request.create().withRootParameter("limit", 300);
+
+            Random r = new Random();
+            for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
+                ThreeDModel model = entry.getKey();
+                for (ThreeDModelRevision revision : entry.getValue()) {
+                    List<ThreeDNode> listResults = new ArrayList<>();
+                    while(listResults.size() == 0) {
+                        client.threeD()
+                                .models()
+                                .revisions()
+                                .nodes()
+                                .list(model.getId(), revision.getId())
+                                .forEachRemaining(val -> listResults.addAll(val));
+                    }
+                    validateList(listResults);
+                    validateFields(listResults);
+
+                    Integer position = r.nextInt(listResults.size());
+                    ThreeDNode nodeDrawn = listResults.get(position);
+                    List<ThreeDNode> listResultsAncestorNodes = new ArrayList<>();
+                    client.threeD()
+                            .models()
+                            .revisions()
+                            .nodes()
+                            .list(model.getId(), revision.getId(), nodeDrawn.getId(), request)
                             .forEachRemaining(val -> listResultsAncestorNodes.addAll(val));
                     validateList(listResultsAncestorNodes);
                     validateFields(listResultsAncestorNodes);
@@ -171,12 +224,14 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
                 ThreeDModel model = entry.getKey();
                 for (ThreeDModelRevision revision : entry.getValue()) {
                     List<ThreeDNode> listResults = new ArrayList<>();
-                    client.threeD()
-                            .models()
-                            .revisions()
-                            .nodes()
-                            .list(model.getId(), revision.getId())
-                            .forEachRemaining(val -> listResults.addAll(val));
+                    while(listResults.size() == 0) {
+                        client.threeD()
+                                .models()
+                                .revisions()
+                                .nodes()
+                                .list(model.getId(), revision.getId())
+                                .forEachRemaining(val -> listResults.addAll(val));
+                    }
                     validateList(listResults);
                     validateFields(listResults);
 
@@ -231,6 +286,7 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
                             .nodes()
                             .filter(model.getId(), revision.getId(), request)
                             .forEachRemaining(val -> listResults.addAll(val));
+
                     assertNotNull(listResults);
                     validateFields(listResults);
                 }
@@ -252,7 +308,7 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
     @Tag("remoteCDP")
     public void testListPublicData() throws Exception {
         try {
-            client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientAPIKey();
             Iterator<List<ThreeDNode>> it = client.threeD()
                     .models()
                     .revisions()
@@ -271,7 +327,7 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
     @Tag("remoteCDP")
     public void testFilterPublicData() throws Exception {
         try {
-            client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientAPIKey();
             Request request = Request.create()
                     .withFilterParameter("properties", createFilterPropertiesWithCategories());
 
@@ -294,7 +350,7 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
     @Tag("remoteCDP")
     public void testFilter1CategorieAnd2ItemsPublicData() throws Exception {
         try {
-            client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientAPIKey();
             Request request = Request.create()
                     .withFilterParameter("properties", createFilterProperties1CategoriesAnd2Items());
 
@@ -317,7 +373,7 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
     @Tag("remoteCDP")
     public void testFilterWith2ICategoriesPublicData() throws Exception {
         try {
-            client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientAPIKey();
             Request request = Request.create()
                     .withRootParameter("limit", 1)
                     .withFilterParameter("properties", createFilterPropertiesWith2Categories());
@@ -341,7 +397,7 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
     @Tag("remoteCDP")
     public void testFilterWith2ICategoriesAnd2ItemsPublicData() throws Exception {
         try {
-            client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientAPIKey();
             Request request = Request.create()
                     .withRootParameter("limit", 1)
                     .withFilterParameter("properties", createFilterPropertiesWith2CategoriesANd2Items());
@@ -364,7 +420,7 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
     @Tag("remoteCDP")
     public void testFilterEmptyPublicData() throws Exception {
         try {
-            client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientAPIKey();
 
             Iterator<List<ThreeDNode>> itFilter = client.threeD()
                     .models()
