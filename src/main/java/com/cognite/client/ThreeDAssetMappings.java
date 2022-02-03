@@ -94,8 +94,8 @@ public abstract class ThreeDAssetMappings extends ApiBase {
      */
     public Iterator<List<ThreeDAssetMapping>> list(Long modelId, Long revisionId, Request requestParameters, String... partitions) throws Exception {
         Request request = requestParameters
-                .withRootParameter("modelId", String.valueOf(modelId))
-                .withRootParameter("revisionId", String.valueOf(revisionId));
+                .withRootParameter("modelId", modelId)
+                .withRootParameter("revisionId", revisionId);
         return AdapterIterator.of(listJson(ResourceType.THREED_ASSET_MAPPINGS, request, partitions), this::parseThreeDAssetMapping);
     }
 

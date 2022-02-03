@@ -26,8 +26,12 @@ public abstract class ThreeDRevisionLogsRequestProvider extends GenericRequestPr
 
     public ThreeDRevisionLogsRequestProvider withRequest(Request parameters) {
         Preconditions.checkNotNull(parameters, "Request parameters cannot be null.");
-        Preconditions.checkArgument(parameters.getRequestParameters().containsKey("modelId"));
-        Preconditions.checkArgument(parameters.getRequestParameters().containsKey("revisionId"));
+        Preconditions.checkArgument(parameters.getRequestParameters().containsKey("modelId")
+                        && parameters.getRequestParameters().get("modelId") instanceof Long,
+                "Request parameters must include modelId with a Long value");
+        Preconditions.checkArgument(parameters.getRequestParameters().containsKey("revisionId")
+                        && parameters.getRequestParameters().get("revisionId") instanceof Long,
+                "Request parameters must include revisionId with a Long value");
         return toBuilder().setRequest(parameters).build();
     }
 
@@ -37,10 +41,14 @@ public abstract class ThreeDRevisionLogsRequestProvider extends GenericRequestPr
         HttpUrl.Builder urlBuilder = buildGenericUrl();
 
         // Build path
-        urlBuilder.addPathSegment((String) requestParameters.getRequestParameters().get("modelId"));
+        urlBuilder.addPathSegment(String.valueOf(requestParameters.getRequestParameters().get("modelId")));
         urlBuilder.addPathSegment("revisions");
-        urlBuilder.addPathSegment((String) requestParameters.getRequestParameters().get("revisionId"));
+        urlBuilder.addPathSegment(String.valueOf(requestParameters.getRequestParameters().get("revisionId")));
         urlBuilder.addPathSegment("logs");
+
+        if (requestParameters.getRequestParameters().containsKey("severity")) {
+            urlBuilder.addQueryParameter("severity", String.valueOf(requestParameters.getRequestParameters().get("severity")));
+        }
 
         return requestBuilder.url(urlBuilder.build()).build();
     }

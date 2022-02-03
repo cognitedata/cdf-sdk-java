@@ -46,14 +46,28 @@ public abstract class ThreeDRevisionLogs extends ApiBase {
      * @param revisionId The id of ThreeDModelRevision object
      */
     public List<ThreeDRevisionLog> retrieve(Long modelId, Long revisionId) throws Exception {
+       return retrieve(modelId, revisionId, Request.create());
+    }
+
+    /**
+     *
+     * Retrieves 3D Revision Logs by modeId and revisionId
+     *
+     * @param modelId The id of ThreeDModel object
+     * @param revisionId The id of ThreeDModelRevision object
+     * @param requestParameters The filters to use for retrieving the 3D Revision Logs.
+     * @return
+     * @throws Exception
+     */
+    public List<ThreeDRevisionLog> retrieve(Long modelId, Long revisionId, Request requestParameters) throws Exception {
         String loggingPrefix = "retrieve() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ItemReader<String> tdReader = connector.readThreeDRevisionLogs();
 
         List<CompletableFuture<ResponseItems<String>>> resultFutures = new ArrayList<>();
-        Request request = Request.create()
-                .withRootParameter("modelId", String.valueOf(modelId))
-                .withRootParameter("revisionId", String.valueOf(revisionId));
+        Request request = requestParameters
+                .withRootParameter("modelId", modelId)
+                .withRootParameter("revisionId", revisionId);
         resultFutures.add(tdReader.getItemsAsync(addAuthInfo(request)));
         // Sync all downloads to a single future. It will complete when all the upstream futures have completed.
         CompletableFuture<ResponseItems<String>> itemsAsync = tdReader.getItemsAsync(addAuthInfo(request));

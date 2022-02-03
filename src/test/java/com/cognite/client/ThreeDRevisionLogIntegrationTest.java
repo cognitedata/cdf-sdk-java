@@ -54,6 +54,39 @@ public class ThreeDRevisionLogIntegrationTest extends ThreeDBaseIntegrationTest 
             LOG.error(e.toString());
             e.printStackTrace();
         }
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void listThreeDRevisionLogsWithSeverityFilter() throws Exception {
+        try {
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "UnitTest - listThreeDModelsRevisions() - ";
+
+            LOG.info(loggingPrefix + "Start list 3D Revision Logs.");
+
+            Request request = Request.create().withRootParameter("severity", Long.valueOf(3));
+
+            List<ThreeDRevisionLog> listResultsLogs = new ArrayList<>();
+            for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
+                ThreeDModel model = entry.getKey();
+                for (ThreeDModelRevision revision : entry.getValue()) {
+                    List<ThreeDRevisionLog> listResults =
+                            client.threeD()
+                                    .models()
+                                    .revisions()
+                                    .revisionLogs()
+                                    .retrieve(model.getId(), revision.getId(), request);
+                    listResultsLogs.addAll(listResults);
+                }
+            }
+
+            LOG.info(loggingPrefix + "Finished list 3D Revision Logs. Duration : {}",
+                    Duration.between(startInstant, Instant.now()));
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            e.printStackTrace();
+        }
 
     }
 
