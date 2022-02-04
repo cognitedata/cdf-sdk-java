@@ -1755,7 +1755,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
     public Iterator<CompletableFuture<ResponseItems<String>>> readThreeDModels(Request queryParameters) {
         LOG.debug(loggingPrefix + "Initiating read 3d models service.");
 
-        GetSimpleListRequestProvider requestProvider = GetSimpleListRequestProvider.builder()
+        ThreeDRequestProvider requestProvider = ThreeDRequestProvider.builder()
                 .setEndpoint("3d/models")
                 .setRequest(queryParameters)
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())

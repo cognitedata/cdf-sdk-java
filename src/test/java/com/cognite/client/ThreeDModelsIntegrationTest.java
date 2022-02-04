@@ -148,6 +148,40 @@ public class ThreeDModelsIntegrationTest {
         delete(startInstant, loggingPrefix, client, listUpsert);
     }
 
+    @Test
+    @Tag("remoteCDP")
+    void filter3DModelsWithPublished() throws MalformedURLException {
+        try {
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "UnitTest - listThreeDModels() -";
+            LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+            CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
+
+            Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
+
+            List<ThreeDModel> listUpsert = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
+
+            Thread.sleep(2000); // wait for eventual consistency
+
+            LOG.info(loggingPrefix + "Start reading 3D Models.");
+            Request request = Request.create()
+                    .withRootParameter("published", true);
+            List<ThreeDModel> listResults = new ArrayList<>();
+            client.threeD().models().list(request).forEachRemaining(model -> listResults.addAll(model));
+            LOG.info(loggingPrefix + "------------ Finished reading 3D Models. Duration: {} -----------",
+                    Duration.between(startInstant, Instant.now()));
+
+            assertTrue(listResults.containsAll(listUpsert));
+            assertEquals(listUpsert.size(), listResults.size());
+
+            delete(startInstant, loggingPrefix, client, listUpsert);
+
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
+    }
+
     @NotNull
     private CogniteClient replace(Instant startInstant, String loggingPrefix, CogniteClient client, List<ThreeDModel> editedTdInput) throws Exception {
         LOG.info(loggingPrefix + "Start update replace 3D Models.");
