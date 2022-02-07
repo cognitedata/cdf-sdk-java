@@ -238,6 +238,52 @@ public class ThreeDModelsRevisionsIntegrationTest {
 
     }
 
+    @Test
+    @Tag("remoteCDP")
+    void filter3DModelRevisionsWithPublished() throws MalformedURLException {
+        try {
+
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "UnitTest - listThreeDModelsRevisions() -";
+            LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+            CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
+
+            Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
+            List<ThreeDModel> listUpsert3D = createThreeDModel(startInstant, loggingPrefix, client, dataSetId);
+            FileMetadata file = uploadFile(loggingPrefix, FileType.THREED_OBJ);
+
+            Map<ThreeDModel, List<ThreeDModelRevision>> map = new HashMap<>();
+            List<ThreeDModelRevision> listUpsertRevisions = null;
+            List<ThreeDModelRevision> listAllRevisions = new ArrayList<>();
+            for (ThreeDModel model : listUpsert3D) {
+                listUpsertRevisions = new ArrayList<>();
+                listUpsertRevisions.addAll(createThreeDModelRevisions(startInstant, loggingPrefix, client, model, file));
+                listAllRevisions.addAll(listUpsertRevisions);
+                map.put(model, listUpsertRevisions);
+            }
+
+            Thread.sleep(2000); // wait for eventual consistency
+
+            List<ThreeDModelRevision> listResults = new ArrayList<>();
+            Request request = Request.create()
+                    .withRootParameter("published", true);
+            for (ThreeDModel threeDModel : listUpsert3D) {
+                client.threeD()
+                        .models()
+                        .revisions()
+                        .list(threeDModel.getId(), request)
+                        .forEachRemaining(model -> listResults.addAll(model));
+            }
+
+            delete(startInstant, loggingPrefix, client, map, file);
+
+            deleteThreeDModel(startInstant, loggingPrefix, client, listUpsert3D);
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
+    }
+
 
     private CogniteClient getCogniteClient(Instant startInstant, String loggingPrefix) throws MalformedURLException {
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");

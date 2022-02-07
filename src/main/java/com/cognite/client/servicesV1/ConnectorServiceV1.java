@@ -1868,7 +1868,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
 
         Long modelId = (Long) queryParameters.getRequestParameters().get("modelId");
 
-        GetSimpleListRequestProvider requestProvider = GetSimpleListRequestProvider.builder()
+        ThreeDRequestProvider requestProvider = ThreeDRequestProvider.builder()
                 .setEndpoint("3d/models/" + modelId + "/revisions")
                 .setRequest(queryParameters)
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
