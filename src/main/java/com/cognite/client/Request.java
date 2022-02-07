@@ -214,7 +214,6 @@ public abstract class Request implements Serializable {
      */
     public Request withItems(List<? extends Map<String, Object>> items) {
         checkNotNull(items, "Items cannot be null.");
-        checkArgument(items.size() <= 10000, "Number of items cannot exceed 10k.");
 
         HashMap<String, Object> tempMapRoot = new HashMap<>();
         tempMapRoot.putAll(getRequestParameters());
@@ -231,12 +230,26 @@ public abstract class Request implements Serializable {
      * @param externalId
      * @return The request object with the parameter applied.
      */
+    @Deprecated
     public Request withItemExternalId(String externalId) {
+        return withItemExternalIds(externalId);
+    }
+
+    /**
+     * Convenience method for setting the external id for requesting multiple items.
+     *
+     * You can use this method when requesting a data item by id, for example when requesting a set of events.
+     *
+     * @param externalId
+     * @return The request object with the parameter applied.
+     */
+    public Request withItemExternalIds(String... externalId) {
         checkNotNull(externalId, "ExternalId cannot be null.");
 
-        List<Map<String, Object>> items = ImmutableList.of(
-                ImmutableMap.of("externalId", externalId)
-        );
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (String element : externalId) {
+            items.add(Map.of("externalId", element));
+        }
 
         return withItems(items);
     }
@@ -250,10 +263,24 @@ public abstract class Request implements Serializable {
      * @param internalId
      * @return The request object with the parameter applied.
      */
+    @Deprecated
     public Request withItemInternalId(long internalId) {
-        List<Map<String, Object>> items = ImmutableList.of(
-                ImmutableMap.of("id", internalId)
-        );
+        return withItemInternalIds(internalId);
+    }
+
+    /**
+     * Convenience method for setting the external id for requesting multiple items.
+     *
+     * You can use this method when requesting a data item by id, for example when requesting a set of events.
+     *
+     * @param internalId
+     * @return The request object with the parameter applied.
+     */
+    public Request withItemInternalIds(long... internalId) {
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (Long element : internalId) {
+            items.add(Map.of("id", element));
+        }
 
         return withItems(items);
     }

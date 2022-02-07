@@ -30,8 +30,24 @@ public abstract class ThreeDNodesRequestProvider extends GenericRequestProvider 
                 && parameters.getRequestParameters().get("modelId") instanceof Long,
                 "Request parameters must include modelId with a Long value");
         Preconditions.checkArgument(parameters.getRequestParameters().containsKey("revisionId")
-                && parameters.getRequestParameters().get("revisionId") instanceof Long,
+                        && parameters.getRequestParameters().get("revisionId") instanceof Long,
                 "Request parameters must include revisionId with a Long value");
+
+        if (parameters.getRequestParameters().containsKey("depth")) {
+            Preconditions.checkArgument(parameters.getRequestParameters().get("depth") instanceof Integer,
+                    "Request parameters must include depth with a Integer value");
+        }
+
+        if (parameters.getRequestParameters().containsKey("nodeId")) {
+            Preconditions.checkArgument(parameters.getRequestParameters().get("nodeId") instanceof Long,
+                    "Request parameters must include nodeId with a Long value");
+        }
+
+        if (parameters.getRequestParameters().containsKey("sortByNodeId")) {
+            Preconditions.checkArgument(parameters.getRequestParameters().get("sortByNodeId") instanceof Boolean,
+                    "Request parameters must include sortByNodeId with a Boolean value");
+        }
+
         return toBuilder().setRequest(parameters).build();
     }
 
@@ -46,6 +62,30 @@ public abstract class ThreeDNodesRequestProvider extends GenericRequestProvider 
         urlBuilder.addPathSegment("revisions");
         urlBuilder.addPathSegment(String.valueOf(requestParameters.getRequestParameters().get("revisionId")));
         urlBuilder.addPathSegment("nodes");
+
+        String limit = "";
+        if (!requestParameters.getRequestParameters().containsKey("limit")) {
+            limit = String.valueOf(ConnectorConstants.DEFAULT_MAX_BATCH_SIZE);
+        } else {
+            limit = requestParameters.getRequestParameters().get("limit").toString();
+        }
+        urlBuilder.addQueryParameter("limit", limit);
+
+        if (cursor.isPresent()) {
+            urlBuilder.addQueryParameter("cursor", cursor.get());
+        }
+
+        if (requestParameters.getRequestParameters().containsKey("depth")) {
+            urlBuilder.addQueryParameter("depth", String.valueOf(requestParameters.getRequestParameters().get("depth")));
+        }
+
+        if (requestParameters.getRequestParameters().containsKey("nodeId")) {
+            urlBuilder.addQueryParameter("nodeId", String.valueOf(requestParameters.getRequestParameters().get("nodeId")));
+        }
+
+        if (requestParameters.getRequestParameters().containsKey("sortByNodeId")) {
+            urlBuilder.addQueryParameter("sortByNodeId", String.valueOf(requestParameters.getRequestParameters().get("sortByNodeId")));
+        }
 
         return requestBuilder.url(urlBuilder.build()).build();
     }

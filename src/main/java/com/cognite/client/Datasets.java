@@ -23,6 +23,7 @@ import com.cognite.client.dto.DataSet;
 import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.DataSetParser;
+import com.cognite.client.util.Items;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,20 +111,38 @@ public abstract class Datasets extends ApiBase {
     }
 
     /**
-     * Retrieves datasets by id.
+     * Retrieve datasets by {@code externalId}.
+     *
+     * @param externalId The {@code externalIds} to retrieve
+     * @return The retrieved datasets.
+     * @throws Exception
+     */
+    public List<DataSet> retrieve(String... externalId) throws Exception {
+        return retrieve(Items.parseItems(externalId));
+    }
+
+    /**
+     * Retrieve datasets by {@code internal id}.
+     *
+     * @param id The {@code ids} to retrieve
+     * @return The retrieved datasets.
+     * @throws Exception
+     */
+    public List<DataSet> retrieve(long... id) throws Exception {
+        return retrieve(Items.parseItems(id));
+    }
+
+    /**
+     * Retrieves datasets by {@code externalId / id}.
      *
      * @param items The item(s) {@code externalId / id} to retrieve.
      * @return The retrieved datasets.
      * @throws Exception
      */
-    public List<DataSet> retrieve(List<Item> items) {
-        try {
-            return retrieveJson(ResourceType.DATA_SET, items).stream()
-                    .map(this::parseDatasets)
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            throw new IllegalStateException(e);
-        }
+    public List<DataSet> retrieve(List<Item> items) throws Exception {
+        return retrieveJson(ResourceType.DATA_SET, items).stream()
+                .map(this::parseDatasets)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -169,7 +188,7 @@ public abstract class Datasets extends ApiBase {
         }
 
         return upsertItems
-                .withRetrieveFunction(this::retrieve)
+                .withRetrieveFunction(this::retrieveWrapper)
                 .withItemMappingFunction(this::toItem)  // used by upsertViaGetCreateAndUpdate
                 .withEqualFunction((DataSet a, DataSet b) ->
                         a.getId() == b.getId() || (a.hasExternalId() && b.hasExternalId() && a.getExternalId().equals(b.getExternalId())))
@@ -184,6 +203,18 @@ public abstract class Datasets extends ApiBase {
      */
     private Item toItem(DataSet dataSet) {
         return Item.newBuilder().setExternalId(dataSet.getExternalId()).build();
+    }
+
+    /*
+    Wrapping the retrieve function because we need to handle the exception--an ugly workaround since lambdas don't deal very well
+    with exceptions.
+     */
+    private List<DataSet> retrieveWrapper(List<Item> items) {
+        try {
+            return retrieve(items);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /*

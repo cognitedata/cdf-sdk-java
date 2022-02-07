@@ -24,6 +24,7 @@ import com.cognite.client.servicesV1.ResponseItems;
 import com.cognite.client.servicesV1.executor.FileBinaryRequestExecutor;
 import com.cognite.client.servicesV1.parser.FileParser;
 import com.cognite.client.servicesV1.parser.ItemParser;
+import com.cognite.client.util.Items;
 import com.cognite.client.util.Partition;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
@@ -135,7 +136,29 @@ public abstract class Files extends ApiBase {
     }
 
     /**
-     * Retrieve files by id.
+     * Retrieve files by {@code externalId}.
+     *
+     * @param externalId The {@code externalIds} to retrieve
+     * @return The retrieved files.
+     * @throws Exception
+     */
+    public List<FileMetadata> retrieve(String... externalId) throws Exception {
+        return retrieve(Items.parseItems(externalId));
+    }
+
+    /**
+     * Retrieve files by {@code internal id}.
+     *
+     * @param id The {@code ids} to retrieve
+     * @return The retrieved files.
+     * @throws Exception
+     */
+    public List<FileMetadata> retrieve(long... id) throws Exception {
+        return retrieve(Items.parseItems(id));
+    }
+
+    /**
+     * Retrieve files by {@code externalId / id}.
      *
      * @param items The item(s) {@code externalId / id} to retrieve.
      * @return The retrieved file headers.
