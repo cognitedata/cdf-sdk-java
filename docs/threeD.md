@@ -4,6 +4,164 @@ PS: To create client see the file `clientSetup.md`
 
 ### Models
 
+#### List 3D revisions
+Retrieves a list of all models in a project. This operation supports pagination. You can filter out all models without a published revision.
+
+```java
+List<ThreeDModel> listResults = new ArrayList<>();
+client
+    .threeD()
+    .models()
+    .list()
+    .forEachRemaining(model -> listResults.addAll(model));
+```
+
+Options filter:
+- cursor:
+  - string
+  - Example: cursor = 4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo
+  - Cursor for paging through results.
+- limit:
+  - integer [ 1 .. 1000 ]
+  - Default: 100
+  - Limits the number of results to be returned. The maximum results returned by the server is 1000 even if you specify a higher limit.
+- published:
+  - boolean
+  - Filter based on whether or not it has published revisions.
+
+```java
+List<ThreeDModel> listResults = new ArrayList<>();
+
+Request request = Request.create()
+    .withRootParameter("cursor", "")
+    .withRootParameter("limit", "")
+    .withRootParameter("published", "");
+    
+client.threeD()
+    .models()
+    .revisions()
+    .list(request)
+    .forEachRemaining(model -> listResults.addAll(model));
+```
+
+#### Create 3D models
+
+```java
+Long dataSetId = getOrCreateDataSet(client);
+
+List<ThreeDModel> upsertThreeDModelsList = 
+        DataGenerator.generate3DModels(1, dataSetId);
+
+List<ThreeDModel> listUpsert = 
+        client
+        .threeD()
+        .models()
+        .upsert(upsertThreeDModelsList);
+
+//Example to generate data of ThreeDModel
+public static List<ThreeDModel> generate3DModels(int noObjects, long dataSetId) {
+    List<ThreeDModel> objects = new ArrayList<>();
+    for (int i = 0; i < noObjects; i++) {
+      ThreeDModel.Builder builder = ThreeDModel.newBuilder();
+      builder.setName("generated-" + RandomStringUtils.randomAlphanumeric(5));
+      builder.setDataSetId(dataSetId);
+      builder.setCreatedTime(1552566113 + ThreadLocalRandom.current().nextInt(10000));
+      objects.add(builder.build());
+    }
+    return objects;
+}
+
+//Example to find data of DataSet
+private Long getOrCreateDataSet(CogniteClient client) throws Exception {
+    Request request = Request.create()
+        .withRootParameter("limit", 1);
+    Iterator<List<DataSet>> itDataSet = 
+        client
+        .datasets()
+        .list(request);
+    Long dataSetId = null;
+    List<DataSet> list = itDataSet.next();
+    dataSetId=list.get(0).getId();
+}
+```
+
+#### Update 3D models
+
+```java
+List<ThreeDModel> listUpsert = find();
+
+List<ThreeDModel> editedTdInput = 
+        listUpsert.stream()
+                .map(td -> td.toBuilder()
+                        .setName("new-value")
+                        .clearMetadata()
+                        .putMetadata("new-key", "new-value")
+                        .build())
+                .collect(Collectors.toList());
+
+List<ThreeDModel> tdUpdateResults = 
+        client
+        .threeD()
+        .models()
+        .upsert(editedTdInput);
+
+```
+
+#### Update 3D models Replace mode
+
+When this mode is used, all values passed will be overwritten. If the object does not contain the value, it will be replaced by null, or it will be removed from a collection or map
+
+```java
+client = client
+    .withClientConfig(ClientConfig.create()
+    .withUpsertMode(UpsertMode.REPLACE));
+
+List<ThreeDModel> tdReplaceResults = 
+        client
+        .threeD()
+        .models()
+        .upsert(editedTdInput);
+```
+
+#### Delete 3D models
+
+```java
+
+List<ThreeDModel> listUpsert = find();
+List<Item> deleteItemsInput = new ArrayList<>();
+listUpsert.stream()
+        .map(td -> Item.newBuilder()
+          .setId(td.getId())
+          .build())
+        .forEach(item -> deleteItemsInput.add(item));
+
+List<Item> deleteItemsResults = 
+        client
+        .threeD()
+        .models()
+        .delete(deleteItemsInput);
+
+```
+
+#### Retrieve a 3D model
+
+```java
+List<ThreeDModel> listUpsert = find();
+List<Item> tdList = new ArrayList<>();
+listUpsert.stream()
+  .map(td -> Item.newBuilder()
+          .setId(td.getId())
+          .build())
+  .forEach(item -> tdList.add(item));
+
+List<ThreeDModel> retrievedTD = 
+        client
+        .threeD()
+        .models()
+        .retrieve(tdList);
+
+```
+
 ### Revisions
 
 #### List 3D revisions
