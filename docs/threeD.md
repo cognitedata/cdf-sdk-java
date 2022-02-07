@@ -4,7 +4,7 @@ PS: To create client see the file `clientSetup.md`
 
 ### Models
 
-#### List 3D revisions
+#### List 3D models
 Retrieves a list of all models in a project. This operation supports pagination. You can filter out all models without a published revision.
 
 ```java
