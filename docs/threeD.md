@@ -604,4 +604,24 @@ PS:
 
 ### Files
 
+#### Retrieve a 3D file
+Retrieve the contents of a 3D file.
+
+This endpoint supported tag-based caching.
+
+This endpoint is only compatible with 3D file IDs from the 3D API, and not compatible with file IDs from the Files API.
+
+```java
+
+client
+    .threeD()
+    .files()
+    .downloadToPath("fileId", "fileTargetPath");
+
+```
+
+PS:
+- Change the `fileId` to id of the 3D file to download.
+- Change the `fileTargetPath` to URI to the download storage
+
 ### Asset mappings
