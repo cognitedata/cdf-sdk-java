@@ -67,6 +67,46 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
 
     @Test
     @Tag("remoteCDP")
+    void listThreeDNodesWithFilterDepth() throws Exception {
+        try {
+
+            Thread.sleep(5000); // wait for eventual consistency
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "listThreeDNodes - ";
+            LOG.info(loggingPrefix + "Start list 3D Nodes");
+
+            Request request = Request.create()
+                    .withRootParameter("depth", 0);
+            for (Map.Entry<ThreeDModel, List<ThreeDModelRevision>> entry : super.map3D.entrySet()) {
+                ThreeDModel model = entry.getKey();
+                for (ThreeDModelRevision revision : entry.getValue()) {
+                    List<ThreeDNode> listResults = new ArrayList<>();
+                    while(listResults.size() == 0) {
+                        client.threeD()
+                                .models()
+                                .revisions()
+                                .nodes()
+                                .list(model.getId(), revision.getId(), request)
+                                .forEachRemaining(val -> listResults.addAll(val));
+                    }
+                    validateList(listResults);
+                    validateFields(listResults);
+                }
+            }
+
+            LOG.info(loggingPrefix + "Finished list 3D Nodes. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
+
+    }
+
+
+    @Test
+    @Tag("remoteCDP")
     void listThreeDNodesAncestorNodes() throws Exception {
         try {
             Thread.sleep(5000); // wait for eventual consistency
