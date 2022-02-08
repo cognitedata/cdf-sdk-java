@@ -243,7 +243,7 @@ public abstract class Request implements Serializable {
     }
 
     /**
-     * Convenience method for setting dataset internal ids of a request.
+     * Convenience method for setting dataset ids of a request.
      *
      * You can use this methods to limit a request to only include the resources within one or several
      * specified data sets.
@@ -252,7 +252,7 @@ public abstract class Request implements Serializable {
      * @return The request object with the parameter applied.
      */
     public Request withDatasetIds(long... internalId) {
-        checkNotNull(internalId, "ExternalId cannot be null.");
+        checkNotNull(internalId, "InternalId cannot be null.");
 
         List<Map<String, Object>> items = new ArrayList<>();
         for (long element : internalId) {
