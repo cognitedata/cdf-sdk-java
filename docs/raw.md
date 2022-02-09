@@ -17,34 +17,7 @@ client
 
 ```
 
-Options filter:
-- limit:
-    - integer [ 1 .. 1000 ]
-    - Default: 25
-    - Limit on the number of databases to be returned.
-- cursor:
-    - string
-    - Example: cursor = 4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo
-    - Cursor for paging through results.
-
-```java
-Request request = Request.create()
-        .withRootParameter("cursor", "")
-        .withRootParameter("limit", "");
-
-List<String> listDatabaseResults = new ArrayList<>();
-        client
-        .raw()
-        .databases()
-        .list(request)
-        .forEachRemaining(databases -> listDatabaseResults.addAll(databases));
-
-
-```
-
 #### Create databases
-
-Create databases in a project. It is possible to post a maximum of 1000 databases per request.
 
 ```java
 
@@ -101,30 +74,6 @@ client
     .tables()
     .list("databaseName")
     .forEachRemaining(databases -> tablesResults.addAll(databases));
-
-```
-
-Options filter:
-- limit:
-  - integer [ 1 .. 1000 ]
-  - Default: 25
-  - Limit on the number of tables to be returned.
-- cursor:
-  - string
-  - Example: cursor = 4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo
-  - Cursor for paging through results.
-
-```java
-Request request = Request.create()
-        .withRootParameter("cursor", "")
-        .withRootParameter("limit", "");
-
-List<String> tablesResults = new ArrayList<>();
-        client
-        .raw()
-        .tables()
-        .list("databaseName", request)
-        .forEachRemaining(databases -> tablesResults.addAll(databases));
 
 ```
 
@@ -202,16 +151,12 @@ Options filter:
 - maxLastUpdatedTime:
   - integer <int64> (EpochTimestamp) >= 0
   - An inclusive filter, specified as the number of milliseconds that have elapsed since 00:00:00 Thursday, 1 January 1970, Coordinated Universal Time (UTC), minus leap seconds.
-- numberOfCursors:
-  - integer <int32> [ 1 .. 10000 ]
-  - The number of cursors to return, by default it's 10.
 
 ```java
 long epochTime = new Date().getTime();
 Request request = Request.create()
         .withRootParameter("minLastUpdatedTime", epochTime)
-        .withRootParameter("maxLastUpdatedTime", epochTime)
-        .withRootParameter("numberOfCursors", 10);
+        .withRootParameter("maxLastUpdatedTime", epochTime);
 
 List<RawRow> listRowsResults = new ArrayList<>();
 client
@@ -227,7 +172,7 @@ client
 
 #### Insert rows into a table
 
-Insert rows into a table. It is possible to post a maximum of 10000 rows per request. It will replace the columns of an existing row if the rowKey already exists.
+Insert rows into a table. It will replace the columns of an existing row if the rowKey already exists.
 
 The rowKey is limited to 1024 characters which also includes Unicode characters. The maximum size of columns are 5 MiB, however the maximum size of one column name and value is 2621440 characters each. If you want to store huge amount of data per row or column we recommend using the Files API to upload blobs, then reference it from the Raw row.
 
