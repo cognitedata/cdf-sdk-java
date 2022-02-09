@@ -221,6 +221,47 @@ public abstract class Request implements Serializable {
         return toBuilder().setRequestParameters(tempMapRoot).build();
     }
 
+
+    /**
+     * Convenience method for setting dataset external ids of a request.
+     *
+     * You can use this methods to limit a request to only include the resources within one or several
+     * specified data sets.
+     *
+     * @param externalId
+     * @return The request object with the parameter applied.
+     */
+    public Request withDatasetExternalIds(String... externalId) {
+        checkNotNull(externalId, "ExternalId cannot be null.");
+
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (String element : externalId) {
+            items.add(Map.of("externalId", element));
+        }
+
+        return withFilterParameter("dataSetIds", items);
+    }
+
+    /**
+     * Convenience method for setting dataset ids of a request.
+     *
+     * You can use this methods to limit a request to only include the resources within one or several
+     * specified data sets.
+     *
+     * @param internalId
+     * @return The request object with the parameter applied.
+     */
+    public Request withDatasetIds(long... internalId) {
+        checkNotNull(internalId, "InternalId cannot be null.");
+
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (long element : internalId) {
+            items.add(Map.of("id", element));
+        }
+
+        return withFilterParameter("dataSetIds", items);
+    }
+
     /**
      * Convenience method for setting the external id for requesting an item.
      *
