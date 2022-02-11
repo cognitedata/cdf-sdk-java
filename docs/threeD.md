@@ -447,3 +447,173 @@ PS:
 ### Files
 
 ### Asset mappings
+
+#### List 3D asset mappings
+List all asset mappings
+
+Asset references obtained from a mapping - through asset ids - may be invalid, simply by the non-transactional nature of HTTP. They are NOT maintained by any means from CDF, meaning they will be stored until the reference is removed through the delete endpoint of 3d asset mappings.
+
+```java
+Iterator<List<ThreeDAssetMapping>> itFilter = 
+        client
+        .threeD()
+        .models()
+        .revisions()
+        .assetMappings()
+        .list("threeDModelId", "threeDModelRevisionI");
+```
+
+Options filter:
+- cursor:
+  - string
+  - Example: cursor=4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo
+    Cursor for paging through results.
+- limit:
+  - integer [ 1 .. 1000 ]
+  - Default: 100
+  - Limits the number of results to be returned. The maximum results returned by the server is 1000 even if you specify a higher limit.
+- nodeId:
+  - integer <int64>
+- assetId:
+  - integer <int64>
+- intersectsBoundingBox:
+  - string
+  - Example: {"min":[0.0, 0.0, 0.0], "max":[1.0, 1.0, 1.0]}
+  - If given, only return asset mappings for assets whose bounding box intersects the given bounding box.
+  - Must be a JSON object with min, max arrays of coordinates.
+
+```java
+Request request = Request.create()
+        .withRootParameter("limit", 300)
+        .withRootParameter("cursor", "4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo")
+        .withRootParameter("nodeId", 1)
+        .withRootParameter("assetId", 1)
+        .withRootParameter("intersectsBoundingBox", createBoundingBox());
+
+Iterator<List<ThreeDAssetMapping>> itFilter =
+        client
+        .threeD()
+        .models()
+        .revisions()
+        .assetMappings()
+        .list("threeDModelId", "threeDModelRevisionI", request);
+
+//Example to generate data of filter
+// This method will generate
+// {
+//   "min":[62.64287567138672, 47.26144790649414, -74.95000457763672], 
+//   "max":[214.71351623535156, 191.49485778808594, 125.31800079345703]
+// }
+public ThreeDNode.BoundingBox createBoundingBox() {
+    ThreeDNode.BoundingBox.Builder builder = ThreeDNode.BoundingBox.newBuilder();
+    builder.addMin(62.64287567138672);
+    builder.addMin(47.26144790649414);
+    builder.addMin(-74.95000457763672);
+    builder.addMax(214.71351623535156);
+    builder.addMax(191.49485778808594);
+    builder.addMax(125.31800079345703);
+    return builder.build();
+}
+
+```
+PS:
+- Change the `threeDModelId` to id of ThreeDModel object
+- Change the `threeDModelRevisionId` to id of ThreeDModelRevision object
+
+#### Create 3D asset mappings
+Create asset mappings
+
+Asset references when creating a mapping - through asset ids - are allowed to be invalid. They are NOT maintained by any means from CDF, meaning they will be stored until the reference is removed through the delete endpoint of 3d asset mappings.
+
+```java
+List<ThreeDAssetMapping> items = new ArrayList<>();
+ThreeDAssetMapping.Builder mappingBuilder = ThreeDAssetMapping.newBuilder();
+mappingBuilder.setAssetId(1);
+mappingBuilder.setNodeId(1);
+items.add(mappingBuilder.build());
+
+List<ThreeDAssetMapping> listCreated = 
+        client
+        .threeD()
+        .models()
+        .revisions()
+        .assetMappings()
+        .create("threeDModelId", "threeDModelRevisionI", items);
+```
+PS:
+- Change the `threeDModelId` to id of ThreeDModel object
+- Change the `threeDModelRevisionId` to id of ThreeDModelRevision object
+
+#### Delete 3D asset mappings
+Delete a list of asset mappings
+
+```java
+List<ThreeDAssetMapping> items = new ArrayList<>();
+ThreeDAssetMapping.Builder mappingBuilder = ThreeDAssetMapping.newBuilder();
+mappingBuilder.setAssetId(1);
+mappingBuilder.setNodeId(1);
+items.add(mappingBuilder.build());
+
+Boolean isDeleted =
+        client
+        .threeD()
+        .models()
+        .revisions()
+        .assetMappings()
+        .delete("threeDModelId", "threeDModelRevisionI", items);
+```
+PS:
+- Change the `threeDModelId` to id of ThreeDModel object
+- Change the `threeDModelRevisionId` to id of ThreeDModelRevision object
+
+#### Filter 3D asset mappings
+Lists 3D assets mappings that match the specified filter parameter. Only one type of filter can be specified for each request, either assetIds, nodeIds or treeIndexes.
+
+Asset references obtained from a mapping - through asset ids - may be invalid, simply by the non-transactional nature of HTTP. They are NOT maintained by any means from CDF, meaning they will be stored until the reference is removed through the delete endpoint of 3d asset mappings.
+
+```java
+Iterator<List<ThreeDAssetMapping>> itFilter = 
+        client
+        .threeD()
+        .models()
+        .revisions()
+        .assetMappings()
+        .filter("threeDModelId", "threeDModelRevisionI");
+```
+
+Options filter:
+- cursor:
+  - string
+  - Example: cursor=4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo
+    Cursor for paging through results.
+- limit:
+  - integer [ 1 .. 1000 ]
+  - Default: 100
+  - Limits the number of results to be returned. The maximum results returned by the server is 1000 even if you specify a higher limit.
+- filter:
+  - assetIds
+    - Array of integers <int64> [ 0 .. 100 ] items [ items &lt;int64&gt; ]
+  - nodeIds
+    - Array of integers <int64> [ 0 .. 100 ] items [ items &lt;int64&gt; ]
+  - treeIndexes
+    - Array of integers <int64> [ 0 .. 100 ] items [ items &lt;int64&gt; ]
+
+```java
+Request request = Request.create()
+        .withRootParameter("limit", 100)
+        .withRootParameter("cursor", "4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo")
+        .withFilterParameter("assetIds", List.of(1, 2))
+        .withFilterParameter("nodeIds", List.of(3, 4))
+        .withFilterParameter("treeIndexes", List.of(5, 6));
+
+Iterator<List<ThreeDAssetMapping>> itFilter = 
+        client
+        .threeD()
+        .models()
+        .revisions()
+        .assetMappings()
+        .filter("threeDModelId", "threeDModelRevisionI", request);
+```
+PS:
+- Change the `threeDModelId` to id of ThreeDModel object
+- Change the `threeDModelRevisionId` to id of ThreeDModelRevision object
