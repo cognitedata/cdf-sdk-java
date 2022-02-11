@@ -1,6 +1,6 @@
 ## 3D 
 
-PS: To create client see the file `clientSetup.md`
+> Note: To create client see the file [clientSetup.md](clientSetup.md)
 
 ### Models
 
@@ -17,14 +17,6 @@ client
 ```
 
 Options filter:
-- cursor:
-  - string
-  - Example: cursor = 4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo
-  - Cursor for paging through results.
-- limit:
-  - integer [ 1 .. 1000 ]
-  - Default: 100
-  - Limits the number of results to be returned. The maximum results returned by the server is 1000 even if you specify a higher limit.
 - published:
   - boolean
   - Filter based on whether or not it has published revisions.
@@ -33,8 +25,6 @@ Options filter:
 List<ThreeDModel> listResults = new ArrayList<>();
 
 Request request = Request.create()
-    .withRootParameter("cursor", "")
-    .withRootParameter("limit", "")
     .withRootParameter("published", "");
     
 client.threeD()
@@ -177,14 +167,6 @@ client.threeD()
 ```
 
 Options filter:
-- cursor:
-    - string
-    - Example: cursor = 4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo
-    - Cursor for paging through results.
-- limit:
-    - integer [ 1 .. 1000 ]
-    - Default: 100
-    - Limits the number of results to be returned. The maximum results returned by the server is 1000 even if you specify a higher limit.
 - published:
     - boolean
     - Filter based on published status.
@@ -193,8 +175,6 @@ Options filter:
 List<ThreeDModelRevision> listResults = new ArrayList<>();
 
 Request request = Request.create()
-    .withRootParameter("cursor", "")
-    .withRootParameter("limit", "")
     .withRootParameter("published", "");
     
 client.threeD()
@@ -465,22 +445,10 @@ Options filter:
     - properties
       - object (Node3DPropertyFilter)
       - Contains one or more categories (namespaces), each of which contains one or more properties. Each property is associated with a list of values. The list of values acts as an OR-clause, so that if a node's corresponding property value equals ANY of the strings in the list, it satisfies the condition for that property. The different properties are concatenated with AND-operations, so that a node must satisfy the condition for ALL properties from all categories to be part of the returned set. The allowed number of property values is limited to 1000 values in total.
-- limit:
-  - integer [ 1 .. 1000 ]
-  - Default: 100
-  - Limits the number of results to return.
-- cursor:
-  - string 
-- partition:
-  - string (Partition)
-  - Splits the data set into N partitions. You need to follow the cursors within each partition in order to receive all the data. Example: 1/10
 
 ```java
 Request request = Request.create()
-        .withFilterParameter("properties", createFilterPropertiesWithCategories())
-        .withRootParameter("limit", Long.valueOf(100))
-        .withRootParameter("cursor", "4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo")
-        .withRootParameter("partition", "1/10");
+        .withFilterParameter("properties", createFilterPropertiesWithCategories());
 
 List<ThreeDNode> listResults = new ArrayList<>();
 client.threeD()
@@ -570,30 +538,6 @@ client.threeD()
         .revisions()
         .nodes()
         .list("threeDModelId", "threeDModelRevisionI"d, "nodeId")
-        .forEachRemaining(val -> listResultsAncestorNodes.addAll(val));
-```
-
-Options filter:
-- cursor:
-  - string
-  - Example: cursor=4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo
-    Cursor for paging through results.
-- limit:
-  - integer [ 1 .. 1000 ]
-  - Default: 100
-  - Limits the number of results to be returned. The maximum results returned by the server is 1000 even if you specify a higher limit.
-
-```java
-Request request = Request.create()
-        .withRootParameter("limit", 300)
-        .withRootParameter("cursor", "4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo");
-
-List<ThreeDNode> listResultsAncestorNodes = new ArrayList<>();
-client.threeD()
-        .models()
-        .revisions()
-        .nodes()
-        .list("threeDModelId", "threeDModelRevisionI", "nodeId", request)
         .forEachRemaining(val -> listResultsAncestorNodes.addAll(val));
 ```
 
