@@ -129,9 +129,8 @@ client
 
 #### Retrieve cursors for parallel reads
 
-Retrieve cursors based on the last updated time range. Normally this endpoint is used for reading in parallel.
 
-Each cursor should be supplied as the 'cursor' query parameter on GET requests to Read Rows. Note that the 'minLastUpdatedTime' and the 'maxLastUpdatedTime' query parameter on Read Rows are ignored when a cursor is specified.
+> **Note: The SDK will normally handle parallelization for you.**
 
 ```java
 
@@ -167,8 +166,26 @@ client
 
 ```
 
+> **Note: Specialized list for distributed frameworks which offers custom control of the cursors.**
+
+```java
+long epochTime = new Date().getTime();
+Request request = Request.create()
+        .withRootParameter("minLastUpdatedTime", epochTime)
+        .withRootParameter("maxLastUpdatedTime", epochTime);
+
+List<RawRow> listRowsResults = new ArrayList<>();
+client
+    .raw()
+    .rows()
+    .list("databaseName", "tableName", request, "cursor")
+    .forEachRemaining(results -> results.stream().forEach(row -> listRowsResults.add(row)));
+
+```
+
 - Change the `databaseName` to name of database
 - Change the `tableName` to name of table
+- Change the `cursor` to cursor value
 
 #### Insert rows into a table
 
