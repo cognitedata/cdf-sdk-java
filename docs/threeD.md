@@ -586,14 +586,6 @@ Iterator<List<ThreeDAssetMapping>> itFilter =
 ```
 
 Options filter:
-- cursor:
-  - string
-  - Example: cursor=4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo
-    Cursor for paging through results.
-- limit:
-  - integer [ 1 .. 1000 ]
-  - Default: 100
-  - Limits the number of results to be returned. The maximum results returned by the server is 1000 even if you specify a higher limit.
 - nodeId:
   - integer <int64>
 - assetId:
@@ -606,8 +598,6 @@ Options filter:
 
 ```java
 Request request = Request.create()
-        .withRootParameter("limit", 300)
-        .withRootParameter("cursor", "4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo")
         .withRootParameter("nodeId", 1)
         .withRootParameter("assetId", 1)
         .withRootParameter("intersectsBoundingBox", createBoundingBox());
@@ -704,14 +694,6 @@ Iterator<List<ThreeDAssetMapping>> itFilter =
 ```
 
 Options filter:
-- cursor:
-  - string
-  - Example: cursor=4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo
-    Cursor for paging through results.
-- limit:
-  - integer [ 1 .. 1000 ]
-  - Default: 100
-  - Limits the number of results to be returned. The maximum results returned by the server is 1000 even if you specify a higher limit.
 - filter:
   - assetIds
     - Array of integers <int64> [ 0 .. 100 ] items [ items &lt;int64&gt; ]
@@ -722,8 +704,6 @@ Options filter:
 
 ```java
 Request request = Request.create()
-        .withRootParameter("limit", 100)
-        .withRootParameter("cursor", "4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo")
         .withFilterParameter("assetIds", List.of(1, 2))
         .withFilterParameter("nodeIds", List.of(3, 4))
         .withFilterParameter("treeIndexes", List.of(5, 6));
