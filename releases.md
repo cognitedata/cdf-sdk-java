@@ -19,6 +19,13 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [1.11.0-SNAPSHOT]
+
+### Added
+
+- Add utility class `com.cognite.client.util.RawRows` for working with `RawRow` object. Please refer to 
+[the documentation](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/rawRow.md) for more information.
+
 ## [1.10.0] 2022-02-02
 
 ### Added
