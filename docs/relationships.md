@@ -9,6 +9,8 @@ particularly useful when contextualizing data.
 
 `Relationships` support all the usual operations described in [how to read and write data](readAndWriteData.md). 
 
+> Note: To create client see the file [clientSetup.md](clientSetup.md)
+
 ### Upsert (create and edit)
 
 One thing to be aware of, is how to specify the `source` and `target` of a `relationship`. When creating or updating 
@@ -86,4 +88,20 @@ if (retrievedRelationshipsWithObjects.get(0).getSourceCase() == Relationship.Sou
     // You can also check the source and target "case" to check if it is set--and its resource type
 }
 
+```
+
+### Delete relationships
+
+Delete the relationships between resources identified by the external IDs in the request.
+
+```java
+
+Item item = Item.newBuilder()
+    .setExternalId("external-id-of-relationship-object")
+    .build();
+
+List<Item> deleteItemsResults = 
+        client
+        .relationships()
+        .delete(List.of(item));
 ```
