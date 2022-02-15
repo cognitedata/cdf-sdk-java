@@ -158,10 +158,10 @@ Request request = Request.create()
 
 List<RawRow> listRowsResults = new ArrayList<>();
 client
-    .raw()
-    .rows()
-    .list("databaseName", "tableName", request)
-    .forEachRemaining(results -> results.stream().forEach(row -> listRowsResults.add(row)));
+        .raw()
+        .rows()
+        .list("databaseName", "tableName", request)
+        .forEachRemaining(listRowsResults::addAll);
 
 ```
 
@@ -178,13 +178,32 @@ client
     .raw()
     .rows()
     .list("databaseName", "tableName", request, "cursor")
-    .forEachRemaining(results -> results.stream().forEach(row -> listRowsResults.add(row)));
+    .forEachRemaining(listRowsResults::addAll);
 
 ```
 
 - Change the `databaseName` to name of database
 - Change the `tableName` to name of table
 - Change the `cursor` to cursor value
+
+#### Parsing rows 
+
+`RawRow` carries a data payload with a very flexible structure. It has a varying number of columns, and each column 
+can be a nested structure of varying types (i.e. comparable to a Json object). To help with parsing rows, the SDK has 
+a few utility classes you can use.
+```java
+// Parsing individual column values into specific types.
+// These methods work well on non-nested columns
+import com.cognite.client.util.ParseValue;
+String myString = ParseValue.parseString(row.getColumns().getFieldsOrThrow("columnName"));
+double myDouble = ParseValue.parseDouble(row.getColumns().getFieldsOrThrow("columnName"));
+boolean myString = ParseValue.parseBoolean(row.getColumns().getFieldsOrThrow("columnName"));
+
+// When working with nested structures, you should use the ParseStruct utility class. 
+import com.cognite.client.util.ParseStruct;
+
+String myDelimitedString = ParseStruct(row.getColumns(), "columnName.parentName.nodeName", "delimiter");
+```
 
 #### Insert rows into a table
 
