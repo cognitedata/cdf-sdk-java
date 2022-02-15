@@ -107,7 +107,7 @@ PS:
 client
     .raw()
     .tables()
-    .delete("databaseName", List.of("tableName"));
+    .delete("databaseName", List.of("tableName1", "tableName2"));
 
 ```
 
@@ -127,10 +127,9 @@ client
 - Change the `databaseName` to name of database
 - Change the `tableName` to name of table
 
-#### Retrieve cursors for parallel reads
-
-
 > **Note: The SDK will normally handle parallelization for you.**
+
+#### List rows from a table
 
 ```java
 
@@ -139,7 +138,7 @@ client
     .raw()
     .rows()
     .list("databaseName", "tableName")
-    .forEachRemaining(results -> results.stream().forEach(row -> listRowsResults.add(row)));
+    .forEachRemaining(listRowsResults::addAll);
 
 ```
 
