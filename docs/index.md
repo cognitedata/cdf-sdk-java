@@ -22,5 +22,6 @@ map directly to the API's definitions.
 - [Streaming data from Cognite Data Fusion](streamingData.md)
 - [The Asset resource type. The secret sauce for handling the asset-hierarchy](assets.md)
 - [Relationships, powering the Cognite Data Fusion graph](relationships.md)
+- [Raw, flexible wide-column store](raw.md)
 - [Time series--TBD]
 - [Contextualization](contextualization.md)

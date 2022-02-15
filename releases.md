@@ -24,7 +24,7 @@ Changes are grouped as follows:
 ### Added
 
 - Add utility class `com.cognite.client.util.RawRows` for working with `RawRow` object. Please refer to 
-[the documentation](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/rawRow.md) for more information.
+[the documentation](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/raw.md) for more information.
 
 ## [1.10.0] 2022-02-02
 
