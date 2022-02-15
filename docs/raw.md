@@ -210,32 +210,61 @@ List<RawRow> createRowsResults =
         .upsert(createRowsList, ensureParent);
 
 //Example to generate data of RawRows
+//First, we illustrate how to build a row using the DTO. This is similar to how you would build any other resource object.
 public static List<RawRow> generateRawRows(String dbName, String tableName, int noObjects) {
 List<RawRow> objects = new ArrayList<>();
-  for (int i = 0; i < noObjects; i++) {
-      RawRow row1 = RawRow.newBuilder()
-          .setDbName(dbName)
-          .setTableName(tableName)
-          .setKey(RandomStringUtils.randomAlphanumeric(10))
-          .setColumns(Struct.newBuilder()
-          .putFields("string", Value.newBuilder().setStringValue(RandomStringUtils.randomAlphanumeric(10)).build())
-          .putFields("numeric", Value.newBuilder().setNumberValue(ThreadLocalRandom.current().nextDouble(10000d)).build())
-          .putFields("bool", Value.newBuilder().setBoolValue(ThreadLocalRandom.current().nextBoolean()).build())
-          .putFields("null_value", Value.newBuilder().setNullValue(NullValue.NULL_VALUE).build())
-          .putFields("array", Value.newBuilder().setListValue(ListValue.newBuilder()
-          .addValues(Value.newBuilder().setNumberValue(ThreadLocalRandom.current().nextDouble(10000d)).build())
-          .addValues(Value.newBuilder().setNumberValue(ThreadLocalRandom.current().nextDouble(10000d)).build())
-          .addValues(Value.newBuilder().setNumberValue(ThreadLocalRandom.current().nextDouble(10000d)).build())
-          .build()).build())
-          .putFields("struct", Value.newBuilder().setStructValue(Struct.newBuilder()
-          .putFields("nestedString", Value.newBuilder().setStringValue("myTrickyStringValue_æøå_äö")
-          .build())).build())
+    for (int i = 0; i < noObjects; i++) {
+        RawRow row1 = RawRow.newBuilder()
+                .setDbName(dbName)
+                .setTableName(tableName)
+                .setKey(RandomStringUtils.randomAlphanumeric(10))
+                .setColumns(Struct.newBuilder()
+                        .putFields("string", Values.of("my string value"))
+                        .putFields("numeric", Values.of(1234))
+                        .putFields("bool", Values.of(true))
+                        .putFields("null_value", Values.ofNull())
+                        .putFields("array", Values.of(ListValue.newBuilder()
+                                .addValues(Values.of(1))
+                                .addValues(Values.of(2))
+                                .addValues(Values.of(3))
+                                .build()))
+                        .putFields("struct", Values.of(Structs.of(
+                                "nestedString", Values.of("my nested string value")
+                        )))
           ).build();
       objects.add(row1);
   }
   return objects;
 }
 
+// Build a row using the helper class util.RawRows. This allows you to define the row payload via a 
+// plain Map<String, Object>        
+// define the columns
+Map<String, Object> myColumns = Map.of(
+        "string-value", "my name value -",
+        "int-value", 1234,
+        "double-value", 23.5d,
+        "nested-object", Map.of(
+                "sub-name", "my sub-name value -",
+                "sub-type", "a good sub-type"
+        ),
+        "num-list", List.of(1, 2, 3),
+        "string-list", List.of("one", "two", "three")
+);
+
+// build a complete row
+RawRow row2 = RawRows.of("dbName", "tableName", "rowKey", myColumns);
+
+// Build a set of rows based on columns.
+// First, build the basic key and column payloads
+List<RawRow> allMyRows = new ArrayList<>();
+for (<all the rows you need to iterate over>) {
+    allMyRows.add(RawRows.of("rowKey", myColumns));
+}
+
+// Then add the db and table names
+RawRows.setDbName(allMyRows, "myDbName");
+RawRows.setTableName(allMyRows, "myTableName");
 ```
 
 Options of create:
