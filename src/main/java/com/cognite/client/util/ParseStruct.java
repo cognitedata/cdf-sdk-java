@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 public class ParseStruct {
 
     /**
-     * Parses a node in the {@code Struct} into a {@code List<String>}. This is convenient in case the node itself,
-     * or one of its parents, is a list.
+     * Parses a node in the {@code Struct} into a delimited string. This is convenient in case the node itself,
+     * or one of its parents, is a list with multiple entries.
      *
      * @param struct The Struct to parse.
      * @param path The path of node to parse, separated by period ("."). Ex: "parent.child.grandChild"
