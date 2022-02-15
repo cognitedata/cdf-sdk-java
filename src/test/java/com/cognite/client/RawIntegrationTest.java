@@ -83,7 +83,7 @@ class RawIntegrationTest {
             List<String> listDatabaseResults = new ArrayList<>();
             client.raw().databases()
                     .list()
-                    .forEachRemaining(databases -> listDatabaseResults.addAll(databases));
+                    .forEachRemaining(listDatabaseResults::addAll);
             LOG.info(loggingPrefix + "Finished reading databases. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
@@ -94,7 +94,7 @@ class RawIntegrationTest {
                 List<String> tablesResults = new ArrayList<>();
                 client.raw().tables()
                         .list(dbName)
-                        .forEachRemaining(databases -> tablesResults.addAll(databases));
+                        .forEachRemaining(tablesResults::addAll);
                 listTablesResults.put(dbName, tablesResults);
             }
             LOG.info(loggingPrefix + "Finished reading databases. Duration: {}",
@@ -104,7 +104,7 @@ class RawIntegrationTest {
             LOG.info(loggingPrefix + "Start listing raw rows.");
             List<RawRow> listRowsResults = new ArrayList<>();
             client.raw().rows().list(rowDbName, rowTableName)
-                    .forEachRemaining(results -> results.stream().forEach(row -> listRowsResults.add(row)));
+                    .forEachRemaining(listRowsResults::addAll);
             LOG.info(loggingPrefix + "Finished listing raw rows. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
