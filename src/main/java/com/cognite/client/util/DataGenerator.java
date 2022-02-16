@@ -2,6 +2,7 @@ package com.cognite.client.util;
 
 import com.cognite.client.dto.*;
 import com.google.protobuf.*;
+import com.google.protobuf.util.Structs;
 import com.google.protobuf.util.Values;
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -322,18 +323,18 @@ public class DataGenerator {
                     .setTableName(tableName)
                     .setKey(RandomStringUtils.randomAlphanumeric(10))
                     .setColumns(Struct.newBuilder()
-                            .putFields("string", Value.newBuilder().setStringValue(RandomStringUtils.randomAlphanumeric(10)).build())
-                            .putFields("numeric", Value.newBuilder().setNumberValue(ThreadLocalRandom.current().nextDouble(10000d)).build())
-                            .putFields("bool", Value.newBuilder().setBoolValue(ThreadLocalRandom.current().nextBoolean()).build())
-                            .putFields("null_value", Value.newBuilder().setNullValue(NullValue.NULL_VALUE).build())
-                            .putFields("array", Value.newBuilder().setListValue(ListValue.newBuilder()
-                                    .addValues(Value.newBuilder().setNumberValue(ThreadLocalRandom.current().nextDouble(10000d)).build())
-                                    .addValues(Value.newBuilder().setNumberValue(ThreadLocalRandom.current().nextDouble(10000d)).build())
-                                    .addValues(Value.newBuilder().setNumberValue(ThreadLocalRandom.current().nextDouble(10000d)).build())
-                                    .build()).build())
-                            .putFields("struct", Value.newBuilder().setStructValue(Struct.newBuilder()
-                                    .putFields("nestedString", Value.newBuilder().setStringValue("myTrickyStringValue_æøå_äö")
-                                            .build())).build())
+                            .putFields("string", Values.of(RandomStringUtils.randomAlphanumeric(10)))
+                            .putFields("numeric", Values.of(ThreadLocalRandom.current().nextDouble(10000d)))
+                            .putFields("bool", Values.of(ThreadLocalRandom.current().nextBoolean()))
+                            .putFields("null_value", Values.ofNull())
+                            .putFields("array", Values.of(ListValue.newBuilder()
+                                    .addValues(Values.of(ThreadLocalRandom.current().nextDouble(10000d)))
+                                    .addValues(Values.of(ThreadLocalRandom.current().nextDouble(10000d)))
+                                    .addValues(Values.of(ThreadLocalRandom.current().nextDouble(10000d)))
+                                    .build()))
+                            .putFields("struct", Values.of(Structs.of(
+                                    "nestedString", Values.of("myTrickyStringValue_æøå_äö")
+                                            )))
                     ).build();
             objects.add(row1);
         }
