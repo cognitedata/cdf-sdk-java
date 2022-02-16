@@ -30,7 +30,7 @@ public abstract class ThreeDNodesRequestProvider extends GenericRequestProvider 
                 && parameters.getRequestParameters().get("modelId") instanceof Long,
                 "Request parameters must include modelId with a Long value");
         Preconditions.checkArgument(parameters.getRequestParameters().containsKey("revisionId")
-                && parameters.getRequestParameters().get("revisionId") instanceof Long,
+                        && parameters.getRequestParameters().get("revisionId") instanceof Long,
                 "Request parameters must include revisionId with a Long value");
 
         if (parameters.getRequestParameters().containsKey("depth")) {

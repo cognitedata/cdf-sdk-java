@@ -1,8 +1,156 @@
 ## 3D 
 
-PS: To create client see the file `clientSetup.md`
+> Note: To create client see the file [clientSetup.md](clientSetup.md)
 
 ### Models
+
+#### List 3D models
+Retrieves a list of all models in a project. This operation supports pagination. You can filter out all models without a published revision.
+
+```java
+List<ThreeDModel> listResults = new ArrayList<>();
+client
+    .threeD()
+    .models()
+    .list()
+    .forEachRemaining(model -> listResults.addAll(model));
+```
+
+Options filter:
+- published:
+  - boolean
+  - Filter based on whether or not it has published revisions.
+
+```java
+List<ThreeDModel> listResults = new ArrayList<>();
+
+Request request = Request.create()
+    .withRootParameter("published", "");
+    
+client.threeD()
+    .models()
+    .revisions()
+    .list(request)
+    .forEachRemaining(model -> listResults.addAll(model));
+```
+
+#### Create 3D models
+
+```java
+Long dataSetId = getOrCreateDataSet(client);
+
+List<ThreeDModel> upsertThreeDModelsList = 
+        DataGenerator.generate3DModels(1, dataSetId);
+
+List<ThreeDModel> listUpsert = 
+        client
+        .threeD()
+        .models()
+        .upsert(upsertThreeDModelsList);
+
+//Example to generate data of ThreeDModel
+public static List<ThreeDModel> generate3DModels(int noObjects, long dataSetId) {
+    List<ThreeDModel> objects = new ArrayList<>();
+    for (int i = 0; i < noObjects; i++) {
+      ThreeDModel.Builder builder = ThreeDModel.newBuilder();
+      builder.setName("generated-" + RandomStringUtils.randomAlphanumeric(5));
+      builder.setDataSetId(dataSetId);
+      builder.setCreatedTime(1552566113 + ThreadLocalRandom.current().nextInt(10000));
+      objects.add(builder.build());
+    }
+    return objects;
+}
+
+//Example to find data of DataSet
+private Long getOrCreateDataSet(CogniteClient client) throws Exception {
+    Request request = Request.create()
+        .withRootParameter("limit", 1);
+    Iterator<List<DataSet>> itDataSet = 
+        client
+        .datasets()
+        .list(request);
+    Long dataSetId = null;
+    List<DataSet> list = itDataSet.next();
+    dataSetId=list.get(0).getId();
+}
+```
+
+#### Update 3D models
+
+```java
+List<ThreeDModel> listUpsert = find();
+
+List<ThreeDModel> editedTdInput = 
+        listUpsert.stream()
+                .map(td -> td.toBuilder()
+                        .setName("new-value")
+                        .clearMetadata()
+                        .putMetadata("new-key", "new-value")
+                        .build())
+                .collect(Collectors.toList());
+
+List<ThreeDModel> tdUpdateResults = 
+        client
+        .threeD()
+        .models()
+        .upsert(editedTdInput);
+
+```
+
+#### Update 3D models Replace mode
+
+When this mode is used, all values passed will be overwritten. If the object does not contain the value, it will be replaced by null, or it will be removed from a collection or map
+
+```java
+client = client
+    .withClientConfig(ClientConfig.create()
+    .withUpsertMode(UpsertMode.REPLACE));
+
+List<ThreeDModel> tdReplaceResults = 
+        client
+        .threeD()
+        .models()
+        .upsert(editedTdInput);
+```
+
+#### Delete 3D models
+
+```java
+
+List<ThreeDModel> listUpsert = find();
+List<Item> deleteItemsInput = new ArrayList<>();
+listUpsert.stream()
+        .map(td -> Item.newBuilder()
+          .setId(td.getId())
+          .build())
+        .forEach(item -> deleteItemsInput.add(item));
+
+List<Item> deleteItemsResults = 
+        client
+        .threeD()
+        .models()
+        .delete(deleteItemsInput);
+
+```
+
+#### Retrieve a 3D model
+
+```java
+List<ThreeDModel> listUpsert = find();
+List<Item> tdList = new ArrayList<>();
+listUpsert.stream()
+  .map(td -> Item.newBuilder()
+          .setId(td.getId())
+          .build())
+  .forEach(item -> tdList.add(item));
+
+List<ThreeDModel> retrievedTD = 
+        client
+        .threeD()
+        .models()
+        .retrieve(tdList);
+
+```
 
 ### Revisions
 
@@ -19,14 +167,6 @@ client.threeD()
 ```
 
 Options filter:
-- cursor:
-    - string
-    - Example: cursor = 4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo
-    - Cursor for paging through results.
-- limit:
-    - integer [ 1 .. 1000 ]
-    - Default: 100
-    - Limits the number of results to be returned. The maximum results returned by the server is 1000 even if you specify a higher limit.
 - published:
     - boolean
     - Filter based on published status.
@@ -35,8 +175,6 @@ Options filter:
 List<ThreeDModelRevision> listResults = new ArrayList<>();
 
 Request request = Request.create()
-    .withRootParameter("cursor", "")
-    .withRootParameter("limit", "")
     .withRootParameter("published", "");
     
 client.threeD()
@@ -307,22 +445,10 @@ Options filter:
     - properties
       - object (Node3DPropertyFilter)
       - Contains one or more categories (namespaces), each of which contains one or more properties. Each property is associated with a list of values. The list of values acts as an OR-clause, so that if a node's corresponding property value equals ANY of the strings in the list, it satisfies the condition for that property. The different properties are concatenated with AND-operations, so that a node must satisfy the condition for ALL properties from all categories to be part of the returned set. The allowed number of property values is limited to 1000 values in total.
-- limit:
-  - integer [ 1 .. 1000 ]
-  - Default: 100
-  - Limits the number of results to return.
-- cursor:
-  - string 
-- partition:
-  - string (Partition)
-  - Splits the data set into N partitions. You need to follow the cursors within each partition in order to receive all the data. Example: 1/10
 
 ```java
 Request request = Request.create()
-        .withFilterParameter("properties", createFilterPropertiesWithCategories())
-        .withRootParameter("limit", Long.valueOf(100))
-        .withRootParameter("cursor", "4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo")
-        .withRootParameter("partition", "1/10");
+        .withFilterParameter("properties", createFilterPropertiesWithCategories());
 
 List<ThreeDNode> listResults = new ArrayList<>();
 client.threeD()
@@ -415,36 +541,32 @@ client.threeD()
         .forEachRemaining(val -> listResultsAncestorNodes.addAll(val));
 ```
 
-Options filter:
-- cursor:
-  - string
-  - Example: cursor=4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo
-    Cursor for paging through results.
-- limit:
-  - integer [ 1 .. 1000 ]
-  - Default: 100
-  - Limits the number of results to be returned. The maximum results returned by the server is 1000 even if you specify a higher limit.
-
-```java
-Request request = Request.create()
-        .withRootParameter("limit", 300)
-        .withRootParameter("cursor", "4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo");
-
-List<ThreeDNode> listResultsAncestorNodes = new ArrayList<>();
-client.threeD()
-        .models()
-        .revisions()
-        .nodes()
-        .list("threeDModelId", "threeDModelRevisionI", "nodeId", request)
-        .forEachRemaining(val -> listResultsAncestorNodes.addAll(val));
-```
-
 PS: 
 - Change the `threeDModelId` to id of ThreeDModel object
 - Change the `threeDModelRevisionId` to id of ThreeDModelRevision object
 - Change the `nodeId` to id of ThreeDNode object
 
 ### Files
+
+#### Retrieve a 3D file
+Retrieve the contents of a 3D file.
+
+This endpoint supported tag-based caching.
+
+This endpoint is only compatible with 3D file IDs from the 3D API, and not compatible with file IDs from the Files API.
+
+```java
+
+client
+    .threeD()
+    .files()
+    .downloadToPath("fileId", "fileTargetPath");
+
+```
+
+PS:
+- Change the `fileId` to id of the 3D file to download.
+- Change the `fileTargetPath` to URI to the download storage
 
 ### Asset mappings
 
@@ -464,14 +586,6 @@ Iterator<List<ThreeDAssetMapping>> itFilter =
 ```
 
 Options filter:
-- cursor:
-  - string
-  - Example: cursor=4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo
-    Cursor for paging through results.
-- limit:
-  - integer [ 1 .. 1000 ]
-  - Default: 100
-  - Limits the number of results to be returned. The maximum results returned by the server is 1000 even if you specify a higher limit.
 - nodeId:
   - integer <int64>
 - assetId:
@@ -484,8 +598,6 @@ Options filter:
 
 ```java
 Request request = Request.create()
-        .withRootParameter("limit", 300)
-        .withRootParameter("cursor", "4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo")
         .withRootParameter("nodeId", 1)
         .withRootParameter("assetId", 1)
         .withRootParameter("intersectsBoundingBox", createBoundingBox());
@@ -582,14 +694,6 @@ Iterator<List<ThreeDAssetMapping>> itFilter =
 ```
 
 Options filter:
-- cursor:
-  - string
-  - Example: cursor=4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo
-    Cursor for paging through results.
-- limit:
-  - integer [ 1 .. 1000 ]
-  - Default: 100
-  - Limits the number of results to be returned. The maximum results returned by the server is 1000 even if you specify a higher limit.
 - filter:
   - assetIds
     - Array of integers <int64> [ 0 .. 100 ] items [ items &lt;int64&gt; ]
@@ -600,8 +704,6 @@ Options filter:
 
 ```java
 Request request = Request.create()
-        .withRootParameter("limit", 100)
-        .withRootParameter("cursor", "4zj0Vy2fo0NtNMb229mI9r1V3YG5NBL752kQz1cKtwo")
         .withFilterParameter("assetIds", List.of(1, 2))
         .withFilterParameter("nodeIds", List.of(3, 4))
         .withFilterParameter("treeIndexes", List.of(5, 6));
