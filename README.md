@@ -28,7 +28,7 @@ information ([https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.m
 <dependency>    
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>1.10.0</version>
+    <version>1.11.0</version>
 </dependency>
 ```
     
@@ -49,7 +49,7 @@ information ([https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.m
 
 #### Contextualization
 - Entity matching
-- Interactive P&ID (experimental)
+- Interactive P&ID
 
 #### Login
 - Login status by api-key
