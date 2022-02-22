@@ -18,52 +18,50 @@ Example of an interactive P&ID pipeline: https://github.com/cognitedata/cdf-sdk-
 
 ```java
 
-ImmutableList<Struct> source = generateSourceStructs();
-ImmutableList<Struct> target = generateTargetTrainingStructs();
+List<Struct> source = generateSourceStructs();
+List<Struct> target = generateTargetTrainingStructs();
 
 Request entityMatchFitRequest = Request.create()
         .withRootParameter("sources",  source)
         .withRootParameter("targets", target)
-        .withRootParameter("matchFields", ImmutableList.of(
-                    ImmutableMap.of("source", "name", "target", "externalId")
-                ))
+        .withRootParameter("matchFields", Map.of("source", "name", "target", "externalId"))
         .withRootParameter("featureType", featureType);
 
 List<EntityMatchModel> models = 
         client
         .contextualization()
         .entityMatching()
-        .create(ImmutableList.of(entityMatchFitRequest));
+        .create(List.of(entityMatchFitRequest));
 
 //Example to generate data of Struct
-private ImmutableList<Struct> generateSourceStructs() {
+private List<Struct> generateSourceStructs() {
     Struct entityA = Struct.newBuilder()
-        .putFields("id", Value.newBuilder().setNumberValue(1D).build())
-        .putFields("name", Value.newBuilder().setStringValue("23-DB-9101").build())
-        .putFields("fooField", Value.newBuilder().setStringValue("bar").build())
+        .putFields("id", Values.of(1D))
+        .putFields("name", Values.of("23-DB-9101"))
+        .putFields("fooField", Values.of("bar"))
         .build();
     Struct entityB = Struct.newBuilder()
-        .putFields("id", Value.newBuilder().setNumberValue(2D).build())
-        .putFields("name", Value.newBuilder().setStringValue("23-PC-9101").build())
-        .putFields("barField", Value.newBuilder().setStringValue("foo").build())
+        .putFields("id", Values.of(2D))
+        .putFields("name", Values.of("23-PC-9101"))
+        .putFields("barField", Values.of("foo"))
         .build();
     Struct entityC = Struct.newBuilder()
-        .putFields("id", Value.newBuilder().setNumberValue(3D).build())
-        .putFields("name", Value.newBuilder().setStringValue("343-Å").build())
+        .putFields("id", Values.of(3D))
+        .putFields("name", Values.of("343-Å"))
         .build();
-    return ImmutableList.of(entityA, entityB, entityC);
+    return List.of(entityA, entityB, entityC);
 }
 
-private ImmutableList<Struct> generateTargetTrainingStructs() {
+private List<Struct> generateTargetTrainingStructs() {
     Struct targetA = Struct.newBuilder()
-        .putFields("id", Value.newBuilder().setNumberValue(1D).build())
-        .putFields("externalId", Value.newBuilder().setStringValue("IA-23_DB_9101").build())
+        .putFields("id", Values.of(1D))
+        .putFields("externalId", Values.of("IA-23_DB_9101"))
         .build();
     Struct targetB = Struct.newBuilder()
-        .putFields("id", Value.newBuilder().setNumberValue(2D).build())
-        .putFields("externalId", Value.newBuilder().setStringValue("VAL_23_PC_9101").build())
+        .putFields("id", Values.of(2D))
+        .putFields("externalId", Values.of("VAL_23_PC_9101"))
         .build();
-    return ImmutableList.of(targetA, targetB);
+    return List.of(targetA, targetB);
 }
 
 ```
@@ -74,8 +72,8 @@ private ImmutableList<Struct> generateTargetTrainingStructs() {
 
 ```java
 EntityMatchModel entityMatchModel = find();
-ImmutableList<Struct> source = generateSourceStructs();
-ImmutableList<Struct> target = generateTargetStructs();
+List<Struct> source = generateSourceStructs();
+List<Struct> target = generateTargetStructs();
 
 //By id
 List<EntityMatchResult> matchResultsById = 
@@ -110,36 +108,34 @@ List<EntityMatchResult> matchResultsByExternalId =
         .predict(entityMatchModel.getExternalId(), source, target, numMatches, scoreThreshold);
 
 //Example to generate data of Struct
-private ImmutableList<Struct> generateSourceStructs() {
+private List<Struct> generateSourceStructs() {
     Struct entityA = Struct.newBuilder()
-        .putFields("id", Value.newBuilder().setNumberValue(1D).build())
-        .putFields("name", Value.newBuilder().setStringValue("23-DB-9101").build())
-        .putFields("fooField", Value.newBuilder().setStringValue("bar").build())
+        .putFields("id", Values.of(1D))
+        .putFields("name", Values.of("23-DB-9101"))
+        .putFields("fooField", Values.of("bar"))
         .build();
     Struct entityB = Struct.newBuilder()
-        .putFields("id", Value.newBuilder().setNumberValue(2D).build())
-        .putFields("name", Value.newBuilder().setStringValue("23-PC-9101").build())
-        .putFields("barField", Value.newBuilder().setStringValue("foo").build())
+        .putFields("id", Values.of(2D))
+        .putFields("name", Values.of("23-PC-9101"))
+        .putFields("barField", Values.of("foo"))
         .build();
     Struct entityC = Struct.newBuilder()
-        .putFields("id", Value.newBuilder().setNumberValue(3D).build())
-        .putFields("name", Value.newBuilder().setStringValue("343-Å").build())
+        .putFields("id", Values.of(3D))
+        .putFields("name", Values.of("343-Å"))
         .build();
-    return ImmutableList.of(entityA, entityB, entityC);
+        return List.of(entityA, entityB, entityC);
 }
 
-private ImmutableList<Struct> generateTargetStructs() {
+private List<Struct> generateTargetTrainingStructs() {
     Struct targetA = Struct.newBuilder()
-        .putFields("id", Value.newBuilder().setNumberValue(1D).build())
-        .putFields("externalId", Value.newBuilder().setStringValue("IA-23_DB_9101").build())
-        .putFields("uuid", Value.newBuilder().setStringValue(UUID.randomUUID().toString()).build())
+        .putFields("id", Values.of(1D))
+        .putFields("externalId", Values.of("IA-23_DB_9101"))
         .build();
     Struct targetB = Struct.newBuilder()
-        .putFields("id", Value.newBuilder().setNumberValue(2D).build())
-        .putFields("externalId", Value.newBuilder().setStringValue("VAL_23_PC_9101").build())
-        .putFields("uuid", Value.newBuilder().setStringValue(UUID.randomUUID().toString()).build())
+        .putFields("id", Values.of(2D))
+        .putFields("externalId", Values.of("VAL_23_PC_9101"))
         .build();
-    return ImmutableList.of(targetA, targetB);
+        return List.of(targetA, targetB);
 }
 
 ```
@@ -159,7 +155,7 @@ List<Item> deleteResults =
         client
         .contextualization()
         .entityMatching()
-        .delete(ImmutableList.of(modelItemById));
+        .delete(List.of(modelItemById));
 
 //By externalId
 Item modelItemByExternalId = Item.newBuilder()
@@ -169,7 +165,7 @@ List<Item> deleteResults =
         client
         .contextualization()
         .entityMatching()
-        .delete(ImmutableList.of(modelItemByExternalId));
+        .delete(List.of(modelItemByExternalId));
 
 ```
 

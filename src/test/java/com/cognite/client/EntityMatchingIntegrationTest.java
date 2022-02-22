@@ -5,10 +5,9 @@ import com.cognite.client.config.TokenUrl;
 import com.cognite.client.dto.EntityMatchModel;
 import com.cognite.client.dto.EntityMatchResult;
 import com.cognite.client.dto.Item;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
+import com.google.protobuf.util.Values;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -17,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -56,8 +56,8 @@ class EntityMatchingIntegrationTest {
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
             LOG.info(loggingPrefix + "Start entity match predict.");
-            ImmutableList<Struct> source = generateSourceStructs();
-            ImmutableList<Struct> target = generateTargetStructs();
+            List<Struct> source = generateSourceStructs();
+            List<Struct> target = generateTargetStructs();
             List<EntityMatchResult> matchResults = client.contextualization()
                     .entityMatching()
                     .predict(modelId, source, target);
@@ -72,7 +72,7 @@ class EntityMatchingIntegrationTest {
                     .build();
             List<Item> deleteResults = client.contextualization()
                     .entityMatching()
-                    .delete(ImmutableList.of(modelItem));
+                    .delete(List.of(modelItem));
 
             LOG.info(loggingPrefix + "Finished delete matching model. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
@@ -88,20 +88,18 @@ class EntityMatchingIntegrationTest {
 
     private long trainMatchingModel(CogniteClient client, String featureType, String loggingPrefix) throws Exception {
         // Set up the main data objects to use during the test
-        ImmutableList<Struct> source = generateSourceStructs();
-        ImmutableList<Struct> target = generateTargetTrainingStructs();
+        List<Struct> source = generateSourceStructs();
+        List<Struct> target = generateTargetTrainingStructs();
 
         // Train the matching model
         Request entityMatchFitRequest = Request.create()
                 .withRootParameter("sources",  source)
                 .withRootParameter("targets", target)
-                .withRootParameter("matchFields", ImmutableList.of(
-                        ImmutableMap.of("source", "name", "target", "externalId")
-                ))
+                .withRootParameter("matchFields", Map.of("source", "name", "target", "externalId"))
                 .withRootParameter("featureType", featureType);
 
         List<EntityMatchModel> models = client.contextualization().entityMatching()
-                .create(ImmutableList.of(entityMatchFitRequest));
+                .create(List.of(entityMatchFitRequest));
 
         LOG.debug(loggingPrefix + "Train matching model response body: {}",
                 models.get(0));
@@ -109,47 +107,47 @@ class EntityMatchingIntegrationTest {
         return models.get(0).getId();
     }
 
-    private ImmutableList<Struct> generateSourceStructs() {
+    private List<Struct> generateSourceStructs() {
         Struct entityA = Struct.newBuilder()
-                .putFields("id", Value.newBuilder().setNumberValue(1D).build())
-                .putFields("name", Value.newBuilder().setStringValue("23-DB-9101").build())
-                .putFields("fooField", Value.newBuilder().setStringValue("bar").build())
+                .putFields("id", Values.of(1D))
+                .putFields("name", Values.of("23-DB-9101"))
+                .putFields("fooField", Values.of("bar"))
                 .build();
         Struct entityB = Struct.newBuilder()
-                .putFields("id", Value.newBuilder().setNumberValue(2D).build())
-                .putFields("name", Value.newBuilder().setStringValue("23-PC-9101").build())
-                .putFields("barField", Value.newBuilder().setStringValue("foo").build())
+                .putFields("id", Values.of(2D))
+                .putFields("name", Values.of("23-PC-9101"))
+                .putFields("barField", Values.of("foo"))
                 .build();
         Struct entityC = Struct.newBuilder()
-                .putFields("id", Value.newBuilder().setNumberValue(3D).build())
-                .putFields("name", Value.newBuilder().setStringValue("343-Å").build())
+                .putFields("id", Values.of(3D))
+                .putFields("name", Values.of("343-Å"))
                 .build();
-        return ImmutableList.of(entityA, entityB, entityC);
+        return List.of(entityA, entityB, entityC);
     }
 
-    private ImmutableList<Struct> generateTargetTrainingStructs() {
+    private List<Struct> generateTargetTrainingStructs() {
         Struct targetA = Struct.newBuilder()
-                .putFields("id", Value.newBuilder().setNumberValue(1D).build())
-                .putFields("externalId", Value.newBuilder().setStringValue("IA-23_DB_9101").build())
+                .putFields("id", Values.of(1D))
+                .putFields("externalId", Values.of("IA-23_DB_9101"))
                 .build();
         Struct targetB = Struct.newBuilder()
-                .putFields("id", Value.newBuilder().setNumberValue(2D).build())
-                .putFields("externalId", Value.newBuilder().setStringValue("VAL_23_PC_9101").build())
+                .putFields("id", Values.of(2D))
+                .putFields("externalId", Values.of("VAL_23_PC_9101"))
                 .build();
-        return ImmutableList.of(targetA, targetB);
+        return List.of(targetA, targetB);
     }
 
-    private ImmutableList<Struct> generateTargetStructs() {
+    private List<Struct> generateTargetStructs() {
         Struct targetA = Struct.newBuilder()
-                .putFields("id", Value.newBuilder().setNumberValue(1D).build())
-                .putFields("externalId", Value.newBuilder().setStringValue("IA-23_DB_9101").build())
-                .putFields("uuid", Value.newBuilder().setStringValue(UUID.randomUUID().toString()).build())
+                .putFields("id", Values.of(1D))
+                .putFields("externalId", Values.of("IA-23_DB_9101"))
+                .putFields("uuid", Values.of(UUID.randomUUID().toString()))
                 .build();
         Struct targetB = Struct.newBuilder()
-                .putFields("id", Value.newBuilder().setNumberValue(2D).build())
-                .putFields("externalId", Value.newBuilder().setStringValue("VAL_23_PC_9101").build())
-                .putFields("uuid", Value.newBuilder().setStringValue(UUID.randomUUID().toString()).build())
+                .putFields("id", Values.of(2D))
+                .putFields("externalId", Values.of("VAL_23_PC_9101"))
+                .putFields("uuid", Values.of(UUID.randomUUID().toString()))
                 .build();
-        return ImmutableList.of(targetA, targetB);
+        return List.of(targetA, targetB);
     }
 }
