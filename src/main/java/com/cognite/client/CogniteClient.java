@@ -311,6 +311,45 @@ public abstract class CogniteClient implements Serializable {
     }
 
     /**
+     * Returns a {@link CogniteClient} using the specified list of scopes for issuing API requests.
+     *
+     * @param scopes The collection of scopes to be used for OAuth2.0 authentication
+     * @return the client object with the authentication handler configured
+     */
+    public CogniteClient withScopes(Collection<String> scopes) {
+        Preconditions.checkArgument(getAuthType() == AuthType.CLIENT_CREDENTIALS,
+                "Scopes supported fpr client credentials mode only.");
+        String host;
+
+        try {
+            host = new URL(getBaseUrl()).getHost();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        // Set the generic part of the configuration
+        CogniteClient.Builder returnValueBuilder = toBuilder();
+
+        // Add the auth specific config
+        switch (getAuthType()) {
+            case CLIENT_CREDENTIALS:
+                returnValueBuilder = returnValueBuilder
+                        .setHttpClient(CogniteClient.getHttpClientBuilder()
+                                .addInterceptor(new ClientCredentialsInterceptor(host, getClientId(),
+                                        getClientSecret(), getTokenUrl(), scopes))
+                                .build());
+                break;
+            case API_KEY:
+            case TOKEN_SUPPLIER:
+            default:
+                // This should never execute...
+                throw new RuntimeException("Unsupported authentication type. Cannot configure the client.");
+        }
+
+        return returnValueBuilder.build();
+    }
+
+    /**
      * Returns a {@link CogniteClient} using the specified configuration settings.
      *
      * @param config The {@link ClientConfig} hosting the client configuration setting.
