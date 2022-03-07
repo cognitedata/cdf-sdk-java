@@ -16,6 +16,17 @@
 
 package com.cognite.client.servicesV1.executor;
 
+import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
+import com.amazonaws.client.builder.AwsClientBuilder;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
+import com.amazonaws.services.s3.transfer.Upload;
 import com.cognite.client.dto.FileBinary;
 import com.cognite.client.servicesV1.ConnectorConstants;
 import com.cognite.client.servicesV1.ResponseBinary;
@@ -33,7 +44,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -67,9 +80,9 @@ import java.util.concurrent.*;
  */
 @AutoValue
 public abstract class FileBinaryRequestExecutor {
+    protected final static Logger LOG = LoggerFactory.getLogger(FileBinaryRequestExecutor.class);
     // Valid response codes *outside* the 200-range.
     private static final ImmutableList<Integer> DEFAULT_VALID_RESPONSE_CODES = ImmutableList.of();
-
     private static final ImmutableList<Integer> RETRYABLE_RESPONSE_CODES = ImmutableList.of(
             408,    // request timeout
             429,    // too many requests
@@ -78,28 +91,23 @@ public abstract class FileBinaryRequestExecutor {
             503,    // service unavailable
             504     // gateway timeout
     );
-
     private static final ImmutableList<Class<? extends Exception>> RETRYABLE_EXCEPTIONS = ImmutableList.of(
             IOException.class,
             StreamResetException.class,
             com.google.cloud.storage.StorageException.class     // Timeout + stream reset when using GCS as temp storage
     );
-
     private static final int DEFAULT_NUM_WORKERS = 8;
     //private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(DEFAULT_NUM_WORKERS);
     private static final ThreadPoolExecutor DEFAULT_POOL = new ThreadPoolExecutor(DEFAULT_NUM_WORKERS, DEFAULT_NUM_WORKERS,
             2000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
-
     private static final int DATA_TRANSFER_BUFFER_SIZE = 1024 * 4;
-
-    protected final static Logger LOG = LoggerFactory.getLogger(FileBinaryRequestExecutor.class);
-
-    private final String randomIdString = RandomStringUtils.randomAlphanumeric(5);
-    private final String loggingPrefix = "FileBinaryRequestExecutor [" + randomIdString + "] -";
 
     static {
         DEFAULT_POOL.allowCoreThreadTimeOut(true);
     }
+
+    private final String randomIdString = RandomStringUtils.randomAlphanumeric(5);
+    private final String loggingPrefix = "FileBinaryRequestExecutor [" + randomIdString + "] -";
 
     private static Builder builder() {
         return new AutoValue_FileBinaryRequestExecutor.Builder()
@@ -118,12 +126,57 @@ public abstract class FileBinaryRequestExecutor {
                 .build();
     }
 
+    /*
+    Transfers all bytes from a readable channel to a writeable channel. This method is used by Java.nio based
+    streaming transfers for high performance IO.
+     */
+    private static void transferBytes(ReadableByteChannel input,
+                                      WritableByteChannel output,
+                                      int bufferSize) throws Exception {
+        ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
+        buffer.clear();
+
+        while (input.read(buffer) != -1) {
+            buffer.flip();
+            while (buffer.hasRemaining()) {
+                output.write(buffer);
+            }
+            buffer.clear();
+        }
+        input.close();
+        output.close();
+    }
+
+    private static AmazonS3 getAmazonS3() {
+        System.setProperty("com.amazonaws.services.s3.disablePutObjectMD5Validation", "1");
+        System.setProperty("com.amazonaws.services.s3.disableGetObjectMD5Validation", "1");
+
+        final AmazonS3ClientBuilder s3Builder = AmazonS3ClientBuilder.standard()
+                .withCredentials(new EnvironmentVariableCredentialsProvider())
+                .withPathStyleAccessEnabled(Boolean.TRUE);
+
+        if (!System.getenv("AWS_ENDPOINT").isEmpty() && !System.getenv("AWS_DEFAULT_REGION").isEmpty()) {
+            s3Builder.withEndpointConfiguration(
+                    new AwsClientBuilder.EndpointConfiguration(
+                            System.getenv("AWS_ENDPOINT"),
+                            System.getenv("AWS_DEFAULT_REGION")));
+        }
+
+        return s3Builder.build();
+    }
+
     abstract Builder toBuilder();
+
     abstract OkHttpClient getHttpClient();
+
     abstract List<Integer> getValidResponseCodes();
+
     abstract Executor getExecutor();
+
     abstract int getMaxRetries();
+
     abstract boolean isForceTempStorage();
+
     abstract boolean isDeleteTempFile();
 
     @Nullable
@@ -133,6 +186,7 @@ public abstract class FileBinaryRequestExecutor {
      * Sets the executor to use for running the api requests.
      *
      * The default executor is a <code>ForkJoinPool</code> with a target parallelism of four threads per core.
+     *
      * @param executor
      * @return
      */
@@ -145,6 +199,7 @@ public abstract class FileBinaryRequestExecutor {
      * Sets the maximum number of retries.
      *
      * The default setting is 3.
+     *
      * @param retries
      * @return
      */
@@ -152,7 +207,7 @@ public abstract class FileBinaryRequestExecutor {
         Preconditions.checkArgument(retries <= ConnectorConstants.MAX_MAX_RETRIES
                         && retries >= ConnectorConstants.MIN_MAX_RETRIES,
                 "Max retries out of range. Must be between "
-                            + ConnectorConstants.MIN_MAX_RETRIES + " and " + ConnectorConstants.MAX_MAX_RETRIES);
+                        + ConnectorConstants.MIN_MAX_RETRIES + " and " + ConnectorConstants.MAX_MAX_RETRIES);
         return toBuilder().setMaxRetries(retries).build();
     }
 
@@ -259,8 +314,7 @@ public abstract class FileBinaryRequestExecutor {
      * If no valid response can be produced, this method will throw an exception.
      *
      * The async version of this method is <code>downloadBinaryAsync</code>
-     *
-     * */
+     */
     public FileBinary downloadBinary(Request request) throws Exception {
         LOG.debug(loggingPrefix + "Executing request to [{}]", request.url().toString());
 
@@ -296,8 +350,8 @@ public abstract class FileBinaryRequestExecutor {
                 // check the response
                 if (response.body() == null) {
                     throw new Exception(loggingPrefix + "Successful response, but the body is null. "
-                                                + response.toString() + System.lineSeparator()
-                                                + "Response headers: " + response.headers().toString());
+                            + response.toString() + System.lineSeparator()
+                            + "Response headers: " + response.headers().toString());
                 }
 
                 // check the content length. When downloading files >200MiB we will use temp storage.
@@ -346,7 +400,7 @@ public abstract class FileBinaryRequestExecutor {
                 request.url().toString());
         IOException e;
         if (catchedExceptions.size() > 0) { //add the details of the most recent exception.
-            Exception mostRecentException = catchedExceptions.get(catchedExceptions.size() -1);
+            Exception mostRecentException = catchedExceptions.get(catchedExceptions.size() - 1);
             exceptionMessage += System.lineSeparator();
             exceptionMessage += mostRecentException.getMessage();
             e = new IOException(exceptionMessage, mostRecentException);
@@ -366,7 +420,6 @@ public abstract class FileBinaryRequestExecutor {
      * Each retry is performed with exponential back-off in case the api is overloaded.
      *
      * If no valid response can be produced, this method will throw an exception.
-     *
      */
     public CompletableFuture<ResponseBinary> uploadBinaryAsync(FileBinary fileBinary, URL targetURL) {
         LOG.debug(loggingPrefix + "Executing request async. Detected {} CPUs. Default executor running with "
@@ -395,8 +448,7 @@ public abstract class FileBinaryRequestExecutor {
      * If no valid response can be produced, this method will throw an exception.
      *
      * The async version of this method is <code>uploadBinaryAsync</code>
-     *
-     * */
+     */
     public ResponseBinary uploadBinary(FileBinary fileBinary, URL targetURL) throws Exception {
         LOG.debug(loggingPrefix + "Executing request to [{}]", targetURL.toString());
 
@@ -515,7 +567,7 @@ public abstract class FileBinaryRequestExecutor {
                 request.url().toString());
         IOException e;
         if (catchedExceptions.size() > 0) { //add the details of the most recent exception.
-            Exception mostRecentException = catchedExceptions.get(catchedExceptions.size() -1);
+            Exception mostRecentException = catchedExceptions.get(catchedExceptions.size() - 1);
             exceptionMessage += System.lineSeparator();
             exceptionMessage += mostRecentException.getMessage();
             e = new IOException(exceptionMessage, mostRecentException);
@@ -552,7 +604,8 @@ public abstract class FileBinaryRequestExecutor {
             String bucketName = getTempStoragePath().getHost();
             String path = getTempStoragePath().getPath();
             if (!path.endsWith("/")) path = path + "/";         // make sure the path ends with a forward slash
-            if (path.startsWith("/")) path = path.substring(1); // make sure the path does not start with a forward slash
+            if (path.startsWith("/"))
+                path = path.substring(1); // make sure the path does not start with a forward slash
             String objectName = path + tempFileName;
             LOG.debug(loggingPrefix + "Download to GCS: {}",
                     objectName);
@@ -578,6 +631,27 @@ public abstract class FileBinaryRequestExecutor {
             LOG.debug(loggingPrefix + "Finished downloading to GCS. Temp file URI: {}",
                     fileURI.toString());
 
+            return FileBinary.newBuilder()
+                    .setBinaryUri(fileURI.toString())
+                    .setContentLength(response.body().contentLength())
+                    .build();
+        } else if (null != getTempStoragePath().getScheme()
+                && getTempStoragePath().getScheme().equalsIgnoreCase("s3")) {
+            AmazonS3 s3 = getAmazonS3();
+            String bucketName = getTempStoragePath().getHost();
+            String path = getTempStoragePath().getPath();
+            if (!path.endsWith("/")) path = path + "/";
+            String objectName = path + tempFileName;
+
+            TransferManager tm = TransferManagerBuilder.standard()
+                    .withS3Client(s3)
+                    .withMultipartUploadThreshold((long) DATA_TRANSFER_BUFFER_SIZE)
+                    .build();
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentLength(response.body().contentLength());
+            Upload upload = tm.upload(bucketName, objectName, response.body().source().inputStream(), metadata);
+            upload.waitForCompletion();
+            URI fileURI = new URI("s3", bucketName, "/" + objectName, null);
             return FileBinary.newBuilder()
                     .setBinaryUri(fileURI.toString())
                     .setContentLength(response.body().contentLength())
@@ -628,6 +702,12 @@ public abstract class FileBinaryRequestExecutor {
             validURI = true;
         }
 
+        // Validate Amazon S3 URIs
+        if (null != path.getScheme() && path.getScheme().equalsIgnoreCase("s3")
+                && null != path.getHost() && path.getHost().length() > 1) {
+            validURI = true;
+        }
+
         // Validate local (or network based) file system URI
         if (null != path.getScheme() && path.getScheme().equalsIgnoreCase("file")) {
             try {
@@ -641,27 +721,6 @@ public abstract class FileBinaryRequestExecutor {
         }
 
         return validURI;
-    }
-
-    /*
-    Transfers all bytes from a readable channel to a writeable channel. This method is used by Java.nio based
-    streaming transfers for high performance IO.
-     */
-    private static void transferBytes(ReadableByteChannel input,
-                                      WritableByteChannel output,
-                                      int bufferSize) throws Exception{
-        ByteBuffer buffer = ByteBuffer.allocate(bufferSize);
-        buffer.clear();
-
-        while (input.read(buffer) != -1) {
-            buffer.flip();
-            while (buffer.hasRemaining()) {
-                output.write(buffer);
-            }
-            buffer.clear();
-        }
-        input.close();
-        output.close();
     }
 
     /*
@@ -706,6 +765,24 @@ public abstract class FileBinaryRequestExecutor {
                 blob.downloadTo(bufferedSink.outputStream());
                 if (deleteTempFile) {
                     blob.delete();
+                }
+            } else if (null != fileURI.getScheme() && fileURI.getScheme().equalsIgnoreCase("s3")) {
+                final AmazonS3 s3 = getAmazonS3();
+                if (!s3.doesObjectExist(fileURI.getHost(), fileURI.getPath())) {
+                    LOG.error("Looks like the S3 blob does not exist. File URI: {}",
+                            fileURI.toString());
+                    throw new IOException(String.format("Looks like the S3 blob is null/does not exist. File URI: %s",
+                            fileURI.toString()));
+                }
+                S3Object object = s3.getObject(new GetObjectRequest(fileURI.getHost(), fileURI.getPath()));
+                InputStream reader = new BufferedInputStream(object.getObjectContent());
+                int read = -1;
+                while ((read = reader.read()) != -1) {
+                    bufferedSink.writeByte(read);
+                }
+                reader.close();
+                if (deleteTempFile) {
+                    s3.deleteObject(new DeleteObjectRequest(fileURI.getHost(), fileURI.getPath()));
                 }
             } else if (null != fileURI.getScheme() && fileURI.getScheme().equalsIgnoreCase("file")) {
                 // Handler for local (or network) based file system blobs
@@ -757,7 +834,8 @@ public abstract class FileBinaryRequestExecutor {
 
             String bucketName = fileURI.getHost();
             String path = fileURI.getPath();
-            if (path.startsWith("/")) path = path.substring(1); // make sure the path does not start with a forward slash
+            if (path.startsWith("/"))
+                path = path.substring(1); // make sure the path does not start with a forward slash
 
             BlobId blobId = BlobId.of(bucketName, path);
             return getCloudStorage().get(blobId);
@@ -785,6 +863,7 @@ public abstract class FileBinaryRequestExecutor {
             super(message);
             this.httpResponseCode = httpResponseCode;
         }
+
         ClientRequestException(Throwable cause, int httpResponseCode) {
             super(cause);
             this.httpResponseCode = httpResponseCode;
@@ -798,11 +877,17 @@ public abstract class FileBinaryRequestExecutor {
     @AutoValue.Builder
     public abstract static class Builder {
         abstract Builder setExecutor(Executor value);
+
         abstract Builder setHttpClient(OkHttpClient value);
+
         abstract Builder setValidResponseCodes(List<Integer> value);
+
         abstract Builder setMaxRetries(int value);
+
         abstract Builder setForceTempStorage(boolean value);
+
         abstract Builder setTempStoragePath(URI value);
+
         abstract Builder setDeleteTempFile(boolean value);
 
         abstract FileBinaryRequestExecutor autoBuild();
