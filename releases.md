@@ -19,6 +19,12 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [1.12.0-SNAPSHOT]
+
+### Fixed
+
+- File binary download. Expired URLs not retried properly.
+
 ## [1.11.0] 2022-02-18
 
 ### Added
