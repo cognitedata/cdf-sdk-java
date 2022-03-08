@@ -2,6 +2,7 @@ package com.cognite.client.util;
 
 import com.cognite.client.dto.*;
 import com.google.protobuf.*;
+import com.google.protobuf.util.Structs;
 import com.google.protobuf.util.Values;
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -83,7 +84,7 @@ public class DataGenerator {
             int noColumns = ThreadLocalRandom.current().nextInt(2,200);
             for (int j = 0; j < noColumns; j++) {
                 columns.add(SequenceColumn.newBuilder()
-                        .setExternalId(RandomStringUtils.randomAlphanumeric(20))
+                        .setExternalId(RandomStringUtils.randomAlphanumeric(50))
                         .setName("test_column_" + RandomStringUtils.randomAlphanumeric(5))
                         .setDescription(RandomStringUtils.randomAlphanumeric(50))
                         .setValueTypeValue(ThreadLocalRandom.current().nextInt(0,2))
@@ -91,7 +92,7 @@ public class DataGenerator {
             }
 
             objects.add(SequenceMetadata.newBuilder()
-                    .setExternalId(RandomStringUtils.randomAlphanumeric(10))
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(20))
                     .setName("test_sequence_" + RandomStringUtils.randomAlphanumeric(5))
                     .setDescription(RandomStringUtils.randomAlphanumeric(50))
                     .putMetadata("type", DataGenerator.sourceValue)
@@ -322,18 +323,18 @@ public class DataGenerator {
                     .setTableName(tableName)
                     .setKey(RandomStringUtils.randomAlphanumeric(10))
                     .setColumns(Struct.newBuilder()
-                            .putFields("string", Value.newBuilder().setStringValue(RandomStringUtils.randomAlphanumeric(10)).build())
-                            .putFields("numeric", Value.newBuilder().setNumberValue(ThreadLocalRandom.current().nextDouble(10000d)).build())
-                            .putFields("bool", Value.newBuilder().setBoolValue(ThreadLocalRandom.current().nextBoolean()).build())
-                            .putFields("null_value", Value.newBuilder().setNullValue(NullValue.NULL_VALUE).build())
-                            .putFields("array", Value.newBuilder().setListValue(ListValue.newBuilder()
-                                    .addValues(Value.newBuilder().setNumberValue(ThreadLocalRandom.current().nextDouble(10000d)).build())
-                                    .addValues(Value.newBuilder().setNumberValue(ThreadLocalRandom.current().nextDouble(10000d)).build())
-                                    .addValues(Value.newBuilder().setNumberValue(ThreadLocalRandom.current().nextDouble(10000d)).build())
-                                    .build()).build())
-                            .putFields("struct", Value.newBuilder().setStructValue(Struct.newBuilder()
-                                    .putFields("nestedString", Value.newBuilder().setStringValue("myTrickyStringValue_æøå_äö")
-                                            .build())).build())
+                            .putFields("string", Values.of(RandomStringUtils.randomAlphanumeric(10)))
+                            .putFields("numeric", Values.of(ThreadLocalRandom.current().nextDouble(10000d)))
+                            .putFields("bool", Values.of(ThreadLocalRandom.current().nextBoolean()))
+                            .putFields("null_value", Values.ofNull())
+                            .putFields("array", Values.of(ListValue.newBuilder()
+                                    .addValues(Values.of(ThreadLocalRandom.current().nextDouble(10000d)))
+                                    .addValues(Values.of(ThreadLocalRandom.current().nextDouble(10000d)))
+                                    .addValues(Values.of(ThreadLocalRandom.current().nextDouble(10000d)))
+                                    .build()))
+                            .putFields("struct", Values.of(Structs.of(
+                                    "nestedString", Values.of("myTrickyStringValue_æøå_äö")
+                                            )))
                     ).build();
             objects.add(row1);
         }
@@ -343,4 +344,69 @@ public class DataGenerator {
     private static double customLog(double base, double logNumber) {
         return Math.log(logNumber) / Math.log(base);
     }
+
+    public static List<ThreeDModel> generate3DModels(int noObjects, long dataSetId) {
+        List<ThreeDModel> objects = new ArrayList<>();
+        for (int i = 0; i < noObjects; i++) {
+            ThreeDModel.Builder builder = ThreeDModel.newBuilder();
+            builder.setName("generated-" + RandomStringUtils.randomAlphanumeric(5));
+            builder.setDataSetId(dataSetId);
+            builder.setCreatedTime(1552566113 + ThreadLocalRandom.current().nextInt(10000));
+            objects.add(builder.build());
+        }
+        return objects;
+    }
+
+    public static List<ThreeDModelRevision> generate3DModelsRevisions(int noObjects, long fileId) {
+        Random random = new Random();
+        List<ThreeDModelRevision> objects = new ArrayList<>();
+        for (int i = 0; i < noObjects; i++) {
+            ThreeDModelRevision.Builder builder = ThreeDModelRevision.newBuilder();
+
+            ThreeDModelRevision.Camera.Builder cameraBuilder = ThreeDModelRevision.Camera.newBuilder();
+            cameraBuilder.addPosition(2.707411050796509);
+            cameraBuilder.addPosition(-4.514726638793945);
+            cameraBuilder.addPosition(1.5695604085922241);
+            cameraBuilder.addTarget(0.0);
+            cameraBuilder.addTarget(-0.002374999923631549);
+            cameraBuilder.addTarget(1.5695604085922241);
+
+            builder.setFileId(fileId);
+            builder.setCamera(cameraBuilder.build());
+            builder.addRotation(random.nextInt(100) / 100.0);
+            objects.add(builder.build());
+        }
+        return objects;
+    }
+
+    public static List<FileMetadata> generateFileHeader3DModelsRevisions(int noObjects) {
+        List<FileMetadata> objects = new ArrayList<>(noObjects);
+        for (int i = 0; i < noObjects; i++) {
+            objects.add(FileMetadata.newBuilder()
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(10))
+                    .setName("CAMARO_TEST_SDK_JAVA.obj")
+                    .setSource(sourceValue)
+                    .putMetadata("type", DataGenerator.sourceValue)
+                    .putMetadata(sourceKey, DataGenerator.sourceValue)
+                    .build());
+        }
+        return objects;
+    }
+
+    public static List<FileMetadata> generateFile3DRevisionThumbnail(int noObjects) {
+        List<FileMetadata> objects = new ArrayList<>(noObjects);
+        for (int i = 0; i < noObjects; i++) {
+            objects.add(FileMetadata.newBuilder()
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(10))
+                    .setName("CAMARO_THUMBNAIL_TEST_SDK_JAVA.png")
+                    .setSource(sourceValue)
+                    .setUploaded(true)
+                    .setMimeType("image/png")
+                    .putMetadata("type", DataGenerator.sourceValue)
+                    .putMetadata(sourceKey, DataGenerator.sourceValue)
+                    .build());
+        }
+        return objects;
+    }
+
 }

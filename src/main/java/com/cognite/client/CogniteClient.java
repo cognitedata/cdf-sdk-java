@@ -6,7 +6,7 @@ import com.cognite.client.config.ClientConfig;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import com.google.common.base.Strings;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
 import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.Secret;
@@ -28,7 +28,7 @@ import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
@@ -82,11 +82,16 @@ public abstract class CogniteClient implements Serializable {
     to add specific interceptor depending on the auth method used.
      */
     private static OkHttpClient.Builder getHttpClientBuilder() {
+        /*
+        There is an assumption that all CDF resources (endpoints) have 90 seconds read/write timeouts.
+        In other words request must be completed within that 90 seconds timeout otherwise availability numbers will be
+        breached. If our client drops connection before that, there is no possible way backend teams to detect that.
+         */
         return new OkHttpClient.Builder()
                 .connectionSpecs(DEFAULT_CONNECTION_SPECS)
                 .connectTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(15, TimeUnit.SECONDS)
-                .writeTimeout(20, TimeUnit.SECONDS);
+                .readTimeout(90, TimeUnit.SECONDS) // CDF has 90 seconds timeout
+                .writeTimeout(90, TimeUnit.SECONDS); // CDF has 90 seconds timeout
     }
 
     /**
@@ -171,11 +176,13 @@ public abstract class CogniteClient implements Serializable {
      * @param clientId The client id to use for authentication.
      * @param clientSecret The client secret to use for authentication.
      * @param tokenUrl The URL to call for obtaining the access token.
+     * @param scopes The list of scopes to be used for authentication
      * @return the client object with default configuration.
      */
     public static CogniteClient ofClientCredentials(String clientId,
                                                     String clientSecret,
-                                                    URL tokenUrl) {
+                                                    URL tokenUrl,
+                                                    Collection<String> scopes) {
         Preconditions.checkArgument(null != clientId && !clientId.isEmpty(),
                 "The clientId cannot be empty.");
         Preconditions.checkArgument(null != clientSecret && !clientSecret.isEmpty(),
@@ -195,9 +202,27 @@ public abstract class CogniteClient implements Serializable {
                 .setAuthType(AuthType.CLIENT_CREDENTIALS)
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
                         .addInterceptor(new ClientCredentialsInterceptor(host, clientId,
-                                clientSecret, tokenUrl, DEFAULT_BASE_URL + "/.default"))
+                                clientSecret, tokenUrl, scopes))
                         .build())
                 .build();
+    }
+
+    /**
+     * Returns a {@link CogniteClient} using client credentials for authentication.
+     *
+     * Client credentials is the preferred authentication pattern for services /
+     * machine to machine communication for Openid Connect (and Oauth) compatible identity providers.
+     *
+     * @param clientId The client id to use for authentication.
+     * @param clientSecret The client secret to use for authentication.
+     * @param tokenUrl The URL to call for obtaining the access token.
+     * @return the client object with default configuration.
+     */
+    public static CogniteClient ofClientCredentials(String clientId,
+                                                    String clientSecret,
+                                                    URL tokenUrl) {
+       return CogniteClient.ofClientCredentials(
+               clientId, clientSecret, tokenUrl, List.of(DEFAULT_BASE_URL + "/.default"));
     }
 
     protected abstract Builder toBuilder();
@@ -274,12 +299,51 @@ public abstract class CogniteClient implements Serializable {
                 returnValueBuilder = returnValueBuilder
                         .setHttpClient(CogniteClient.getHttpClientBuilder()
                                 .addInterceptor(new ClientCredentialsInterceptor(host, getClientId(),
-                                        getClientSecret(), getTokenUrl(), baseUrl + "/.default"))
+                                        getClientSecret(), getTokenUrl(), List.of(baseUrl + "/.default")))
                                 .build());
                 break;
             default:
                 // This should never execute...
                 throw new RuntimeException("Unknown authentication type. Cannot configure the client.");
+        }
+
+        return returnValueBuilder.build();
+    }
+
+    /**
+     * Returns a {@link CogniteClient} using the specified list of scopes for issuing API requests.
+     *
+     * @param scopes The collection of scopes to be used for OAuth2.0 authentication
+     * @return the client object with the authentication handler configured
+     */
+    public CogniteClient withScopes(Collection<String> scopes) {
+        Preconditions.checkArgument(getAuthType() == AuthType.CLIENT_CREDENTIALS,
+                "Scopes supported fpr client credentials mode only.");
+        String host;
+
+        try {
+            host = new URL(getBaseUrl()).getHost();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        // Set the generic part of the configuration
+        CogniteClient.Builder returnValueBuilder = toBuilder();
+
+        // Add the auth specific config
+        switch (getAuthType()) {
+            case CLIENT_CREDENTIALS:
+                returnValueBuilder = returnValueBuilder
+                        .setHttpClient(CogniteClient.getHttpClientBuilder()
+                                .addInterceptor(new ClientCredentialsInterceptor(host, getClientId(),
+                                        getClientSecret(), getTokenUrl(), scopes))
+                                .build());
+                break;
+            case API_KEY:
+            case TOKEN_SUPPLIER:
+            default:
+                // This should never execute...
+                throw new RuntimeException("Unsupported authentication type. Cannot configure the client.");
         }
 
         return returnValueBuilder.build();
@@ -315,8 +379,7 @@ public abstract class CogniteClient implements Serializable {
      * @return the client object with the config applied.
      */
     public CogniteClient enableHttp(boolean enable) {
-        List<ConnectionSpec> connectionSpecs = new ArrayList<>();
-        connectionSpecs.addAll(DEFAULT_CONNECTION_SPECS);
+        List<ConnectionSpec> connectionSpecs = new ArrayList<>(DEFAULT_CONNECTION_SPECS);
         if (enable) {
             connectionSpecs.add(ConnectionSpec.CLEARTEXT);
         }
@@ -336,6 +399,7 @@ public abstract class CogniteClient implements Serializable {
     public Assets assets() {
         return Assets.of(this);
     }
+
 
     /**
      * Returns {@link Timeseries} representing the Cognite timeseries api endpoint.
@@ -443,6 +507,24 @@ public abstract class CogniteClient implements Serializable {
      */
     public Experimental experimental() {
         return Experimental.of(this);
+    }
+
+    /**
+     * Returns {@link LoginStatus} representing login status api endpoints.
+     *
+     * @return The LoginStatus api endpoints.
+     */
+    public Login login() throws Exception {
+        return Login.of(this);
+    }
+
+    /**
+     * Returns {@link ThreeD} representing 3D api endpoints.
+     *
+     * @return The ThreeD api endpoints.
+     */
+    public ThreeD threeD() {
+        return ThreeD.of(this);
     }
 
     /**
@@ -561,7 +643,7 @@ public abstract class CogniteClient implements Serializable {
         private final String clientId;
         private final String clientSecret;
         private final URL tokenUrl;
-        private final String scope;
+        private final Collection<String> scopes;
 
         // The access token--fetched from the token provider
         private String token = null;
@@ -572,18 +654,21 @@ public abstract class CogniteClient implements Serializable {
                                             String clientId,
                                             String clientSecret,
                                             URL tokenUrl,
-                                            String scope) {
+                                            Collection<String> scopes) {
             Preconditions.checkArgument(null != clientId && !clientId.isEmpty(),
                     "The clientId cannot be empty.");
             Preconditions.checkArgument(null != clientSecret && !clientSecret.isEmpty(),
                     "The clientSecret cannot be empty.");
-            Preconditions.checkArgument(null != scope && !scope.isEmpty(),
+            Preconditions.checkArgument(null != scopes && !scopes.isEmpty(),
+                    "The scopes collection cannot be empty.");
+            Preconditions.checkState(scopes.stream().noneMatch(Strings::isNullOrEmpty),
                     "The scope cannot be empty.");
+
             this.apiHost = host;
             this.clientId = clientId;
             this.clientSecret = clientSecret;
             this.tokenUrl = tokenUrl;
-            this.scope = scope;
+            this.scopes = scopes;
         }
 
         @Override
@@ -637,7 +722,7 @@ public abstract class CogniteClient implements Serializable {
             ClientID clientID = new ClientID(clientId);
             Secret secret = new Secret(clientSecret);
             ClientAuthentication clientAuth = new ClientSecretBasic(clientID, secret);
-            Scope tokenScope = new Scope(scope);
+            Scope tokenScope = new Scope(scopes.toArray(new String[0]));
 
             URI tokenEndpoint = tokenUrl.toURI();
 

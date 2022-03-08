@@ -24,17 +24,19 @@ import com.cognite.client.servicesV1.ResponseItems;
 import com.cognite.client.servicesV1.executor.FileBinaryRequestExecutor;
 import com.cognite.client.servicesV1.parser.FileParser;
 import com.cognite.client.servicesV1.parser.ItemParser;
+import com.cognite.client.util.Items;
 import com.cognite.client.util.Partition;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import okhttp3.internal.http2.StreamResetException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.SocketTimeoutException;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -56,6 +58,14 @@ public abstract class Files extends ApiBase {
     private static final int MAX_WRITE_REQUEST_BATCH_SIZE = 100;
     private static final int MAX_DOWNLOAD_BINARY_BATCH_SIZE = 10;
     private static final int MAX_UPLOAD_BINARY_BATCH_SIZE = 10;
+
+    // Retry upload batches with one item at a time when the following list of exceptions are observed
+    private static final ImmutableList<Class<? extends Exception>> RETRYABLE_EXCEPTIONS_BINARY_UPLOAD =
+            ImmutableList.of(
+                    StreamResetException.class,
+                    IOException.class,                              // IOException worth set of retries
+                    com.google.cloud.storage.StorageException.class // Timeout + stream reset when using GCS as temp storage
+            );
 
     private static Builder builder() {
         return new AutoValue_Files.Builder();
@@ -126,7 +136,29 @@ public abstract class Files extends ApiBase {
     }
 
     /**
-     * Retrieve files by id.
+     * Retrieve files by {@code externalId}.
+     *
+     * @param externalId The {@code externalIds} to retrieve
+     * @return The retrieved files.
+     * @throws Exception
+     */
+    public List<FileMetadata> retrieve(String... externalId) throws Exception {
+        return retrieve(Items.parseItems(externalId));
+    }
+
+    /**
+     * Retrieve files by {@code internal id}.
+     *
+     * @param id The {@code ids} to retrieve
+     * @return The retrieved files.
+     * @throws Exception
+     */
+    public List<FileMetadata> retrieve(long... id) throws Exception {
+        return retrieve(Items.parseItems(id));
+    }
+
+    /**
+     * Retrieve files by {@code externalId / id}.
      *
      * @param items The item(s) {@code externalId / id} to retrieve.
      * @return The retrieved file headers.
@@ -520,7 +552,11 @@ public abstract class Files extends ApiBase {
             try {
                 responseFileMetadata.addAll(uploadFileBinaries(uploadBatch, deleteTempFile));
             } catch (CompletionException e) {
-                if (e.getCause() instanceof SocketTimeoutException) {
+                // Must unwrap the completion exception
+                Throwable cause = e.getCause();
+
+                if (RETRYABLE_EXCEPTIONS_BINARY_UPLOAD.stream()
+                        .anyMatch(retryable -> retryable.isInstance(cause))) {
                     // The API is most likely saturated. Retry the uploads one file at a time.
                     LOG.warn(batchLoggingPrefix + "Error when uploading the batch of file binaries. Will retry each file individually.");
                     for (FileContainer file : uploadBatch) {
@@ -766,7 +802,8 @@ public abstract class Files extends ApiBase {
                 } else if (responseBatch.size() > 0 && !responseBatch.get(0).isSuccessful()) {
                     // Batch failed. Most likely because of missing or duplicated items
                     exceptionMessage = responseBatch.get(0).getResponseBodyAsString();
-                    LOG.debug(loggingPrefix + "Download items request failed: {}", responseBatch.get(0).getResponseBodyAsString());
+                    LOG.warn(loggingPrefix + "Download items request failed. Will try to correct errors and retry: {}",
+                            responseBatch.get(0).getResponseBodyAsString());
                     if (i == MAX_RETRIES - 1) {
                         // Add the error message to std logging
                         LOG.error(loggingPrefix + "Download items request failed. {}", responseBatch.get(0).getResponseBodyAsString());
@@ -955,18 +992,8 @@ public abstract class Files extends ApiBase {
 
             try {
                 responseMap.put(reader.readFileBinaries(request), batch);
-            } catch (CompletionException | FileBinaryRequestExecutor.ClientRequestException e) {
-                // First we need to find out the cause / which exception type is thrown
-                FileBinaryRequestExecutor.ClientRequestException requestException = null;
-                if (e instanceof FileBinaryRequestExecutor.ClientRequestException) {
-                    requestException = (FileBinaryRequestExecutor.ClientRequestException) e;
-                } else if (e instanceof CompletionException) {
-                    // Unwrap the completion exception to see if the underlying cause is a ClientRequestException
-                    requestException = ((CompletionException) e).getCause() instanceof FileBinaryRequestExecutor.ClientRequestException ?
-                            ((FileBinaryRequestExecutor.ClientRequestException) ((CompletionException) e).getCause()) : null;
-                }
-
-                if (null != requestException) {
+            } catch (CompletionException e) {
+                if (e.getCause() instanceof FileBinaryRequestExecutor.ClientRequestException) {
                     // This exception indicates a malformed download URL--typically an expired URL. This can be caused
                     // by the parallel downloads interfering with each other. Retry with the file items downloaded individually
                     LOG.warn(loggingPrefix + "Error when downloading a batch of file binaries. Will retry each file individually.");

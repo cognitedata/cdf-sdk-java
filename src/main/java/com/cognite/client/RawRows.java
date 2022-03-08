@@ -215,11 +215,11 @@ public abstract class RawRows extends ApiBase {
     }
 
     /**
-     * Streams rows from a raw table.
+     * Returns a {@link RawPublisher} that can stream {@link RawRow} from a raw table.
      *
      * @param dbName The database to read rows from.
      * @param tableName The table to read rows from.
-     * @return The stream producing object. Call {@code start()} to start the stream.
+     * @return The publisher producing the stream of objects. Call {@code start()} to start the stream.
      */
     public RawPublisher stream(String dbName, String tableName) {
         return RawPublisher.of(this, dbName, tableName);

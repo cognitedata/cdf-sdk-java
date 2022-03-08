@@ -43,7 +43,7 @@ class JsonUtilTest {
             //System.out.printf("Via ObjectMapper: %s \n\r", deserialized);
             Assertions.assertEquals(deserialized, directDeserialized);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -69,7 +69,7 @@ class JsonUtilTest {
             //System.out.printf("Request: %s \n\r", deserialized);
             assertEquals(deserialized, expected);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 }

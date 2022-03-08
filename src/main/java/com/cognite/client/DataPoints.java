@@ -23,19 +23,19 @@ import com.cognite.client.servicesV1.ItemReader;
 import com.cognite.client.servicesV1.ResponseItems;
 import com.cognite.client.servicesV1.parser.TimeseriesParser;
 import com.cognite.client.servicesV1.util.TSIterationUtilities;
+import com.cognite.client.util.Items;
 import com.cognite.client.util.Partition;
 import com.cognite.v1.timeseries.proto.*;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.Int64Value;
-import com.google.protobuf.StringValue;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -54,7 +54,7 @@ public abstract class DataPoints extends ApiBase {
     // Write request batch limits
     private static final int DATA_POINTS_WRITE_MAX_ITEMS_PER_REQUEST = 10_000;
     private static final int DATA_POINTS_WRITE_MAX_POINTS_PER_REQUEST = 100_000;
-    private static final int DATA_POINTS_WRITE_MAX_CHARS_PER_REQUEST = 1_000_000;
+    private static final int DATA_POINTS_WRITE_MAX_UTF8_BYTES_PER_REQUEST = 1_000_000;
 
     // Read request limits
     private static final int MAX_RAW_POINTS = 100000;
@@ -145,13 +145,37 @@ public abstract class DataPoints extends ApiBase {
     }
 
     /**
+     * Retrieve all {@link TimeseriesPoint}/data points for the specified time series ({@code externalId}).
+     * Refer to {@link #retrieveComplete(List)} for more information.
+     *
+     * @param externalId The {@code externalIds} of the time series to retrieve
+     * @return The time series data points.
+     * @throws Exception
+     */
+    public Iterator<List<TimeseriesPoint>> retrieveComplete(String... externalId) throws Exception {
+        return retrieveComplete(Items.parseItems(externalId));
+    }
+
+    /**
+     * Retrieve all {@link TimeseriesPoint}/data points for the specified time series ({@code id}).
+     * Refer to {@link #retrieveComplete(List)} for more information.
+     *
+     * @param id The {@code ids} of the time series to retrieve
+     * @return The time series data points.
+     * @throws Exception
+     */
+    public Iterator<List<TimeseriesPoint>> retrieveComplete(long... id) throws Exception {
+        return retrieveComplete(Items.parseItems(id));
+    }
+
+    /**
      * Returns all {@link TimeseriesPoint} objects that matches the item specifications (externalId / id).
      *
      * the results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      * @param items
-     * @return
+     * @return The time series data points.
      * @throws Exception
      */
     public Iterator<List<TimeseriesPoint>> retrieveComplete(List<Item> items) throws Exception {
@@ -326,6 +350,30 @@ public abstract class DataPoints extends ApiBase {
 
     /**
      * Retrieves the latest (newest) data point for a time series.
+     * Refer to {@link #retrieveLatest(List)} for more information.
+     *
+     * @param externalId The {@code externalIds} of the time series to retrieve
+     * @return The time series data points.
+     * @throws Exception
+     */
+    public List<TimeseriesPoint> retrieveLatest(String... externalId) throws Exception {
+        return retrieveLatest(Items.parseItems(externalId));
+    }
+
+    /**
+     * Retrieves the latest (newest) data point for a time series.
+     * Refer to {@link #retrieveLatest(List)} for more information.
+     *
+     * @param id The {@code ids} of the time series to retrieve
+     * @return The time series data points.
+     * @throws Exception
+     */
+    public List<TimeseriesPoint> retrieveLatest(long... id) throws Exception {
+        return retrieveLatest(Items.parseItems(id));
+    }
+
+    /**
+     * Retrieves the latest (newest) data point for a time series.
      *
      * The {@link Item} must specify the externalId / id of the time series.
      *
@@ -424,6 +472,30 @@ public abstract class DataPoints extends ApiBase {
                 .map(this::parseDataPointJsonItem)
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieve the first (eldest) data point for a time series.
+     * Refer to {@link #retrieveFirst(List)} for more information.
+     *
+     * @param externalId The {@code externalIds} of the time series to retrieve
+     * @return The time series data points.
+     * @throws Exception
+     */
+    public List<TimeseriesPoint> retrieveFirst(String... externalId) throws Exception {
+        return retrieveFirst(Items.parseItems(externalId));
+    }
+
+    /**
+     * Retrieve the first (eldest) data point for a time series.
+     * Refer to {@link #retrieveFirst(List)} for more information.
+     *
+     * @param id The {@code ids} of the time series to retrieve
+     * @return The time series data points.
+     * @throws Exception
+     */
+    public List<TimeseriesPoint> retrieveFirst(long... id) throws Exception {
+        return retrieveFirst(Items.parseItems(id));
     }
 
     /**
@@ -562,7 +634,7 @@ public abstract class DataPoints extends ApiBase {
             if (itemsBatch.size() > 0) {
                 splitsByItems.add(requestParameters.withItems(itemsBatch));
             }
-            LOG.info(loggingPrefix + "Split the original {} request items across {} requests.",
+            LOG.info(loggingPrefix + "Split the original {} time series items across {} requests.",
                     requestParameters.getItems().size(),
                     splitsByItems.size());
         } else {
@@ -575,8 +647,8 @@ public abstract class DataPoints extends ApiBase {
         int capacity = Math.min(getClient().getClientConfig().getNoWorkers(),
                 getClient().getClientConfig().getNoListPartitions());
         if (splitsByItems.size() / (long) capacity > 0.6) {
-            LOG.info(loggingPrefix + "Splitting by items into {} requests offers good utilization of the available {} "
-                    + "capacity units. Will not split further (by time window).",
+            LOG.info(loggingPrefix + "Splitting by time series items into {} requests offers good utilization of the available {} "
+                    + "workers/partitions. Will not split further (by time window).",
                     splitsByItems.size(),
                     capacity);
             return splitsByItems;
@@ -740,17 +812,17 @@ public abstract class DataPoints extends ApiBase {
         List<List<TimeseriesPointPost>> batch = new ArrayList<>();
         int totalItemCounter = 0;
         int totalPointsCounter = 0;
-        int totalCharacterCounter = 0;
+        int totalUtf8ByteCounter = 0;
         int batchItemsCounter = 0;
         int batchPointsCounter = 0;
-        int batchCharacterCounter = 0;
+        int batchUtf8ByteCounter = 0;
         for (Map.Entry<String, List<TimeseriesPointPost>> entry : groupedPoints.entrySet()) {
             List<TimeseriesPointPost> pointsList = new ArrayList<>();
             for (TimeseriesPointPost dataPoint : entry.getValue()) {
                 // Check if the new data point will make the current batch too large.
                 // If yes, submit the batch before continuing the iteration.
                 if (batchPointsCounter + 1 >= DATA_POINTS_WRITE_MAX_POINTS_PER_REQUEST
-                        || batchCharacterCounter + getCharacterCount(dataPoint) >= DATA_POINTS_WRITE_MAX_CHARS_PER_REQUEST) {
+                        || batchUtf8ByteCounter + getUtf8ByteCount(dataPoint) >= DATA_POINTS_WRITE_MAX_UTF8_BYTES_PER_REQUEST) {
                     if (pointsList.size() > 0) {
                         // We have some points to add to the batch before submitting
                         batch.add(pointsList);
@@ -758,7 +830,7 @@ public abstract class DataPoints extends ApiBase {
                     }
                     responseMap.put(upsertDataPoints(batch, dataPointsWriter), batch);
                     batch = new ArrayList<>();
-                    batchCharacterCounter = 0;
+                    batchUtf8ByteCounter = 0;
                     batchItemsCounter = 0;
                     batchPointsCounter = 0;
                 }
@@ -767,8 +839,8 @@ public abstract class DataPoints extends ApiBase {
                 pointsList.add(dataPoint);
                 batchPointsCounter++;
                 totalPointsCounter++;
-                batchCharacterCounter += getCharacterCount(dataPoint);
-                totalCharacterCounter += getCharacterCount(dataPoint);
+                batchUtf8ByteCounter += getUtf8ByteCount(dataPoint);
+                totalUtf8ByteCounter += getUtf8ByteCount(dataPoint);
             }
             if (pointsList.size() > 0) {
                 batch.add(pointsList);
@@ -779,7 +851,7 @@ public abstract class DataPoints extends ApiBase {
             if (batchItemsCounter >= DATA_POINTS_WRITE_MAX_ITEMS_PER_REQUEST) {
                 responseMap.put(upsertDataPoints(batch, dataPointsWriter), batch);
                 batch = new ArrayList<>();
-                batchCharacterCounter = 0;
+                batchUtf8ByteCounter = 0;
                 batchItemsCounter = 0;
                 batchPointsCounter = 0;
             }
@@ -788,10 +860,10 @@ public abstract class DataPoints extends ApiBase {
             responseMap.put(upsertDataPoints(batch, dataPointsWriter), batch);
         }
 
-        LOG.debug(loggingPrefix + "Finished submitting {} data points with {} characters across {} TS items "
+        LOG.debug(loggingPrefix + "Finished submitting {} numeric data points and {} UTF-8 bytes across {} TS items "
                         + "in {} requests batches. Duration: {}",
                 totalPointsCounter,
-                totalCharacterCounter,
+                totalUtf8ByteCounter,
                 totalItemCounter,
                 responseMap.size(),
                 Duration.between(startInstant, Instant.now()));
@@ -960,15 +1032,15 @@ public abstract class DataPoints extends ApiBase {
     }
 
     /**
-     * Returns the total character count. If it is a numeric data point, the count will be 0.
+     * Returns the UTF8 byte count for string data points. If it is a numeric data point, the count will be 0.
      *
      * @param point The data point to check for character count.
      * @return The number of string characters.
      */
-    private int getCharacterCount(TimeseriesPointPost point) {
+    private int getUtf8ByteCount(TimeseriesPointPost point) {
         int count = 0;
         if (point.getValueTypeCase() == TimeseriesPointPost.ValueTypeCase.VALUE_STRING) {
-            count = point.getValueString().length();
+            count = point.getValueString().getBytes(StandardCharsets.UTF_8).length;
         }
         return count;
     }

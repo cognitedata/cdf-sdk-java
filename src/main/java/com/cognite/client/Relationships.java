@@ -22,6 +22,7 @@ import com.cognite.client.dto.Item;
 import com.cognite.client.dto.Relationship;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.RelationshipParser;
+import com.cognite.client.util.Items;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,6 +108,28 @@ public abstract class Relationships extends ApiBase {
      */
     public Iterator<List<Relationship>> list(Request requestParameters, String... partitions) throws Exception {
         return AdapterIterator.of(listJson(ResourceType.RELATIONSHIP, requestParameters, partitions), this::parseRelationship);
+    }
+
+    /**
+     * Retrieve relationships by {@code externalId}.
+     *
+     * @param externalId The {@code externalIds} to retrieve
+     * @return The retrieved relationships.
+     * @throws Exception
+     */
+    public List<Relationship> retrieve(String... externalId) throws Exception {
+        return retrieve(Items.parseItems(externalId));
+    }
+
+    /**
+     * Retrieve relationships by {@code internal id}.
+     *
+     * @param id The {@code ids} to retrieve
+     * @return The retrieved relationships.
+     * @throws Exception
+     */
+    public List<Relationship> retrieve(long... id) throws Exception {
+        return retrieve(Items.parseItems(id));
     }
 
     /**

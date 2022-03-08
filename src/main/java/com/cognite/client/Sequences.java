@@ -19,19 +19,16 @@ package com.cognite.client;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Aggregate;
-import com.cognite.client.dto.Event;
 import com.cognite.client.dto.SequenceMetadata;
 import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.SequenceParser;
+import com.cognite.client.util.Items;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -120,7 +117,29 @@ public abstract class Sequences extends ApiBase {
     }
 
     /**
-     * Retrieve sequences by id.
+     * Retrieve sequences by {@code externalId}.
+     *
+     * @param externalId The {@code externalIds} to retrieve
+     * @return The retrieved sequences.
+     * @throws Exception
+     */
+    public List<SequenceMetadata> retrieve(String... externalId) throws Exception {
+        return retrieve(Items.parseItems(externalId));
+    }
+
+    /**
+     * Retrieve sequences by {@code internal id}.
+     *
+     * @param id The {@code ids} to retrieve
+     * @return The retrieved sequences.
+     * @throws Exception
+     */
+    public List<SequenceMetadata> retrieve(long... id) throws Exception {
+        return retrieve(Items.parseItems(id));
+    }
+
+    /**
+     * Retrieve sequences by {@code externalId / id}.
      *
      * @param items The item(s) {@code externalId / id} to retrieve
      * @return The retrieved sequences
@@ -166,7 +185,8 @@ public abstract class Sequences extends ApiBase {
         UpsertItems<SequenceMetadata> upsertItems = UpsertItems.of(createItemWriter, this::toRequestInsertItem, getClient().buildAuthConfig())
                 .withUpdateItemWriter(updateItemWriter)
                 .withUpdateMappingFunction(this::toRequestUpdateItem)
-                .withIdFunction(this::getSequenceId);
+                .withIdFunction(this::getSequenceId)
+                .withBatchingFunction(this::splitSequenceMetadataIntoBatches);
 
         if (getClient().getClientConfig().getUpsertMode() == UpsertMode.REPLACE) {
             upsertItems = upsertItems.withUpdateMappingFunction(this::toRequestReplaceItem);
@@ -193,6 +213,36 @@ public abstract class Sequences extends ApiBase {
         DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig());
 
         return deleteItems.deleteItems(sequences);
+    }
+
+    /*
+    Custom batching function for upserting sequence headers/metadata. There are two limitations for the sequence header
+    batch size: 1) max no items = 1k and 2) max no cells/columns = 10k
+     */
+    private List<List<SequenceMetadata>> splitSequenceMetadataIntoBatches(List<SequenceMetadata> items) {
+        int MAX_CELLS_PER_BATCH = 10000;
+        int MAX_ITEMS_PER_BATCH = 1000;
+        List<List<SequenceMetadata>> batchList = new ArrayList<>();
+
+        int batchCellsCounter = 0;
+        List<SequenceMetadata> currentBatch = new ArrayList<>();
+        for (SequenceMetadata sequenceMetadata : items) {
+            if ((currentBatch.size() + 1 > MAX_ITEMS_PER_BATCH)
+                    || (batchCellsCounter + sequenceMetadata.getColumnsCount()) > MAX_CELLS_PER_BATCH) {
+                // We cannot add more items to the current batch. Start a new batch
+                batchList.add(currentBatch);
+                currentBatch = new ArrayList<>();
+                batchCellsCounter = 0;
+            }
+            // Add item to batch and bump the cell counter.
+            currentBatch.add(sequenceMetadata);
+            batchCellsCounter += sequenceMetadata.getColumnsCount();
+        }
+        if (currentBatch.size() > 0) {
+            // Add all remaining items
+            batchList.add(currentBatch);
+        }
+        return batchList;
     }
 
     /*

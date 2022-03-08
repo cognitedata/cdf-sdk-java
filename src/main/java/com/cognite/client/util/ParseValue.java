@@ -18,22 +18,22 @@ public class ParseValue {
      */
     public static String parseString(Value rawValue) {
         Preconditions.checkNotNull(rawValue, "rawValue cannot be null");
-        String returnString = "";
-        if (rawValue.hasStringValue()) {
-            returnString = rawValue.getStringValue();
-        } else if (rawValue.hasBoolValue()) {
-            returnString = String.valueOf(rawValue.getBoolValue());
-        } else if (rawValue.hasListValue()) {
-            returnString = rawValue.getListValue().toString();
-        } else if (rawValue.hasNumberValue()) {
-            returnString = String.valueOf(rawValue.getNumberValue());
-        } else if (rawValue.hasStructValue()) {
-            returnString = rawValue.getStructValue().toString();
-        } else if (rawValue.hasNullValue()) {
-            returnString = "null";
+        switch (rawValue.getKindCase()) {
+            case STRING_VALUE:
+                return rawValue.getStringValue().trim();
+            case NUMBER_VALUE:
+                return String.valueOf(rawValue.getNumberValue());
+            case BOOL_VALUE:
+                return String.valueOf(rawValue.getBoolValue());
+            case LIST_VALUE:
+                return rawValue.getListValue().toString();
+            case STRUCT_VALUE:
+                return rawValue.getStructValue().toString();
+            case NULL_VALUE:
+                return "null";
+            default: // KIND_NOT_SET
+                return "";
         }
-
-        return returnString;
     }
 
     /**

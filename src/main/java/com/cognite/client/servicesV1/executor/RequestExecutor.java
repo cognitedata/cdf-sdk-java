@@ -60,6 +60,10 @@ public abstract class RequestExecutor {
             504     // gateway timeout
     );
 
+    private static final ImmutableList<Class<? extends Exception>> RETRYABLE_EXCEPTIONS = ImmutableList.of(
+            IOException.class
+    );
+
     private static final int DEFAULT_CPU_MULTIPLIER = 8;
     private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(Runtime.getRuntime().availableProcessors()
             * DEFAULT_CPU_MULTIPLIER);
@@ -241,7 +245,8 @@ public abstract class RequestExecutor {
                 catchedExceptions.add(e);
 
                 // if we get a transient error, retry the call
-                if (e instanceof java.net.SocketTimeoutException || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
+                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(e))
+                        || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     apiRetryCounter++;
                     LOG.warn(loggingPrefix + "Transient error when reading from Fusion (request id: " + requestId
                             + ", response code: " + responseCode
@@ -258,11 +263,15 @@ public abstract class RequestExecutor {
 
         // No results are produced. Throw the list of registered Exception.
         String exceptionMessage = "Unable to produce a valid response from Cognite Fusion.";
+        IOException e;
         if (catchedExceptions.size() > 0) { //add the details of the most recent exception.
+            Exception mostRecentException = catchedExceptions.get(catchedExceptions.size() -1);
             exceptionMessage += System.lineSeparator();
-            exceptionMessage += catchedExceptions.get(catchedExceptions.size() -1).getMessage();
+            exceptionMessage += mostRecentException.getMessage();
+            e = new IOException(exceptionMessage, mostRecentException);
+        } else {
+            e = new IOException(exceptionMessage);
         }
-        Exception e = new Exception(exceptionMessage);
         catchedExceptions.forEach(e::addSuppressed);
         throw e;
     }

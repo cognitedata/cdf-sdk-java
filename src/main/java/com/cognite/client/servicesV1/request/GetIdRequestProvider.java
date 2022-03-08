@@ -26,7 +26,7 @@ import java.net.URISyntaxException;
 import java.util.Optional;
 
 /**
- * Builds request to get results from an async api job based on a jobId.
+ * Builds request to get results from an async api job based on an id.
  *
  * Used by various context api services as most context services are based on an async api pattern.
  *

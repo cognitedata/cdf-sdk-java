@@ -22,11 +22,11 @@ import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ResponseItems;
 import com.cognite.client.servicesV1.parser.ItemParser;
 import com.cognite.client.servicesV1.parser.SequenceParser;
+import com.cognite.client.util.Items;
 import com.cognite.client.util.Partition;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.protobuf.StringValue;
 import com.google.protobuf.Value;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
@@ -125,9 +125,32 @@ public abstract class SequenceRows extends ApiBase {
         return AdapterIterator.of(fanOutIterator, this::parseSequenceBody);
     }
 
+    /**
+     * Retrieves {@link SequenceBody} by {@code externalId}.
+     * Refer to {@link #retrieveComplete(List)} for more information.
+     *
+     * @param externalId The {@code externalIds} to retrieve
+     * @return The retrieved sequence bodies.
+     * @throws Exception
+     */
+    public Iterator<List<SequenceBody>> retrieveComplete(String... externalId) throws Exception {
+        return retrieveComplete(Items.parseItems(externalId));
+    }
 
     /**
-     * Retrieves {@link SequenceBody} by id.
+     * Retrieves {@link SequenceBody} by {@code internal id}.
+     * Refer to {@link #retrieveComplete(List)} for more information.
+     *
+     * @param id The {@code ids} to retrieve
+     * @return The retrieved sequence bodies.
+     * @throws Exception
+     */
+    public Iterator<List<SequenceBody>> retrieveComplete(long... id) throws Exception {
+        return retrieveComplete(Items.parseItems(id));
+    }
+
+    /**
+     * Retrieves {@link SequenceBody} by {@code externalId / id}.
      *
      * The entire Sequence body (i.e. all rows and columns) will be retrieved.
      *

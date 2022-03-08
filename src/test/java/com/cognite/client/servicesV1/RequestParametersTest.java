@@ -125,7 +125,7 @@ class RequestParametersTest {
             assertEquals(root.path("matchFrom").get(2).path("name").textValue(),
                     entityC.getFieldsOrThrow("name").getStringValue());
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 

@@ -33,8 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLProtocolException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -79,6 +77,12 @@ public abstract class FileBinaryRequestExecutor {
             502,    // bad gateway
             503,    // service unavailable
             504     // gateway timeout
+    );
+
+    private static final ImmutableList<Class<? extends Exception>> RETRYABLE_EXCEPTIONS = ImmutableList.of(
+            java.net.SocketTimeoutException.class,
+            StreamResetException.class,
+            com.google.cloud.storage.StorageException.class     // Timeout + stream reset when using GCS as temp storage
     );
 
     private static final int DEFAULT_NUM_WORKERS = 8;
@@ -322,10 +326,7 @@ public abstract class FileBinaryRequestExecutor {
                 catchedExceptions.add(e);
 
                 // if we get a transient error, retry the call
-                if (e instanceof java.net.SocketTimeoutException
-                        || e instanceof StreamResetException
-                        || e instanceof SSLProtocolException
-                        || e instanceof SSLException
+                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(e))
                         || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     LOG.warn(loggingPrefix + "Transient error when downloading file ("
                             + "response code: " + responseCode
@@ -341,13 +342,17 @@ public abstract class FileBinaryRequestExecutor {
         }
 
         // No results are produced. Throw the list of registered Exception.
-        String exceptionMessage = String.format("Unable to download file binary from %s.",
+        String exceptionMessage = String.format(loggingPrefix + "Unable to download file binary from %s.",
                 request.url().toString());
+        IOException e;
         if (catchedExceptions.size() > 0) { //add the details of the most recent exception.
+            Exception mostRecentException = catchedExceptions.get(catchedExceptions.size() -1);
             exceptionMessage += System.lineSeparator();
-            exceptionMessage += catchedExceptions.get(catchedExceptions.size() -1).getMessage();
+            exceptionMessage += mostRecentException.getMessage();
+            e = new IOException(exceptionMessage, mostRecentException);
+        } else {
+            e = new IOException(exceptionMessage);
         }
-        Exception e = new IOException(exceptionMessage);
         catchedExceptions.forEach(e::addSuppressed);
         throw e;
     }
@@ -420,13 +425,13 @@ public abstract class FileBinaryRequestExecutor {
             request = new Request.Builder()
                     .url(url)
                     .header("Content-length", String.valueOf(contentLength))
-                    .post(RequestBody.create(fileBinary.getBinary().toByteArray(), MediaType.get(mimeType)))
+                    .put(RequestBody.create(fileBinary.getBinary().toByteArray(), MediaType.get(mimeType)))
                     .build();
         } else {
             LOG.debug(loggingPrefix + "File binary sourced temporary blob storage: " + fileBinary.getBinaryUri());
             request = new Request.Builder()
                     .url(url)
-                    .post(new UploadFileBinaryRequestBody(fileBinary.getBinaryUri(),
+                    .put(new UploadFileBinaryRequestBody(fileBinary.getBinaryUri(),
                             MediaType.get(mimeType),
                             isDeleteTempFile()))
                     .build();
@@ -489,10 +494,7 @@ public abstract class FileBinaryRequestExecutor {
                 catchedExceptions.add(e);
 
                 // if we get a transient error, retry the call
-                if (e instanceof java.net.SocketTimeoutException
-                        || e instanceof StreamResetException
-                        || e instanceof SSLProtocolException
-                        || e instanceof SSLException
+                if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(e))
                         || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     apiRetryCounter++;
                     LOG.warn(loggingPrefix + "Transient error when reading from Fusion (request id: " + requestId
@@ -509,13 +511,18 @@ public abstract class FileBinaryRequestExecutor {
         }
 
         // No results are produced. Throw the list of registered Exception.
-        String exceptionMessage = String.format("Unable to upload file binary to %s.",
+        String exceptionMessage = String.format(loggingPrefix + "Unable to upload file binary to %s.",
                 request.url().toString());
+        IOException e;
         if (catchedExceptions.size() > 0) { //add the details of the most recent exception.
+            Exception mostRecentException = catchedExceptions.get(catchedExceptions.size() -1);
             exceptionMessage += System.lineSeparator();
-            exceptionMessage += catchedExceptions.get(catchedExceptions.size() -1).getMessage();
+            exceptionMessage += mostRecentException.getMessage();
+            e = new IOException(exceptionMessage, mostRecentException);
+        } else {
+            e = new IOException(exceptionMessage);
         }
-        Exception e = new IOException(exceptionMessage);
+
         catchedExceptions.forEach(e::addSuppressed);
         throw e;
     }

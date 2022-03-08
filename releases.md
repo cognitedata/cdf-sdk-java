@@ -19,7 +19,107 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
-## [1.6.0-SNAPSHOT]
+## [1.12.0-SNAPSHOT]
+
+### Added
+
+- Write string data points. Write requests will chunk strings at 1M UTF8 bytes per request to respect API limits.
+
+### Fixed
+
+- File binary download. Expired URLs not retried properly.
+
+## [1.11.0] 2022-02-18
+
+### Added
+
+- Add utility class `com.cognite.client.util.RawRows` for working with `RawRow` object. Please refer to 
+[the documentation](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/raw.md) for more information.
+
+## [1.10.0] 2022-02-02
+
+### Added
+
+- Added `3D Models Revisions`
+- Added `3D File Download`
+- Added `3D Asset Mapping`
+- `EngineeringDiagrams` promoted from experimental to stable. It has the same signature and behavior as before and is 
+located under the `contextualization` family: `CogniteClient.contextualization().engineeringDiagrams()`.
+- Added convenience methods to the `Request` object for easier handling of items (by `externalId` or `id`). You can use 
+`Request.withItemExternalIds(String... externalId)` and `Request.withItemInternalIds(long... internalId)` to add multiple 
+items to the request.
+- Added convenience methods for retrieving items by `externalId` and `id`: `client.<resourceType>().retrieve(String... externalId)` 
+and `client.<resourceType>().retrieve(String... externalId)`. This is implemented by the resource types `Assets`, `DataPoints`, 
+`Datasets`, `Events`, `ExtractionPipelines`, `Files`, `Relationships`, `Sequences` and `SequencesRows`.
+
+### Deprecated
+
+- The experimental version of `EngineeringDiagrams` is deprecated given the new, stable version.
+- The single item methods `Request.withItemExternalId(String externalId)` and `Request.withItemInternalId(long internalId)` 
+have been deprecated in favour of the new multi-item versions.
+
+### Removed
+
+- The old, experimental `pnid` api. This api has been replaced by the `EngineeringDiagrams` api.
+
+## [1.9.0] 2022-01-04
+
+### Added
+
+- Added `3D Models`
+- Increased read and write timeouts to match sever-side values
+
+### Fixed
+
+- Upsert of `sequenceMetadata` not identifying duplicate entries correctly.
+
+## [1.8.0] 2021-12-15
+
+### Added
+
+- Experimental streaming support for `events` and `assets`.
+- Added `login status` by api-key
+
+### Fixed
+
+- Upsert of `sequenceMetadata` not respecting the max number of cells/columns per batch.
+
+## [1.7.1] 2021-11-23
+
+### Fixed
+
+- Request retries did not work properly in 1.7.0.
+
+## [1.7.0] 2021-11-22
+
+### Fixed
+
+- File binary upload uses PUT instead of POST
+
+## [1.6.3] 2021-11-22
+
+### Fixed
+
+- Improved robustness for file binary upload. Add batch-level retries on a broader set of exceptions.
+
+## [1.6.2] 2021-11-21
+
+### Added
+
+- Improved robustness for file binary upload. Add batch-level retries when the http2 stream is reset. 
+
+## [1.6.1] 2021-11-18
+
+### Fixed
+
+- Parsing error on file binary download using internal `id`.
+
+## [1.6.0] 2021-11-17
+
+### Fixed
+
+- Retry requests on `UnknownHostException`.
+- Retry requests on Google Cloud Storage timeouts.
 
 ## [1.5.0] 2021-11-11
 
