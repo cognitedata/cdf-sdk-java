@@ -9,12 +9,43 @@ option java_multiple_files = true;
 
 /*
 A Point is the basic geometry object. It represents a single coordinate point consisting of
-longitude / latitude (or easting / northing).
+longitude / latitude (or easting / northing) and an optional elevation.
  */
 message Point {
     double lon = 1;
     double lat = 2;
     optional double elev = 3;
+}
+
+message MultiPoint {
+    repeated Point coordinates = 1;
+}
+
+message LineString {
+    repeated Point coordinates = 1;
+}
+
+message MultiLineString {
+    repeated LineString coordinates = 1;
+}
+
+message Polygon {
+    repeated LineString coordinates = 1;
+}
+
+message MultiPolygon {
+    repeated Polygon coordinates = 1;
+}
+
+message Geometry {
+    oneof geometry_type {
+        Point point = 1;
+        MultiPoint multi_point = 2;
+        LineString line_string = 3;
+        MultiLineString multi_line_string = 4;
+        Polygon polygon = 5;
+        MultiPolygon multi_polygon = 6;
+    }
 }
 
 message Asfdasdf {
