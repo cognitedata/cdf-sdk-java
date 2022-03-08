@@ -3,7 +3,6 @@ syntax = "proto3";
 package com.cognite.beam.proto;
 
 import "google/protobuf/struct.proto";
-import "google/protobuf/wrappers.proto";
 
 option java_package = "com.cognite.client.dto";
 option java_multiple_files = true;
@@ -15,6 +14,7 @@ longitude / latitude (or easting / northing).
 message Point {
     double lon = 1;
     double lat = 2;
+    optional double elev = 3;
 }
 
 message Asfdasdf {
@@ -25,10 +25,10 @@ message Asfdasdf {
     }
 
     string external_id = 1;
-    google.protobuf.StringValue name = 2;
-    google.protobuf.StringValue description = 3;
+    optional string name = 2;
+    optional string description = 3;
     ValueType value_type = 4;
     map<string, string> metadata = 5;
-    google.protobuf.Int64Value created_time = 6;
-    google.protobuf.Int64Value last_updated_time = 7;
+    optional int64 created_time = 6;
+    optional int64 last_updated_time = 7;
 }
