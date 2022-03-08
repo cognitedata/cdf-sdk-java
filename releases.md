@@ -21,6 +21,10 @@ Changes are grouped as follows:
 
 ## [1.12.0-SNAPSHOT]
 
+### Added
+
+- Write string data points. Write requests will chunk strings at 1M UTF8 bytes per request to respect API limits.
+
 ### Fixed
 
 - File binary download. Expired URLs not retried properly.
