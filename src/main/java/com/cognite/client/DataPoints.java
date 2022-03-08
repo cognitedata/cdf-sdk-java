@@ -812,7 +812,7 @@ public abstract class DataPoints extends ApiBase {
         List<List<TimeseriesPointPost>> batch = new ArrayList<>();
         int totalItemCounter = 0;
         int totalPointsCounter = 0;
-        int totalCharacterCounter = 0;
+        int totalUtf8ByteCounter = 0;
         int batchItemsCounter = 0;
         int batchPointsCounter = 0;
         int batchUtf8ByteCounter = 0;
@@ -840,7 +840,7 @@ public abstract class DataPoints extends ApiBase {
                 batchPointsCounter++;
                 totalPointsCounter++;
                 batchUtf8ByteCounter += getUtf8ByteCount(dataPoint);
-                totalCharacterCounter += getUtf8ByteCount(dataPoint);
+                totalUtf8ByteCounter += getUtf8ByteCount(dataPoint);
             }
             if (pointsList.size() > 0) {
                 batch.add(pointsList);
@@ -860,10 +860,10 @@ public abstract class DataPoints extends ApiBase {
             responseMap.put(upsertDataPoints(batch, dataPointsWriter), batch);
         }
 
-        LOG.debug(loggingPrefix + "Finished submitting {} data points with {} characters across {} TS items "
+        LOG.debug(loggingPrefix + "Finished submitting {} numeric data points and {} UTF-8 bytes across {} TS items "
                         + "in {} requests batches. Duration: {}",
                 totalPointsCounter,
-                totalCharacterCounter,
+                totalUtf8ByteCounter,
                 totalItemCounter,
                 responseMap.size(),
                 Duration.between(startInstant, Instant.now()));
