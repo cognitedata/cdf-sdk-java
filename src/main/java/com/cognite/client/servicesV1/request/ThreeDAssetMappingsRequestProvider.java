@@ -44,9 +44,14 @@ public abstract class ThreeDAssetMappingsRequestProvider extends GenericRequestP
         if (parameters.getRequestParameters().containsKey("intersectsBoundingBox")) {
             ThreeDNode.BoundingBox paramBoundingBox = (ThreeDNode.BoundingBox) parameters.getRequestParameters().get("intersectsBoundingBox");
             Preconditions.checkArgument(!paramBoundingBox.getMinList().isEmpty(),
-                    "Request parameters must include intersectsBoundingBox.min with a list double value");
+                    "Request parameters must include intersectsBoundingBox.min with a double list value");
             Preconditions.checkArgument(!paramBoundingBox.getMaxList().isEmpty(),
-                    "Request parameters must include intersectsBoundingBox.max with a list double value");
+                    "Request parameters must include intersectsBoundingBox.max with a double list value");
+
+            Preconditions.checkArgument(Integer.valueOf(3).equals(paramBoundingBox.getMinList().size()),
+                    "Request parameters must include intersectsBoundingBox.min with a double list value of 3 items");
+            Preconditions.checkArgument(Integer.valueOf(3).equals(paramBoundingBox.getMaxList().size()),
+                    "Request parameters must include intersectsBoundingBox.max with a double list value of 3 items");
         }
 
 
