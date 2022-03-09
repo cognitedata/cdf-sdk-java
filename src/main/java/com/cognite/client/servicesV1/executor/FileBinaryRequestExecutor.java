@@ -647,7 +647,8 @@ public abstract class FileBinaryRequestExecutor {
             try {
                 AmazonS3 s3 = getAmazonS3();
                 String bucketName = getTempStoragePath().getHost();
-                String path = getTempStoragePath().getPath().substring(1);
+                String path = getTempStoragePath().getPath();
+                if (path.startsWith("/")) path = path.substring(1);
                 if (!path.endsWith("/")) path = path + "/";
                 String objectName = path + tempFileName;
 
@@ -657,9 +658,9 @@ public abstract class FileBinaryRequestExecutor {
                         .build();
                 ObjectMetadata metadata = new ObjectMetadata();
                 metadata.setContentLength(response.body().contentLength());
-                Upload upload = tm.upload(bucketName, objectName, response.body().source().inputStream(), metadata);
+                Upload upload = tm.upload(bucketName, objectName.substring(1), response.body().source().inputStream(), metadata);
                 upload.waitForCompletion();
-                URI fileURI = new URI("s3", bucketName, "/" + objectName, null);
+                URI fileURI = new URI("s3", bucketName, objectName, null);
                 return FileBinary.newBuilder()
                         .setBinaryUri(fileURI.toString())
                         .setContentLength(response.body().contentLength())
