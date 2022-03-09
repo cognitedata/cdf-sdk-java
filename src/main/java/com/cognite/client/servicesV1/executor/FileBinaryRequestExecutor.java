@@ -481,7 +481,7 @@ public abstract class FileBinaryRequestExecutor {
                     .put(RequestBody.create(fileBinary.getBinary().toByteArray(), MediaType.get(mimeType)))
                     .build();
         } else {
-            LOG.debug(loggingPrefix + "File binary sourced temporary blob storage: " + fileBinary.getBinaryUri());
+            LOG.debug(loggingPrefix + "File binary sourced from temporary blob storage: " + fileBinary.getBinaryUri());
             request = new Request.Builder()
                     .url(url)
                     .header("X-Upload-Content-Type", mimeType)
