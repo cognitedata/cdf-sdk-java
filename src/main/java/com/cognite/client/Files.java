@@ -594,16 +594,22 @@ public abstract class Files extends ApiBase {
      * Examples: {@code file://localhost/home/files/, file:///home/files/, file:///c:/temp/}
      * - Google Cloud Storage. Specify the temp path as {@code gs://<my-storage-bucket>/<my-path>/}.
      *
+     * If the file binary download URI points to the local file system we will try to name the file binary based on
+     * the file metadata/header {@code fileName} attribute. For remote storage we will use a randomly generated
+     * filename.
+     *
      * @param files The list of files to download.
-     * @param downloadPath The URI to the download storage
+     * @param downloadUri The URI to the download storage
      * @param preferByteStream Set to true to return byte streams when possible, set to false to always store
      *                         binary as file.
      * @return File containers with file headers and references/byte streams of the binary.
      */
-    public List<FileContainer> download(List<Item> files, Path downloadPath, boolean preferByteStream) throws Exception {
+    public List<FileContainer> download(List<Item> files, URI downloadUri, boolean preferByteStream) throws Exception {
         String loggingPrefix = "download() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
-        Preconditions.checkArgument(java.nio.file.Files.isDirectory(downloadPath),
-                loggingPrefix + "The download path must be a valid directory.");
+        // check that the input URI follows a valid scheme
+        Preconditions.checkArgument("file".equalsIgnoreCase(downloadUri.getScheme())
+                || "gs".equalsIgnoreCase(downloadUri.getScheme()),
+                loggingPrefix + "The download URI must be either \"file\" or \"gs\".");
 
         Instant startInstant = Instant.now();
         if (files.isEmpty()) {
@@ -617,17 +623,18 @@ public abstract class Files extends ApiBase {
         List<FileContainer> results = new ArrayList<>();
         for (List<Item> batch : batches) {
             // Get the file binaries
-            List<FileBinary> fileBinaries = downloadFileBinaries(batch, downloadPath.toUri(), !preferByteStream);
+            List<FileBinary> fileBinaries = downloadFileBinaries(batch, downloadUri, !preferByteStream);
             // Get the file metadata
             List<FileMetadata> fileMetadataList = retrieve(batch);
             // Merge the binary and metadata
             List<FileContainer> tempNameContainers = buildFileContainers(fileBinaries, fileMetadataList);
 
-            // Rename the file from random temp name to file name
+            // Rename the file from random temp name to file name (if we are working with the local file system)
             List<FileContainer> resultContainers = new ArrayList<>();
             for (FileContainer container : tempNameContainers) {
                 if (container.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY_URI
-                        && container.hasFileMetadata()) {
+                        && container.hasFileMetadata()
+                        && "file".equalsIgnoreCase(downloadUri.getScheme())) {
                     // Get the target file name. Replace illegal characters with dashes
                     String fileNameBase = container.getFileMetadata().getName()
                             .trim()
@@ -639,6 +646,7 @@ public abstract class Files extends ApiBase {
                         fileSuffix = fileNameBase.substring(splitIndex);
                         fileNameBase = fileNameBase.substring(0, splitIndex);
                     }
+                    Path downloadPath = Paths.get(downloadUri);
                     Path tempFilePath = Paths.get(new URI(container.getFileBinary().getBinaryUri()));
                     String destinationFileName = fileNameBase;
                     int counter = 1;
@@ -693,7 +701,7 @@ public abstract class Files extends ApiBase {
      * @return File containers with file headers and references/byte streams of the binary.
      */
     public List<FileContainer> downloadToPath(List<Item> files, Path downloadPath) throws Exception {
-        return download(files, downloadPath, false);
+        return download(files, downloadPath.toUri(), false);
     }
 
     /*
