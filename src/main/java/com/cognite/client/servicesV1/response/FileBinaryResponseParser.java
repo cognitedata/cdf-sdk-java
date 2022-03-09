@@ -47,7 +47,7 @@ public abstract class FileBinaryResponseParser implements ResponseParser<FileBin
     public static FileBinaryResponseParser create() {
         return FileBinaryResponseParser.builder()
                 .setRequest(Request.create()
-                        .withItemExternalId("defaultBeamId"))
+                        .withItemExternalIds("defaultBeamId"))
                 .build();
     }
 

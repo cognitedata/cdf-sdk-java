@@ -16,6 +16,7 @@
 
 package com.cognite.client.servicesV1.executor;
 
+import com.amazonaws.SdkClientException;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
@@ -45,6 +46,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -588,6 +590,9 @@ public abstract class FileBinaryRequestExecutor {
     private FileBinary downloadBinaryToTempStorage(Response response) throws Exception {
         Preconditions.checkState(null != getTempStoragePath(),
                 "Invalid temp storage path");
+
+        Preconditions.checkNotNull(response.body(), "Response must have body");
+
         ZonedDateTime nowUTC = Instant.now().atZone(ZoneId.of("UTC"));
         DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssSSS");
         String tempFileName = new StringBuilder(36)
@@ -639,25 +644,30 @@ public abstract class FileBinaryRequestExecutor {
                     .build();
         } else if (null != getTempStoragePath().getScheme()
                 && getTempStoragePath().getScheme().equalsIgnoreCase("s3")) {
-            AmazonS3 s3 = getAmazonS3();
-            String bucketName = getTempStoragePath().getHost();
-            String path = getTempStoragePath().getPath();
-            if (!path.endsWith("/")) path = path + "/";
-            String objectName = path + tempFileName;
+            try {
+                AmazonS3 s3 = getAmazonS3();
+                String bucketName = getTempStoragePath().getHost();
+                String path = getTempStoragePath().getPath().substring(1);
+                if (!path.endsWith("/")) path = path + "/";
+                String objectName = path + tempFileName;
 
-            TransferManager tm = TransferManagerBuilder.standard()
-                    .withS3Client(s3)
-                    .withMultipartUploadThreshold((long) DATA_TRANSFER_BUFFER_SIZE)
-                    .build();
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentLength(response.body().contentLength());
-            Upload upload = tm.upload(bucketName, objectName, response.body().source().inputStream(), metadata);
-            upload.waitForCompletion();
-            URI fileURI = new URI("s3", bucketName, "/" + objectName, null);
-            return FileBinary.newBuilder()
-                    .setBinaryUri(fileURI.toString())
-                    .setContentLength(response.body().contentLength())
-                    .build();
+                TransferManager tm = TransferManagerBuilder.standard()
+                        .withS3Client(s3)
+                        .withMultipartUploadThreshold((long) DATA_TRANSFER_BUFFER_SIZE)
+                        .build();
+                ObjectMetadata metadata = new ObjectMetadata();
+                metadata.setContentLength(response.body().contentLength());
+                Upload upload = tm.upload(bucketName, objectName, response.body().source().inputStream(), metadata);
+                upload.waitForCompletion();
+                URI fileURI = new URI("s3", bucketName, "/" + objectName, null);
+                return FileBinary.newBuilder()
+                        .setBinaryUri(fileURI.toString())
+                        .setContentLength(response.body().contentLength())
+                        .build();
+            } catch (SdkClientException e) {
+                LOG.error("Failed to upload data to S3 store", e);
+                throw new IOException("Failed to upload data to S3 store", e);
+            }
         } else if (null != getTempStoragePath().getScheme()
                 && getTempStoragePath().getScheme().equalsIgnoreCase("file")) {
             // Handler for local (or network) based file system blobs
@@ -769,22 +779,27 @@ public abstract class FileBinaryRequestExecutor {
                     blob.delete();
                 }
             } else if (null != fileURI.getScheme() && fileURI.getScheme().equalsIgnoreCase("s3")) {
-                final AmazonS3 s3 = getAmazonS3();
-                if (!s3.doesObjectExist(fileURI.getHost(), fileURI.getPath())) {
-                    LOG.error("Looks like the S3 blob does not exist. File URI: {}",
-                            fileURI.toString());
-                    throw new IOException(String.format("Looks like the S3 blob is null/does not exist. File URI: %s",
-                            fileURI.toString()));
-                }
-                S3Object object = s3.getObject(new GetObjectRequest(fileURI.getHost(), fileURI.getPath()));
-                InputStream reader = new BufferedInputStream(object.getObjectContent());
-                int read = -1;
-                while ((read = reader.read()) != -1) {
-                    bufferedSink.writeByte(read);
-                }
-                reader.close();
-                if (deleteTempFile) {
-                    s3.deleteObject(new DeleteObjectRequest(fileURI.getHost(), fileURI.getPath()));
+                try {
+                    final AmazonS3 s3 = getAmazonS3();
+                    if (!s3.doesObjectExist(fileURI.getHost(), fileURI.getPath().substring(1))) {
+                        LOG.error("Looks like the S3 blob does not exist. File URI: {}",
+                                fileURI.toString());
+                        throw new IOException(String.format("Looks like the S3 blob is null/does not exist. File URI: %s",
+                                fileURI.toString()));
+                    }
+                    S3Object object = s3.getObject(new GetObjectRequest(fileURI.getHost(), fileURI.getPath().substring(1)));
+                    InputStream reader = new BufferedInputStream(object.getObjectContent());
+                    int read = -1;
+                    while ((read = reader.read()) != -1) {
+                        bufferedSink.writeByte(read);
+                    }
+                    reader.close();
+                    if (deleteTempFile) {
+                        s3.deleteObject(new DeleteObjectRequest(fileURI.getHost(), fileURI.getPath().substring(1)));
+                    }
+                } catch (SdkClientException e) {
+                    LOG.error("Failed to read object from S3 store", e);
+                    throw new IOException("Failed to read S3 blob", e);
                 }
             } else if (null != fileURI.getScheme() && fileURI.getScheme().equalsIgnoreCase("file")) {
                 // Handler for local (or network) based file system blobs
@@ -808,22 +823,33 @@ public abstract class FileBinaryRequestExecutor {
         }
 
         public long contentLength() {
-            long contentLength = -1;
             if (fileURI.getScheme().equalsIgnoreCase("gs")) {
                 try {
                     Blob blob = getBlob(fileURI);
-                    if (null == blob) {
-                        LOG.warn("Looks like the GCS blob is null/does not exist. File URI: {}",
-                                fileURI.toString());
+                    if (null != blob) {
+                        return blob.getSize();
                     } else {
-                        contentLength = blob.getSize();
+                        LOG.warn("Looks like the GCS blob is null/does not exist. File URI: {}", fileURI.toString());
                     }
                 } catch (IOException e) {
                     LOG.warn(e.getMessage());
                 }
             }
 
-            return contentLength;
+            if (fileURI.getScheme().equalsIgnoreCase("file")) {
+                final File file = new File(fileURI.getPath());
+                return file.length();
+            }
+
+            if (fileURI.getScheme().equalsIgnoreCase("s3")) {
+                try {
+                    return getAmazonS3().getObjectMetadata(fileURI.getHost(), fileURI.getPath().substring(1)).getContentLength();
+                } catch (SdkClientException e) {
+                    LOG.warn("Failed to estimate contentLength on S3", e);
+                }
+            }
+
+            return -1;
         }
 
         /*

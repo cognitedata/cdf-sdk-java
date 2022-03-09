@@ -59,6 +59,7 @@ class FilesIntegrationTest {
         FileContainer fileContainer = FileContainer.newBuilder()
                 .setFileMetadata(DataGenerator.generateFileHeaderObjects(1).get(0))
                 .setFileBinary(FileBinary.newBuilder()
+//                        .setBinaryUri("s3://testbucket/README.md")
                         .setBinaryUri(fileATemp.toUri().toString())
                         )
                 .build();
