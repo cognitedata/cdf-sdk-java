@@ -44,6 +44,7 @@
         <auto.version>1.9</auto.version>
 
         <nimbusds.version>9.22.1</nimbusds.version>
+        <awss3.version>1.12.153</awss3.version>
         <jgrapht.version>1.5.1</jgrapht.version>
         <okhttp3.version>4.9.3</okhttp3.version>
         <jackson.version>2.13.1</jackson.version>
@@ -104,6 +105,11 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
+            <version>${awss3.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jgrapht</groupId>
