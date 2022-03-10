@@ -5,6 +5,7 @@ import com.cognite.client.config.TokenUrl;
 import com.cognite.client.dto.*;
 import com.cognite.client.util.DataGenerator;
 import com.google.common.collect.ImmutableMap;
+import com.cognite.client.util.Items;
 import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -22,10 +23,33 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class FilesIntegrationTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
+
+    @Test
+    void downloadValidateUri() throws Exception {
+        Instant startInstant = Instant.now();
+        String loggingPrefix = "UnitTest - downloadValidateUri() -";
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                        TestConfigProvider.getClientId(),
+                        TestConfigProvider.getClientSecret(),
+                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                .withProject(TestConfigProvider.getProject())
+                .withBaseUrl(TestConfigProvider.getHost())
+                //.withClientConfig(config)
+                ;
+        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        LOG.info(loggingPrefix + "Check download URI validation.");
+        assertThrows(Exception.class, () -> client.files()
+                .download(Items.parseItems(1, 2, 3), new URI("notSupported://myBucket"), false));
+    }
 
     @Test
     @Tag("remoteCDP")
@@ -211,7 +235,6 @@ class FilesIntegrationTest {
 
             assertEquals(fileContainerInput.size(), listFilesResults.size());
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
-
 
         } catch (Exception e) {
             LOG.error(e.toString());

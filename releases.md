@@ -19,12 +19,20 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+
 ## [SNAPSHOT]
 
 ### Added
 
 - Files API supports S3 buckets as intermediate store for both read from and write to. 
 
+## [1.12.1] 2022-03-10
+
+### Fixed
+
+- `Files.download()` took a `Path` argument instead of `URI`. 
+
+###
 
 ## [1.12.0] 2022-03-09
 
