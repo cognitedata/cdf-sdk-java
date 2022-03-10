@@ -608,8 +608,9 @@ public abstract class Files extends ApiBase {
         String loggingPrefix = "download() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         // check that the input URI follows a valid scheme
         Preconditions.checkArgument("file".equalsIgnoreCase(downloadUri.getScheme())
-                || "gs".equalsIgnoreCase(downloadUri.getScheme()),
-                loggingPrefix + "The download URI must be either \"file\" or \"gs\".");
+                || "gs".equalsIgnoreCase(downloadUri.getScheme())
+                || "s3".equalsIgnoreCase(downloadUri.getScheme()),
+                loggingPrefix + "The download URI must be either \"file\",  \"gs\" or \"s3\".");
 
         Instant startInstant = Instant.now();
         if (files.isEmpty()) {
