@@ -95,6 +95,7 @@ public abstract class FileBinaryRequestExecutor {
     );
     private static final ImmutableList<Class<? extends Exception>> RETRYABLE_EXCEPTIONS = ImmutableList.of(
             java.net.SocketTimeoutException.class,
+            java.net.SocketException.class,                     // API saturation
             java.net.UnknownHostException.class,                // Can indicate a saturated link
             javax.net.ssl.SSLException.class,                   // Can indicate a saturated link
             StreamResetException.class,
