@@ -19,6 +19,13 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type.
 
+## [1.14.0-SNAPSHOT]
+
+
+### Fixed
+
+- File binary download retrying on `SSLException` and `UnknownHostException`. Both may indicate a saturated link for a 
+long-running job (which file binary downloads often are).
 
 ## [1.13.0] 2022-03-11
 
