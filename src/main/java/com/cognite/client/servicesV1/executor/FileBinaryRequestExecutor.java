@@ -95,6 +95,7 @@ public abstract class FileBinaryRequestExecutor {
     );
     private static final ImmutableList<Class<? extends Exception>> RETRYABLE_EXCEPTIONS = ImmutableList.of(
             java.net.SocketTimeoutException.class,
+            javax.net.ssl.SSLException.class,
             StreamResetException.class,
             com.google.cloud.storage.StorageException.class     // Timeout + stream reset when using GCS as temp storage
     );
