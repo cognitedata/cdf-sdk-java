@@ -16,19 +16,23 @@
 
 package com.cognite.client.servicesV1.parser;
 
-import com.cognite.client.dto.*;
+import com.cognite.client.dto.SequenceBody;
+import com.cognite.client.dto.SequenceColumn;
+import com.cognite.client.dto.SequenceMetadata;
+import com.cognite.client.dto.SequenceRow;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.Int64Value;
-import com.google.protobuf.StringValue;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.Value;
 import com.google.protobuf.util.Values;
 
 import java.util.*;
 
+import static com.cognite.client.dto.SequenceColumn.ValueType.DOUBLE;
+import static com.cognite.client.dto.SequenceColumn.ValueType.LONG;
 import static com.cognite.client.servicesV1.ConnectorConstants.MAX_LOG_ELEMENT_LENGTH;
 
 /**
@@ -41,8 +45,8 @@ public class SequenceParser {
 
     private static final ImmutableBiMap<String, SequenceColumn.ValueType> valueTypeMap = ImmutableBiMap
             .<String, SequenceColumn.ValueType>builder()
-            .put("DOUBLE", SequenceColumn.ValueType.DOUBLE)
-            .put("LONG", SequenceColumn.ValueType.LONG)
+            .put("DOUBLE", DOUBLE)
+            .put("LONG", LONG)
             .put("STRING", SequenceColumn.ValueType.STRING)
             .build();
 
@@ -324,6 +328,9 @@ public class SequenceParser {
             mapBuilder.put("id", element.getId());
         }
 
+        List<SequenceColumn.ValueType> columnTypes = new ArrayList<>();
+        element.getColumnsList().forEach(a -> columnTypes.add(a.getValueType()));
+
         if (element.getColumnsCount() > 0) {
             List<String> columnList = new ArrayList<>(element.getColumnsCount());
             element.getColumnsList().forEach(column -> columnList.add(column.getExternalId()));
@@ -343,9 +350,18 @@ public class SequenceParser {
                             element.getExternalId(),
                             row.getRowNumber()));
                 }
-                for (Value value : row.getValuesList()) {
+                for (int i = 0; i < row.getValuesList().size(); i++) {
+                    Value value = row.getValuesList().get(i);
                     if (value.getKindCase() == Value.KindCase.NUMBER_VALUE) {
-                        valueList.add(value.getNumberValue());
+                        if (columnTypes.get(i) == DOUBLE) {
+                            valueList.add(value.getNumberValue());
+                        } else if (columnTypes.get(i) == LONG) {
+                            valueList.add((long) value.getNumberValue());
+                        } else {
+                            throw new Exception(logPrefix + "Mismatch value type between column and row value: "
+                                    + value.getKindCase() + ". Seq Column expects: " + columnTypes.get(i).toString()
+                                    + ". Value type must be string or null.");
+                        }
                     } else if (value.getKindCase() == Value.KindCase.STRING_VALUE) {
                         valueList.add(value.getStringValue());
                     } else if (value.getKindCase() == Value.KindCase.NULL_VALUE) {
@@ -438,6 +454,7 @@ public class SequenceParser {
      *
      * A replace item object replaces an existingTS header object with new values for all provided fields.
      * Fields that are not in the update object are set to null.
+     *
      * @param element
      * @return
      */
@@ -522,6 +539,7 @@ public class SequenceParser {
 
     /**
      * Returns the string representation of a {@link SequenceColumn.ValueType}.
+     *
      * @param valueType The value type
      * @return The string representation of the {@link SequenceColumn.ValueType}
      */
