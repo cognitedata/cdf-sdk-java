@@ -25,14 +25,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.Descriptors;
 import com.google.protobuf.Value;
 import com.google.protobuf.util.Values;
 
 import java.util.*;
 
-import static com.cognite.client.dto.SequenceColumn.ValueType.DOUBLE;
-import static com.cognite.client.dto.SequenceColumn.ValueType.LONG;
 import static com.cognite.client.servicesV1.ConnectorConstants.MAX_LOG_ELEMENT_LENGTH;
 
 /**
@@ -45,8 +42,8 @@ public class SequenceParser {
 
     private static final ImmutableBiMap<String, SequenceColumn.ValueType> valueTypeMap = ImmutableBiMap
             .<String, SequenceColumn.ValueType>builder()
-            .put("DOUBLE", DOUBLE)
-            .put("LONG", LONG)
+            .put("DOUBLE", SequenceColumn.ValueType.DOUBLE)
+            .put("LONG", SequenceColumn.ValueType.LONG)
             .put("STRING", SequenceColumn.ValueType.STRING)
             .build();
 
@@ -353,9 +350,9 @@ public class SequenceParser {
                 for (int i = 0; i < row.getValuesList().size(); i++) {
                     Value value = row.getValuesList().get(i);
                     if (value.getKindCase() == Value.KindCase.NUMBER_VALUE) {
-                        if (columnTypes.get(i) == DOUBLE) {
+                        if (columnTypes.get(i) == SequenceColumn.ValueType.DOUBLE) {
                             valueList.add(value.getNumberValue());
-                        } else if (columnTypes.get(i) == LONG) {
+                        } else if (columnTypes.get(i) == SequenceColumn.ValueType.LONG) {
                             valueList.add((long) value.getNumberValue());
                         } else {
                             throw new Exception(logPrefix + "Mismatch value type between column and row value: "
