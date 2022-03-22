@@ -357,7 +357,7 @@ public class SequenceParser {
                         } else {
                             throw new Exception(logPrefix + "Mismatch value type between column and row value: "
                                     + value.getKindCase() + ". Seq Column expects: " + columnTypes.get(i).toString()
-                                    + ". Value type must be string or null.");
+                                    + ". Value type must be string.");
                         }
                     } else if (value.getKindCase() == Value.KindCase.STRING_VALUE) {
                         valueList.add(value.getStringValue());
