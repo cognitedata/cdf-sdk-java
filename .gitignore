@@ -6,3 +6,4 @@ target/
 .classpath
 .factorypath
 *.iml
+/dependency-reduced-pom.xml
