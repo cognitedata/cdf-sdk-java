@@ -3,10 +3,7 @@ package com.cognite.client;
 import com.cognite.client.config.ClientConfig;
 import com.cognite.client.config.TokenUrl;
 import com.cognite.client.config.UpsertMode;
-import com.cognite.client.dto.Aggregate;
-import com.cognite.client.dto.Item;
-import com.cognite.client.dto.SequenceBody;
-import com.cognite.client.dto.SequenceMetadata;
+import com.cognite.client.dto.*;
 import com.cognite.client.util.DataGenerator;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -17,6 +14,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
@@ -212,10 +210,23 @@ class SequencesIntegrationTest {
             LOG.info(loggingPrefix + "Start updating sequences.");
             List<SequenceMetadata> editedSequencesInput = upsertedTimeseries.stream()
                     .map(sequences -> sequences.toBuilder()
-                            .setDescription("new-value")
-                            .clearMetadata()
-                            .putMetadata("new-key", "new-value")
-                            .build())
+                                .setDescription("new-value")
+                                .clearMetadata()
+                                .putMetadata("new-key", "new-value")
+                                .addAllColumns(DataGenerator.generateSequenceColumnHeader(2))
+                                .removeColumns(1)
+                                .build())
+                    .map(sequence -> {
+                        // modify a column
+                        int index = ThreadLocalRandom.current().nextInt(0, sequence.getColumnsCount());
+                        SequenceColumn column = sequence.getColumns(index).toBuilder()
+                                .clearMetadata()
+                                .putMetadata("new-column-key", "new-column-value")
+                                .build();
+                        return sequence.toBuilder()
+                                .addColumns(index, column)
+                                .build();
+                    })
                     .collect(Collectors.toList());
 
             List<SequenceMetadata> sequencesUpdateResults = client.sequences().upsert(editedSequencesInput);
