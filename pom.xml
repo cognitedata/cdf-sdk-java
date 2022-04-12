@@ -348,11 +348,11 @@
                         </goals>
                         <configuration>
                             <minimizeJar>false</minimizeJar>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <createDependencyReducedPom>true</createDependencyReducedPom>
+                            <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
                             <artifactSet>
                                 <includes>
                                     <include>com.squareup.okhttp3:okhttp</include>
-                                    <include>org.jetbrains.kotlin:kotlin-stdlib</include>
                                     <include>com.squareup.okio:okio</include>
                                 </includes>
                             </artifactSet>
