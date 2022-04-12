@@ -17,7 +17,15 @@ Changes are grouped as follows:
 
 ### Short term
 
-- Geo-location attribute and resource type.
+- Geo-location attribute and resource type
+
+## [1.13.2] 2022-04-12
+
+### Fixed
+
+- Fix shaded dependencies. Some of the shaded Kotlin libraries caused conflicts when using the SDK from a Kotlin environment.
+- Fix duplicated protobuf class files.
+- Fix dependency vulnerability. Bump `jackson-databind` to `v2.13.2.1`.
 
 ## [1.13.1] 2022-03-22
 

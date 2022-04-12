@@ -28,7 +28,7 @@ information ([https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.m
 <dependency>    
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>1.13.1</version>
+    <version>1.13.2</version>
 </dependency>
 ```
     
