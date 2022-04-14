@@ -30,6 +30,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -762,7 +763,7 @@ abstract class ApiBase {
          * Creates a new {@link UpsertItems} that will perform upsert actions.
          *
          * @param createWriter          The item writer for create requests.
-         * @param createMappingFunction A mapping function that will translate types objects
+         * @param createMappingFunction A mapping function that will translate typed objects
          *                              into JSON create/insert objects.
          * @param authConfig            The authorization info for api requests.
          * @param <T>                   The object type of the objects to upsert.
@@ -781,12 +782,28 @@ abstract class ApiBase {
         /**
          * Get id via the common dto methods {@code getExternalId} and {@code getId}.
          *
+         * This is the default implementation which uses {@code Message} reflection to find the {@code externalId} or
+         * {@code id} fields.
+         *
          * @param item The item to interrogate for id
          * @param <T>  The object type of the item. Must be a protobuf object.
          * @return The (external)Id if found. An empty {@link Optional} if no id is found.
          */
-        private static <T> Optional<String> getId(T item) {
-            return Optional.<String>empty();
+        private static <T extends Message> Optional<String> getId(T item) {
+            Optional<String> returnObject = Optional.empty();
+
+            java.util.Map<Descriptors.FieldDescriptor, java.lang.Object> fieldMap = item.getAllFields();
+            for (Descriptors.FieldDescriptor field : fieldMap.keySet()) {
+                if (field.getName().equalsIgnoreCase("external_id")
+                        && field.getType() == Descriptors.FieldDescriptor.Type.STRING) {
+                    returnObject = Optional.of((String) fieldMap.get(field));
+                } else if (field.getName().equalsIgnoreCase("id")
+                        && field.getType() == Descriptors.FieldDescriptor.Type.DOUBLE) {
+                    returnObject = Optional.of(String.valueOf(fieldMap.get(field)));
+                }
+            }
+
+            return returnObject;
         }
 
         /**
@@ -802,17 +819,13 @@ abstract class ApiBase {
         abstract Builder<T> toBuilder();
 
         abstract int getMaxBatchSize();
-
         abstract AuthConfig getAuthConfig();
-
         abstract Function<T, Optional<String>> getIdFunction();
-
         abstract Function<T, Map<String, Object>> getCreateMappingFunction();
 
         /**
          * Returns the function that controls the batching of items. The default batching function is based on
-         * splitting the items into batches based on the number of items (which can be controlled via the
-         * {@code maxBatchSize} parameter).
+         * splitting the items into batches of max 1k objects.
          *
          * @return The current batching function.
          */
