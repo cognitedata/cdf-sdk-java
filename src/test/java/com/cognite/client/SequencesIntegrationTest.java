@@ -216,17 +216,17 @@ class SequencesIntegrationTest {
                                 .addAllColumns(DataGenerator.generateSequenceColumnHeader(2))
                                 .removeColumns(1)
                                 .build())
-                    .map(sequence -> {
-                        // modify a column
-                        int index = ThreadLocalRandom.current().nextInt(0, sequence.getColumnsCount());
-                        SequenceColumn column = sequence.getColumns(index).toBuilder()
-                                .clearMetadata()
-                                .putMetadata("new-column-key", "new-column-value")
-                                .build();
-                        return sequence.toBuilder()
-                                .addColumns(index, column)
-                                .build();
-                    })
+//                    .map(sequence -> {
+//                        // modify a column
+//                        int index = ThreadLocalRandom.current().nextInt(0, sequence.getColumnsCount());
+//                        SequenceColumn column = sequence.getColumns(index).toBuilder()
+//                                .clearMetadata()
+//                                .putMetadata("new-column-key", "new-column-value")
+//                                .build();
+//                        return sequence.toBuilder()
+//                                .addColumns(index, column)
+//                                .build();
+//                    })
                     .collect(Collectors.toList());
 
             List<SequenceMetadata> sequencesUpdateResults = client.sequences().upsert(editedSequencesInput);
