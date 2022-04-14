@@ -1906,7 +1906,7 @@ abstract class ApiBase {
          * @throws Exception
          */
         private Map<ResponseItems<String>, List<T>> splitAndCreateItems(List<T> items) {
-            return splitAndDoItems(items, this::createItems);
+            return splitAndProcessItems(items, this::createItems);
         }
 
         /**
@@ -1920,7 +1920,7 @@ abstract class ApiBase {
          * @throws Exception
          */
         private Map<ResponseItems<String>, List<T>> splitAndUpdateItems(List<T> items) {
-            return splitAndDoItems(items, this::updateItems);
+            return splitAndProcessItems(items, this::updateItems);
         }
 
         /**
@@ -1930,12 +1930,12 @@ abstract class ApiBase {
          * The response from each request is returned along with the items used as input.
          *
          * @param items the objects to create/insert.
-         * @param doer  function that maps batch to a request
+         * @param processFunc function that maps batch to a request
          * @return a {@link Map} with the responses and request inputs.
          */
-        private Map<ResponseItems<String>, List<T>> splitAndDoItems(
+        private Map<ResponseItems<String>, List<T>> splitAndProcessItems(
                 List<T> items,
-                Function<List<T>, CompletableFuture<ResponseItems<String>>> doer) {
+                Function<List<T>, CompletableFuture<ResponseItems<String>>> processFunc) {
             Map<CompletableFuture<ResponseItems<String>>, List<T>> responseMap = new HashMap<>();
 
             // Split into batches
@@ -1943,7 +1943,7 @@ abstract class ApiBase {
 
             // Submit all batches
             for (List<T> batch : itemBatches) {
-                responseMap.put(doer.apply(batch), batch);
+                responseMap.put(processFunc.apply(batch), batch);
             }
 
             // Wait for all requests futures to complete
@@ -1991,8 +1991,8 @@ abstract class ApiBase {
          * Submits a set of items as a writer request with mapping function to the Cognite API.
          *
          * @param items  the objects to update.
-         * @param mapper JSON desierialiser function
-         * @param writer the objects to update.
+         * @param mapper JSON deserializer function
+         * @param writer the {@link com.cognite.client.servicesV1.ConnectorServiceV1.ItemWriter} to use to post the items.
          * @return a {@link CompletableFuture} representing the response from the update request.
          * @throws Exception
          */
