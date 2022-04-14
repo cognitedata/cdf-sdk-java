@@ -807,7 +807,10 @@ abstract class ApiBase {
         }
 
         /**
-         * The default batching function, splitting items into batches based on a max count.
+         * The default batching function, splitting items into batches based on the max batch size.
+         *
+         * If {@code max batch size} is configured via {@link #withMaxBatchSize(int)}, then the batching function
+         * will be updated as well.
          *
          * @param items the items to be split into batches.
          * @return The batches of items.
@@ -825,7 +828,9 @@ abstract class ApiBase {
 
         /**
          * Returns the function that controls the batching of items. The default batching function is based on
-         * splitting the items into batches of max 1k objects.
+         * splitting the items into batches based on the {@code maxBatchSize} setting. The default max batch size is
+         * 1k. If you configure the max batch size via {@link #withMaxBatchSize(int)} then this will be picked up
+         * by the default batching function.
          *
          * @return The current batching function.
          */
@@ -833,16 +838,12 @@ abstract class ApiBase {
 
         @Nullable
         abstract Function<T, Map<String, Object>> getUpdateMappingFunction();
-
         @Nullable
         abstract Function<List<Item>, List<T>> getRetrieveFunction();
-
         @Nullable
         abstract BiFunction<T, T, Boolean> getEqualFunction();
-
         @Nullable
         abstract Function<T, Item> getItemMappingFunction();
-
         abstract ConnectorServiceV1.ItemWriter getCreateItemWriter();
 
         @Nullable
@@ -898,7 +899,7 @@ abstract class ApiBase {
         }
 
         /**
-         * Sets the mapping function for translating from the typed objects an {@link Item} object. This function
+         * Sets the mapping function for translating from the typed objects to an {@link Item} object. This function
          * is used when deleting objects (which is done via the Item representation).
          *
          * @param function The {@link Item} mapping function.
@@ -962,7 +963,7 @@ abstract class ApiBase {
          * Specifies a custom batching function.
          *
          * The default batching function is based on splitting the items into batches based on the number of
-         * items (which can be controlled via the {@code maxBatchSize} parameter).
+         * items (which can be controlled via the {@link #withMaxBatchSize(int)} parameter).
          *
          * @param function The custom batching function
          * @return The {@link UpsertItems} object with the configuration applied.
@@ -1002,7 +1003,7 @@ abstract class ApiBase {
             List<String> elementListCompleted = new ArrayList<>(elementListCreate.size());
 
             if (elementListCreate.size() != items.size()) {
-                LOG.debug(batchLogPrefix + "Identified {} duplicate items in the input.",
+                LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
                         items.size() - elementListCreate.size());
             }
 
@@ -1055,21 +1056,10 @@ abstract class ApiBase {
                             LOG.debug(batchLogPrefix + "Number of duplicate entries reported by CDF: {}", duplicates.size());
 
                             // Move duplicates from insert to the update request
-                            Map<String, T> itemsMap = mapToId(createResponseMap.get(response));
-                            for (Item value : duplicates) {
-                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
-                                    elementListUpdate.add(itemsMap.get(value.getExternalId()));
-                                    itemsMap.remove(value.getExternalId());
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
-                                    elementListUpdate.add(itemsMap.get(String.valueOf(value.getId())));
-                                    itemsMap.remove(String.valueOf(value.getId()));
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME) {
-                                    // Special case for v1 TS headers.
-                                    elementListUpdate.add(itemsMap.get(value.getLegacyName()));
-                                    itemsMap.remove(value.getLegacyName());
-                                }
-                            }
-                            elementListCreate.addAll(itemsMap.values()); // Add remaining items to be re-inserted
+                            distributeObjectsToMainAndReminder(createResponseMap.get(response),
+                                    duplicates,
+                                    elementListUpdate,
+                                    elementListCreate);
                         }
                     }
                 }
@@ -1104,25 +1094,10 @@ abstract class ApiBase {
                             LOG.debug(batchLogPrefix + "Number of missing entries reported by CDF: {}", missing.size());
 
                             // Move missing items from update to the create request
-                            // Must check for null since missing items may refer to parent asset references.
-                            Map<String, T> itemsMap = mapToId(updateResponseMap.get(response));
-                            for (Item value : missing) {
-                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID
-                                        && itemsMap.containsKey(value.getExternalId())) {
-                                    elementListCreate.add(itemsMap.get(value.getExternalId()));
-                                    itemsMap.remove(value.getExternalId());
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID
-                                        && itemsMap.containsKey(String.valueOf(value.getId()))) {
-                                    elementListCreate.add(itemsMap.get(String.valueOf(value.getId())));
-                                    itemsMap.remove(String.valueOf(value.getId()));
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME
-                                        && itemsMap.containsKey(value.getLegacyName())) {
-                                    // Special case for v1 TS headers.
-                                    elementListCreate.add(itemsMap.get(value.getLegacyName()));
-                                    itemsMap.remove(value.getLegacyName());
-                                }
-                            }
-                            elementListUpdate.addAll(itemsMap.values()); // Add remaining items to be re-updated
+                            distributeObjectsToMainAndReminder(updateResponseMap.get(response),
+                                    missing,
+                                    elementListCreate,
+                                    elementListUpdate);
                         }
                     }
                 }
@@ -1183,7 +1158,7 @@ abstract class ApiBase {
             List<String> elementListCompleted = new ArrayList<>(elementListUpdate.size());
 
             if (elementListUpdate.size() != items.size()) {
-                LOG.debug(batchLogPrefix + "Identified {} duplicate items in the input.",
+                LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
                         items.size() - elementListUpdate.size());
             }
 
@@ -1236,25 +1211,10 @@ abstract class ApiBase {
                             LOG.debug(batchLogPrefix + "Number of missing entries reported by CDF: {}", missing.size());
 
                             // Move missing items from update to the create request
-                            // Must check for null since missing items may refer to parent asset references.
-                            Map<String, T> itemsMap = mapToId(updateResponseMap.get(response));
-                            for (Item value : missing) {
-                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID
-                                        && itemsMap.containsKey(value.getExternalId())) {
-                                    elementListCreate.add(itemsMap.get(value.getExternalId()));
-                                    itemsMap.remove(value.getExternalId());
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID
-                                        && itemsMap.containsKey(String.valueOf(value.getId()))) {
-                                    elementListCreate.add(itemsMap.get(String.valueOf(value.getId())));
-                                    itemsMap.remove(String.valueOf(value.getId()));
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME
-                                        && itemsMap.containsKey(value.getLegacyName())) {
-                                    // Special case for v1 TS headers.
-                                    elementListCreate.add(itemsMap.get(value.getLegacyName()));
-                                    itemsMap.remove(value.getLegacyName());
-                                }
-                            }
-                            elementListUpdate.addAll(itemsMap.values()); // Add remaining items to be re-updated
+                            distributeObjectsToMainAndReminder(updateResponseMap.get(response),
+                                    missing,
+                                    elementListCreate,
+                                    elementListUpdate);
                         }
                     }
                 }
@@ -1289,21 +1249,10 @@ abstract class ApiBase {
                             LOG.debug(batchLogPrefix + "Number of duplicate entries reported by CDF: {}", duplicates.size());
 
                             // Move duplicates from insert to the update request
-                            Map<String, T> itemsMap = mapToId(createResponseMap.get(response));
-                            for (Item value : duplicates) {
-                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
-                                    elementListUpdate.add(itemsMap.get(value.getExternalId()));
-                                    itemsMap.remove(value.getExternalId());
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
-                                    elementListUpdate.add(itemsMap.get(String.valueOf(value.getId())));
-                                    itemsMap.remove(String.valueOf(value.getId()));
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME) {
-                                    // Special case for v1 TS headers.
-                                    elementListUpdate.add(itemsMap.get(value.getLegacyName()));
-                                    itemsMap.remove(value.getLegacyName());
-                                }
-                            }
-                            elementListCreate.addAll(itemsMap.values()); // Add remaining items to be re-inserted
+                            distributeObjectsToMainAndReminder(createResponseMap.get(response),
+                                    duplicates,
+                                    elementListUpdate,
+                                    elementListCreate);
                         }
                     }
                 }
@@ -1372,7 +1321,7 @@ abstract class ApiBase {
             List<String> elementListCompleted = new ArrayList<>(elementListCreate.size());
 
             if (elementListCreate.size() != items.size()) {
-                LOG.debug(batchLogPrefix + "Identified {} duplicate items in the input.",
+                LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
                         items.size() - elementListCreate.size());
             }
 
@@ -1493,6 +1442,10 @@ abstract class ApiBase {
                     "upsertViaGetCreateAndUpdate() - batch " + RandomStringUtils.randomAlphanumeric(5) + " - ";
             Preconditions.checkArgument(itemsHaveId(items),
                     batchLogPrefix + "All items must have externalId or id.");
+            Preconditions.checkState(null != getItemMappingFunction(),
+                    batchLogPrefix + "The item mapping function is not configured.");
+            Preconditions.checkState(null != getRetrieveFunction(),
+                    batchLogPrefix + "The retrieve function is not configured.");
 
             LOG.debug(batchLogPrefix + "Received {} items to upsert", items.size());
 
@@ -1507,7 +1460,7 @@ abstract class ApiBase {
             List<String> elementListCompleted = new ArrayList<>(elementListGet.size());
 
             if (elementListGet.size() != items.size()) {
-                LOG.debug(batchLogPrefix + "Identified {} duplicate items in the input.",
+                LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will deduplicate and continue with the upsert process.",
                         items.size() - elementListGet.size());
             }
 
@@ -1578,21 +1531,10 @@ abstract class ApiBase {
                             LOG.debug(batchLogPrefix + "Number of duplicate entries reported by CDF: {}", duplicates.size());
 
                             // Move duplicates from insert to the update request
-                            Map<String, T> itemsMap = mapToId(createResponseMap.get(response));
-                            for (Item value : duplicates) {
-                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
-                                    elementListUpdate.add(itemsMap.get(value.getExternalId()));
-                                    itemsMap.remove(value.getExternalId());
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
-                                    elementListUpdate.add(itemsMap.get(String.valueOf(value.getId())));
-                                    itemsMap.remove(String.valueOf(value.getId()));
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME) {
-                                    // Special case for v1 TS headers.
-                                    elementListUpdate.add(itemsMap.get(value.getLegacyName()));
-                                    itemsMap.remove(value.getLegacyName());
-                                }
-                            }
-                            elementListCreate.addAll(itemsMap.values()); // Add remaining items to be re-inserted
+                            distributeObjectsToMainAndReminder(createResponseMap.get(response),
+                                    duplicates,
+                                    elementListUpdate,
+                                    elementListCreate);
                         }
                     }
                 }
@@ -1627,25 +1569,10 @@ abstract class ApiBase {
                             LOG.debug(batchLogPrefix + "Number of missing entries reported by CDF: {}", missing.size());
 
                             // Move missing items from update to the create request
-                            // Must check for null since missing items may refer to parent asset references.
-                            Map<String, T> itemsMap = mapToId(updateResponseMap.get(response));
-                            for (Item value : missing) {
-                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID
-                                        && itemsMap.containsKey(value.getExternalId())) {
-                                    elementListCreate.add(itemsMap.get(value.getExternalId()));
-                                    itemsMap.remove(value.getExternalId());
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID
-                                        && itemsMap.containsKey(String.valueOf(value.getId()))) {
-                                    elementListCreate.add(itemsMap.get(String.valueOf(value.getId())));
-                                    itemsMap.remove(String.valueOf(value.getId()));
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME
-                                        && itemsMap.containsKey(value.getLegacyName())) {
-                                    // Special case for v1 TS headers.
-                                    elementListCreate.add(itemsMap.get(value.getLegacyName()));
-                                    itemsMap.remove(value.getLegacyName());
-                                }
-                            }
-                            elementListUpdate.addAll(itemsMap.values()); // Add remaining items to be re-updated
+                            distributeObjectsToMainAndReminder(updateResponseMap.get(response),
+                                    missing,
+                                    elementListCreate,
+                                    elementListUpdate);
                         }
                     }
                 }
@@ -1702,7 +1629,7 @@ abstract class ApiBase {
             List<String> elementListCompleted = new ArrayList<>(elementListCreate.size());
 
             if (elementListCreate.size() != items.size()) {
-                LOG.debug(batchLogPrefix + "Identified {} duplicate items in the input.",
+                LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
                         items.size() - elementListCreate.size());
             }
 
@@ -1824,7 +1751,7 @@ abstract class ApiBase {
             List<String> elementListCompleted = new ArrayList<>(elementListCreate.size());
 
             if (elementListCreate.size() != items.size()) {
-                LOG.debug(batchLogPrefix + "Identified {} duplicate items in the input.",
+                LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
                         items.size() - elementListCreate.size());
             }
 
@@ -1929,6 +1856,46 @@ abstract class ApiBase {
         }
 
         /**
+         * Distributes a set of objects from an input list to two output lists: {@code main} and {@code reminder}.
+         *
+         * The objects are distributed based on a second input list of {@link Item}. The {@link Item} list specifies
+         * which objects to add to {@code main}. The rest are added to {@code reminder}.
+         *
+         * This method is used by the upsert methods when moving upsert objects between {@code create} and {@code update}
+         * lists.
+         *
+         * @param inputObjects The input objects to distribute.
+         * @param itemsToMain Specifies the objects (via {@code externalId / id}) to add to {@code main}.
+         * @param main The {@code main} output list.
+         * @param reminder The {@code reminder} output list.
+         */
+        private void distributeObjectsToMainAndReminder(List<T> inputObjects,
+                                                        List<Item> itemsToMain,
+                                                        List<T> main,
+                                                        List<T> reminder) {
+            // Must check that itemsToMain refers to valid objects from inputObjects as some
+            // items may refer to invalid references (from parent asset references reported as missing items).
+            Map<String, T> itemsMap = mapToId(inputObjects);
+            for (Item value : itemsToMain) {
+                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID
+                        && itemsMap.containsKey(value.getExternalId())) {
+                    main.add(itemsMap.get(value.getExternalId()));
+                    itemsMap.remove(value.getExternalId());
+                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID
+                        && itemsMap.containsKey(String.valueOf(value.getId()))) {
+                    main.add(itemsMap.get(String.valueOf(value.getId())));
+                    itemsMap.remove(String.valueOf(value.getId()));
+                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME
+                        && itemsMap.containsKey(value.getLegacyName())) {
+                    // Special case for v1 TS headers.
+                    main.add(itemsMap.get(value.getLegacyName()));
+                    itemsMap.remove(value.getLegacyName());
+                }
+            }
+            reminder.addAll(itemsMap.values()); // Add remaining items
+        }
+
+        /**
          * Create /insert items.
          *
          * Submits a (large) batch of items by splitting it up into multiple, parallel create / insert requests.
@@ -1968,8 +1935,7 @@ abstract class ApiBase {
          */
         private Map<ResponseItems<String>, List<T>> splitAndDoItems(
                 List<T> items,
-                Function<List<T>, CompletableFuture<ResponseItems<String>>> doer
-        ) {
+                Function<List<T>, CompletableFuture<ResponseItems<String>>> doer) {
             Map<CompletableFuture<ResponseItems<String>>, List<T>> responseMap = new HashMap<>();
 
             // Split into batches
