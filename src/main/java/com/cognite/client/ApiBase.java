@@ -1104,21 +1104,8 @@ abstract class ApiBase {
             }
 
             // Check if all elements completed the upsert requests
-            if (elementListCreate.isEmpty() && elementListUpdate.isEmpty()) {
-                LOG.info(batchLogPrefix + "Successfully upserted {} items within a duration of {}.",
-                        elementListCompleted.size(),
-                        Duration.between(startInstant, Instant.now()).toString());
-            } else {
-                LOG.error(batchLogPrefix + "Failed to upsert items. {} items remaining. {} items completed upsert."
-                                + System.lineSeparator() + "{}",
-                        elementListCreate.size() + elementListUpdate.size(),
-                        elementListCompleted.size(),
-                        exceptionMessage);
-                throw new Exception(String.format(batchLogPrefix + "Failed to upsert items. %d items remaining. "
-                                + " %d items completed upsert. %n " + exceptionMessage,
-                        elementListCreate.size() + elementListUpdate.size(),
-                        elementListCompleted.size()));
-            }
+            verifyAndLogCompleteUpsertProcess(elementListCreate, elementListUpdate, elementListCompleted,
+                    batchLogPrefix, startInstant, exceptionMessage);
 
             return elementListCompleted;
         }
@@ -1259,21 +1246,8 @@ abstract class ApiBase {
             }
 
             // Check if all elements completed the upsert requests
-            if (elementListCreate.isEmpty() && elementListUpdate.isEmpty()) {
-                LOG.info(batchLogPrefix + "Successfully upserted {} items within a duration of {}.",
-                        elementListCompleted.size(),
-                        Duration.between(startInstant, Instant.now()).toString());
-            } else {
-                LOG.error(batchLogPrefix + "Failed to upsert items. {} items remaining. {} items completed upsert."
-                                + System.lineSeparator() + "{}",
-                        elementListCreate.size() + elementListUpdate.size(),
-                        elementListCompleted.size(),
-                        exceptionMessage);
-                throw new Exception(String.format(batchLogPrefix + "Failed to upsert items. %d items remaining. "
-                                + " %d items completed upsert. %n " + exceptionMessage,
-                        elementListCreate.size() + elementListUpdate.size(),
-                        elementListCompleted.size()));
-            }
+            verifyAndLogCompleteUpsertProcess(elementListCreate, elementListUpdate, elementListCompleted,
+                    batchLogPrefix, startInstant, exceptionMessage);
 
             return elementListCompleted;
         }
@@ -1404,21 +1378,8 @@ abstract class ApiBase {
             }
 
             // Check if all elements completed the upsert requests
-            if (elementListCreate.isEmpty() && elementListDelete.isEmpty()) {
-                LOG.info(batchLogPrefix + "Successfully upserted {} items within a duration of {}.",
-                        elementListCompleted.size(),
-                        Duration.between(startInstant, Instant.now()).toString());
-            } else {
-                LOG.error(batchLogPrefix + "Failed to upsert items. {} items remaining. {} items completed upsert."
-                                + System.lineSeparator() + "{}",
-                        elementListCreate.size() + elementListDelete.size(),
-                        elementListCompleted.size(),
-                        exceptionMessage);
-                throw new Exception(String.format(batchLogPrefix + "Failed to upsert items. %d items remaining. "
-                                + " %d items completed upsert. %n " + exceptionMessage,
-                        elementListCreate.size() + elementListDelete.size(),
-                        elementListCompleted.size()));
-            }
+            verifyAndLogCompleteUpsertProcess(elementListCreate, elementListDelete, elementListCompleted,
+                    batchLogPrefix, startInstant, exceptionMessage);
 
             return elementListCompleted;
         }
@@ -1579,21 +1540,8 @@ abstract class ApiBase {
             }
 
             // Check if all elements completed the upsert requests
-            if (elementListCreate.isEmpty() && elementListUpdate.isEmpty()) {
-                LOG.info(batchLogPrefix + "Successfully upserted {} items within a duration of {}.",
-                        elementListCompleted.size(),
-                        Duration.between(startInstant, Instant.now()).toString());
-            } else {
-                LOG.error(batchLogPrefix + "Failed to upsert items. {} items remaining. {} items completed upsert."
-                                + System.lineSeparator() + "{}",
-                        elementListCreate.size() + elementListUpdate.size(),
-                        elementListCompleted.size(),
-                        exceptionMessage);
-                throw new Exception(String.format(batchLogPrefix + "Failed to upsert items. %d items remaining. "
-                                + " %d items completed upsert. %n " + exceptionMessage,
-                        elementListCreate.size() + elementListUpdate.size(),
-                        elementListCompleted.size()));
-            }
+            verifyAndLogCompleteUpsertProcess(elementListCreate, elementListUpdate, elementListCompleted,
+                    batchLogPrefix, startInstant, exceptionMessage);
 
             return elementListCompleted;
         }
@@ -1693,15 +1641,13 @@ abstract class ApiBase {
                         elementListCompleted.size(),
                         Duration.between(startInstant, Instant.now()).toString());
             } else {
-                LOG.error(batchLogPrefix + "Failed to create items. {} items remaining. {} items completed upsert."
-                                + System.lineSeparator() + "{}",
+                String message = String.format(batchLogPrefix + "Failed to create items. %d items remaining. "
+                                + " %d items completed upsert. %n %s",
                         elementListCreate.size(),
                         elementListCompleted.size(),
                         exceptionMessage);
-                throw new Exception(String.format(batchLogPrefix + "Failed to create items. %d items remaining. "
-                                + " %d items completed upsert. %n " + exceptionMessage,
-                        elementListCreate.size(),
-                        elementListCompleted.size()));
+                LOG.error(message);
+                throw new Exception(message);
             }
 
             return elementListCompleted;
@@ -1836,21 +1782,8 @@ abstract class ApiBase {
             }
 
             // Check if all elements completed the upsert requests
-            if (elementListCreate.isEmpty() && elementListDelete.isEmpty()) {
-                LOG.info(batchLogPrefix + "Successfully upserted {} items within a duration of {}.",
-                        elementListCompleted.size(),
-                        Duration.between(startInstant, Instant.now()).toString());
-            } else {
-                LOG.error(batchLogPrefix + "Failed to upsert items. {} items remaining. {} items completed upsert."
-                                + System.lineSeparator() + "{}",
-                        elementListCreate.size() + elementListDelete.size(),
-                        elementListCompleted.size(),
-                        exceptionMessage);
-                throw new Exception(String.format(batchLogPrefix + "Failed to upsert items. %d items remaining. "
-                                + " %d items completed upsert. %n " + exceptionMessage,
-                        elementListCreate.size() + elementListDelete.size(),
-                        elementListCompleted.size()));
-            }
+            verifyAndLogCompleteUpsertProcess(elementListCreate, elementListDelete, elementListCompleted,
+                    batchLogPrefix, startInstant, exceptionMessage);
 
             return elementListCompleted;
         }
@@ -1861,8 +1794,8 @@ abstract class ApiBase {
          * The objects are distributed based on a second input list of {@link Item}. The {@link Item} list specifies
          * which objects to add to {@code main}. The rest are added to {@code reminder}.
          *
-         * This method is used by the upsert methods when moving upsert objects between {@code create} and {@code update}
-         * lists.
+         * This method is used by the upsert methods when moving upsert objects between {@code create}, {@code update}
+         * and {@code delete} lists.
          *
          * @param inputObjects The input objects to distribute.
          * @param itemsToMain Specifies the objects (via {@code externalId / id}) to add to {@code main}.
@@ -1893,6 +1826,43 @@ abstract class ApiBase {
                 }
             }
             reminder.addAll(itemsMap.values()); // Add remaining items
+        }
+
+        /**
+         * Checks if the input lists {@code A and B} are empty--which signals a completed upsert operation--and logs
+         * the main statistics to info.
+         *
+         * If the input lists are not empty, then the main statistics are logged as an error and an exception is thrown.
+         *
+         *
+         * @param inputListA Input list A. Must be empty for the upsert operation to be considered complete.
+         * @param inputListB Input list B. Must be empty for the upsert operation to be considered complete.
+         * @param outputList Output/results list. Contains the results of the completed upsert operations.
+         * @param loggingPrefix A prefix prepended to the logs.
+         * @param startInstant The Instant when the upsert operation started. Used to calculate operation duration.
+         * @param errorMessage An error message (from the upsert operation). Will be appended to the error log and Exception.
+         * @throws Exception If the input lists are not empty.
+         */
+        private void verifyAndLogCompleteUpsertProcess(List<?> inputListA,
+                                                       List<?> inputListB,
+                                                       List<?> outputList,
+                                                       String loggingPrefix,
+                                                       Instant startInstant,
+                                                       String errorMessage) throws Exception {
+            // Check if all elements completed the upsert requests
+            if (inputListA.isEmpty() && inputListB.isEmpty()) {
+                LOG.info(loggingPrefix + "Successfully upserted {} items within a duration of {}.",
+                        outputList.size(),
+                        Duration.between(startInstant, Instant.now()).toString());
+            } else {
+                String message = String.format(loggingPrefix + "Failed to upsert items. %d items remaining. "
+                                + " %d items completed upsert. %n %s",
+                        inputListA.size() + inputListB.size(),
+                        outputList.size(),
+                        errorMessage);
+                LOG.error(message);
+                throw new Exception(message);
+            }
         }
 
         /**
