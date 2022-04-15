@@ -43,8 +43,8 @@
 
         <auto.version>1.9</auto.version>
 
-        <nimbusds.version>9.22.1</nimbusds.version>
-        <awss3.version>1.12.153</awss3.version>
+        <nimbusds.version>9.33</nimbusds.version>
+        <awss3.version>1.12.196</awss3.version>
         <jgrapht.version>1.5.1</jgrapht.version>
         <okhttp3.version>4.9.3</okhttp3.version>
         <jackson.version>2.13.2.2</jackson.version>
@@ -85,7 +85,7 @@
             <dependency>
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
-                <version>24.2.0</version>
+                <version>25.1.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
