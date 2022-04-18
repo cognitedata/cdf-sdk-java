@@ -1100,6 +1100,7 @@ abstract class ApiBase {
             */
             ThreadLocalRandom random = ThreadLocalRandom.current();
             String exceptionMessage = "";
+            boolean logToWarn = false;
             for (int i = 0; i < maxUpsertLoopIterations && (elementListCreate.size() + elementListUpdate.size()) > 0;
                  i++, Thread.sleep(Math.min(500L, (10L * (long) Math.exp(i)) + random.nextLong(5)))) {
                 LOG.debug(batchLogPrefix + "Start upsert loop {} with {} items to update, {} items to create and "
@@ -1110,81 +1111,22 @@ abstract class ApiBase {
                         elementListCompleted.size(),
                         Duration.between(startInstant, Instant.now()).toString());
 
-                /*
-                Update items
-                 */
-                if (elementListUpdate.isEmpty()) {
-                    LOG.debug(batchLogPrefix + "Update items list is empty. Skipping update.");
-                } else {
-                    Map<ResponseItems<String>, List<T>> updateResponseMap = splitAndUpdateItems(elementListUpdate);
-                    LOG.debug(batchLogPrefix + "Completed update items requests for {} items across {} batches at duration {}",
-                            elementListUpdate.size(),
-                            updateResponseMap.size(),
-                            Duration.between(startInstant, Instant.now()).toString());
-                    elementListUpdate.clear(); // Must prepare the list for possible new entries.
-
-                    for (ResponseItems<String> response : updateResponseMap.keySet()) {
-                        if (response.isSuccessful()) {
-                            elementListCompleted.addAll(response.getResultsItems());
-                            LOG.debug(batchLogPrefix + "Update items request success. Adding {} update result items to result collection.",
-                                    response.getResultsItems().size());
-                        } else {
-                            exceptionMessage = response.getResponseBodyAsString();
-                            LOG.debug(batchLogPrefix + "Update items request failed: {}", response.getResponseBodyAsString());
-                            if (i == maxUpsertLoopIterations - 1) {
-                                // Add the error message to std logging
-                                LOG.error(batchLogPrefix + "Update items request failed. {}", response.getResponseBodyAsString());
-                            }
-                            LOG.debug(batchLogPrefix + "Converting missing items to create and retrying the request");
-                            List<Item> missing = ItemParser.parseItems(response.getMissingItems());
-                            LOG.debug(batchLogPrefix + "Number of missing entries reported by CDF: {}", missing.size());
-
-                            // Move missing items from update to the create request
-                            distributeObjectsToMainAndReminder(updateResponseMap.get(response),
-                                    missing,
-                                    elementListCreate,
-                                    elementListUpdate);
-                        }
-                    }
+                if (i == maxUpsertLoopIterations - 1) {
+                    // Add the error message to std logging
+                    logToWarn = true;
                 }
 
-                /*
-                Insert / create items
-                 */
-                if (elementListCreate.isEmpty()) {
-                    LOG.debug(batchLogPrefix + "Create items list is empty. Skipping create.");
-                } else {
-                    Map<ResponseItems<String>, List<T>> createResponseMap = splitAndCreateItems(elementListCreate);
-                    LOG.debug(batchLogPrefix + "Completed create items requests for {} items across {} batches at duration {}",
-                            elementListCreate.size(),
-                            createResponseMap.size(),
-                            Duration.between(startInstant, Instant.now()).toString());
-                    elementListCreate.clear(); // Must prepare the list for possible new entries.
+                //Update items
+                elementListCompleted.addAll(
+                        updateItemsWithConflictDetection(elementListUpdate, elementListCreate, batchLogPrefix,
+                                startInstant, exceptionMessage, logToWarn)
+                );
 
-                    for (ResponseItems<String> response : createResponseMap.keySet()) {
-                        if (response.isSuccessful()) {
-                            elementListCompleted.addAll(response.getResultsItems());
-                            LOG.debug(batchLogPrefix + "Create items request success. Adding {} create result items to result collection.",
-                                    response.getResultsItems().size());
-                        } else {
-                            exceptionMessage = response.getResponseBodyAsString();
-                            LOG.debug(batchLogPrefix + "Create items request failed: {}", response.getResponseBodyAsString());
-                            if (i == maxUpsertLoopIterations - 1) {
-                                // Add the error message to std logging
-                                LOG.error(batchLogPrefix + "Create items request failed. {}", response.getResponseBodyAsString());
-                            }
-                            LOG.debug(batchLogPrefix + "Converting duplicates to update and retrying the request");
-                            List<Item> duplicates = ItemParser.parseItems(response.getDuplicateItems());
-                            LOG.debug(batchLogPrefix + "Number of duplicate entries reported by CDF: {}", duplicates.size());
-
-                            // Move duplicates from insert to the update request
-                            distributeObjectsToMainAndReminder(createResponseMap.get(response),
-                                    duplicates,
-                                    elementListUpdate,
-                                    elementListCreate);
-                        }
-                    }
-                }
+                //Insert / create items
+                elementListCompleted.addAll(
+                        createItemsWithConflictDetection(elementListCreate, elementListUpdate, batchLogPrefix,
+                                startInstant, exceptionMessage, logToWarn)
+                );
             }
 
             // Check if all elements completed the upsert requests
@@ -1231,9 +1173,9 @@ abstract class ApiBase {
             DeleteItems deleteItemsHandler = DeleteItems.of(getDeleteItemWriter(), getAuthConfig())
                     .setParameters(getDeleteParameters());
 
-            // Insert, update, completed lists
+            // Delete, create, completed lists
             List<T> elementListCreate = deduplicate(items);
-            List<T> elementListDelete = deduplicate(items);
+            List<T> elementListDelete = new ArrayList<>(elementListCreate.size());
             List<String> elementListCompleted = new ArrayList<>(elementListCreate.size());
 
             if (elementListCreate.size() != items.size()) {
@@ -1244,11 +1186,13 @@ abstract class ApiBase {
             /*
             The upsert loop. If there are items left to insert or delete:
             1. Delete elements.
+            2. Copy delete elements to create list
             2. Create elements.
             3. If conflicts, move duplicates to delete elements.
             */
             ThreadLocalRandom random = ThreadLocalRandom.current();
             String exceptionMessage = "";
+            boolean logToWarn = false;
             for (int i = 0; i < maxUpsertLoopIterations && (elementListCreate.size() + elementListDelete.size()) > 0;
                  i++, Thread.sleep(Math.min(500L, (10L * (long) Math.exp(i)) + random.nextLong(5)))) {
                 LOG.debug(batchLogPrefix + "Start upsert loop {} with {} items to delete, {} items to create and "
@@ -1258,6 +1202,11 @@ abstract class ApiBase {
                         elementListCreate.size(),
                         elementListCompleted.size(),
                         Duration.between(startInstant, Instant.now()).toString());
+
+                if (i == maxUpsertLoopIterations - 1) {
+                    // Add the error message to std logging
+                    logToWarn = true;
+                }
 
                 /*
                 Delete items
@@ -1269,54 +1218,17 @@ abstract class ApiBase {
                     List<Item> deleteItems = new ArrayList<>(elementListDelete.size());
                     elementListDelete.forEach(element -> deleteItems.add(getItemMappingFunction().apply(element)));
                     deleteItemsHandler.deleteItems(deleteItems);
+
+                    // Copy the deleted elements to the create list.
+                    elementListCreate.addAll(elementListDelete);
                     elementListDelete.clear();
                 }
 
-                /*
-                Insert / create items
-                 */
-                if (elementListCreate.isEmpty()) {
-                    LOG.debug(batchLogPrefix + "Create items list is empty. Skipping create.");
-                } else {
-                    Map<ResponseItems<String>, List<T>> createResponseMap = splitAndCreateItems(elementListCreate);
-                    LOG.debug(batchLogPrefix + "Completed create items requests for {} items across {} batches at duration {}",
-                            elementListCreate.size(),
-                            createResponseMap.size(),
-                            Duration.between(startInstant, Instant.now()).toString());
-                    elementListCreate.clear(); // Must prepare the list for possible new entries.
-
-                    for (ResponseItems<String> response : createResponseMap.keySet()) {
-                        if (response.isSuccessful()) {
-                            elementListCompleted.addAll(response.getResultsItems());
-                            LOG.debug(batchLogPrefix + "Create items request success. Adding {} create result items to result collection.",
-                                    response.getResultsItems().size());
-                        } else {
-                            exceptionMessage = response.getResponseBodyAsString();
-                            LOG.debug(batchLogPrefix + "Create items request failed: {}", response.getResponseBodyAsString());
-                            if (i == maxUpsertLoopIterations - 1) {
-                                // Add the error message to std logging
-                                LOG.error(batchLogPrefix + "Create items request failed. {}", response.getResponseBodyAsString());
-                            }
-                            LOG.debug(batchLogPrefix + "Copy duplicates to delete collection and retrying the request");
-                            List<Item> duplicates = ItemParser.parseItems(response.getDuplicateItems());
-                            LOG.debug(batchLogPrefix + "Number of duplicate entries reported by CDF: {}", duplicates.size());
-
-                            // Copy duplicates from insert to the delete request
-                            Map<String, T> itemsMap = mapToId(createResponseMap.get(response));
-                            for (Item value : duplicates) {
-                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
-                                    elementListDelete.add(itemsMap.get(value.getExternalId()));
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
-                                    elementListDelete.add(itemsMap.get(String.valueOf(value.getId())));
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME) {
-                                    // Special case for v1 TS headers.
-                                    elementListDelete.add(itemsMap.get(value.getLegacyName()));
-                                }
-                            }
-                            elementListCreate.addAll(itemsMap.values()); // Add remaining items to be re-inserted
-                        }
-                    }
-                }
+                //Insert / create items
+                elementListCompleted.addAll(
+                        createItemsWithConflictDetection(elementListCreate, elementListDelete, batchLogPrefix,
+                                startInstant, exceptionMessage, logToWarn)
+                );
             }
 
             // Check if all elements completed the upsert requests
@@ -1394,6 +1306,7 @@ abstract class ApiBase {
             */
             ThreadLocalRandom random = ThreadLocalRandom.current();
             String exceptionMessage = "";
+            boolean logToWarn = false;
             for (int i = 0; i < maxUpsertLoopIterations && (elementListCreate.size() + elementListUpdate.size()) > 0;
                  i++, Thread.sleep(Math.min(500L, (10L * (long) Math.exp(i)) + random.nextLong(5)))) {
                 LOG.debug(batchLogPrefix + "Start upsert loop {} with {} items to create, {} items to update and "
@@ -1404,81 +1317,22 @@ abstract class ApiBase {
                         elementListCompleted.size(),
                         Duration.between(startInstant, Instant.now()).toString());
 
-                /*
-                Insert / create items
-                 */
-                if (elementListCreate.isEmpty()) {
-                    LOG.debug(batchLogPrefix + "Create items list is empty. Skipping create.");
-                } else {
-                    Map<ResponseItems<String>, List<T>> createResponseMap = splitAndCreateItems(elementListCreate);
-                    LOG.debug(batchLogPrefix + "Completed create items requests for {} items across {} batches at duration {}",
-                            elementListCreate.size(),
-                            createResponseMap.size(),
-                            Duration.between(startInstant, Instant.now()).toString());
-                    elementListCreate.clear(); // Must prepare the list for possible new entries.
-
-                    for (ResponseItems<String> response : createResponseMap.keySet()) {
-                        if (response.isSuccessful()) {
-                            elementListCompleted.addAll(response.getResultsItems());
-                            LOG.debug(batchLogPrefix + "Create items request success. Adding {} create result items to result collection.",
-                                    response.getResultsItems().size());
-                        } else {
-                            exceptionMessage = response.getResponseBodyAsString();
-                            LOG.debug(batchLogPrefix + "Create items request failed: {}", response.getResponseBodyAsString());
-                            if (i == maxUpsertLoopIterations - 1) {
-                                // Add the error message to std logging
-                                LOG.error(batchLogPrefix + "Create items request failed. {}", response.getResponseBodyAsString());
-                            }
-                            LOG.debug(batchLogPrefix + "Converting duplicates to update and retrying the request");
-                            List<Item> duplicates = ItemParser.parseItems(response.getDuplicateItems());
-                            LOG.debug(batchLogPrefix + "Number of duplicate entries reported by CDF: {}", duplicates.size());
-
-                            // Move duplicates from insert to the update request
-                            distributeObjectsToMainAndReminder(createResponseMap.get(response),
-                                    duplicates,
-                                    elementListUpdate,
-                                    elementListCreate);
-                        }
-                    }
+                if (i == maxUpsertLoopIterations - 1) {
+                    // Add the error message to std logging
+                    logToWarn = true;
                 }
 
-                /*
-                Update items
-                 */
-                if (elementListUpdate.isEmpty()) {
-                    LOG.debug(batchLogPrefix + "Update items list is empty. Skipping update.");
-                } else {
-                    Map<ResponseItems<String>, List<T>> updateResponseMap = splitAndUpdateItems(elementListUpdate);
-                    LOG.debug(batchLogPrefix + "Completed update items requests for {} items across {} batches at duration {}",
-                            elementListUpdate.size(),
-                            updateResponseMap.size(),
-                            Duration.between(startInstant, Instant.now()).toString());
-                    elementListUpdate.clear(); // Must prepare the list for possible new entries.
+                //Insert / create items
+                elementListCompleted.addAll(
+                        createItemsWithConflictDetection(elementListCreate, elementListUpdate, batchLogPrefix,
+                                startInstant, exceptionMessage, logToWarn)
+                );
 
-                    for (ResponseItems<String> response : updateResponseMap.keySet()) {
-                        if (response.isSuccessful()) {
-                            elementListCompleted.addAll(response.getResultsItems());
-                            LOG.debug(batchLogPrefix + "Update items request success. Adding {} update result items to result collection.",
-                                    response.getResultsItems().size());
-                        } else {
-                            exceptionMessage = response.getResponseBodyAsString();
-                            LOG.debug(batchLogPrefix + "Update items request failed: {}", response.getResponseBodyAsString());
-                            if (i == maxUpsertLoopIterations - 1) {
-                                // Add the error message to std logging
-                                LOG.error(batchLogPrefix + "Update items request failed. {}", response.getResponseBodyAsString());
-                            }
-                            LOG.debug(batchLogPrefix + "Converting missing items to create and retrying the request");
-                            List<Item> missing = ItemParser.parseItems(response.getMissingItems());
-                            LOG.debug(batchLogPrefix + "Number of missing entries reported by CDF: {}", missing.size());
-
-                            // Move missing items from update to the create request
-                            distributeObjectsToMainAndReminder(updateResponseMap.get(response),
-                                    missing,
-                                    elementListCreate,
-                                    elementListUpdate);
-                        }
-                    }
-                }
+                //Update items
+                elementListCompleted.addAll(
+                        updateItemsWithConflictDetection(elementListUpdate, elementListCreate, batchLogPrefix,
+                                startInstant, exceptionMessage, logToWarn)
+                );
             }
 
             // Check if all elements completed the upsert requests
@@ -1528,69 +1382,23 @@ abstract class ApiBase {
             1. Insert elements
             2. If conflict, report to client
 
-            PS: This will only run once. The elementListCreate is cleared, but not filled again.
             */
-            ThreadLocalRandom random = ThreadLocalRandom.current();
             String exceptionMessage = "";
-            for (int i = 0; i < maxUpsertLoopIterations && (elementListCreate.size()) > 0;
-                 i++, Thread.sleep(Math.min(500L, (10L * (long) Math.exp(i)) + random.nextLong(5)))) {
-                LOG.debug(batchLogPrefix + "Start create loop {} with {} items to create and "
-                                + "{} completed items at duration {}",
-                        i,
-                        elementListCreate.size(),
-                        elementListCompleted.size(),
-                        Duration.between(startInstant, Instant.now()).toString());
+            LOG.debug(batchLogPrefix + "Start create loop with {} items to create and "
+                            + "{} completed items at duration {}",
+                    elementListCreate.size(),
+                    elementListCompleted.size(),
+                    Duration.between(startInstant, Instant.now()).toString());
 
-                /*
-                Insert / create items
-                 */
-                if (elementListCreate.isEmpty()) {
-                    LOG.debug(batchLogPrefix + "Create items list is empty. Skipping create.");
-                } else {
-                    Map<ResponseItems<String>, List<T>> createResponseMap = splitAndCreateItems(elementListCreate);
-                    LOG.debug(batchLogPrefix + "Completed create items requests for {} items across {} batches at duration {}",
-                            elementListCreate.size(),
-                            createResponseMap.size(),
-                            Duration.between(startInstant, Instant.now()).toString());
-                    elementListCreate.clear(); // Must prepare the list for possible new entries.
-
-                    for (ResponseItems<String> response : createResponseMap.keySet()) {
-                        if (response.isSuccessful()) {
-                            elementListCompleted.addAll(response.getResultsItems());
-                            LOG.debug(batchLogPrefix + "Create items request success. Adding {} create result items to result collection.",
-                                    response.getResultsItems().size());
-                        } else {
-                            exceptionMessage = response.getResponseBodyAsString();
-                            LOG.debug(batchLogPrefix + "Create items request failed: {}", response.getResponseBodyAsString());
-                            if (i == maxUpsertLoopIterations - 1) {
-                                // Add the error message to std logging
-                                LOG.error(batchLogPrefix + "Create items request failed. {}", response.getResponseBodyAsString());
-                            }
-                            LOG.debug(batchLogPrefix + "Converting duplicates to update and retrying the request");
-                            List<Item> duplicates = ItemParser.parseItems(response.getDuplicateItems());
-                            LOG.debug(batchLogPrefix + "Number of duplicate entries reported by CDF: {}", duplicates.size());
-                            throw new Exception(String.format(batchLogPrefix + "Failed to create items. "
-                                            + "Number of duplicate entries reported by CDF: %d. %n" + exceptionMessage,
-                                    duplicates.size()));
-                        }
-                    }
-                }
-            }
+            //Insert / create items
+            elementListCompleted.addAll(
+                    createItemsWithConflictDetection(elementListCreate, new ArrayList<T>(), batchLogPrefix,
+                            startInstant, exceptionMessage, true)
+            );
 
             // Check if all elements completed the upsert requests
-            if (elementListCreate.isEmpty()) {
-                LOG.info(batchLogPrefix + "Successfully created {} items within a duration of {}.",
-                        elementListCompleted.size(),
-                        Duration.between(startInstant, Instant.now()).toString());
-            } else {
-                String message = String.format(batchLogPrefix + "Failed to create items. %d items remaining. "
-                                + " %d items completed upsert. %n %s",
-                        elementListCreate.size(),
-                        elementListCompleted.size(),
-                        exceptionMessage);
-                LOG.error(message);
-                throw new Exception(message);
-            }
+            verifyAndLogCompleteUpsertProcess(elementListCreate, new ArrayList<T>(), elementListCompleted,
+                    batchLogPrefix, startInstant, exceptionMessage);
 
             return elementListCompleted;
         }
@@ -1635,7 +1443,7 @@ abstract class ApiBase {
 
             // Insert, update, completed lists
             List<T> elementListCreate = deduplicate(items);
-            List<T> elementListDelete = new ArrayList<>(1000);
+            List<T> elementListDelete = new ArrayList<>();
             List<String> elementListCompleted = new ArrayList<>(elementListCreate.size());
 
             if (elementListCreate.size() != items.size()) {
@@ -1646,11 +1454,13 @@ abstract class ApiBase {
             /*
             The upsert loop. If there are items left to insert or delete:
             1. Create elements.
-            2. If conflict, copy duplicates into the delete maps
+                a. If conflict, move duplicates to the delete list.
             2. Delete elements.
+            3. Move delete items to create (for re-try)
             */
             ThreadLocalRandom random = ThreadLocalRandom.current();
             String exceptionMessage = "";
+            boolean logToWarn = false;
             for (int i = 0; i < maxUpsertLoopIterations && (elementListCreate.size() + elementListDelete.size()) > 0;
                  i++, Thread.sleep(Math.min(500L, (10L * (long) Math.exp(i)) + random.nextLong(5)))) {
                 LOG.debug(batchLogPrefix + "Start upsert loop {} with {} items to delete, {} items to create and "
@@ -1661,51 +1471,16 @@ abstract class ApiBase {
                         elementListCompleted.size(),
                         Duration.between(startInstant, Instant.now()).toString());
 
-                /*
-                Insert / create items
-                 */
-                if (elementListCreate.isEmpty()) {
-                    LOG.debug(batchLogPrefix + "Create items list is empty. Skipping create.");
-                } else {
-                    Map<ResponseItems<String>, List<T>> createResponseMap = splitAndCreateItems(elementListCreate);
-                    LOG.debug(batchLogPrefix + "Completed create items requests for {} items across {} batches at duration {}",
-                            elementListCreate.size(),
-                            createResponseMap.size(),
-                            Duration.between(startInstant, Instant.now()).toString());
-                    elementListCreate.clear(); // Must prepare the list for possible new entries.
-
-                    for (ResponseItems<String> response : createResponseMap.keySet()) {
-                        if (response.isSuccessful()) {
-                            elementListCompleted.addAll(response.getResultsItems());
-                            LOG.debug(batchLogPrefix + "Create items request success. Adding {} create result items to result collection.",
-                                    response.getResultsItems().size());
-                        } else {
-                            exceptionMessage = response.getResponseBodyAsString();
-                            LOG.debug(batchLogPrefix + "Create items request failed: {}", response.getResponseBodyAsString());
-                            if (i == maxUpsertLoopIterations - 1) {
-                                // Add the error message to std logging
-                                LOG.error(batchLogPrefix + "Create items request failed. {}", response.getResponseBodyAsString());
-                            }
-                            LOG.debug(batchLogPrefix + "Copy duplicates to delete collection and retrying the request");
-                            List<Item> duplicates = ItemParser.parseItems(response.getDuplicateItems());
-                            LOG.debug(batchLogPrefix + "Number of duplicate entries reported by CDF: {}", duplicates.size());
-
-                            // Copy duplicates from insert to the delete request
-                            Map<String, T> itemsMap = mapToId(createResponseMap.get(response));
-                            for (Item value : duplicates) {
-                                if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
-                                    elementListDelete.add(itemsMap.get(value.getExternalId()));
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.ID) {
-                                    elementListDelete.add(itemsMap.get(String.valueOf(value.getId())));
-                                } else if (value.getIdTypeCase() == Item.IdTypeCase.LEGACY_NAME) {
-                                    // Special case for v1 TS headers.
-                                    elementListDelete.add(itemsMap.get(value.getLegacyName()));
-                                }
-                            }
-                            elementListCreate.addAll(itemsMap.values()); // Add batch items to be re-inserted
-                        }
-                    }
+                if (i == maxUpsertLoopIterations - 1) {
+                    // Add the error message to std logging
+                    logToWarn = true;
                 }
+
+                //Insert / create items
+                elementListCompleted.addAll(
+                        createItemsWithConflictDetection(elementListCreate, elementListDelete, batchLogPrefix,
+                                startInstant, exceptionMessage, logToWarn)
+                );
 
                 /*
                 Delete items
@@ -1717,7 +1492,9 @@ abstract class ApiBase {
                     List<Item> deleteItems = new ArrayList<>(elementListDelete.size());
                     elementListDelete.forEach(element -> deleteItems.add(getItemMappingFunction().apply(element)));
                     deleteItemsHandler.deleteItems(deleteItems);
-                    elementListCreate = elementListDelete;
+
+                    // Copy the deleted elements to the create list for re-try on the next loop.
+                    elementListCreate.addAll(elementListDelete);
                     elementListDelete.clear();
                 }
             }
@@ -1805,7 +1582,7 @@ abstract class ApiBase {
                         } else {
                             LOG.debug(logMessage);
                         }
-                        LOG.debug(loggingPrefix + "Converting duplicates to update and retrying the request");
+                        LOG.debug(loggingPrefix + "Converting duplicates for conflict resolution and retrying the request");
                         List<Item> duplicates = ItemParser.parseItems(response.getDuplicateItems());
                         LOG.debug(loggingPrefix + "Number of duplicate entries reported by CDF: {}", duplicates.size());
 
@@ -1871,6 +1648,11 @@ abstract class ApiBase {
                                                               Instant startInstant,
                                                               String errorMessage,
                                                               boolean logErrorAsWarn) throws Exception {
+            Preconditions.checkState(null != getUpdateItemWriter(),
+                    "The update item writer is not configured.");
+            Preconditions.checkState(null != getUpdateMappingFunction(),
+                    "The update mapping function is not configured.");
+
             List<String> completedItems = new ArrayList<>();
 
             if (updateItems.isEmpty()) {
@@ -1897,11 +1679,11 @@ abstract class ApiBase {
                         } else {
                             LOG.debug(logMessage);
                         }
-                        LOG.debug(loggingPrefix + "Converting missing items to create and retrying the request");
+                        LOG.debug(loggingPrefix + "Converting missing items for conflict resolution and retrying the request");
                         List<Item> missing = ItemParser.parseItems(response.getMissingItems());
                         LOG.debug(loggingPrefix + "Number of missing entries reported by CDF: {}", missing.size());
 
-                        // Move duplicates from insert to the create request
+                        // Move missing items from insert to the conflict list
                         distributeObjectsToMainAndReminder(updateResponseMap.get(response),
                                 missing,
                                 conflictItems,
