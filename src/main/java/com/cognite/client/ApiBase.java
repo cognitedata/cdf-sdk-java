@@ -1032,51 +1032,17 @@ abstract class ApiBase {
                     logToWarn = true;
                 }
 
-                /*
-                Insert / create items
-                 */
+                //Insert / create items
                 elementListCompleted.addAll(
                         createItemsWithConflictDetection(elementListCreate, elementListUpdate, batchLogPrefix,
                                 startInstant, exceptionMessage, logToWarn)
                 );
 
-                /*
-                Update items
-                 */
-                if (elementListUpdate.isEmpty()) {
-                    LOG.debug(batchLogPrefix + "Update items list is empty. Skipping update.");
-                } else {
-                    Map<ResponseItems<String>, List<T>> updateResponseMap = splitAndUpdateItems(elementListUpdate);
-                    LOG.debug(batchLogPrefix + "Completed update items requests for {} items across {} batches at duration {}",
-                            elementListUpdate.size(),
-                            updateResponseMap.size(),
-                            Duration.between(startInstant, Instant.now()).toString());
-                    elementListUpdate.clear(); // Must prepare the list for possible new entries.
-
-                    for (ResponseItems<String> response : updateResponseMap.keySet()) {
-                        if (response.isSuccessful()) {
-                            elementListCompleted.addAll(response.getResultsItems());
-                            LOG.debug(batchLogPrefix + "Update items request success. Adding {} update result items to result collection.",
-                                    response.getResultsItems().size());
-                        } else {
-                            exceptionMessage = response.getResponseBodyAsString();
-                            LOG.debug(batchLogPrefix + "Update items request failed: {}", response.getResponseBodyAsString());
-                            if (i == maxUpsertLoopIterations - 1) {
-                                // Add the error message to std logging
-                                LOG.error(batchLogPrefix + "Update items request failed. {}", response.getResponseBodyAsString());
-                            }
-                            LOG.debug(batchLogPrefix + "Converting missing items to create and retrying the request");
-                            List<Item> missing = ItemParser.parseItems(response.getMissingItems());
-                            LOG.debug(batchLogPrefix + "Number of missing entries reported by CDF: {}", missing.size());
-
-                            // Move missing items from update to the create request
-                            distributeObjectsToMainAndReminder(updateResponseMap.get(response),
-                                    missing,
-                                    elementListCreate,
-                                    elementListUpdate);
-                        }
-                    }
-                }
+                //Update items
+                elementListCompleted.addAll(
+                        updateItemsWithConflictDetection(elementListUpdate, elementListCreate, batchLogPrefix,
+                                startInstant, exceptionMessage, logToWarn)
+                );
             }
 
             // Check if all elements completed the upsert requests
@@ -1558,7 +1524,7 @@ abstract class ApiBase {
             }
 
             /*
-            The upsert loop. If there are items left to insert or update:
+            The upsert loop. If there are items left to insert:
             1. Insert elements
             2. If conflict, report to client
 
@@ -1778,7 +1744,7 @@ abstract class ApiBase {
          * {@code return object}.
          * - Items that have an insert conflict will be added to the {@code conflictItems} list. These items should be
          * re-tried as an {@code update} request.
-         * - Items that does not have an insert conflict, but have not been created/inserted (because they were in a
+         * - Items that does not have an insert conflict, but have not been committed to created/inserted (because they were in a
          * failed request batch) will be added to the {@code createItems} list. These items can be re-tried as an
          * insert request.
          *
@@ -1819,7 +1785,7 @@ abstract class ApiBase {
                 LOG.debug(loggingPrefix + "Create items list is empty. Skipping create.");
             } else {
                 Map<ResponseItems<String>, List<T>> createResponseMap = splitAndCreateItems(createItems);
-                LOG.debug(loggingPrefix + "Completed create items requests for {} items across {} batches at duration {}",
+                LOG.debug(loggingPrefix + "Completed building create items requests for {} items across {} batches at duration {}",
                         createItems.size(),
                         createResponseMap.size(),
                         Duration.between(startInstant, Instant.now()).toString());
@@ -1828,15 +1794,16 @@ abstract class ApiBase {
                 for (ResponseItems<String> response : createResponseMap.keySet()) {
                     if (response.isSuccessful()) {
                         completedItems.addAll(response.getResultsItems());
-                        LOG.debug(loggingPrefix + "Create items request success. Adding {} create result items to result collection.",
+                        LOG.debug(loggingPrefix + "Create items request completed successfully. Adding {} create result items to result collection.",
                                 response.getResultsItems().size());
                     } else {
                         errorMessage = response.getResponseBodyAsString();
+                        String logMessage = String.format("Create items request failed: %s", errorMessage);
                         if (logErrorAsWarn) {
                             // Add the error message to std logging
-                            LOG.error(loggingPrefix + "Create items request failed. {}", response.getResponseBodyAsString());
+                            LOG.error(logMessage);
                         } else {
-                            LOG.debug(loggingPrefix + "Create items request failed: {}", response.getResponseBodyAsString());
+                            LOG.debug(logMessage);
                         }
                         LOG.debug(loggingPrefix + "Converting duplicates to update and retrying the request");
                         List<Item> duplicates = ItemParser.parseItems(response.getDuplicateItems());
@@ -1847,6 +1814,98 @@ abstract class ApiBase {
                                 duplicates,
                                 conflictItems,
                                 createItems);
+                    }
+                }
+            }
+
+            return completedItems;
+        }
+
+        /**
+         * Performs an update items operation on a (large) batch of items with conflict/missing items detection.
+         *
+         * Large input batches will be split into smaller batches and submitted in parallel to CDF. Each update
+         * request/response is investigated for conflicts (currently, {@code missing items} conflicts will be detected)
+         * and reported back.
+         *
+         * In case of a failed request batch, we need to identify the conflicting items from the non-conflicting ones.
+         * Because CDF will treat an entire request batch atomically, all items in the batch will be
+         * rejected even if just a single item represents a conflict. This leads to a rather complex result being returned
+         * from this method:
+         * - Items that have been successfully created/inserted to CDF are returned in a {@code List<String>} as the
+         * {@code return object}.
+         * - Items that have an update conflict will be added to the {@code conflictItems} list. These items should be
+         * re-tried as a {@code create/insert} request.
+         * - Items that does not have an update conflict, but have not been committed to update (because they were in a
+         * failed request batch) will be added to the {@code updateItems} list. These items can be re-tried as an
+         * update request.
+         *
+         * Please note that the {@code updateItems} list serves two purposes:
+         * 1. When invoking this method, the list holds all items that should be updated.
+         * 2. When the method is finished, the lists holds the items (if any) that can be re-tried as update.
+         *
+         * Algorithm:
+         * 1. All items to update are submitted in the {@code updateItems} list.
+         * 2. Split large input into smaller request batches (if necessary) and post to CDF.
+         * 3. Clear {@code updateItems}.
+         * 4. For each request batch:
+         *  - If successful: register all items as {@code completed}.
+         *  - If unsuccessful:
+         *      - Register error/conflict message in {@code errorMessage}.
+         *      - Add missing items to the {@code conflictItems} list.
+         *      - Add non-conflicting items back to the {@code updateItems} list.
+         *
+         * @param updateItems The items to update.
+         * @param conflictItems The items that caused a conflict when inserting/creating.
+         * @param loggingPrefix A prefix prepended to the logs.
+         * @param startInstant The Instant when the upsert operation started. Used to calculate operation duration.
+         * @param errorMessage The error message from the update operation (if a conflict is detected) will be added here.
+         * @param logErrorAsWarn If set to {@code true}, any error message from the create/insert operation will be logged
+         *                       as {@code warn}. If set to {@code false}, any error will be logged as {@code debug}.
+         * @return The results from the items that successfully completed the update operation.
+         * @throws Exception If an error is encountered during the update operation. For example, a network error.
+         */
+        private List<String> updateItemsWithConflictDetection(List<T> updateItems,
+                                                              List<T> conflictItems,
+                                                              String loggingPrefix,
+                                                              Instant startInstant,
+                                                              String errorMessage,
+                                                              boolean logErrorAsWarn) throws Exception {
+            List<String> completedItems = new ArrayList<>();
+
+            if (updateItems.isEmpty()) {
+                LOG.debug(loggingPrefix + "Update items list is empty. Skipping update.");
+            } else {
+                Map<ResponseItems<String>, List<T>> updateResponseMap = splitAndUpdateItems(updateItems);
+                LOG.debug(loggingPrefix + "Completed building update items requests for {} items across {} batches at duration {}",
+                        updateItems.size(),
+                        updateResponseMap.size(),
+                        Duration.between(startInstant, Instant.now()).toString());
+                updateItems.clear(); // Must prepare the list for possible new entries.
+
+                for (ResponseItems<String> response : updateResponseMap.keySet()) {
+                    if (response.isSuccessful()) {
+                        completedItems.addAll(response.getResultsItems());
+                        LOG.debug(loggingPrefix + "Update items request completed successfully. Adding {} update result items to result collection.",
+                                response.getResultsItems().size());
+                    } else {
+                        errorMessage = response.getResponseBodyAsString();
+                        String logMessage = String.format("Update items request failed: %s", errorMessage);
+                        if (logErrorAsWarn) {
+                            // Add the error message to std logging
+                            LOG.error(logMessage);
+                        } else {
+                            LOG.debug(logMessage);
+                        }
+                        LOG.debug(loggingPrefix + "Converting missing items to create and retrying the request");
+                        List<Item> missing = ItemParser.parseItems(response.getMissingItems());
+                        LOG.debug(loggingPrefix + "Number of missing entries reported by CDF: {}", missing.size());
+
+                        // Move duplicates from insert to the create request
+                        distributeObjectsToMainAndReminder(updateResponseMap.get(response),
+                                missing,
+                                conflictItems,
+                                updateItems);
                     }
                 }
             }
