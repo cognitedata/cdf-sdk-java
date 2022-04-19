@@ -1001,10 +1001,11 @@ abstract class ApiBase {
             List<T> elementListCreate = deduplicate(items);
             List<T> elementListUpdate = new ArrayList<>(1000);
             List<String> elementListCompleted = new ArrayList<>(elementListCreate.size());
+            int deduplicatedInputCount = elementListCreate.size();
 
-            if (elementListCreate.size() != items.size()) {
+            if (deduplicatedInputCount != items.size()) {
                 LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
-                        items.size() - elementListCreate.size());
+                        items.size() - deduplicatedInputCount);
             }
 
             /*
@@ -1047,7 +1048,7 @@ abstract class ApiBase {
 
             // Check if all elements completed the upsert requests
             verifyAndLogCompleteUpsertProcess(elementListCreate, elementListUpdate, elementListCompleted,
-                    batchLogPrefix, startInstant, exceptionMessage);
+                    deduplicatedInputCount, batchLogPrefix, startInstant, exceptionMessage);
 
             return elementListCompleted;
         }
@@ -1085,10 +1086,11 @@ abstract class ApiBase {
             List<T> elementListUpdate = deduplicate(items);
             List<T> elementListCreate = new ArrayList<>(items.size() / 2);
             List<String> elementListCompleted = new ArrayList<>(elementListUpdate.size());
+            int deduplicatedInputCount = elementListUpdate.size();
 
-            if (elementListUpdate.size() != items.size()) {
+            if (deduplicatedInputCount != items.size()) {
                 LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
-                        items.size() - elementListUpdate.size());
+                        items.size() - deduplicatedInputCount);
             }
 
             /*
@@ -1131,7 +1133,7 @@ abstract class ApiBase {
 
             // Check if all elements completed the upsert requests
             verifyAndLogCompleteUpsertProcess(elementListCreate, elementListUpdate, elementListCompleted,
-                    batchLogPrefix, startInstant, exceptionMessage);
+                    deduplicatedInputCount, batchLogPrefix, startInstant, exceptionMessage);
 
             return elementListCompleted;
         }
@@ -1175,12 +1177,13 @@ abstract class ApiBase {
 
             // Delete, create, completed lists
             List<T> elementListCreate = deduplicate(items);
-            List<T> elementListDelete = new ArrayList<>(elementListCreate.size());
-            List<String> elementListCompleted = new ArrayList<>(elementListCreate.size());
+            List<T> elementListDelete = new ArrayList<>();
+            List<String> elementListCompleted = new ArrayList<>();
+            int deduplicatedInputCount = elementListCreate.size();
 
-            if (elementListCreate.size() != items.size()) {
+            if (deduplicatedInputCount != items.size()) {
                 LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
-                        items.size() - elementListCreate.size());
+                        items.size() - deduplicatedInputCount);
             }
 
             /*
@@ -1233,7 +1236,7 @@ abstract class ApiBase {
 
             // Check if all elements completed the upsert requests
             verifyAndLogCompleteUpsertProcess(elementListCreate, elementListDelete, elementListCompleted,
-                    batchLogPrefix, startInstant, exceptionMessage);
+                    deduplicatedInputCount, batchLogPrefix, startInstant, exceptionMessage);
 
             return elementListCompleted;
         }
@@ -1273,10 +1276,11 @@ abstract class ApiBase {
             // Insert, update, completed lists
             List<T> elementListGet = deduplicate(items);
             List<String> elementListCompleted = new ArrayList<>(elementListGet.size());
+            int deduplicatedInputCount = elementListGet.size();
 
-            if (elementListGet.size() != items.size()) {
+            if (deduplicatedInputCount != items.size()) {
                 LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will deduplicate and continue with the upsert process.",
-                        items.size() - elementListGet.size());
+                        items.size() - deduplicatedInputCount);
             }
 
             final Set<T> existingResources = Set.copyOf(Objects.requireNonNull(getRetrieveFunction())
@@ -1337,7 +1341,7 @@ abstract class ApiBase {
 
             // Check if all elements completed the upsert requests
             verifyAndLogCompleteUpsertProcess(elementListCreate, elementListUpdate, elementListCompleted,
-                    batchLogPrefix, startInstant, exceptionMessage);
+                    deduplicatedInputCount, batchLogPrefix, startInstant, exceptionMessage);
 
             return elementListCompleted;
         }
@@ -1371,17 +1375,17 @@ abstract class ApiBase {
             // Insert, completed lists
             List<T> elementListCreate = deduplicate(items);
             List<String> elementListCompleted = new ArrayList<>(elementListCreate.size());
+            int deduplicatedInputCount = elementListCreate.size();
 
-            if (elementListCreate.size() != items.size()) {
+            if (deduplicatedInputCount != items.size()) {
                 LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
-                        items.size() - elementListCreate.size());
+                        items.size() - deduplicatedInputCount);
             }
 
             /*
             The upsert loop. If there are items left to insert:
             1. Insert elements
             2. If conflict, report to client
-
             */
             String exceptionMessage = "";
             LOG.debug(batchLogPrefix + "Start create loop with {} items to create and "
@@ -1398,7 +1402,7 @@ abstract class ApiBase {
 
             // Check if all elements completed the upsert requests
             verifyAndLogCompleteUpsertProcess(elementListCreate, new ArrayList<T>(), elementListCompleted,
-                    batchLogPrefix, startInstant, exceptionMessage);
+                    deduplicatedInputCount, batchLogPrefix, startInstant, exceptionMessage);
 
             return elementListCompleted;
         }
@@ -1445,10 +1449,11 @@ abstract class ApiBase {
             List<T> elementListCreate = deduplicate(items);
             List<T> elementListDelete = new ArrayList<>();
             List<String> elementListCompleted = new ArrayList<>(elementListCreate.size());
+            int deduplicatedInputCount = elementListCreate.size();
 
-            if (elementListCreate.size() != items.size()) {
+            if (deduplicatedInputCount != items.size()) {
                 LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
-                        items.size() - elementListCreate.size());
+                        items.size() - deduplicatedInputCount);
             }
 
             /*
@@ -1501,7 +1506,7 @@ abstract class ApiBase {
 
             // Check if all elements completed the upsert requests
             verifyAndLogCompleteUpsertProcess(elementListCreate, elementListDelete, elementListCompleted,
-                    batchLogPrefix, startInstant, exceptionMessage);
+                    deduplicatedInputCount, batchLogPrefix, startInstant, exceptionMessage);
 
             return elementListCompleted;
         }
@@ -1746,6 +1751,8 @@ abstract class ApiBase {
          * @param inputListA Input list A. Must be empty for the upsert operation to be considered complete.
          * @param inputListB Input list B. Must be empty for the upsert operation to be considered complete.
          * @param outputList Output/results list. Contains the results of the completed upsert operations.
+         * @param expectedOutputCount The expected number of results/output. The output list size will be compared to this
+         *                            number and a warning logged if they differ.
          * @param loggingPrefix A prefix prepended to the logs.
          * @param startInstant The Instant when the upsert operation started. Used to calculate operation duration.
          * @param errorMessage An error message (from the upsert operation). Will be appended to the error log and Exception.
@@ -1754,6 +1761,7 @@ abstract class ApiBase {
         private void verifyAndLogCompleteUpsertProcess(List<?> inputListA,
                                                        List<?> inputListB,
                                                        List<?> outputList,
+                                                       int expectedOutputCount,
                                                        String loggingPrefix,
                                                        Instant startInstant,
                                                        String errorMessage) throws Exception {
@@ -1770,6 +1778,14 @@ abstract class ApiBase {
                         errorMessage);
                 LOG.error(message);
                 throw new Exception(message);
+            }
+
+            // Check if we have the expected number of results. This test will only be executed in case the
+            // input lists are empty (seemingly successful upsert).
+            if (expectedOutputCount != outputList.size()) {
+                LOG.warn("The output count is different from the input count. De-duplicated input count: {}. Output count: {}",
+                        expectedOutputCount,
+                        outputList.size());
             }
         }
 
