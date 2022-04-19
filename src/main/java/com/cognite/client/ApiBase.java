@@ -1016,7 +1016,7 @@ abstract class ApiBase {
             */
             ThreadLocalRandom random = ThreadLocalRandom.current();
             String exceptionMessage = "";
-            boolean logToWarn = false;
+            boolean logToError = false;
             for (int i = 0; i < maxUpsertLoopIterations && (elementListCreate.size() + elementListUpdate.size()) > 0;
                  i++, Thread.sleep(Math.min(500L, (10L * (long) Math.exp(i)) + random.nextLong(5)))) {
                 LOG.debug(batchLogPrefix + "Start upsert loop {} with {} items to create, {} items to update and "
@@ -1029,19 +1029,19 @@ abstract class ApiBase {
 
                 if (i == maxUpsertLoopIterations - 1) {
                     // Add the error message to std logging
-                    logToWarn = true;
+                    logToError = true;
                 }
 
                 //Insert / create items
                 elementListCompleted.addAll(
                         createItemsWithConflictDetection(elementListCreate, elementListUpdate, batchLogPrefix,
-                                startInstant, exceptionMessage, logToWarn)
+                                startInstant, exceptionMessage, logToError)
                 );
 
                 //Update items
                 elementListCompleted.addAll(
                         updateItemsWithConflictDetection(elementListUpdate, elementListCreate, batchLogPrefix,
-                                startInstant, exceptionMessage, logToWarn)
+                                startInstant, exceptionMessage, logToError)
                 );
             }
 
@@ -1100,7 +1100,7 @@ abstract class ApiBase {
             */
             ThreadLocalRandom random = ThreadLocalRandom.current();
             String exceptionMessage = "";
-            boolean logToWarn = false;
+            boolean logToError = false;
             for (int i = 0; i < maxUpsertLoopIterations && (elementListCreate.size() + elementListUpdate.size()) > 0;
                  i++, Thread.sleep(Math.min(500L, (10L * (long) Math.exp(i)) + random.nextLong(5)))) {
                 LOG.debug(batchLogPrefix + "Start upsert loop {} with {} items to update, {} items to create and "
@@ -1113,19 +1113,19 @@ abstract class ApiBase {
 
                 if (i == maxUpsertLoopIterations - 1) {
                     // Add the error message to std logging
-                    logToWarn = true;
+                    logToError = true;
                 }
 
                 //Update items
                 elementListCompleted.addAll(
                         updateItemsWithConflictDetection(elementListUpdate, elementListCreate, batchLogPrefix,
-                                startInstant, exceptionMessage, logToWarn)
+                                startInstant, exceptionMessage, logToError)
                 );
 
                 //Insert / create items
                 elementListCompleted.addAll(
                         createItemsWithConflictDetection(elementListCreate, elementListUpdate, batchLogPrefix,
-                                startInstant, exceptionMessage, logToWarn)
+                                startInstant, exceptionMessage, logToError)
                 );
             }
 
@@ -1192,7 +1192,7 @@ abstract class ApiBase {
             */
             ThreadLocalRandom random = ThreadLocalRandom.current();
             String exceptionMessage = "";
-            boolean logToWarn = false;
+            boolean logToError = false;
             for (int i = 0; i < maxUpsertLoopIterations && (elementListCreate.size() + elementListDelete.size()) > 0;
                  i++, Thread.sleep(Math.min(500L, (10L * (long) Math.exp(i)) + random.nextLong(5)))) {
                 LOG.debug(batchLogPrefix + "Start upsert loop {} with {} items to delete, {} items to create and "
@@ -1205,7 +1205,7 @@ abstract class ApiBase {
 
                 if (i == maxUpsertLoopIterations - 1) {
                     // Add the error message to std logging
-                    logToWarn = true;
+                    logToError = true;
                 }
 
                 /*
@@ -1227,7 +1227,7 @@ abstract class ApiBase {
                 //Insert / create items
                 elementListCompleted.addAll(
                         createItemsWithConflictDetection(elementListCreate, elementListDelete, batchLogPrefix,
-                                startInstant, exceptionMessage, logToWarn)
+                                startInstant, exceptionMessage, logToError)
                 );
             }
 
@@ -1306,7 +1306,7 @@ abstract class ApiBase {
             */
             ThreadLocalRandom random = ThreadLocalRandom.current();
             String exceptionMessage = "";
-            boolean logToWarn = false;
+            boolean logToError = false;
             for (int i = 0; i < maxUpsertLoopIterations && (elementListCreate.size() + elementListUpdate.size()) > 0;
                  i++, Thread.sleep(Math.min(500L, (10L * (long) Math.exp(i)) + random.nextLong(5)))) {
                 LOG.debug(batchLogPrefix + "Start upsert loop {} with {} items to create, {} items to update and "
@@ -1319,19 +1319,19 @@ abstract class ApiBase {
 
                 if (i == maxUpsertLoopIterations - 1) {
                     // Add the error message to std logging
-                    logToWarn = true;
+                    logToError = true;
                 }
 
                 //Insert / create items
                 elementListCompleted.addAll(
                         createItemsWithConflictDetection(elementListCreate, elementListUpdate, batchLogPrefix,
-                                startInstant, exceptionMessage, logToWarn)
+                                startInstant, exceptionMessage, logToError)
                 );
 
                 //Update items
                 elementListCompleted.addAll(
                         updateItemsWithConflictDetection(elementListUpdate, elementListCreate, batchLogPrefix,
-                                startInstant, exceptionMessage, logToWarn)
+                                startInstant, exceptionMessage, logToError)
                 );
             }
 
@@ -1460,7 +1460,7 @@ abstract class ApiBase {
             */
             ThreadLocalRandom random = ThreadLocalRandom.current();
             String exceptionMessage = "";
-            boolean logToWarn = false;
+            boolean logToError = false;
             for (int i = 0; i < maxUpsertLoopIterations && (elementListCreate.size() + elementListDelete.size()) > 0;
                  i++, Thread.sleep(Math.min(500L, (10L * (long) Math.exp(i)) + random.nextLong(5)))) {
                 LOG.debug(batchLogPrefix + "Start upsert loop {} with {} items to delete, {} items to create and "
@@ -1473,13 +1473,13 @@ abstract class ApiBase {
 
                 if (i == maxUpsertLoopIterations - 1) {
                     // Add the error message to std logging
-                    logToWarn = true;
+                    logToError = true;
                 }
 
                 //Insert / create items
                 elementListCompleted.addAll(
                         createItemsWithConflictDetection(elementListCreate, elementListDelete, batchLogPrefix,
-                                startInstant, exceptionMessage, logToWarn)
+                                startInstant, exceptionMessage, logToError)
                 );
 
                 /*
@@ -1536,7 +1536,7 @@ abstract class ApiBase {
          * 4. For each request batch:
          *  - If successful: register all items as {@code completed}.
          *  - If unsuccessful:
-         *      - Register error/conflict message in {@code errorMessage}.
+         *      - Register error/conflict message in {@code exceptionMessage}.
          *      - Add duplicates to the {@code conflictItems} list.
          *      - Add non-conflicting items back to the {@code createItems} list.
          *
@@ -1544,9 +1544,9 @@ abstract class ApiBase {
          * @param conflictItems The items that caused a conflict when inserting/creating.
          * @param loggingPrefix A prefix prepended to the logs.
          * @param startInstant The Instant when the upsert operation started. Used to calculate operation duration.
-         * @param errorMessage The error message from the create/insert operation (if a conflict is detected) will be added here.
-         * @param logErrorAsWarn If set to {@code true}, any error message from the create/insert operation will be logged
-         *                       as {@code warn}. If set to {@code false}, any error will be logged as {@code debug}.
+         * @param exceptionMessage The exception message from the create/insert operation (if a conflict is detected) will be added here.
+         * @param logExceptionAsError If set to {@code true}, any error message from the create/insert operation will be logged
+         *                       as {@code error}. If set to {@code false}, any error will be logged as {@code debug}.
          * @return The results from the items that successfully completed the create/insert operation.
          * @throws Exception If an error is encountered during the create operation. For example, a network error.
          */
@@ -1554,8 +1554,8 @@ abstract class ApiBase {
                                                               List<T> conflictItems,
                                                               String loggingPrefix,
                                                               Instant startInstant,
-                                                              String errorMessage,
-                                                              boolean logErrorAsWarn) throws Exception {
+                                                              String exceptionMessage,
+                                                              boolean logExceptionAsError) throws Exception {
             List<String> completedItems = new ArrayList<>();
 
             if (createItems.isEmpty()) {
@@ -1574,9 +1574,9 @@ abstract class ApiBase {
                         LOG.debug(loggingPrefix + "Create items request completed successfully. Adding {} create result items to result collection.",
                                 response.getResultsItems().size());
                     } else {
-                        errorMessage = response.getResponseBodyAsString();
-                        String logMessage = String.format("Create items request failed: %s", errorMessage);
-                        if (logErrorAsWarn) {
+                        exceptionMessage = response.getResponseBodyAsString();
+                        String logMessage = String.format("Create items request failed: %s", exceptionMessage);
+                        if (logExceptionAsError) {
                             // Add the error message to std logging
                             LOG.error(logMessage);
                         } else {
@@ -1586,7 +1586,7 @@ abstract class ApiBase {
                         List<Item> duplicates = ItemParser.parseItems(response.getDuplicateItems());
                         LOG.debug(loggingPrefix + "Number of duplicate entries reported by CDF: {}", duplicates.size());
 
-                        // Move duplicates from insert to the update request
+                        // Move duplicates from insert to the conflict list
                         distributeObjectsToMainAndReminder(createResponseMap.get(response),
                                 duplicates,
                                 conflictItems,
@@ -1628,7 +1628,7 @@ abstract class ApiBase {
          * 4. For each request batch:
          *  - If successful: register all items as {@code completed}.
          *  - If unsuccessful:
-         *      - Register error/conflict message in {@code errorMessage}.
+         *      - Register error/conflict message in {@code exceptionMessage}.
          *      - Add missing items to the {@code conflictItems} list.
          *      - Add non-conflicting items back to the {@code updateItems} list.
          *
@@ -1636,9 +1636,9 @@ abstract class ApiBase {
          * @param conflictItems The items that caused a conflict when inserting/creating.
          * @param loggingPrefix A prefix prepended to the logs.
          * @param startInstant The Instant when the upsert operation started. Used to calculate operation duration.
-         * @param errorMessage The error message from the update operation (if a conflict is detected) will be added here.
-         * @param logErrorAsWarn If set to {@code true}, any error message from the create/insert operation will be logged
-         *                       as {@code warn}. If set to {@code false}, any error will be logged as {@code debug}.
+         * @param exceptionMessage The exception message from the update operation (if a conflict is detected) will be added here.
+         * @param logExceptionAsError If set to {@code true}, any error message from the create/insert operation will be logged
+         *                       as {@code error}. If set to {@code false}, any error will be logged as {@code debug}.
          * @return The results from the items that successfully completed the update operation.
          * @throws Exception If an error is encountered during the update operation. For example, a network error.
          */
@@ -1646,8 +1646,8 @@ abstract class ApiBase {
                                                               List<T> conflictItems,
                                                               String loggingPrefix,
                                                               Instant startInstant,
-                                                              String errorMessage,
-                                                              boolean logErrorAsWarn) throws Exception {
+                                                              String exceptionMessage,
+                                                              boolean logExceptionAsError) throws Exception {
             Preconditions.checkState(null != getUpdateItemWriter(),
                     "The update item writer is not configured.");
             Preconditions.checkState(null != getUpdateMappingFunction(),
@@ -1671,9 +1671,9 @@ abstract class ApiBase {
                         LOG.debug(loggingPrefix + "Update items request completed successfully. Adding {} update result items to result collection.",
                                 response.getResultsItems().size());
                     } else {
-                        errorMessage = response.getResponseBodyAsString();
-                        String logMessage = String.format("Update items request failed: %s", errorMessage);
-                        if (logErrorAsWarn) {
+                        exceptionMessage = response.getResponseBodyAsString();
+                        String logMessage = String.format("Update items request failed: %s", exceptionMessage);
+                        if (logExceptionAsError) {
                             // Add the error message to std logging
                             LOG.error(logMessage);
                         } else {
