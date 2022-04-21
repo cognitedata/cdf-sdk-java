@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package com.cognite.beam.proto;
+
+option java_package = "com.cognite.client.dto";
+option java_multiple_files = true;
+
+message Transformation {
+
+  message DataSource1 {
+    enum DataSource1Type {
+      ASSETS = 0;
+      TIMESERIES = 1;
+      ASSET_HIERARCHY = 2;
+      EVENTS = 3;
+      DATAPOINTS = 4;
+      STRING_DATAPOINTS = 5;
+      SEQUENCES = 6;
+      SEQUENCE_ROWS = 7;
+      FILES = 8;
+      LABELS = 9;
+      RELATIONSHIPS = 10;
+      DATA_SETS = 11;
+    }
+
+    string type = 1;
+  }
+
+  message RawDataSource {
+    string type = 1;
+    string database = 2;
+    string table = 3;
+  }
+
+  message SequenceRowDataSource {
+    string type = 1;
+    string externalId = 2;
+  }
+
+  message FlatOidcCredentials {
+    string clientId = 1;
+    string clientSecret = 2;
+    string scopes = 3;
+    string tokenUri = 4;
+    string cdfProjectName = 5;
+    string audience = 6;
+  }
+
+  message TransformBlockedInfo {
+    string reason = 1;
+    int64 created_time = 2;
+  }
+
+  message Owner {
+    string user = 1;
+  }
+
+  message JobRead {
+    int32 id = 1;
+    string uuid = 2;
+    int32 transformationId = 3;
+    string transformationExternalId = 4;
+    string sourceProject = 5;
+    string destinationProject = 6;
+    optional DataSource1 dataSource1 = 7;
+    optional RawDataSource rawDataSource = 8;
+    optional SequenceRowDataSource sequenceRowDataSource = 9;
+    string conflictMode = 10;
+    string query = 11;
+    optional int64 created_time = 12;
+    optional int64 startedTime = 13;
+    optional int64 finishedTime = 14;
+    optional int64 lastSeenTime = 15;
+    optional string error = 16;
+    bool ignoreNullFields = 17;
+    string status = 18;
+  }
+
+  message Schedule {
+    int32 id = 1;
+    string externalId = 2;
+    int64 created_time = 3;
+    int64 lastUpdatedTime = 4;
+    string interval = 5;
+    bool isPaused = 6;
+  }
+
+  optional int64 id = 1;
+  string name = 2;
+  optional string query = 3;
+  optional DataSource1 dataSource1 = 4;
+  optional RawDataSource rawDataSource = 5;
+  optional SequenceRowDataSource sequenceRowDataSource = 6;
+  optional string conflictMode = 7;
+  optional bool isPublic = 8;
+  optional string sourceApiKey = 9;
+  optional string destinationApiKey = 10;
+  optional FlatOidcCredentials sourceOidcCredentials = 11;
+  optional FlatOidcCredentials destinationOidcCredentials = 12;
+  string externalId = 13;
+  bool ignoreNullFields = 14;
+  optional int64 dataSetId = 15;
+  optional TransformBlockedInfo blocked = 16;
+  optional int64 created_time = 17;
+  optional int64 lastUpdatedTime = 18;
+  optional Owner owner = 19;
+  optional bool hasSourceApiKey = 21;
+  optional bool hasDestinationApiKey = 22;
+  optional bool hasSourceOidcCredentials = 23;
+  optional bool hasDestinationOidcCredentials = 24;
+  optional JobRead lastFinishedJob = 25;
+  optional JobRead runningJob = 26;
+  optional Schedule schedule = 27;
+}

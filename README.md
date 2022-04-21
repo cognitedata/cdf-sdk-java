@@ -60,6 +60,9 @@ information ([https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.m
 - 3D File Download
 - 3D Asset Mapping
 
+#### TRANSFORMATIONS
+- Transformations
+
 ## Quickstart
 ```java
 // Create the Cognite client using API key as the authentication method

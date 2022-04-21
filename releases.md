@@ -19,6 +19,12 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type
 
+## [1.14.0] 2022-04-21
+
+### Added
+
+- Added `Transformations`
+
 ## [1.13.2] 2022-04-12
 
 ### Fixed

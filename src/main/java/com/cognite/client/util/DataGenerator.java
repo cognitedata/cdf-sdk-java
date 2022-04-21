@@ -409,4 +409,67 @@ public class DataGenerator {
         return objects;
     }
 
+    /**
+     *
+     * @param noObjects
+     * @param dataSetId
+     * @param destinationType 1 = DataSource1, 2 = RawDataSource and 3 = SequenceRowDataSource
+     * @param typeOfCredentials 1 = ApiKey and 2 = OidcCredentials
+     * @return
+     */
+    public static List<Transformation> generateTransformations(Integer noObjects, long dataSetId, int destinationType, int typeOfCredentials) {
+        List<Transformation> objects = new ArrayList<>(noObjects);
+        for (int i = 0; i < noObjects; i++) {
+            Transformation.Builder builder = Transformation.newBuilder()
+                    .setName("TransformationTestSDK-"+RandomStringUtils.randomAlphanumeric(10))
+                    .setQuery("select * from teste")
+                    .setConflictMode("upsert")
+                    .setIsPublic(true)
+                    .setExternalId("TestSKD-"+RandomStringUtils.randomAlphanumeric(10))
+                    .setIgnoreNullFields(true)
+                    .setDataSetId(dataSetId);
+
+            if (destinationType == 1) {
+                builder.setDataSource1(Transformation.DataSource1.newBuilder()
+                        .setType(Transformation.DataSource1.DataSource1Type.ASSETS.toString())
+                        .build());
+            } else if(destinationType == 2) {
+                builder.setRawDataSource(Transformation.RawDataSource.newBuilder()
+                                    .setType("raw")
+                                    .setDatabase("Teste")
+                                    .setTable("Teste")
+                                    .build());
+            } else if(destinationType == 3) {
+                builder.setSequenceRowDataSource(Transformation.SequenceRowDataSource.newBuilder()
+                        .setType("sequence_rows")
+                        .setExternalId("Teste-sequence_rows")
+                        .build()
+                );
+            }
+
+            if (typeOfCredentials == 1) {
+                builder.setSourceApiKey("TesteApiKey");
+                builder.setDestinationApiKey("TesteApiKey");
+            } else if(typeOfCredentials == 2) {
+                builder.setSourceOidcCredentials(Transformation.FlatOidcCredentials.newBuilder()
+                        .setClientId("ClientId")
+                        .setClientSecret("ClientSecret")
+                        .setScopes("https://greenfield.cognitedata.com/.default")
+                        .setTokenUri("https://login.microsoftonline.com/TENENT_ID/oauth2/v2.0/token")
+                        .setCdfProjectName("CdfProjectName")
+                        .setAudience("")
+                        .build());
+                builder.setDestinationOidcCredentials(Transformation.FlatOidcCredentials.newBuilder()
+                        .setClientId("ClientId")
+                        .setClientSecret("ClientSecret")
+                        .setScopes("https://greenfield.cognitedata.com/.default")
+                        .setTokenUri("https://login.microsoftonline.com/TENENT_ID/oauth2/v2.0/token")
+                        .setCdfProjectName("CdfProjectName")
+                        .setAudience("")
+                        .build());
+            }
+            objects.add(builder.build());
+        }
+        return objects;
+    }
 }
