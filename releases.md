@@ -19,6 +19,11 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type
 
+## [1.14.0-SNAPSHOT]
+
+### Fixed
+- File binary upload null pointer exception when running on Android devices.
+
 ## [1.13.2] 2022-04-12
 
 ### Fixed

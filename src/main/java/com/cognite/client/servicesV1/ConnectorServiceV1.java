@@ -3076,9 +3076,9 @@ public abstract class ConnectorServiceV1 implements Serializable {
     public static abstract class FileWriter extends ConnectorBase {
         private final String randomIdString = RandomStringUtils.randomAlphanumeric(5);
         private final String loggingPrefix = "FileWriter [" + randomIdString + "] -";
-        private final ObjectMapper objectMapper = new ObjectMapper();
+        private final ObjectMapper objectMapper = JsonUtil.getObjectMapperInstance();
 
-        // Using a dedicated http client for bile binary
+        // Using a dedicated http client for file binary
         final static OkHttpClient httpClient = new OkHttpClient.Builder()
                 .connectionSpecs(Arrays.asList(ConnectionSpec.MODERN_TLS, ConnectionSpec.COMPATIBLE_TLS))
                 .connectTimeout(10, TimeUnit.SECONDS)
@@ -3209,10 +3209,9 @@ public abstract class ConnectorServiceV1 implements Serializable {
 
             // Post the file metadata and get the file upload links
             ResponseBinary fileUploadResponse = getRequestExecutor()
-                    .executeRequestAsync(requestProvider
+                    .executeRequest(requestProvider
                             .withRequest(postFileMetaRequest)
-                            .buildRequest(Optional.empty()))
-                    .join();
+                            .buildRequest(Optional.empty()));
 
             if (!fileUploadResponse.getResponse().isSuccessful()) {
                 LOG.warn(loggingPrefix + "Unable to retrieve the file upload URLs");
@@ -3223,19 +3222,26 @@ public abstract class ConnectorServiceV1 implements Serializable {
 
             // Parse the upload response
             String jsonResponsePayload = fileUploadResponse.getResponseBodyBytes().toStringUtf8();
+            /*
             Map<String, Object> fileUploadResponseItem = objectMapper
                     .readValue(jsonResponsePayload, new TypeReference<Map<String, Object>>(){});
-            LOG.debug(loggingPrefix + "Posted file metadata for [{}]. Received file upload URL response.",
-                    fileContainer.getFileMetadata().getName());
 
-            Preconditions.checkState(fileUploadResponseItem.containsKey(uploadUrlKey),
-                    "Unable to retrieve upload URL from the CogniteAPI: " + fileUploadResponseItem.toString());
+             */
+            LOG.debug(loggingPrefix + "Posted file metadata for [{}]. Received file upload URL response: {}",
+                    fileContainer.getFileMetadata().getName(),
+                    jsonResponsePayload);
+            List<String> fileUploadUrlResponse = JsonStringAttributeResponseParser.create()
+                    .withAttributePath(uploadUrlKey)
+                    .extractItems(jsonResponsePayload);
+
+            Preconditions.checkState(!fileUploadUrlResponse.isEmpty(),
+                    "Unable to retrieve upload URL from the CogniteAPI: " + fileUploadUrlResponse.toString());
             LOG.debug(loggingPrefix + "[{}] upload URL: {}",
                     fileContainer.getFileMetadata().getName(),
-                    fileUploadResponseItem.getOrDefault(uploadUrlKey, "No upload URL"));
+                    fileUploadUrlResponse.get(0));
 
             // Start upload of the file binaries on a separate thread
-            URL fileUploadURL = new URL((String) fileUploadResponseItem.get(uploadUrlKey));
+            URL fileUploadURL = new URL(fileUploadUrlResponse.get(0));
 
             CompletableFuture<ResponseItems<String>> future;
             if ((fileContainer.getFileBinary().getBinaryTypeCase() == FileBinary.BinaryTypeCase.BINARY
