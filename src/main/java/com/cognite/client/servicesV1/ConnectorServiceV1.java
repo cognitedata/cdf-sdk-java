@@ -3076,7 +3076,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
     public static abstract class FileWriter extends ConnectorBase {
         private final String randomIdString = RandomStringUtils.randomAlphanumeric(5);
         private final String loggingPrefix = "FileWriter [" + randomIdString + "] -";
-        private final ObjectMapper objectMapper = JsonUtil.getObjectMapperInstance();
 
         // Using a dedicated http client for file binary
         final static OkHttpClient httpClient = new OkHttpClient.Builder()
