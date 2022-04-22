@@ -43,6 +43,16 @@ public abstract class Transformations extends ApiBase {
     }
 
     /**
+     * Returns {@link TransformationJobs} representing TransformationJobs api endpoints.
+     *
+     * @return The TransformationJobs api endpoints.
+     */
+    public TransformationJobs jobs() {
+        return TransformationJobs.of(getClient());
+    }
+
+
+    /**
      * Returns all {@link Transformation} objects.
      *
      * @see #list(Request)

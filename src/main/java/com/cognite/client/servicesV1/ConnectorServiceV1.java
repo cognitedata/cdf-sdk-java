@@ -2193,6 +2193,41 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
     }
 
+    /**
+     * Start running the job in Cognite.
+     * @param queryParameters
+     * @return
+     */
+    public ConnectorServiceV1.ItemWriter runTransformationJobs(Request queryParameters) {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("transformations/run")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ConnectorServiceV1.ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Stop running the job
+     * 
+     * @param queryParameters
+     * @return
+     */
+    public ConnectorServiceV1.ItemWriter cancelTransformationJobs(Request queryParameters) {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("transformations/cancel")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ConnectorServiceV1.ItemWriter.of(getClient(), requestProvider);
+    }
+
     @AutoValue.Builder
     public abstract static class Builder {
         public abstract Builder setClient(CogniteClient value);
