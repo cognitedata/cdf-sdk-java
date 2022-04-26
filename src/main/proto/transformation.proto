@@ -55,7 +55,7 @@ message Transformation {
     string user = 1;
   }
 
-  message JobRead {
+  message Job {
     int32 id = 1;
     string uuid = 2;
     int32 transformationId = 3;
@@ -108,7 +108,7 @@ message Transformation {
   optional bool hasDestinationApiKey = 22;
   optional bool hasSourceOidcCredentials = 23;
   optional bool hasDestinationOidcCredentials = 24;
-  optional JobRead lastFinishedJob = 25;
-  optional JobRead runningJob = 26;
+  optional Job lastFinishedJob = 25;
+  optional Job runningJob = 26;
   optional Schedule schedule = 27;
 }

@@ -2165,8 +2165,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter deleteTransformations() {
-        LOG.debug(loggingPrefix + "Initiating delete Transformations service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("transformations/delete")
                 .setRequest(Request.create())

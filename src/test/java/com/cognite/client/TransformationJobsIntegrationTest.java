@@ -80,10 +80,10 @@ public class TransformationJobsIntegrationTest {
 
     private void runJobs(CogniteClient client, List<Transformation> createdList) {
         try {
-            Transformation.JobRead jobRead1 =
+            Transformation.Job jobRead1 =
                     client.transformation().jobs().run(createdList.get(0).getId());
 
-            Transformation.JobRead jobRead2 =
+            Transformation.Job jobRead2 =
                     client.transformation().jobs().run(createdList.get(1).getExternalId());
             assertNotNull(jobRead1);
             assertNotNull(jobRead2);

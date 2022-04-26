@@ -13,9 +13,9 @@ public class TransformationJobsParser {
 
     static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static Transformation.JobRead parseTransformationJobs(String json) throws JsonProcessingException {
+    public static Transformation.Job parseTransformationJobs(String json) throws JsonProcessingException {
         JsonNode root = objectMapper.readTree(json);
-        Transformation.JobRead.Builder tmBuilder = Transformation.JobRead.newBuilder();
+        Transformation.Job.Builder tmBuilder = Transformation.Job.newBuilder();
 
         if (root.isObject()) {
             extractNodes(tmBuilder, root);
@@ -24,7 +24,7 @@ public class TransformationJobsParser {
         return tmBuilder.build();
     }
 
-    public static void extractNodes(Transformation.JobRead.Builder tmBuilder, JsonNode root) {
+    public static void extractNodes(Transformation.Job.Builder tmBuilder, JsonNode root) {
         if (root.path("id").isNumber()) {
             tmBuilder.setId(root.get("id").intValue());
         }

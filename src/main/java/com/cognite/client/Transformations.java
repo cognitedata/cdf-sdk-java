@@ -12,11 +12,9 @@ import com.cognite.client.servicesV1.parser.TimeseriesParser;
 import com.cognite.client.servicesV1.parser.TransformationParser;
 import com.google.auto.value.AutoValue;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -100,59 +98,22 @@ public abstract class Transformations extends ApiBase {
     }
 
     public List<Transformation> upsert(List<Transformation> transformations) throws Exception {
-        String loggingPrefix = "create() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter createItemWriter = connector.writeTransformation();
         ConnectorServiceV1.ItemWriter updateItemWriter = connector.updateTransformation();
 
-        List<Map<String, Object>> insertItems = new ArrayList<>();
-        List<Map<String, Object>> updateItems = new ArrayList<>();
+        UpsertItems<Transformation> upsertItems = UpsertItems.of(createItemWriter, this::toRequestInsertItem, getClient().buildAuthConfig())
+                .withUpdateItemWriter(updateItemWriter)
+                .withUpdateMappingFunction(this::toRequestUpdateItem)
+                .withIdFunction(this::getTransformationId);
 
-        transformations.forEach(td-> {
-            if (td.getId() == 0) {
-                insertItems.add(toRequestInsertItem(td));
-            } else {
-                if (getClient().getClientConfig().getUpsertMode() == UpsertMode.REPLACE) {
-                    updateItems.add(toRequestReplaceItem(td));
-                } else {
-                    updateItems.add(toRequestUpdateItem(td));
-                }
-            }
-        });
-
-        Request requestInsert = Request.create().withItems(insertItems);
-        Request requestUpdate = Request.create().withItems(updateItems);
-
-        CompletableFuture<ResponseItems<String>> responseInsert =
-                createItemWriter.writeItemsAsync(addAuthInfo(requestInsert));
-        CompletableFuture<ResponseItems<String>> responseUpdate =
-                updateItemWriter.writeItemsAsync(addAuthInfo(requestUpdate));
-
-        List<CompletableFuture<ResponseItems<String>>> futureList = new ArrayList<>();
-        if (insertItems.size() > 0) {
-            futureList.add(responseInsert);
-        }
-        if (updateItems.size() > 0) {
-            futureList.add(responseUpdate);
+        if (getClient().getClientConfig().getUpsertMode() == UpsertMode.REPLACE) {
+            upsertItems = upsertItems.withUpdateMappingFunction(this::toRequestReplaceItem);
         }
 
-        CompletableFuture<Void> allFutures =
-                CompletableFuture.allOf(futureList.toArray(new CompletableFuture[futureList.size()]));
-        allFutures.join(); // Wait for all futures to complete
-
-        List<Transformation> listResponse = new ArrayList<>();
-        String exceptionMessage = "";
-        for (CompletableFuture<ResponseItems<String>> future : futureList) {
-            ResponseItems<String> response = future.get();
-            if (response.isSuccessful()) {
-                listResponse.addAll(parseTransformationsToList(response.getResponseBodyAsString()));
-                LOG.debug(loggingPrefix + "Upsert items request success. Adding batch to result collection.");
-            } else {
-                exceptionMessage = response.getResponseBodyAsString();
-                LOG.debug(loggingPrefix + "Upsert items request failed: {}", exceptionMessage);
-            }
-        }
-        return listResponse;
+        return upsertItems.upsertViaCreateAndUpdate(transformations).stream()
+                .map(this::parseTransformations)
+                .collect(Collectors.toList());
     }
 
     public List<Transformation> retrieve(List<Item> items) throws Exception {
@@ -220,6 +181,21 @@ public abstract class Transformations extends ApiBase {
             return TransformationParser.toRequestReplaceItem(item);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    /*
+    Returns the id of an transformation. It will first check for an externalId, second it will check for id.
+
+    If no id is found, it returns an empty Optional.
+     */
+    private Optional<String> getTransformationId(Transformation item) {
+        if (StringUtils.isNotBlank(item.getExternalId())) {
+            return Optional.of(item.getExternalId());
+        } else if (item.hasId()) {
+            return Optional.of(String.valueOf(item.getId()));
+        } else {
+            return Optional.<String>empty();
         }
     }
 

@@ -382,7 +382,7 @@ public class TransformationParser {
 
         if (node.path("lastFinishedJob").isObject()) {
             JsonNode nodeLastFinishedJob = node.path("lastFinishedJob");
-            Transformation.JobRead.Builder lastJobBuilder = Transformation.JobRead.newBuilder();
+            Transformation.Job.Builder lastJobBuilder = Transformation.Job.newBuilder();
             TransformationJobsParser.extractNodes(lastJobBuilder, nodeLastFinishedJob);
             tmBuilder.setLastFinishedJob(lastJobBuilder.build());
         }

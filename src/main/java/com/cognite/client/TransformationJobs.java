@@ -39,7 +39,7 @@ public abstract class TransformationJobs extends ApiBase {
      * @return the job details
      * @throws Exception
      */
-    public Transformation.JobRead run(Long internalID) throws Exception {
+    public Transformation.Job run(Long internalID) throws Exception {
         Request request = Request.create().withRootParameter("id", internalID);
         return run(request);
     }
@@ -51,7 +51,7 @@ public abstract class TransformationJobs extends ApiBase {
      * @return the job details
      * @throws Exception
      */
-    public Transformation.JobRead run(String externalID) throws Exception {
+    public Transformation.Job run(String externalID) throws Exception {
         Request request = Request.create().withRootParameter("externalId", externalID);
         return run(request);
     }
@@ -80,7 +80,7 @@ public abstract class TransformationJobs extends ApiBase {
         return cancel(request);
     }
 
-    private Transformation.JobRead run(Request request) throws Exception {
+    private Transformation.Job run(Request request) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter runItemWriter = connector.runTransformationJobs(request);
 
@@ -117,7 +117,7 @@ public abstract class TransformationJobs extends ApiBase {
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
     deal very well with exceptions.
      */
-    private Transformation.JobRead parseTransformationJobs(String json) {
+    private Transformation.Job parseTransformationJobs(String json) {
         try {
             return TransformationJobsParser.parseTransformationJobs(json);
         } catch (Exception e) {
