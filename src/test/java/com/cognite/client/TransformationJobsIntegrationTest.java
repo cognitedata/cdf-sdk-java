@@ -39,12 +39,12 @@ public class TransformationJobsIntegrationTest {
             LOG.info(loggingPrefix + "------------ Start create Transformations. ------------------");
             List<Transformation> listToBeCreate = new ArrayList<>();
             List<Transformation> generatedWithDestinationDataSource1List =
-                    DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, 1, 2,
+                    DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.DATA_SOURCE_1, 2,
                             TestConfigProvider.getClientId(),
                             TestConfigProvider.getClientSecret(),
                             TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()).toString(),
                             TestConfigProvider.getProject());
-            List<Transformation> generatedWithDestinationRawDataSourceList = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, 2, 2,
+            List<Transformation> generatedWithDestinationRawDataSourceList = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.RAW_DATA_SOURCE, 2,
                     TestConfigProvider.getClientId(),
                     TestConfigProvider.getClientSecret(),
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()).toString(),

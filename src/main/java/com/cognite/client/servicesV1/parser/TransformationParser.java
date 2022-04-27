@@ -37,19 +37,19 @@ public class TransformationParser {
         if (StringUtils.isNotBlank(element.getName())) {
             mapBuilder.put("name", element.getName());
         } else {
-            throw new Exception("Unable to find attribute [name] in the in the Transformation object. ");
+            throw new Exception("Unable to find attribute [name] in the Transformation object. ");
         }
 
         if (StringUtils.isNotBlank(element.getExternalId())) {
             mapBuilder.put("externalId", element.getExternalId());
         } else {
-            throw new Exception("Unable to find attribute [externalId] in the in the Transformation object. ");
+            throw new Exception("Unable to find attribute [externalId] in the Transformation object. ");
         }
 
         if (Boolean.valueOf(element.getIgnoreNullFields()) != null) {
             mapBuilder.put("ignoreNullFields", element.getIgnoreNullFields());
         } else {
-            throw new Exception("Unable to find attribute [ignoreNullFields] in the in the Transformation object. ");
+            throw new Exception("Unable to find attribute [ignoreNullFields] in the Transformation object. ");
         }
 
         // Optional fields
@@ -57,15 +57,30 @@ public class TransformationParser {
             mapBuilder.put("query", element.getQuery());
         }
 
-        if (element.hasDataSource1()) {
-            String valLowerCase = element.getDataSource1().getType().toLowerCase();
-            mapBuilder.put("destination", Transformation.DataSource1.newBuilder()
-                    .setType(valLowerCase)
-                    .build());
-        } else if (element.hasRawDataSource()) {
-            mapBuilder.put("destination", element.getRawDataSource());
-        } else if (element.hasSequenceRowDataSource()) {
-            mapBuilder.put("destination", element.getSequenceRowDataSource());
+        if (element.hasDestination()) {
+            Preconditions.checkNotNull(element.getDestination().getDestinationType(), "Unable to find attribute [destinationType] in the Transformation object.");
+            if (Transformation.Destination.DestinationType.DATA_SOURCE_1.equals(element.getDestination().getDestinationType())) {
+                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
+                mapBuilder.put("destination", Transformation.DataSource1.newBuilder()
+                        .setType(element.getDestination().getType().toLowerCase())
+                        .build());
+            } else if (Transformation.Destination.DestinationType.RAW_DATA_SOURCE.equals(element.getDestination().getDestinationType())) {
+                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
+                Preconditions.checkNotNull(element.getDestination().getDatabase(), "Unable to find attribute [database] in the Transformation object.");
+                Preconditions.checkNotNull(element.getDestination().getTable(), "Unable to find attribute [table] in the Transformation object.");
+                mapBuilder.put("destination", Transformation.RawDataSource.newBuilder()
+                        .setType(element.getDestination().getType())
+                        .setDatabase(element.getDestination().getDatabase())
+                        .setTable(element.getDestination().getTable())
+                        .build());
+            } else if (Transformation.Destination.DestinationType.SEQUENCE_RAW_DATA_SOURCE.equals(element.getDestination().getDestinationType())) {
+                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
+                Preconditions.checkNotNull(element.getDestination().getExternalId(), "Unable to find attribute [externalId] in the Transformation object.");
+                mapBuilder.put("destination", Transformation.SequenceRowDataSource.newBuilder()
+                        .setType(element.getDestination().getType())
+                        .setExternalId(element.getDestination().getExternalId())
+                        .build());
+            }
         }
 
         if (element.hasConflictMode()) {
@@ -121,12 +136,30 @@ public class TransformationParser {
             updateNodeBuilder.put("query", ImmutableMap.of("set", element.getQuery()));
         }
 
-        if (element.hasDataSource1()) {
-            updateNodeBuilder.put("destination", ImmutableMap.of("set", element.getDataSource1()));
-        } else if (element.hasRawDataSource()) {
-            updateNodeBuilder.put("destination", ImmutableMap.of("set", element.getRawDataSource()));
-        } else if (element.hasSequenceRowDataSource()) {
-            updateNodeBuilder.put("destination", ImmutableMap.of("set", element.getSequenceRowDataSource()));
+        if (element.hasDestination()) {
+            Preconditions.checkNotNull(element.getDestination().getDestinationType(), "Unable to find attribute [destinationType] in the Transformation object.");
+            if (Transformation.Destination.DestinationType.DATA_SOURCE_1.equals(element.getDestination().getDestinationType())) {
+                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
+                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.DataSource1.newBuilder()
+                        .setType(element.getDestination().getType().toLowerCase())
+                        .build()));
+            } else if (Transformation.Destination.DestinationType.RAW_DATA_SOURCE.equals(element.getDestination().getDestinationType())) {
+                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
+                Preconditions.checkNotNull(element.getDestination().getDatabase(), "Unable to find attribute [database] in the Transformation object.");
+                Preconditions.checkNotNull(element.getDestination().getTable(), "Unable to find attribute [table] in the Transformation object.");
+                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.RawDataSource.newBuilder()
+                        .setType(element.getDestination().getType())
+                        .setDatabase(element.getDestination().getDatabase())
+                        .setTable(element.getDestination().getTable())
+                        .build()));
+            } else if (Transformation.Destination.DestinationType.SEQUENCE_RAW_DATA_SOURCE.equals(element.getDestination().getDestinationType())) {
+                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
+                Preconditions.checkNotNull(element.getDestination().getExternalId(), "Unable to find attribute [externalId] in the Transformation object.");
+                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.SequenceRowDataSource.newBuilder()
+                        .setType(element.getDestination().getType())
+                        .setExternalId(element.getDestination().getExternalId())
+                        .build()));
+            }
         }
 
         if (element.hasConflictMode()) {
@@ -177,8 +210,6 @@ public class TransformationParser {
 
         if (StringUtils.isNotBlank(element.getName())) {
             updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
-        } else {
-            updateNodeBuilder.put("name", ImmutableMap.of("setNull", true));
         }
 
         if (StringUtils.isNotBlank(element.getName())) {
@@ -187,15 +218,34 @@ public class TransformationParser {
             updateNodeBuilder.put("query", ImmutableMap.of("setNull", true));
         }
 
-        if (element.hasDataSource1()) {
-            updateNodeBuilder.put("destination", ImmutableMap.of("set", element.getDataSource1()));
-        } else if (element.hasRawDataSource()) {
-            updateNodeBuilder.put("destination", ImmutableMap.of("set", element.getRawDataSource()));
-        } else if (element.hasSequenceRowDataSource()) {
-            updateNodeBuilder.put("destination", ImmutableMap.of("set", element.getSequenceRowDataSource()));
+        if (element.hasDestination()) {
+            Preconditions.checkNotNull(element.getDestination().getDestinationType(), "Unable to find attribute [destinationType] in the Transformation object.");
+            if (Transformation.Destination.DestinationType.DATA_SOURCE_1.equals(element.getDestination().getDestinationType())) {
+                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
+                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.DataSource1.newBuilder()
+                        .setType(element.getDestination().getType().toLowerCase())
+                        .build()));
+            } else if (Transformation.Destination.DestinationType.RAW_DATA_SOURCE.equals(element.getDestination().getDestinationType())) {
+                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
+                Preconditions.checkNotNull(element.getDestination().getDatabase(), "Unable to find attribute [database] in the Transformation object.");
+                Preconditions.checkNotNull(element.getDestination().getTable(), "Unable to find attribute [table] in the Transformation object.");
+                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.RawDataSource.newBuilder()
+                        .setType(element.getDestination().getType())
+                        .setDatabase(element.getDestination().getDatabase())
+                        .setTable(element.getDestination().getTable())
+                        .build()));
+            } else if (Transformation.Destination.DestinationType.SEQUENCE_RAW_DATA_SOURCE.equals(element.getDestination().getDestinationType())) {
+                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
+                Preconditions.checkNotNull(element.getDestination().getExternalId(), "Unable to find attribute [externalId] in the Transformation object.");
+                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.SequenceRowDataSource.newBuilder()
+                        .setType(element.getDestination().getType())
+                        .setExternalId(element.getDestination().getExternalId())
+                        .build()));
+            }
         } else {
             updateNodeBuilder.put("destination", ImmutableMap.of("setNull", true));
         }
+
 
         if (element.hasConflictMode()) {
             updateNodeBuilder.put("conflictMode", ImmutableMap.of("set", element.getConflictMode()));
@@ -289,33 +339,36 @@ public class TransformationParser {
         if (node.path("destination").isObject()) {
             if (node.path("destination").size() == 1) {
                 JsonNode dataSourceNode = node.path("destination");
-                tmBuilder.setDataSource1(Transformation.DataSource1.newBuilder()
+                tmBuilder.setDestination(Transformation.Destination.newBuilder()
+                        .setDestinationType(Transformation.Destination.DestinationType.DATA_SOURCE_1)
                         .setType(dataSourceNode.get("type").textValue())
                         .build());
             } else {
                 if (node.path("destination").path("type").textValue().equals("raw")) {
                     JsonNode rawDataSourceNode = node.path("destination");
-                    Transformation.RawDataSource.Builder builderRaw = Transformation.RawDataSource.newBuilder();
+                    Transformation.Destination.Builder builderDest = Transformation.Destination.newBuilder();
+                    builderDest.setDestinationType(Transformation.Destination.DestinationType.RAW_DATA_SOURCE);
                     if (rawDataSourceNode.path("type").isTextual()) {
-                        builderRaw.setType(rawDataSourceNode.path("type").textValue());
+                        builderDest.setType(rawDataSourceNode.path("type").textValue());
                     }
                     if (rawDataSourceNode.path("database").isTextual()) {
-                        builderRaw.setDatabase(rawDataSourceNode.path("database").textValue());
+                        builderDest.setDatabase(rawDataSourceNode.path("database").textValue());
                     }
                     if (rawDataSourceNode.path("table").isTextual()) {
-                        builderRaw.setTable(rawDataSourceNode.path("table").textValue());
+                        builderDest.setTable(rawDataSourceNode.path("table").textValue());
                     }
-                    tmBuilder.setRawDataSource(builderRaw.build());
+                    tmBuilder.setDestination(builderDest.build());
                 } else if (node.path("destination").path("type").textValue().equals("sequence_rows")) {
                     JsonNode sequenceRowDataSourceNode = node.path("destination");
-                    Transformation.SequenceRowDataSource.Builder builderSeq = Transformation.SequenceRowDataSource.newBuilder();
+                    Transformation.Destination.Builder builderDest = Transformation.Destination.newBuilder();
+                    builderDest.setDestinationType(Transformation.Destination.DestinationType.SEQUENCE_RAW_DATA_SOURCE);
                     if (sequenceRowDataSourceNode.path("type").isTextual()) {
-                        builderSeq.setType(sequenceRowDataSourceNode.path("type").textValue());
+                        builderDest.setType(sequenceRowDataSourceNode.path("type").textValue());
                     }
                     if (sequenceRowDataSourceNode.path("externalId").isTextual()) {
-                        builderSeq.setExternalId(sequenceRowDataSourceNode.path("externalId").textValue());
+                        builderDest.setExternalId(sequenceRowDataSourceNode.path("externalId").textValue());
                     }
-                    tmBuilder.setSequenceRowDataSource(builderSeq.build());
+                    tmBuilder.setDestination(builderDest.build());
                 }
             }
         }

@@ -47,33 +47,36 @@ public class TransformationJobsParser {
 
             if (root.path("destination").size() == 1) {
                 JsonNode dataSourceNode = root.path("destination");
-                tmBuilder.setDataSource1(Transformation.DataSource1.newBuilder()
+                tmBuilder.setDestination(Transformation.Destination.newBuilder()
+                        .setDestinationType(Transformation.Destination.DestinationType.DATA_SOURCE_1)
                         .setType(dataSourceNode.get("type").textValue())
                         .build());
             } else {
                 if (root.path("destination").path("type").textValue().equals("raw")) {
                     JsonNode rawDataSourceNode = root.path("destination");
-                    Transformation.RawDataSource.Builder builderRaw = Transformation.RawDataSource.newBuilder();
+                    Transformation.Destination.Builder builderDest = Transformation.Destination.newBuilder();
+                    builderDest.setDestinationType(Transformation.Destination.DestinationType.RAW_DATA_SOURCE);
                     if (rawDataSourceNode.path("type").isTextual()) {
-                        builderRaw.setType(rawDataSourceNode.path("type").textValue());
+                        builderDest.setType(rawDataSourceNode.path("type").textValue());
                     }
                     if (rawDataSourceNode.path("database").isTextual()) {
-                        builderRaw.setDatabase(rawDataSourceNode.path("database").textValue());
+                        builderDest.setDatabase(rawDataSourceNode.path("database").textValue());
                     }
                     if (rawDataSourceNode.path("table").isTextual()) {
-                        builderRaw.setTable(rawDataSourceNode.path("table").textValue());
+                        builderDest.setTable(rawDataSourceNode.path("table").textValue());
                     }
-                    tmBuilder.setRawDataSource(builderRaw.build());
+                    tmBuilder.setDestination(builderDest.build());
                 } else if (root.path("destination").path("type").textValue().equals("sequence_rows")) {
                     JsonNode sequenceRowDataSourceNode = root.path("destination");
-                    Transformation.SequenceRowDataSource.Builder builderSeq = Transformation.SequenceRowDataSource.newBuilder();
+                    Transformation.Destination.Builder builderDest = Transformation.Destination.newBuilder();
+                    builderDest.setDestinationType(Transformation.Destination.DestinationType.SEQUENCE_RAW_DATA_SOURCE);
                     if (sequenceRowDataSourceNode.path("type").isTextual()) {
-                        builderSeq.setType(sequenceRowDataSourceNode.path("type").textValue());
+                        builderDest.setType(sequenceRowDataSourceNode.path("type").textValue());
                     }
                     if (sequenceRowDataSourceNode.path("externalId").isTextual()) {
-                        builderSeq.setExternalId(sequenceRowDataSourceNode.path("externalId").textValue());
+                        builderDest.setExternalId(sequenceRowDataSourceNode.path("externalId").textValue());
                     }
-                    tmBuilder.setSequenceRowDataSource(builderSeq.build());
+                    tmBuilder.setDestination(builderDest.build());
                 }
             }
         }

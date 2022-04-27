@@ -7,7 +7,8 @@ option java_multiple_files = true;
 
 message Transformation {
 
-  message DataSource1 {
+  message Destination {
+
     enum DataSource1Type {
       ASSETS = 0;
       TIMESERIES = 1;
@@ -23,6 +24,20 @@ message Transformation {
       DATA_SETS = 11;
     }
 
+    enum DestinationType {
+      DATA_SOURCE_1 = 0;
+      RAW_DATA_SOURCE = 1;
+      SEQUENCE_RAW_DATA_SOURCE = 2;
+    }
+
+    optional DestinationType destination_type = 1;
+    optional string type = 2;
+    optional string database = 3;
+    optional string table = 4;
+    string external_id = 5;
+  }
+
+  message DataSource1 {
     string type = 1;
   }
 
@@ -38,11 +53,11 @@ message Transformation {
   }
 
   message FlatOidcCredentials {
-    string clientId = 1;
-    string clientSecret = 2;
+    string client_id = 1;
+    string client_secret = 2;
     string scopes = 3;
     string tokenUri = 4;
-    string cdfProjectName = 5;
+    string cdf_project_name = 5;
     string audience = 6;
   }
 
@@ -58,57 +73,53 @@ message Transformation {
   message Job {
     int32 id = 1;
     string uuid = 2;
-    int32 transformationId = 3;
-    string transformationExternalId = 4;
-    string sourceProject = 5;
-    string destinationProject = 6;
-    optional DataSource1 dataSource1 = 7;
-    optional RawDataSource rawDataSource = 8;
-    optional SequenceRowDataSource sequenceRowDataSource = 9;
-    string conflictMode = 10;
-    string query = 11;
-    optional int64 created_time = 12;
-    optional int64 startedTime = 13;
-    optional int64 finishedTime = 14;
-    optional int64 lastSeenTime = 15;
-    optional string error = 16;
-    bool ignoreNullFields = 17;
-    string status = 18;
+    int32 transformation_id = 3;
+    string transformation_external_id = 4;
+    string source_project = 5;
+    string destination_project = 6;
+    optional Destination destination = 7;
+    string conflict_mode = 8;
+    string query = 9;
+    optional int64 created_time = 10;
+    optional int64 started_time = 11;
+    optional int64 finished_time = 12;
+    optional int64 last_seen_time = 13;
+    optional string error = 14;
+    bool ignore_null_fields = 15;
+    string status = 16;
   }
 
   message Schedule {
     int32 id = 1;
-    string externalId = 2;
+    string external_id = 2;
     int64 created_time = 3;
-    int64 lastUpdatedTime = 4;
+    int64 last_updated_time = 4;
     string interval = 5;
-    bool isPaused = 6;
+    bool is_paused = 6;
   }
 
   optional int64 id = 1;
   string name = 2;
   optional string query = 3;
-  optional DataSource1 dataSource1 = 4;
-  optional RawDataSource rawDataSource = 5;
-  optional SequenceRowDataSource sequenceRowDataSource = 6;
-  optional string conflictMode = 7;
-  optional bool isPublic = 8;
-  optional string sourceApiKey = 9;
-  optional string destinationApiKey = 10;
-  optional FlatOidcCredentials sourceOidcCredentials = 11;
-  optional FlatOidcCredentials destinationOidcCredentials = 12;
-  string externalId = 13;
-  bool ignoreNullFields = 14;
-  optional int64 dataSetId = 15;
-  optional TransformBlockedInfo blocked = 16;
-  optional int64 created_time = 17;
-  optional int64 lastUpdatedTime = 18;
-  optional Owner owner = 19;
-  optional bool hasSourceApiKey = 21;
-  optional bool hasDestinationApiKey = 22;
-  optional bool hasSourceOidcCredentials = 23;
-  optional bool hasDestinationOidcCredentials = 24;
-  optional Job lastFinishedJob = 25;
-  optional Job runningJob = 26;
-  optional Schedule schedule = 27;
+  optional Destination destination = 4;
+  optional string conflict_mode = 5;
+  optional bool is_public = 6;
+  optional string source_api_key = 7;
+  optional string destination_api_key = 8;
+  optional FlatOidcCredentials source_oidc_credentials = 9;
+  optional FlatOidcCredentials destination_oidc_credentials = 10;
+  string external_id = 11;
+  bool ignore_null_fields = 12;
+  optional int64 data_set_id = 13;
+  optional TransformBlockedInfo blocked = 14;
+  optional int64 created_time = 15;
+  optional int64 last_updated_time = 16;
+  optional Owner owner = 17;
+  optional bool has_source_api_key = 18;
+  optional bool has_destination_api_key = 19;
+  optional bool has_source_oidc_credentials = 20;
+  optional bool has_destination_oidc_credentials = 21;
+  optional Job last_finished_job = 22;
+  optional Job running_job = 23;
+  optional Schedule schedule = 24;
 }

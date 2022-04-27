@@ -418,7 +418,7 @@ public class DataGenerator {
      * @param typeOfCredentials 1 = ApiKey and 2 = OidcCredentials
      * @return
      */
-    public static List<Transformation> generateTransformations(Integer noObjects, long dataSetId, int destinationType, int typeOfCredentials) {
+    public static List<Transformation> generateTransformations(Integer noObjects, long dataSetId, Transformation.Destination.DestinationType destinationType, int typeOfCredentials) {
         return generateTransformations(noObjects, dataSetId, destinationType, typeOfCredentials, "ClientId","ClientSecret","https://login.microsoftonline.com/TENENT_ID/oauth2/v2.0/token", "CdfProjectName");
     }
 
@@ -434,7 +434,7 @@ public class DataGenerator {
      * @param cdfProjectName
      * @return
      */
-    public static List<Transformation> generateTransformations(Integer noObjects, long dataSetId, int destinationType, int typeOfCredentials, String clientId, String clientSecret, String tokenUri, String cdfProjectName) {
+    public static List<Transformation> generateTransformations(Integer noObjects, long dataSetId, Transformation.Destination.DestinationType destinationType, int typeOfCredentials, String clientId, String clientSecret, String tokenUri, String cdfProjectName) {
         List<Transformation> objects = new ArrayList<>(noObjects);
         for (int i = 0; i < noObjects; i++) {
             Transformation.Builder builder = Transformation.newBuilder()
@@ -446,18 +446,21 @@ public class DataGenerator {
                     .setIgnoreNullFields(true)
                     .setDataSetId(dataSetId);
 
-            if (destinationType == 1) {
-                builder.setDataSource1(Transformation.DataSource1.newBuilder()
-                        .setType(Transformation.DataSource1.DataSource1Type.ASSETS.toString())
+            if (Transformation.Destination.DestinationType.DATA_SOURCE_1.equals(destinationType)) {
+                builder.setDestination(Transformation.Destination.newBuilder()
+                        .setDestinationType(Transformation.Destination.DestinationType.DATA_SOURCE_1)
+                        .setType(Transformation.Destination.DataSource1Type.ASSETS.toString())
                         .build());
-            } else if(destinationType == 2) {
-                builder.setRawDataSource(Transformation.RawDataSource.newBuilder()
+            } else if(Transformation.Destination.DestinationType.RAW_DATA_SOURCE.equals(destinationType)) {
+                builder.setDestination(Transformation.Destination.newBuilder()
+                        .setDestinationType(Transformation.Destination.DestinationType.RAW_DATA_SOURCE)
                         .setType("raw")
                         .setDatabase("Teste")
                         .setTable("Teste")
                         .build());
-            } else if(destinationType == 3) {
-                builder.setSequenceRowDataSource(Transformation.SequenceRowDataSource.newBuilder()
+            } else if(Transformation.Destination.DestinationType.SEQUENCE_RAW_DATA_SOURCE.equals(destinationType)) {
+                builder.setDestination(Transformation.Destination.newBuilder()
+                        .setDestinationType(Transformation.Destination.DestinationType.SEQUENCE_RAW_DATA_SOURCE)
                         .setType("sequence_rows")
                         .setExternalId("Teste-sequence_rows")
                         .build()
