@@ -839,6 +839,8 @@ abstract class ApiBase {
         @Nullable
         abstract Function<T, Map<String, Object>> getUpdateMappingFunction();
         @Nullable
+        abstract BiFunction<T, T, Map<String, Object>> getUpdateMappingBiFunction();
+        @Nullable
         abstract Function<List<Item>, List<T>> getRetrieveFunction();
         @Nullable
         abstract BiFunction<T, T, Boolean> getEqualFunction();
@@ -873,6 +875,24 @@ abstract class ApiBase {
          */
         public UpsertItems<T> withUpdateMappingFunction(Function<T, Map<String, Object>> function) {
             return toBuilder().setUpdateMappingFunction(function).build();
+        }
+
+        /**
+         * Sets the mapping function for translating from the typed objects into JSON update objects. This function
+         * determines how updates are performed--if they are replace operations or update/patch operations.
+         *
+         * This version of the update mapping functions takes two input items to produce the update object:
+         * - New item. The desired target state of the item.
+         * - Existing item. The current state of the item in Cognite Data Fusion
+         *
+         * The function should analyze the difference between the desired state (new item) and current state
+         * (existing item) to produce the update object.
+         *
+         * @param biFunction the update mapping function comparing new item with the existing item
+         * @return The {@link UpsertItems} object with the configuration applied.
+         */
+        public UpsertItems<T> withUpdateMappingBiFunction(BiFunction<T, T, Map<String, Object>> biFunction) {
+            return toBuilder().setUpdateMappingBiFunction(biFunction).build();
         }
 
         /**
@@ -1245,7 +1265,8 @@ abstract class ApiBase {
          * Upserts a set of items via get, create and update.
          *
          * This function will first try to get all the items (in case they already exist in CDF)
-         * before creating them. Effectively this results in an upsert.
+         * before creating them. Items that already exists will be updated while new items will be
+         * created. Effectively this results in an upsert.
          *
          * This method is used for resource types that do not support updates natively
          * in the CDF api.
@@ -1291,6 +1312,117 @@ abstract class ApiBase {
 
             List<T> elementListCreate = new ArrayList<>(1000);
             List<T> elementListUpdate = new ArrayList<>(1000);
+
+            elementListGet.forEach(item -> {
+                if (existingResources.stream()
+                        .anyMatch(existing -> Objects.requireNonNull(getEqualFunction()).apply(existing, item))) {
+                    elementListUpdate.add(item);
+                } else {
+                    elementListCreate.add(item);
+                }
+            });
+
+            /*
+            The upsert loop. If there are items left to insert or update:
+            1. Insert elements (that were not found)
+            2. If a conflict, remove duplicates into the update maps
+            3. Update elements (that were found)
+            4. If conflicts move missing items into the insert maps
+            */
+            ThreadLocalRandom random = ThreadLocalRandom.current();
+            String exceptionMessage = "";
+            boolean logToError = false;
+            for (int i = 0; i < maxUpsertLoopIterations && (elementListCreate.size() + elementListUpdate.size()) > 0;
+                 i++, Thread.sleep(Math.min(500L, (10L * (long) Math.exp(i)) + random.nextLong(5)))) {
+                LOG.debug(batchLogPrefix + "Start upsert loop {} with {} items to create, {} items to update and "
+                                + "{} completed items at duration {}",
+                        i,
+                        elementListCreate.size(),
+                        elementListUpdate.size(),
+                        elementListCompleted.size(),
+                        Duration.between(startInstant, Instant.now()).toString());
+
+                if (i == maxUpsertLoopIterations - 1) {
+                    // Add the error message to std logging
+                    logToError = true;
+                }
+
+                //Insert / create items
+                elementListCompleted.addAll(
+                        createItemsWithConflictDetection(elementListCreate, elementListUpdate, batchLogPrefix,
+                                startInstant, exceptionMessage, logToError)
+                );
+
+                //Update items
+                elementListCompleted.addAll(
+                        updateItemsWithConflictDetection(elementListUpdate, elementListCreate, batchLogPrefix,
+                                startInstant, exceptionMessage, logToError)
+                );
+            }
+
+            // Check if all elements completed the upsert requests
+            verifyAndLogCompleteUpsertProcess(elementListCreate, elementListUpdate, elementListCompleted,
+                    deduplicatedInputCount, batchLogPrefix, startInstant, exceptionMessage);
+
+            return elementListCompleted;
+        }
+
+        /**
+         * Upserts a set of items via get, create and update, with change detection for the updates.
+         *
+         * This function will first try to get all the items (in case they already exist in CDF)
+         * before creating them. New items (that does not exist in CDF) will be created. Existing items will be updated
+         * via an update procedure that compares the existing CDF item with the new (input) item in order to produce
+         * the update request.
+         *
+         * This method is used for resource types that do not support updates natively
+         * in the CDF api.
+         *
+         * @param items The items to be upserted.
+         * @return The upserted items.
+         * @throws Exception
+         */
+        public List<String> upsertViaGetCreateAndUpdateDiff(List<T> items) throws Exception {
+            Instant startInstant = Instant.now();
+            String batchLogPrefix =
+                    "upsertViaGetCreateAndUpdateDiff() - batch " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+            Preconditions.checkArgument(itemsHaveId(items),
+                    batchLogPrefix + "All items must have externalId or id.");
+            Preconditions.checkState(null != getItemMappingFunction(),
+                    batchLogPrefix + "The item mapping function is not configured.");
+            Preconditions.checkState(null != getUpdateMappingBiFunction(),
+                    batchLogPrefix + "The update mapping bi-function is not configured.");
+            Preconditions.checkState(null != getRetrieveFunction(),
+                    batchLogPrefix + "The retrieve function is not configured.");
+            Preconditions.checkState(null != getEqualFunction(),
+                    batchLogPrefix + "The equal function is not configured.");
+
+            LOG.debug(batchLogPrefix + "Received {} items to upsert", items.size());
+
+            // Should not happen--but need to guard against empty input
+            if (items.isEmpty()) {
+                LOG.debug(batchLogPrefix + "Received an empty input list. Will just output an empty list.");
+                return Collections.emptyList();
+            }
+
+            // Insert, update, completed lists
+            List<T> elementListGet = deduplicate(items);
+            List<String> elementListCompleted = new ArrayList<>(elementListGet.size());
+            int deduplicatedInputCount = elementListGet.size();
+
+            if (deduplicatedInputCount != items.size()) {
+                LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will deduplicate and continue with the upsert process.",
+                        items.size() - deduplicatedInputCount);
+            }
+
+            final Set<T> existingResources = Set.copyOf(Objects.requireNonNull(getRetrieveFunction())
+                    .apply(elementListGet.stream()
+                            .map(item -> Objects.requireNonNull(getItemMappingFunction()).apply(item))
+                            .collect(Collectors.toList())));
+
+
+            List<T> elementListCreate = new ArrayList<>();
+            List<T> elementListUpdate = new ArrayList<>();
 
             elementListGet.forEach(item -> {
                 if (existingResources.stream()
@@ -1911,6 +2043,48 @@ abstract class ApiBase {
         }
 
         /**
+         * Submits a set of items as an update items request to the Cognite API.
+         *
+         * This version of the update function takes both the existing item and the new item as input. Then these
+         * two are compared for differences and the update request sent to CDF.
+         *
+         * This method is tailored specifically for update of {@link com.cognite.client.dto.SequenceMetadata} where we
+         * need to compare existing with new in order to construct the update request for the {@code columns} definitions.
+         *
+         * @param newItems the objects to update.
+         * @param existingItems the current version of the items in CDF.
+         * @return a {@link CompletableFuture} representing the response from the update request.
+         * @throws Exception
+         */
+        private CompletableFuture<ResponseItems<String>> updateItems(List<T> newItems, List<T> existingItems) {
+            Preconditions.checkState(null != getUpdateItemWriter() && null != getUpdateMappingBiFunction(),
+                    "Unable to send item update request. UpdateItemWriter and UpdateMappingBiFunction must be specified.");
+            Preconditions.checkArgument(newItems.size() == existingItems.size(),
+                    "New and existing items must be of the same size");
+
+            Map<String, T> existingItemsMap = mapToId(existingItems);
+            Map<String, T> newItemsMap = mapToId(newItems);
+            ImmutableList.Builder<Map<String, Object>> itemsBuilder = ImmutableList.builder();
+            try {
+                for (Map.Entry<String, T> entry : newItemsMap.entrySet()) {
+                    if (!existingItemsMap.containsKey(entry.getKey())) {
+                        // Should not happen
+                        throw new Exception("Error trying to update items. Unable to identify the existing item to "
+                                + "compare the new item with. New item externalId: " + entry.getKey());
+                    }
+                    itemsBuilder.add(getUpdateMappingBiFunction().apply(entry.getValue(), existingItemsMap.get(entry.getKey())));
+                }
+                Request writeItemsRequest = Request.create()
+                        .withItems(itemsBuilder.build())
+                        .withAuthConfig(getAuthConfig());
+
+                return getUpdateItemWriter().writeItemsAsync(writeItemsRequest);
+            } catch (Exception e) {
+                throw new IllegalStateException("Unexpected failure when assembling request", e);
+            }
+        }
+
+        /**
          * Checks all items for id / externalId. Returns {@code true} if all items have an id, {@code false}
          * if one (or more) items are missing id / externalId.
          *
@@ -1967,6 +2141,7 @@ abstract class ApiBase {
             abstract Builder<T> setBatchingFunction(Function<List<T>, List<List<T>>> value);
 
             abstract Builder<T> setUpdateMappingFunction(Function<T, Map<String, Object>> value);
+            abstract Builder<T> setUpdateMappingBiFunction(BiFunction<T, T, Map<String, Object>> value);
 
             abstract Builder<T> setItemMappingFunction(Function<T, Item> value);
 
