@@ -1887,8 +1887,6 @@ abstract class ApiBase {
                                                               boolean logExceptionAsError) throws Exception {
             Preconditions.checkState(null != getUpdateItemWriter(),
                     "The update item writer is not configured.");
-            Preconditions.checkState(null != getUpdateMappingFunction(),
-                    "The update mapping function is not configured.");
 
             List<String> completedItems = new ArrayList<>();
 
