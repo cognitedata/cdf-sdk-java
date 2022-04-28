@@ -1415,7 +1415,7 @@ abstract class ApiBase {
                         items.size() - deduplicatedInputCount);
             }
 
-            final Set<T> existingResources = Set.copyOf(Objects.requireNonNull(getRetrieveFunction())
+            final List<T> existingResources = List.copyOf(Objects.requireNonNull(getRetrieveFunction())
                     .apply(elementListGet.stream()
                             .map(item -> Objects.requireNonNull(getItemMappingFunction()).apply(item))
                             .collect(Collectors.toList())));
@@ -1466,7 +1466,7 @@ abstract class ApiBase {
 
                 //Update items
                 elementListCompleted.addAll(
-                        updateItemsWithConflictDetection(elementListUpdate, elementListCreate, batchLogPrefix,
+                        updateItemsWithConflictDetection(existingResources, elementListUpdate, elementListCreate, batchLogPrefix,
                                 startInstant, exceptionMessage, logToError)
                 );
             }
@@ -1833,6 +1833,106 @@ abstract class ApiBase {
         }
 
         /**
+         * Performs an update items operation on a (large) batch of items with conflict/missing items detection. The
+         * update operation is based on comparing the existing state of the items (in CDF) with the target state (the update).
+         *
+         * Large input batches will be split into smaller batches and submitted in parallel to CDF. Each update
+         * request/response is investigated for conflicts (currently, {@code missing items} conflicts will be detected)
+         * and reported back.
+         *
+         * In case of a failed request batch, we need to identify the conflicting items from the non-conflicting ones.
+         * Because CDF will treat an entire request batch atomically, all items in the batch will be
+         * rejected even if just a single item represents a conflict. This leads to a rather complex result being returned
+         * from this method:
+         * - Items that have been successfully created/inserted to CDF are returned in a {@code List<String>} as the
+         * {@code return object}.
+         * - Items that have an update conflict will be added to the {@code conflictItems} list. These items should be
+         * re-tried as a {@code create/insert} request.
+         * - Items that does not have an update conflict, but have not been committed to update (because they were in a
+         * failed request batch) will be added to the {@code updateItems} list. These items can be re-tried as an
+         * update request.
+         *
+         * Please note that the {@code updateItems} list serves two purposes:
+         * 1. When invoking this method, the list holds all items that should be updated.
+         * 2. When the method is finished, the lists holds the items (if any) that can be re-tried as update.
+         *
+         * Algorithm:
+         * 1. All items to update are submitted in the {@code updateItems} list.
+         * 2. Split large input into smaller request batches (if necessary) and post to CDF.
+         * 3. Clear {@code updateItems}.
+         * 4. For each request batch:
+         *  - If successful: register all items as {@code completed}.
+         *  - If unsuccessful:
+         *      - Register error/conflict message in {@code exceptionMessage}.
+         *      - Add missing items to the {@code conflictItems} list.
+         *      - Add non-conflicting items back to the {@code updateItems} list.
+         *
+         * @param existingItems The items to update, their existing state (in CDF).
+         * @param updateItems The items to update, their target state.
+         * @param conflictItems The items that caused a conflict when inserting/creating.
+         * @param loggingPrefix A prefix prepended to the logs.
+         * @param startInstant The Instant when the upsert operation started. Used to calculate operation duration.
+         * @param exceptionMessage The exception message from the update operation (if a conflict is detected) will be added here.
+         * @param logExceptionAsError If set to {@code true}, any error message from the create/insert operation will be logged
+         *                       as {@code error}. If set to {@code false}, any error will be logged as {@code debug}.
+         * @return The results from the items that successfully completed the update operation.
+         * @throws Exception If an error is encountered during the update operation. For example, a network error.
+         */
+        private List<String> updateItemsWithConflictDetection(List<T> existingItems,
+                                                              List<T> updateItems,
+                                                              List<T> conflictItems,
+                                                              String loggingPrefix,
+                                                              Instant startInstant,
+                                                              String exceptionMessage,
+                                                              boolean logExceptionAsError) throws Exception {
+            Preconditions.checkState(null != getUpdateItemWriter(),
+                    "The update item writer is not configured.");
+            Preconditions.checkState(null != getUpdateMappingFunction(),
+                    "The update mapping function is not configured.");
+
+            List<String> completedItems = new ArrayList<>();
+
+            if (updateItems.isEmpty()) {
+                LOG.debug(loggingPrefix + "Update items list is empty. Skipping update.");
+            } else {
+                Map<ResponseItems<String>, List<T>> updateResponseMap = splitAndUpdateItems(existingItems, updateItems);
+                LOG.debug(loggingPrefix + "Completed building update items requests for {} items across {} batches at duration {}",
+                        updateItems.size(),
+                        updateResponseMap.size(),
+                        Duration.between(startInstant, Instant.now()).toString());
+                updateItems.clear(); // Must prepare the list for possible new entries.
+
+                for (ResponseItems<String> response : updateResponseMap.keySet()) {
+                    if (response.isSuccessful()) {
+                        completedItems.addAll(response.getResultsItems());
+                        LOG.debug(loggingPrefix + "Update items request completed successfully. Adding {} update result items to result collection.",
+                                response.getResultsItems().size());
+                    } else {
+                        exceptionMessage = response.getResponseBodyAsString();
+                        String logMessage = String.format("Update items request failed: %s", exceptionMessage);
+                        if (logExceptionAsError) {
+                            // Add the error message to std logging
+                            LOG.error(logMessage);
+                        } else {
+                            LOG.debug(logMessage);
+                        }
+                        LOG.debug(loggingPrefix + "Converting missing items for conflict resolution and retrying the request");
+                        List<Item> missing = ItemParser.parseItems(response.getMissingItems());
+                        LOG.debug(loggingPrefix + "Number of missing entries reported by CDF: {}", missing.size());
+
+                        // Move missing items from insert to the conflict list
+                        distributeObjectsToMainAndReminder(updateResponseMap.get(response),
+                                missing,
+                                conflictItems,
+                                updateItems);
+                    }
+                }
+            }
+
+            return completedItems;
+        }
+
+        /**
          * Distributes a set of objects from an input list to two output lists: {@code main} and {@code reminder}.
          *
          * The objects are distributed based on a second input list of {@link Item}. The {@link Item} list specifies
@@ -1955,6 +2055,43 @@ abstract class ApiBase {
          * Submits a (large) batch of items by splitting it up into multiple, parallel update requests.
          * The response from each request is returned along with the items used as input.
          *
+         * @param existingItems The items to update, their existing state (in CDF).
+         * @param items The items to update, their target state.
+         * @return a {@link Map} with the responses and request inputs.
+         * @throws Exception
+         */
+        private Map<ResponseItems<String>, List<T>> splitAndUpdateItems(List<T> existingItems, List<T> items) {
+            Map<CompletableFuture<ResponseItems<String>>, List<T>> responseMap = new HashMap<>();
+
+            // Split into batches
+            List<List<T>> itemBatches = getBatchingFunction().apply(items);
+
+            // Submit all batches
+            for (List<T> batch : itemBatches) {
+                responseMap.put(updateItems(existingItems, batch), batch);
+            }
+
+            // Wait for all requests futures to complete
+            List<CompletableFuture<ResponseItems<String>>> futureList = new ArrayList<>(responseMap.keySet());
+            CompletableFuture<Void> allFutures =
+                    CompletableFuture.allOf(futureList.toArray(new CompletableFuture[futureList.size()]));
+            allFutures.join(); // Wait for all futures to complete
+
+            // Collect the responses from the futures
+            Map<ResponseItems<String>, List<T>> resultsMap = new HashMap<>(responseMap.size());
+            for (Map.Entry<CompletableFuture<ResponseItems<String>>, List<T>> entry : responseMap.entrySet()) {
+                resultsMap.put(entry.getKey().join(), entry.getValue());
+            }
+
+            return resultsMap;
+        }
+
+        /**
+         * Process items.
+         *
+         * Submits a (large) batch of items by splitting it up into multiple, parallel update requests.
+         * The response from each request is returned along with the items used as input.
+         *
          * @param items the objects to create/insert.
          * @param processFunc function that maps batch to a request
          * @return a {@link Map} with the responses and request inputs.
@@ -2059,8 +2196,8 @@ abstract class ApiBase {
         private CompletableFuture<ResponseItems<String>> updateItems(List<T> newItems, List<T> existingItems) {
             Preconditions.checkState(null != getUpdateItemWriter() && null != getUpdateMappingBiFunction(),
                     "Unable to send item update request. UpdateItemWriter and UpdateMappingBiFunction must be specified.");
-            Preconditions.checkArgument(newItems.size() == existingItems.size(),
-                    "New and existing items must be of the same size");
+            Preconditions.checkArgument(newItems.size() <= existingItems.size(),
+                    "Existing items list must be minimum the same size as the new items list.");
 
             Map<String, T> existingItemsMap = mapToId(existingItems);
             Map<String, T> newItemsMap = mapToId(newItems);
