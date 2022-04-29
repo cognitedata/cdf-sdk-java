@@ -101,6 +101,8 @@ public class DataGenerator {
                     .setName("test_column_" + RandomStringUtils.randomAlphanumeric(5))
                     .setDescription(RandomStringUtils.randomAlphanumeric(50))
                     .setValueTypeValue(ThreadLocalRandom.current().nextInt(0,2))
+                    .putMetadata("type", DataGenerator.sourceValue)
+                    .putMetadata(sourceKey, DataGenerator.sourceValue)
                     .build());
         }
 
