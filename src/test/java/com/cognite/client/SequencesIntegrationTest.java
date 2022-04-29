@@ -200,7 +200,7 @@ class SequencesIntegrationTest {
 
         try {
             LOG.info(loggingPrefix + "Start upserting sequences.");
-            List<SequenceMetadata> upsertSequencesList = DataGenerator.generateSequenceMetadata(123);
+            List<SequenceMetadata> upsertSequencesList = DataGenerator.generateSequenceMetadata(12);
             List<SequenceMetadata> upsertedTimeseries = client.sequences().upsert(upsertSequencesList);
             LOG.info(loggingPrefix + "Finished upserting sequences. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
@@ -216,17 +216,20 @@ class SequencesIntegrationTest {
                                 .addAllColumns(DataGenerator.generateSequenceColumnHeader(2))
                                 .removeColumns(1)
                                 .build())
-//                    .map(sequence -> {
-//                        // modify a column
-//                        int index = ThreadLocalRandom.current().nextInt(0, sequence.getColumnsCount());
-//                        SequenceColumn column = sequence.getColumns(index).toBuilder()
-//                                .clearMetadata()
-//                                .putMetadata("new-column-key", "new-column-value")
-//                                .build();
-//                        return sequence.toBuilder()
-//                                .addColumns(index, column)
-//                                .build();
-//                    })
+                    .map(sequence -> {
+                        // modify all columns
+                        List<SequenceColumn> modifiedColumns = sequence.getColumnsList().stream()
+                                .map(column -> column.toBuilder()
+                                        .clearMetadata()
+                                        .putMetadata("new-column-key", "new-column-value")
+                                        .build())
+                                .collect(Collectors.toList());
+
+                        return sequence.toBuilder()
+                                .clearColumns()
+                                .addAllColumns(modifiedColumns)
+                                .build();
+                    })
                     .collect(Collectors.toList());
 
             List<SequenceMetadata> sequencesUpdateResults = client.sequences().upsert(editedSequencesInput);
@@ -269,7 +272,10 @@ class SequencesIntegrationTest {
                 for (SequenceMetadata sequences : sequencesUpdateResults)  {
                     if (sequences.getDescription().equals("new-value")
                             && sequences.containsMetadata("new-key")
-                            && sequences.containsMetadata(DataGenerator.sourceKey)) {
+                            && sequences.containsMetadata(DataGenerator.sourceKey)
+                            && sequences.getColumnsList().stream().anyMatch(sequenceColumn -> sequenceColumn.containsMetadata(DataGenerator.sourceKey))
+                            && sequences.getColumnsList().stream().anyMatch(sequenceColumn -> sequenceColumn.containsMetadata("new-column-key"))
+                    ) {
                         // all good
                     } else {
                         return false;
@@ -282,7 +288,10 @@ class SequencesIntegrationTest {
                 for (SequenceMetadata sequences : sequencesReplaceResults)  {
                     if (sequences.getDescription().equals("new-value")
                             && sequences.containsMetadata("new-key")
-                            && !sequences.containsMetadata(DataGenerator.sourceKey)) {
+                            && !sequences.containsMetadata(DataGenerator.sourceKey)
+                            && sequences.getColumnsList().stream().allMatch(sequenceColumn -> !sequenceColumn.containsMetadata(DataGenerator.sourceKey))
+                            && sequences.getColumnsList().stream().allMatch(sequenceColumn -> sequenceColumn.containsMetadata("new-column-key"))
+                    ) {
                         // all good
                     } else {
                         return false;
