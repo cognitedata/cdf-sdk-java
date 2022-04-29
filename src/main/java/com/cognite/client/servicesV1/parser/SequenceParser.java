@@ -473,7 +473,7 @@ public class SequenceParser {
                     columnListAdd.add(toRequestInsertItem(column));
                 }
             }
-            mapBuilder.put("columns", ImmutableMap.of("modify", columnListUpdate,
+            updateNodeBuilder.put("columns", ImmutableMap.of("modify", columnListUpdate,
                     "add", columnListAdd));
             LOG.debug(logPrefix + "Column changes detected. New/added columns: {}. Updated columns: {}",
                     columnListAdd.size(),
@@ -641,7 +641,7 @@ public class SequenceParser {
                     .collect(Collectors.toList());
         }
 
-        mapBuilder.put("columns", ImmutableMap.of(
+        updateNodeBuilder.put("columns", ImmutableMap.of(
                 "modify", columnListUpdate,
                 "add", columnListAdd,
                 "remove", columnListDelete));

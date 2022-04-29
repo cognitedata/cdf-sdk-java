@@ -1466,7 +1466,7 @@ abstract class ApiBase {
 
                 //Update items
                 elementListCompleted.addAll(
-                        updateItemsWithConflictDetection(existingResources, elementListUpdate, elementListCreate, batchLogPrefix,
+                        updateItemsWithConflictDetection(elementListUpdate, existingResources, elementListCreate, batchLogPrefix,
                                 startInstant, exceptionMessage, logToError)
                 );
             }
@@ -1867,8 +1867,8 @@ abstract class ApiBase {
          *      - Add missing items to the {@code conflictItems} list.
          *      - Add non-conflicting items back to the {@code updateItems} list.
          *
-         * @param existingItems The items to update, their existing state (in CDF).
          * @param updateItems The items to update, their target state.
+         * @param existingItems The items to update, their existing state (in CDF).
          * @param conflictItems The items that caused a conflict when inserting/creating.
          * @param loggingPrefix A prefix prepended to the logs.
          * @param startInstant The Instant when the upsert operation started. Used to calculate operation duration.
@@ -1878,8 +1878,8 @@ abstract class ApiBase {
          * @return The results from the items that successfully completed the update operation.
          * @throws Exception If an error is encountered during the update operation. For example, a network error.
          */
-        private List<String> updateItemsWithConflictDetection(List<T> existingItems,
-                                                              List<T> updateItems,
+        private List<String> updateItemsWithConflictDetection(List<T> updateItems,
+                                                              List<T> existingItems,
                                                               List<T> conflictItems,
                                                               String loggingPrefix,
                                                               Instant startInstant,
@@ -1893,7 +1893,7 @@ abstract class ApiBase {
             if (updateItems.isEmpty()) {
                 LOG.debug(loggingPrefix + "Update items list is empty. Skipping update.");
             } else {
-                Map<ResponseItems<String>, List<T>> updateResponseMap = splitAndUpdateItems(existingItems, updateItems);
+                Map<ResponseItems<String>, List<T>> updateResponseMap = splitAndUpdateItems(updateItems, existingItems);
                 LOG.debug(loggingPrefix + "Completed building update items requests for {} items across {} batches at duration {}",
                         updateItems.size(),
                         updateResponseMap.size(),
@@ -2048,25 +2048,27 @@ abstract class ApiBase {
         }
 
         /**
-         * Update items.
+         * Update items, with diff logic. In order to build the update request (to CDF), both the current state of
+         * the items and the target state are used as input. This is in contrast to {@link #splitAndUpdateItems(List)}
+         * which only uses the target state as input.
          *
          * Submits a (large) batch of items by splitting it up into multiple, parallel update requests.
          * The response from each request is returned along with the items used as input.
          *
+         * @param updateItems The items to update, their target state.
          * @param existingItems The items to update, their existing state (in CDF).
-         * @param items The items to update, their target state.
          * @return a {@link Map} with the responses and request inputs.
          * @throws Exception
          */
-        private Map<ResponseItems<String>, List<T>> splitAndUpdateItems(List<T> existingItems, List<T> items) {
+        private Map<ResponseItems<String>, List<T>> splitAndUpdateItems(List<T> updateItems, List<T> existingItems) {
             Map<CompletableFuture<ResponseItems<String>>, List<T>> responseMap = new HashMap<>();
 
             // Split into batches
-            List<List<T>> itemBatches = getBatchingFunction().apply(items);
+            List<List<T>> updateItemBatches = getBatchingFunction().apply(updateItems);
 
             // Submit all batches
-            for (List<T> batch : itemBatches) {
-                responseMap.put(updateItems(existingItems, batch), batch);
+            for (List<T> batch : updateItemBatches) {
+                responseMap.put(updateItems(batch, existingItems), batch);
             }
 
             // Wait for all requests futures to complete
@@ -2186,28 +2188,31 @@ abstract class ApiBase {
          * This method is tailored specifically for update of {@link com.cognite.client.dto.SequenceMetadata} where we
          * need to compare existing with new in order to construct the update request for the {@code columns} definitions.
          *
-         * @param newItems the objects to update.
+         * @param updateItems the objects to update.
          * @param existingItems the current version of the items in CDF.
          * @return a {@link CompletableFuture} representing the response from the update request.
          * @throws Exception
          */
-        private CompletableFuture<ResponseItems<String>> updateItems(List<T> newItems, List<T> existingItems) {
+        private CompletableFuture<ResponseItems<String>> updateItems(List<T> updateItems, List<T> existingItems) {
             Preconditions.checkState(null != getUpdateItemWriter() && null != getUpdateMappingBiFunction(),
                     "Unable to send item update request. UpdateItemWriter and UpdateMappingBiFunction must be specified.");
-            Preconditions.checkArgument(newItems.size() <= existingItems.size(),
-                    "Existing items list must be minimum the same size as the new items list.");
+            Preconditions.checkArgument(updateItems.size() <= existingItems.size(),
+                    String.format("Existing items list must be minimum the same size as the update items list. "
+                            + "Existing items size: %d. Update items size: %d",
+                            updateItems.size(),
+                            existingItems.size()));
 
             Map<String, T> existingItemsMap = mapToId(existingItems);
-            Map<String, T> newItemsMap = mapToId(newItems);
+            Map<String, T> updateItemsMap = mapToId(updateItems);
             ImmutableList.Builder<Map<String, Object>> itemsBuilder = ImmutableList.builder();
             try {
-                for (Map.Entry<String, T> entry : newItemsMap.entrySet()) {
-                    if (!existingItemsMap.containsKey(entry.getKey())) {
+                for (Map.Entry<String, T> updateEntry : updateItemsMap.entrySet()) {
+                    if (!existingItemsMap.containsKey(updateEntry.getKey())) {
                         // Should not happen
                         throw new Exception("Error trying to update items. Unable to identify the existing item to "
-                                + "compare the new item with. New item externalId: " + entry.getKey());
+                                + "compare the update item with. Update item externalId: " + updateEntry.getKey());
                     }
-                    itemsBuilder.add(getUpdateMappingBiFunction().apply(entry.getValue(), existingItemsMap.get(entry.getKey())));
+                    itemsBuilder.add(getUpdateMappingBiFunction().apply(updateEntry.getValue(), existingItemsMap.get(updateEntry.getKey())));
                 }
                 Request writeItemsRequest = Request.create()
                         .withItems(itemsBuilder.build())
