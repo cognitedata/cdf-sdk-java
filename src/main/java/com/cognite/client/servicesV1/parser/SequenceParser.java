@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.cognite.client.servicesV1.ConnectorConstants.MAX_LOG_ELEMENT_LENGTH;
@@ -450,30 +451,11 @@ public class SequenceParser {
 
         // Add the column diff
         if (newElement.getColumnsCount() > 0) {
-            // Get the existing columns. Will be used to identify new and changed columns
-            Map<String, SequenceColumn> existingColumns = existingElement.getColumnsList().stream()
-                    .collect(Collectors.toMap(SequenceColumn::getExternalId, Function.identity()));
+            List<Map<String, Object>> columnListAdd = buildNewColumnsObject(newElement, existingElement);
+            List<Map<String, Object>> columnListUpdate = buildModifyColumnsObject(newElement, existingElement, SequenceParser::toRequestUpdateItem);
 
-            List<Map<String, Object>> columnListAdd = new ArrayList<>();
-            List<Map<String, Object>> columnListUpdate = new ArrayList<>();
-            for (SequenceColumn column : newElement.getColumnsList()) {
-                if (existingColumns.containsKey(column.getExternalId())) {
-                    // Existing column, update
-                    if (!column.getValueType().equals(existingColumns.get(column.getExternalId()).getValueType())) {
-                        // The new column has a different value type. This is not supported
-                        throw new Exception(String.format(logPrefix + "Mismatch between column value types for column extId: %s. "
-                                + "Existing value type: %s. New value type: %s. New value type must match existing value type.",
-                                column.getExternalId(),
-                                existingColumns.get(column.getExternalId()).getValueType(),
-                                column.getValueType()));
-                    }
-                    columnListUpdate.add(toRequestUpdateItem(column));
-                } else {
-                    // New column, add
-                    columnListAdd.add(toRequestInsertItem(column));
-                }
-            }
-            updateNodeBuilder.put("columns", ImmutableMap.of("modify", columnListUpdate,
+            updateNodeBuilder.put("columns", ImmutableMap.of(
+                    "modify", columnListUpdate,
                     "add", columnListAdd));
             LOG.debug(logPrefix + "Column changes detected. New/added columns: {}. Updated columns: {}",
                     columnListAdd.size(),
@@ -604,42 +586,9 @@ public class SequenceParser {
         /*
         Add the column diff
         */
-        // Get the existing columns. Will be used to identify new, changed and deleted columns
-        Map<String, SequenceColumn> existingColumns = existingElement.getColumnsList().stream()
-                .collect(Collectors.toMap(SequenceColumn::getExternalId, Function.identity()));
-        List<Map<String, Object>> columnListAdd = new ArrayList<>();
-        List<Map<String, Object>> columnListUpdate = new ArrayList<>();
-        List<Map<String, Object>> columnListDelete = new ArrayList<>();
-
-        if (newElement.getColumnsCount() > 0) {
-            for (SequenceColumn column : newElement.getColumnsList()) {
-                if (existingColumns.containsKey(column.getExternalId())) {
-                    // Existing column, update
-                    if (!column.getValueType().equals(existingColumns.get(column.getExternalId()).getValueType())) {
-                        // The new column has a different value type. This is not supported
-                        throw new Exception(String.format(logPrefix + "Mismatch between column value types for column extId: %s. "
-                                        + "Existing value type: %s. New value type: %s. New value type must match existing value type.",
-                                column.getExternalId(),
-                                existingColumns.get(column.getExternalId()).getValueType(),
-                                column.getValueType()));
-                    }
-                    columnListUpdate.add(toRequestReplaceItem(column));
-                } else {
-                    // New column, add
-                    columnListAdd.add(toRequestInsertItem(column));
-                }
-                // When adding or modifying/updating a column, we remove it from the "originals" list
-                // so we know which columns are "left over". The left over columns will be deleted.
-                existingColumns.remove(column.getExternalId());
-            }
-        }
-
-        if (existingColumns.size() > 0) {
-            // we have some columns in the existing sequence that are not in the new sequence. Will delete them.
-            columnListDelete = existingColumns.keySet().stream()
-                    .map(extId -> ImmutableMap.<String, Object>of("externalId", extId))
-                    .collect(Collectors.toList());
-        }
+        List<Map<String, Object>> columnListAdd = buildNewColumnsObject(newElement, existingElement);
+        List<Map<String, Object>> columnListUpdate = buildModifyColumnsObject(newElement, existingElement, SequenceParser::toRequestReplaceItem);
+        List<Map<String, Object>> columnListDelete = buildDeleteColumnsObject(newElement, existingElement);
 
         updateNodeBuilder.put("columns", ImmutableMap.of(
                 "modify", columnListUpdate,
@@ -652,6 +601,109 @@ public class SequenceParser {
 
         mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();
+    }
+
+    /**
+     * Builds the request create object for new columns.
+     *
+     * The columns in the new and existing element are compared. New columns will be identified and mapped to a
+     * request create object form.
+     *
+     * @param newElement The existing {@link SequenceMetadata} element.
+     * @param existingElement The new (target state) {@link SequenceMetadata} element.
+     * @return A list of new columns in their request create format.
+     */
+    private static List<Map<String, Object>> buildNewColumnsObject(SequenceMetadata newElement,
+                                                                   SequenceMetadata existingElement) {
+        // Get the existing columns. Will be used to identify new and changed columns
+        List<String> existingColumns = existingElement.getColumnsList().stream()
+                .map(SequenceColumn::getExternalId)
+                .collect(Collectors.toList());
+
+        return newElement.getColumnsList().stream()
+                .filter(column -> !existingColumns.contains(column.getExternalId()))
+                .map(column -> toRequestInsertItem(column))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Builds the request update/replace object for new columns.
+     *
+     * The columns in the new and existing element are compared. Existing columns (to be modified) will be identified
+     * and mapped to a request update/replace object form.
+     *
+     * @param newElement The existing {@link SequenceMetadata} element.
+     * @param existingElement The new (target state) {@link SequenceMetadata} element.
+     * @param updateMappingFunction The mapping function used for building the update object. Controls {@code update} vs.
+     *                              {@code replace}.
+     * @return A list of modified columns in their request update/replace format.
+     * @throws Exception If the modified columns do not represent the same {@code ValueType} as the existing columns
+     */
+    private static List<Map<String, Object>> buildModifyColumnsObject(SequenceMetadata newElement,
+                                                                      SequenceMetadata existingElement,
+                                                                      Function<SequenceColumn, Map<String, Object>> updateMappingFunction) throws Exception {
+        // Get the existing columns. Will be used to identify new and changed columns
+        Map<String, SequenceColumn> existingColumns = existingElement.getColumnsList().stream()
+                .collect(Collectors.toMap(SequenceColumn::getExternalId, Function.identity()));
+
+        Predicate<SequenceColumn> columnExists = column -> existingColumns.containsKey(column.getExternalId());
+        Predicate<SequenceColumn> valueTypeEquals =
+                column -> column.getValueType().equals(existingColumns.get(column.getExternalId()).getValueType());
+
+        List<Map<String, Object>> columnListUpdate = newElement.getColumnsList().stream()
+                .filter(columnExists)
+                .filter(valueTypeEquals)
+                .map(updateMappingFunction)
+                .collect(Collectors.toList());
+
+        List<SequenceColumn> columnListViolate = newElement.getColumnsList().stream()
+                .filter(columnExists)
+                .filter(valueTypeEquals.negate())
+                .collect(Collectors.toList());
+
+        // If we have column value type violations, report them + throw exception
+        if (columnListViolate.size() > 0) {
+            String columnViolationsTopN = columnListViolate.stream()
+                    .limit(10)
+                    .map(column -> String.format("Column extId: %s, existing value type: %s, new value type: %s.%n",
+                            column.getExternalId(),
+                            existingColumns.get(column.getExternalId()).getValueType(),
+                            column.getValueType()))
+                    .collect(Collectors.joining());
+
+            String message = String.format(logPrefix + "Mismatch between column value types for %d columns. "
+                            + "Columns that are updated cannot change value type. Columns (max 10): %n%s",
+                    columnListViolate.size(),
+                    columnViolationsTopN);
+
+            LOG.error(message);
+            throw new Exception(message);
+        }
+
+        return columnListUpdate;
+    }
+
+    /**
+     * Builds the request delete object for columns that should be removed.
+     *
+     * The columns in the new and existing element are compared. Columns to be deleted will be identified and mapped to a
+     * request delete object form.
+     *
+     * @param newElement The existing {@link SequenceMetadata} element.
+     * @param existingElement The new (target state) {@link SequenceMetadata} element.
+     * @return A list of deleted columns in their request delete format.
+     */
+    private static List<Map<String, Object>> buildDeleteColumnsObject(SequenceMetadata newElement,
+                                                                      SequenceMetadata existingElement) {
+        // Get the id of the new columns. Will be used to identify deleted columns
+        List<String> newColumns = newElement.getColumnsList().stream()
+                .map(SequenceColumn::getExternalId)
+                .collect(Collectors.toList());
+
+        return existingElement.getColumnsList().stream()
+                .filter(column -> !newColumns.contains(column.getExternalId()))
+                .map(column -> ImmutableMap.<String, Object>of("externalId", column.getExternalId()))
+                .collect(Collectors.toList());
     }
 
     /**
