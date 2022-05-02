@@ -654,7 +654,7 @@ abstract class ApiBase {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-            LOG.info(String.format(batchLogPrefix + "Retrieved %1$d results items across %2$d requests in %3$s.",
+            LOG.debug(String.format(batchLogPrefix + "Retrieved %1$d results items across %2$d requests in %3$s.",
                     nextBatch.size(),
                     futures.size(),
                     Duration.between(batchStartInstant, Instant.now()).toString()));
@@ -1024,7 +1024,7 @@ abstract class ApiBase {
             int deduplicatedInputCount = elementListCreate.size();
 
             if (deduplicatedInputCount != items.size()) {
-                LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
+                LOG.debug(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
                         items.size() - deduplicatedInputCount);
             }
 
@@ -1109,7 +1109,7 @@ abstract class ApiBase {
             int deduplicatedInputCount = elementListUpdate.size();
 
             if (deduplicatedInputCount != items.size()) {
-                LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
+                LOG.debug(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
                         items.size() - deduplicatedInputCount);
             }
 
@@ -1202,7 +1202,7 @@ abstract class ApiBase {
             int deduplicatedInputCount = elementListCreate.size();
 
             if (deduplicatedInputCount != items.size()) {
-                LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
+                LOG.debug(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
                         items.size() - deduplicatedInputCount);
             }
 
@@ -1300,7 +1300,7 @@ abstract class ApiBase {
             int deduplicatedInputCount = elementListGet.size();
 
             if (deduplicatedInputCount != items.size()) {
-                LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will deduplicate and continue with the upsert process.",
+                LOG.debug(batchLogPrefix + "Identified {} duplicate items in the input. Will deduplicate and continue with the upsert process.",
                         items.size() - deduplicatedInputCount);
             }
 
@@ -1411,7 +1411,7 @@ abstract class ApiBase {
             int deduplicatedInputCount = elementListGet.size();
 
             if (deduplicatedInputCount != items.size()) {
-                LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will deduplicate and continue with the upsert process.",
+                LOG.debug(batchLogPrefix + "Identified {} duplicate items in the input. Will deduplicate and continue with the upsert process.",
                         items.size() - deduplicatedInputCount);
             }
 
@@ -1510,7 +1510,7 @@ abstract class ApiBase {
             int deduplicatedInputCount = elementListCreate.size();
 
             if (deduplicatedInputCount != items.size()) {
-                LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
+                LOG.debug(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
                         items.size() - deduplicatedInputCount);
             }
 
@@ -1584,7 +1584,7 @@ abstract class ApiBase {
             int deduplicatedInputCount = elementListCreate.size();
 
             if (deduplicatedInputCount != items.size()) {
-                LOG.info(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
+                LOG.debug(batchLogPrefix + "Identified {} duplicate items in the input. Will perform deduplication and continue upsert process",
                         items.size() - deduplicatedInputCount);
             }
 
