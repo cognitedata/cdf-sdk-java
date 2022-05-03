@@ -2242,6 +2242,21 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
     }
 
+    /**
+     * Retrieve Transformations Jobs in Cognite.
+     *
+     * @return
+     */
+    public ItemReader<String> readTransformationJobsById() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("transformations/jobs/byids")
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
     @AutoValue.Builder
     public abstract static class Builder {
         public abstract Builder setClient(CogniteClient value);

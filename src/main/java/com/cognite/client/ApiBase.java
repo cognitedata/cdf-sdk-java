@@ -243,6 +243,9 @@ abstract class ApiBase {
             case TRANSFORMATIONS:
                 itemReader = connector.readTransformationsById();
                 break;
+            case TRANSFORMATIONS_JOBS:
+                itemReader = connector.readTransformationJobsById();
+                break;
             default:
                 LOG.error(batchLogPrefix + "Not a supported resource type: " + resourceType);
                 throw new Exception(batchLogPrefix + "Not a supported resource type: " + resourceType);

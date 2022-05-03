@@ -1,6 +1,7 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
+import com.cognite.client.dto.Item;
 import com.cognite.client.dto.Transformation;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ResponseItems;
@@ -12,6 +13,7 @@ import com.google.auto.value.AutoValue;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @AutoValue
 public abstract class TransformationJobs extends ApiBase {
@@ -128,6 +130,12 @@ public abstract class TransformationJobs extends ApiBase {
      */
     public Iterator<List<Transformation.Job>> list(Request requestParameters, String... partitions) throws Exception {
         return AdapterIterator.of(listJson(ResourceType.TRANSFORMATIONS_JOBS, requestParameters, partitions), this::parseTransformationJobs);
+    }
+
+    public List<Transformation.Job> retrieve(List<Item> items) throws Exception {
+        return retrieveJson(ResourceType.TRANSFORMATIONS_JOBS, items).stream()
+                .map(this::parseTransformationJobs)
+                .collect(Collectors.toList());
     }
 
     private Transformation.Job run(Request request) throws Exception {
