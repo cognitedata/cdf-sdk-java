@@ -9,7 +9,7 @@ message Transformation {
 
   message Destination {
 
-    enum DataSource1Type {
+    enum DataSourceType {
       ASSETS = 0;
       TIMESERIES = 1;
       ASSET_HIERARCHY = 2;
@@ -37,7 +37,7 @@ message Transformation {
     string external_id = 5;
   }
 
-  message DataSource1 {
+  message DataSource {
     string type = 1;
   }
 
@@ -49,14 +49,14 @@ message Transformation {
 
   message SequenceRowDataSource {
     string type = 1;
-    string externalId = 2;
+    string external_id = 2;
   }
 
   message FlatOidcCredentials {
     string client_id = 1;
     string client_secret = 2;
     string scopes = 3;
-    string tokenUri = 4;
+    string token_uri = 4;
     string cdf_project_name = 5;
     string audience = 6;
   }
@@ -115,11 +115,7 @@ message Transformation {
   optional int64 created_time = 15;
   optional int64 last_updated_time = 16;
   optional Owner owner = 17;
-  optional bool has_source_api_key = 18;
-  optional bool has_destination_api_key = 19;
-  optional bool has_source_oidc_credentials = 20;
-  optional bool has_destination_oidc_credentials = 21;
-  optional Job last_finished_job = 22;
-  optional Job running_job = 23;
-  optional Schedule schedule = 24;
+  optional Job last_finished_job = 18;
+  optional Job running_job = 19;
+  optional Schedule schedule = 20;
 }

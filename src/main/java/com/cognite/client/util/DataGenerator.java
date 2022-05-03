@@ -449,7 +449,7 @@ public class DataGenerator {
             if (Transformation.Destination.DestinationType.DATA_SOURCE_1.equals(destinationType)) {
                 builder.setDestination(Transformation.Destination.newBuilder()
                         .setDestinationType(Transformation.Destination.DestinationType.DATA_SOURCE_1)
-                        .setType(Transformation.Destination.DataSource1Type.ASSETS.toString())
+                        .setType(Transformation.Destination.DataSourceType.ASSETS.toString())
                         .build());
             } else if(Transformation.Destination.DestinationType.RAW_DATA_SOURCE.equals(destinationType)) {
                 builder.setDestination(Transformation.Destination.newBuilder()

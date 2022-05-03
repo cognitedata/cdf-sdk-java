@@ -61,7 +61,7 @@ public class TransformationParser {
             Preconditions.checkNotNull(element.getDestination().getDestinationType(), "Unable to find attribute [destinationType] in the Transformation object.");
             if (Transformation.Destination.DestinationType.DATA_SOURCE_1.equals(element.getDestination().getDestinationType())) {
                 Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
-                mapBuilder.put("destination", Transformation.DataSource1.newBuilder()
+                mapBuilder.put("destination", Transformation.DataSource.newBuilder()
                         .setType(element.getDestination().getType().toLowerCase())
                         .build());
             } else if (Transformation.Destination.DestinationType.RAW_DATA_SOURCE.equals(element.getDestination().getDestinationType())) {
@@ -140,7 +140,7 @@ public class TransformationParser {
             Preconditions.checkNotNull(element.getDestination().getDestinationType(), "Unable to find attribute [destinationType] in the Transformation object.");
             if (Transformation.Destination.DestinationType.DATA_SOURCE_1.equals(element.getDestination().getDestinationType())) {
                 Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
-                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.DataSource1.newBuilder()
+                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.DataSource.newBuilder()
                         .setType(element.getDestination().getType().toLowerCase())
                         .build()));
             } else if (Transformation.Destination.DestinationType.RAW_DATA_SOURCE.equals(element.getDestination().getDestinationType())) {
@@ -222,7 +222,7 @@ public class TransformationParser {
             Preconditions.checkNotNull(element.getDestination().getDestinationType(), "Unable to find attribute [destinationType] in the Transformation object.");
             if (Transformation.Destination.DestinationType.DATA_SOURCE_1.equals(element.getDestination().getDestinationType())) {
                 Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
-                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.DataSource1.newBuilder()
+                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.DataSource.newBuilder()
                         .setType(element.getDestination().getType().toLowerCase())
                         .build()));
             } else if (Transformation.Destination.DestinationType.RAW_DATA_SOURCE.equals(element.getDestination().getDestinationType())) {
@@ -400,16 +400,33 @@ public class TransformationParser {
             tmBuilder.setLastUpdatedTime(node.get("lastUpdatedTime").longValue());
         }
         if (node.path("hasSourceApiKey").isBoolean()) {
-            tmBuilder.setHasSourceApiKey(node.get("hasSourceApiKey").booleanValue());
+            //tmBuilder.setHasSourceApiKey(node.get("hasSourceApiKey").booleanValue());
+            //tmBuilder.setSourceApiKey("");
         }
         if (node.path("hasDestinationApiKey").isBoolean()) {
-            tmBuilder.setHasDestinationApiKey(node.get("hasDestinationApiKey").booleanValue());
+            //tmBuilder.setHasDestinationApiKey(node.get("hasDestinationApiKey").booleanValue());
+            //tmBuilder.setDestinationApiKey("");
         }
         if (node.path("hasSourceOidcCredentials").isBoolean()) {
-            tmBuilder.setHasSourceOidcCredentials(node.get("hasSourceOidcCredentials").booleanValue());
+            //tmBuilder.setHasSourceOidcCredentials(node.get("hasSourceOidcCredentials").booleanValue());
+//            tmBuilder.setSourceOidcCredentials(Transformation.FlatOidcCredentials.newBuilder()
+//                    .setClientId("")
+//                    .setClientSecret("")
+//                    .setCdfProjectName("")
+//                    .setTokenUri("")
+//                    .setAudience("")
+//                    .setScopes("")
+//                    .build());
         }
         if (node.path("hasDestinationOidcCredentials").isBoolean()) {
-            tmBuilder.setHasDestinationOidcCredentials(node.get("hasDestinationOidcCredentials").booleanValue());
+//            tmBuilder.setDestinationOidcCredentials(Transformation.FlatOidcCredentials.newBuilder()
+//                    .setClientId("")
+//                    .setClientSecret("")
+//                    .setCdfProjectName("")
+//                    .setTokenUri("")
+//                    .setAudience("")
+//                    .setScopes("")
+//                    .build());
         }
 
         if (node.path("owner").isObject()) {
