@@ -23,7 +23,7 @@ public abstract class TransformationJobs extends ApiBase {
     }
 
     /**
-     * Constructs a new {@link Transformations} object using the provided client configuration.
+     * Constructs a new {@link TransformationJobs} object using the provided client configuration.
      *
      * This method is intended for internal use--SDK clients should always use {@link CogniteClient}
      * as the entry point to this class.
@@ -35,6 +35,15 @@ public abstract class TransformationJobs extends ApiBase {
         return TransformationJobs.builder()
                 .setClient(client)
                 .build();
+    }
+
+    /**
+     * Returns {@link TransformationJobs} representing TransformationJobs api endpoints.
+     *
+     * @return The TransformationJobs api endpoints.
+     */
+    public TransformationJobMetrics metrics() {
+        return TransformationJobMetrics.of(getClient());
     }
 
     /**

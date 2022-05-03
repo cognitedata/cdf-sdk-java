@@ -448,6 +448,9 @@ abstract class ApiBase {
             case TRANSFORMATIONS_JOBS:
                 results = connector.readTransformationJobs(requestParameters);
                 break;
+            case TRANSFORMATIONS_JOB_METRICS:
+                results = connector.readTransformationJobMetrics(requestParameters);
+                break;
             default:
                 throw new Exception("Not a supported resource type: " + resourceType);
         }

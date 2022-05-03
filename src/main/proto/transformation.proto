@@ -71,6 +71,14 @@ message Transformation {
   }
 
   message Job {
+
+    message Metric {
+      optional int64 timestamp = 1;
+      optional string name = 2;
+      optional int64 count = 3;
+    }
+
+
     int32 id = 1;
     string uuid = 2;
     int32 transformation_id = 3;

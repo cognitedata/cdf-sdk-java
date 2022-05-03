@@ -2257,6 +2257,22 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
     }
 
+    /**
+     * List TransformationJobMetrics
+     * @return
+     */
+    public Iterator<CompletableFuture<ResponseItems<String>>> readTransformationJobMetrics(Request requestParameters) {
+        Integer modelId = (Integer) requestParameters.getRequestParameters().get("jobId");
+        GetListRequestProvider requestProvider = GetListRequestProvider.builder()
+                .setEndpoint("transformations/jobs/" + modelId + "/metrics")
+                .setRequest(requestParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
     @AutoValue.Builder
     public abstract static class Builder {
         public abstract Builder setClient(CogniteClient value);
