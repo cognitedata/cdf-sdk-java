@@ -78,6 +78,121 @@ public class TransformationJobsIntegrationTest {
 
     }
 
+    @Test
+    @Tag("remoteCDP")
+    void listTransformationJobsWithIdAndExternalId() throws Exception {
+        try {
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "UnitTest - listTransformationJobs() -";
+            LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+            CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
+            LOG.info(loggingPrefix + "Start reading Transformation Jobs.");
+            Iterator<List<Transformation.Job>> listJobs = client.transformation().jobs().list();
+            Transformation.Job job = null;
+            while(listJobs.hasNext()) {
+                List<Transformation.Job> list = listJobs.next();
+                if (!list.isEmpty()) {
+                    job = list.get(0);
+                    assertNotNull(list);
+                    assertTrue(list.size()>0);
+                }
+            }
+
+            if (job != null) {
+                listJobs = client
+                        .transformation()
+                        .jobs()
+                        .list(Request.create()
+                                .withRootParameter("transformationId", job.getTransformationId()));
+                assertNotNull(listJobs);
+                List<Transformation.Job> list = listJobs.next();
+                assertNotNull(list);
+                assertTrue(list.size()>0);
+
+                listJobs = client
+                        .transformation()
+                        .jobs()
+                        .list(Request.create()
+                                .withRootParameter("transformationExternalId", job.getTransformationExternalId()));
+                list = listJobs.next();
+                assertNotNull(list);
+                assertTrue(list.size()>0);
+
+            }
+
+            LOG.info(loggingPrefix + "Finished reading Transformation Jobs.");
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void writeRunListCancelAndDeleteJobs() throws Exception {
+        try {
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "UnitTest - writeReadAndDelete() -";
+            LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+            CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
+
+            Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
+
+            LOG.info(loggingPrefix + "------------ Start create Transformations. ------------------");
+            List<Transformation> listToBeCreate = new ArrayList<>();
+            List<Transformation> generatedWithDestinationDataSource1List =
+                    DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.DATA_SOURCE_1, 2,
+                            TestConfigProvider.getClientId(),
+                            TestConfigProvider.getClientSecret(),
+                            TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()).toString(),
+                            TestConfigProvider.getProject());
+            List<Transformation> generatedWithDestinationRawDataSourceList = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.RAW_DATA_SOURCE, 2,
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()).toString(),
+                    TestConfigProvider.getProject());
+            listToBeCreate.addAll(generatedWithDestinationDataSource1List);
+            listToBeCreate.addAll(generatedWithDestinationRawDataSourceList);
+
+            List<Transformation> createdList = client.transformation().upsert(listToBeCreate);
+            LOG.info(loggingPrefix + "------------ Finished creating Transformations. Duration: {} -----------",
+                    Duration.between(startInstant, Instant.now()));
+            assertEquals(listToBeCreate.size(), createdList.size());
+
+            runJobs(client, createdList);
+
+            Iterator<List<Transformation.Job>> listJobs = client
+                    .transformation()
+                    .jobs()
+                    .list(Request.create()
+                            .withRootParameter("transformationId", createdList.get(0).getId()));
+            while(listJobs.hasNext()) {
+                List<Transformation.Job> list = listJobs.next();
+                if (!list.isEmpty()) {
+                    assertNotNull(list);
+                    assertTrue(list.size()>0);
+                }
+            }
+
+            cancelJobs(client, createdList);
+
+            LOG.info(loggingPrefix + "Start deleting Transformations.");
+            List<Item> deleteItemsInput = new ArrayList<>();
+            createdList.stream()
+                    .map(tra -> Item.newBuilder()
+                            .setExternalId(tra.getExternalId())
+                            .build())
+                    .forEach(item -> deleteItemsInput.add(item));
+            List<Item> deleteItemsResults = client.transformation().delete(deleteItemsInput);
+            LOG.info(loggingPrefix + "Finished deleting Transformations. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
+    }
+
     private void runJobs(CogniteClient client, List<Transformation> createdList) {
         try {
             Transformation.Job jobRead1 =

@@ -24,6 +24,7 @@ Changes are grouped as follows:
 ### Added
 
 - Added `Transformations`
+- Added `Transformations Jobs`
 
 ## [1.13.2] 2022-04-12
 
