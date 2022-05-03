@@ -17,16 +17,19 @@
 package com.cognite.client.servicesV1.parser;
 
 import com.cognite.client.dto.FileMetadata;
+import com.cognite.client.dto.GeoLocation;
+import com.cognite.client.dto.GeoLocationGeometry;
+import com.cognite.client.dto.PointCoordinates;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.protobuf.Struct;
+import com.google.protobuf.util.JsonFormat;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 
 import static com.cognite.client.servicesV1.ConnectorConstants.MAX_LOG_ELEMENT_LENGTH;
 
@@ -141,6 +144,44 @@ public class FileParser {
                     fileMetaBuilder.addLabels(node.path("externalId").textValue());
                 }
             }
+        }
+
+        if (root.path("geoLocation").isObject()) {
+            final JsonNode locationNode = root.path("geoLocation");
+            final GeoLocation.Builder geoLocationBuilder = GeoLocation.newBuilder();
+            geoLocationBuilder.setType(locationNode.path("type").textValue());
+
+            if (locationNode.path("properties").isObject()) {
+                Struct.Builder structBuilder = Struct.newBuilder();
+                JsonFormat.parser()
+                        .merge(objectMapper.writeValueAsString(locationNode.get("properties")), structBuilder);
+                geoLocationBuilder.setProperties(structBuilder.build());
+            }
+            if (locationNode.path("geometry").isObject()) {
+                Preconditions.checkNotNull(locationNode.path("geometry").path("type"));
+                Preconditions.checkArgument(locationNode.path("geometry").path("type").isTextual());
+
+                final HashMap<String, Function<JsonNode, GeoLocationGeometry>> functionHashMap = new HashMap<>();
+                functionHashMap.put("Point", node -> {
+                    final GeoLocationGeometry.Builder b = GeoLocationGeometry.newBuilder();
+                    b.setType("Point");
+                    final PointCoordinates.Builder coordinatesBuilder = PointCoordinates.newBuilder();
+                    for (JsonNode n : root.path("coordinates")) {
+                        if (n.isIntegralNumber()) {
+                            coordinatesBuilder.addCoordinates(n.doubleValue());
+                        }
+                    }
+                    b.setCoordinatesPoints(coordinatesBuilder.build());
+                    return b.build();
+                });
+                geoLocationBuilder.setGeometry(
+                        functionHashMap
+                                .get(locationNode.path("geometry").path("type").textValue())
+                                .apply(locationNode.path("geometry")));
+            } else {
+                throw new IllegalStateException("FileMetadata: geometry property is required inside geoLocation");
+            }
+            fileMetaBuilder.setGeometry(geoLocationBuilder.build());
         }
 
         return fileMetaBuilder.build();

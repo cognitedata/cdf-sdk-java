@@ -5,6 +5,50 @@ package com.cognite.beam.proto;
 option java_package = "com.cognite.client.dto";
 option java_multiple_files = true;
 
+import "google/protobuf/struct.proto";
+
+message PointCoordinates {
+    repeated double coordinates = 1;
+}
+
+message MultiPointCoordinates {
+    repeated PointCoordinates coordinates = 1;
+}
+
+message PolygonCoordinates {
+    repeated MultiPointCoordinates coordinates = 1;
+}
+
+message MultiPolygonCoordinates {
+    repeated PolygonCoordinates coordinates = 1;
+}
+
+message LineCoordinates {
+    repeated PointCoordinates coordinates = 1;
+}
+
+message MultiLineCoordinates {
+    repeated LineCoordinates coordinates = 1;
+}
+
+message GeoLocationGeometry {
+    string type = 1;
+    oneof coordinates {
+        PointCoordinates coordinatesPoints = 2;
+        MultiPolygonCoordinates coordinatesMultiPolygon = 3;
+        MultiLineCoordinates coordinatesMultiLine = 4;
+        MultiPointCoordinates coordinatesMultiPoint = 5;
+        PolygonCoordinates coordinatesPolygon = 6;
+        LineCoordinates coordinatesLineString = 7;
+    }
+}
+
+message GeoLocation {
+    string type = 1;
+    GeoLocationGeometry geometry = 2;
+    optional google.protobuf.Struct properties = 3;
+}
+
 message FileContainer {
     FileMetadata file_metadata = 1;
     FileBinary file_binary = 2;
@@ -28,6 +72,7 @@ message FileMetadata {
     optional int64 data_set_id = 15;
     repeated int64 security_categories = 16;
     repeated string labels = 17;
+    optional GeoLocation geometry = 18;
 }
 
 message FileBinary {
