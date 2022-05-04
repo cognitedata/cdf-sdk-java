@@ -307,7 +307,7 @@ public class TransformationJobsIntegrationTest {
                 }
             });
 
-            LOG.info(loggingPrefix + "Start deleting Transformations Jobs.");
+            LOG.info(loggingPrefix + "Start deleting Transformations.");
             List<Item> deleteItemsInput = new ArrayList<>();
             createdList.stream()
                     .map(tra -> Item.newBuilder()

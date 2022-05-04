@@ -246,6 +246,9 @@ abstract class ApiBase {
             case TRANSFORMATIONS_JOBS:
                 itemReader = connector.readTransformationJobsById();
                 break;
+            case TRANSFORMATIONS_SCHEDULES:
+                itemReader = connector.readTransformationSchedulesById();
+                break;
             default:
                 LOG.error(batchLogPrefix + "Not a supported resource type: " + resourceType);
                 throw new Exception(batchLogPrefix + "Not a supported resource type: " + resourceType);
@@ -450,6 +453,9 @@ abstract class ApiBase {
                 break;
             case TRANSFORMATIONS_JOB_METRICS:
                 results = connector.readTransformationJobMetrics(requestParameters);
+                break;
+            case TRANSFORMATIONS_SCHEDULES:
+                results = connector.readTransformationSchedules(requestParameters);
                 break;
             default:
                 throw new Exception("Not a supported resource type: " + resourceType);

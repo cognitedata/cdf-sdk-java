@@ -98,12 +98,12 @@ message Transformation {
   }
 
   message Schedule {
-    int32 id = 1;
-    string external_id = 2;
-    int64 created_time = 3;
-    int64 last_updated_time = 4;
-    string interval = 5;
-    bool is_paused = 6;
+    optional int32 id = 1;
+    optional string external_id = 2;
+    optional int64 created_time = 3;
+    optional int64 last_updated_time = 4;
+    optional string interval = 5;
+    optional bool is_paused = 6;
   }
 
   optional int64 id = 1;

@@ -492,4 +492,16 @@ public class DataGenerator {
         }
         return objects;
     }
+
+    public static List<Transformation.Schedule> generateTransformationSchedules(Integer noObjects, String transformationExternalId, String interval, Boolean isPaused) {
+        List<Transformation.Schedule> objects = new ArrayList<>(noObjects);
+        for (int i = 0; i < noObjects; i++) {
+            objects.add(Transformation.Schedule.newBuilder()
+                            .setExternalId(transformationExternalId)
+                            .setInterval(interval)
+                            .setIsPaused(isPaused)
+                    .build());
+        }
+        return objects;
+    }
 }

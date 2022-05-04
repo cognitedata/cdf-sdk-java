@@ -49,6 +49,15 @@ public abstract class Transformations extends ApiBase {
         return TransformationJobs.of(getClient());
     }
 
+    /**
+     * Returns {@link TransformationSchedules} representing TransformationJobs api endpoints.
+     *
+     * @return The TransformationJobs api endpoints.
+     */
+    public TransformationSchedules schedules() {
+        return TransformationSchedules.of(getClient());
+    }
+
 
     /**
      * Returns all {@link Transformation} objects.
