@@ -72,7 +72,7 @@ message FileMetadata {
     optional int64 data_set_id = 15;
     repeated int64 security_categories = 16;
     repeated string labels = 17;
-    optional GeoLocation geometry = 18;
+    optional GeoLocation geo_location = 18;
 }
 
 message FileBinary {
