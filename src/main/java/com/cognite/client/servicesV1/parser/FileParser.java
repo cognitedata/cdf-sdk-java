@@ -163,37 +163,37 @@ public class FileParser {
                 final HashMap<String, Function<JsonNode, GeoLocationGeometry>> functionHashMap = new HashMap<>();
                 functionHashMap.put("Point", node -> GeoLocationGeometry.newBuilder()
                         .setType("Point")
-                        .setCoordinatesPoints(getPointCoordinates(root.path("coordinates")))
+                        .setCoordinatesPoints(getPointCoordinates(node.path("coordinates")))
                         .build()
                 );
 
                 functionHashMap.put("MultiPoint", node -> GeoLocationGeometry.newBuilder()
                         .setType("MultiPoint")
-                        .setCoordinatesMultiPoint(getMultiPointCoordinates(root.path("coordinates")))
+                        .setCoordinatesMultiPoint(getMultiPointCoordinates(node.path("coordinates")))
                         .build()
                 );
 
                 functionHashMap.put("Polygon", node -> GeoLocationGeometry.newBuilder()
                         .setType("Polygon")
-                        .setCoordinatesPolygon(getPolygonCoordinates(root.path("coordinates")))
+                        .setCoordinatesPolygon(getPolygonCoordinates(node.path("coordinates")))
                         .build()
                 );
 
                 functionHashMap.put("MultiPolygon", node -> GeoLocationGeometry.newBuilder()
                         .setType("MultiPolygon")
-                        .setCoordinatesMultiPolygon(getMultiPolygonCoordinates(root.path("coordinates")))
+                        .setCoordinatesMultiPolygon(getMultiPolygonCoordinates(node.path("coordinates")))
                         .build()
                 );
 
                 functionHashMap.put("LineString", node -> GeoLocationGeometry.newBuilder()
                         .setType("LineString")
-                        .setCoordinatesLineString(getLineCoordinates(root.path("coordinates")))
+                        .setCoordinatesLineString(getLineCoordinates(node.path("coordinates")))
                         .build()
                 );
 
                 functionHashMap.put("MultiLineString", node -> GeoLocationGeometry.newBuilder()
                         .setType("MultiLineString")
-                        .setCoordinatesMultiLine(getMultiLineCoordinates(root.path("coordinates")))
+                        .setCoordinatesMultiLine(getMultiLineCoordinates(node.path("coordinates")))
                         .build()
                 );
 
