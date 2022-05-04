@@ -329,7 +329,7 @@ public class FileParser {
         return mapBuilder.build();
     }
 
-    private static Map<String, Object> getGeoLocationJson(GeoLocation location) {
+    static Map<String, Object> getGeoLocationJson(GeoLocation location) {
         final HashMap<String, Object> geoLocation = new HashMap<>();
         geoLocation.put("type", location.getType());
         geoLocation.put("geometry", getGeometry(location.getGeometry()));
