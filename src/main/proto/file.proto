@@ -32,14 +32,13 @@ message MultiLineCoordinates {
 }
 
 message GeoLocationGeometry {
-    string type = 1;
     oneof coordinates {
-        PointCoordinates coordinatesPoints = 2;
-        MultiPolygonCoordinates coordinatesMultiPolygon = 3;
-        MultiLineCoordinates coordinatesMultiLine = 4;
-        MultiPointCoordinates coordinatesMultiPoint = 5;
-        PolygonCoordinates coordinatesPolygon = 6;
-        LineCoordinates coordinatesLineString = 7;
+        PointCoordinates coordinatesPoint = 1;
+        MultiPointCoordinates coordinatesMultiPoint = 2;
+        PolygonCoordinates coordinatesPolygon = 3;
+        MultiPolygonCoordinates coordinatesMultiPolygon = 4;
+        LineCoordinates coordinatesLineString = 5;
+        MultiLineCoordinates coordinatesMultiLine = 6;
     }
 }
 

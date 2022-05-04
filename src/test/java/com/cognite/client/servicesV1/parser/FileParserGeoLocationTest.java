@@ -39,8 +39,7 @@ class FileParserGeoLocationTest {
         final GeoLocation defaultInstance = GeoLocation.getDefaultInstance().toBuilder()
                 .setType("Feature")
                 .setGeometry(GeoLocationGeometry.newBuilder()
-                        .setType("Point")
-                        .setCoordinatesPoints(p1)
+                        .setCoordinatesPoint(p1)
                         .build())
                 .build();
         final Map<String, Object> map = getGeoLocationJson(defaultInstance);
@@ -54,7 +53,6 @@ class FileParserGeoLocationTest {
         final GeoLocation defaultInstance = GeoLocation.getDefaultInstance().toBuilder()
                 .setType("Feature")
                 .setGeometry(GeoLocationGeometry.newBuilder()
-                        .setType("MultiPoint")
                         .setCoordinatesMultiPoint(mp1)
                         .build())
                 .build();
@@ -69,7 +67,6 @@ class FileParserGeoLocationTest {
         final GeoLocation defaultInstance = GeoLocation.getDefaultInstance().toBuilder()
                 .setType("Feature")
                 .setGeometry(GeoLocationGeometry.newBuilder()
-                        .setType("MultiPolygon")
                         .setCoordinatesMultiPolygon(mpoly)
                         .build())
                 .build();
@@ -122,7 +119,6 @@ class FileParserGeoLocationTest {
                 "}";
         FileMetadata f = parseFileMetadata(fileMetadata);
         assertEquals("Feature", f.getGeoLocation().getType());
-        assertEquals("MultiPolygon", f.getGeoLocation().getGeometry().getType());
         assertEquals(2, f.getGeoLocation().getGeometry().getCoordinatesMultiPolygon().getCoordinatesCount());
     }
 

@@ -162,37 +162,31 @@ public class FileParser {
 
                 final HashMap<String, Function<JsonNode, GeoLocationGeometry>> functionHashMap = new HashMap<>();
                 functionHashMap.put("Point", node -> GeoLocationGeometry.newBuilder()
-                        .setType("Point")
-                        .setCoordinatesPoints(getPointCoordinates(node.path("coordinates")))
+                        .setCoordinatesPoint(getPointCoordinates(node.path("coordinates")))
                         .build()
                 );
 
                 functionHashMap.put("MultiPoint", node -> GeoLocationGeometry.newBuilder()
-                        .setType("MultiPoint")
                         .setCoordinatesMultiPoint(getMultiPointCoordinates(node.path("coordinates")))
                         .build()
                 );
 
                 functionHashMap.put("Polygon", node -> GeoLocationGeometry.newBuilder()
-                        .setType("Polygon")
                         .setCoordinatesPolygon(getPolygonCoordinates(node.path("coordinates")))
                         .build()
                 );
 
                 functionHashMap.put("MultiPolygon", node -> GeoLocationGeometry.newBuilder()
-                        .setType("MultiPolygon")
                         .setCoordinatesMultiPolygon(getMultiPolygonCoordinates(node.path("coordinates")))
                         .build()
                 );
 
                 functionHashMap.put("LineString", node -> GeoLocationGeometry.newBuilder()
-                        .setType("LineString")
                         .setCoordinatesLineString(getLineCoordinates(node.path("coordinates")))
                         .build()
                 );
 
                 functionHashMap.put("MultiLineString", node -> GeoLocationGeometry.newBuilder()
-                        .setType("MultiLineString")
                         .setCoordinatesMultiLine(getMultiLineCoordinates(node.path("coordinates")))
                         .build()
                 );
@@ -341,16 +335,19 @@ public class FileParser {
 
     private static Map<String, Object> getGeometry(GeoLocationGeometry geometry) {
         final HashMap<String, Object> root = new HashMap<>();
-        String array = "[]"; // default value
-        root.put("type", geometry.getType());
-        final HashMap<String, Function<GeoLocationGeometry, String>> serializers = new HashMap<>();
-        serializers.put("Point", g -> serialize(g.getCoordinatesPoints()));
-        serializers.put("MultiPoint", g -> serialize(g.getCoordinatesMultiPoint()));
-        serializers.put("Polygon", g -> serialize(g.getCoordinatesPolygon()));
-        serializers.put("MultiPolygon", g -> serialize(g.getCoordinatesMultiPolygon()));
-        serializers.put("LineString", g -> serialize(g.getCoordinatesLineString()));
-        serializers.put("MultiLineString", g -> serialize(g.getCoordinatesMultiLine()));
-        root.put("coordinates", serializers.get(geometry.getType()).apply(geometry));
+        // List referencing order of protobuf definition
+        final List<String> names = List.of(
+                "Point", "MultiPoint", "Polygon", "MultiPolygon", "LineString", "MultiLineString"
+        );
+        root.put("type", names.get(geometry.getCoordinatesCase().getNumber() - 1));
+        final HashMap<Integer, Function<GeoLocationGeometry, String>> serializers = new HashMap<>();
+        serializers.put(1, g -> serialize(g.getCoordinatesPoint()));
+        serializers.put(2, g -> serialize(g.getCoordinatesMultiPoint()));
+        serializers.put(3, g -> serialize(g.getCoordinatesPolygon()));
+        serializers.put(4, g -> serialize(g.getCoordinatesMultiPolygon()));
+        serializers.put(5, g -> serialize(g.getCoordinatesLineString()));
+        serializers.put(6, g -> serialize(g.getCoordinatesMultiLine()));
+        root.put("coordinates", serializers.get(geometry.getCoordinatesCase().getNumber()).apply(geometry));
         return root;
     }
 
