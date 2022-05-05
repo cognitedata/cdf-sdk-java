@@ -58,29 +58,9 @@ public class TransformationParser {
         }
 
         if (element.hasDestination()) {
-            Preconditions.checkNotNull(element.getDestination().getDestinationType(), "Unable to find attribute [destinationType] in the Transformation object.");
-            if (Transformation.Destination.DestinationType.DATA_SOURCE_1.equals(element.getDestination().getDestinationType())) {
-                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
-                mapBuilder.put("destination", Transformation.DataSource.newBuilder()
-                        .setType(element.getDestination().getType().toLowerCase())
-                        .build());
-            } else if (Transformation.Destination.DestinationType.RAW_DATA_SOURCE.equals(element.getDestination().getDestinationType())) {
-                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
-                Preconditions.checkNotNull(element.getDestination().getDatabase(), "Unable to find attribute [database] in the Transformation object.");
-                Preconditions.checkNotNull(element.getDestination().getTable(), "Unable to find attribute [table] in the Transformation object.");
-                mapBuilder.put("destination", Transformation.RawDataSource.newBuilder()
-                        .setType(element.getDestination().getType())
-                        .setDatabase(element.getDestination().getDatabase())
-                        .setTable(element.getDestination().getTable())
-                        .build());
-            } else if (Transformation.Destination.DestinationType.SEQUENCE_RAW_DATA_SOURCE.equals(element.getDestination().getDestinationType())) {
-                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
-                Preconditions.checkNotNull(element.getDestination().getExternalId(), "Unable to find attribute [externalId] in the Transformation object.");
-                mapBuilder.put("destination", Transformation.SequenceRowDataSource.newBuilder()
-                        .setType(element.getDestination().getType())
-                        .setExternalId(element.getDestination().getExternalId())
-                        .build());
-            }
+            Transformation.Destination.Builder builder = Transformation.Destination.newBuilder(element.getDestination());
+            builder.setType(element.getDestination().getType().toLowerCase());
+            mapBuilder.put("destination", builder.build());
         }
 
         if (element.hasConflictMode()) {
@@ -91,19 +71,19 @@ public class TransformationParser {
             mapBuilder.put("isPublic", element.getIsPublic());
         }
 
-        if (element.hasSourceApiKey()) {
+        if (element.hasSourceApiKey() && StringUtils.isNotBlank(element.getSourceApiKey())) {
             mapBuilder.put("sourceApiKey", element.getSourceApiKey());
         }
 
-        if (element.hasDestinationApiKey()) {
+        if (element.hasDestinationApiKey() && StringUtils.isNotBlank(element.getDestinationApiKey())) {
             mapBuilder.put("destinationApiKey", element.getDestinationApiKey());
         }
 
-        if (element.hasSourceOidcCredentials()) {
+        if (element.hasSourceOidcCredentials() && isValidOidcCredentials(element.getSourceOidcCredentials())) {
             mapBuilder.put("sourceOidcCredentials", element.getSourceOidcCredentials());
         }
 
-        if (element.hasDestinationOidcCredentials()) {
+        if (element.hasDestinationOidcCredentials() && isValidOidcCredentials(element.getDestinationOidcCredentials())) {
             mapBuilder.put("destinationOidcCredentials", element.getDestinationOidcCredentials());
         }
 
@@ -137,29 +117,7 @@ public class TransformationParser {
         }
 
         if (element.hasDestination()) {
-            Preconditions.checkNotNull(element.getDestination().getDestinationType(), "Unable to find attribute [destinationType] in the Transformation object.");
-            if (Transformation.Destination.DestinationType.DATA_SOURCE_1.equals(element.getDestination().getDestinationType())) {
-                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
-                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.DataSource.newBuilder()
-                        .setType(element.getDestination().getType().toLowerCase())
-                        .build()));
-            } else if (Transformation.Destination.DestinationType.RAW_DATA_SOURCE.equals(element.getDestination().getDestinationType())) {
-                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
-                Preconditions.checkNotNull(element.getDestination().getDatabase(), "Unable to find attribute [database] in the Transformation object.");
-                Preconditions.checkNotNull(element.getDestination().getTable(), "Unable to find attribute [table] in the Transformation object.");
-                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.RawDataSource.newBuilder()
-                        .setType(element.getDestination().getType())
-                        .setDatabase(element.getDestination().getDatabase())
-                        .setTable(element.getDestination().getTable())
-                        .build()));
-            } else if (Transformation.Destination.DestinationType.SEQUENCE_RAW_DATA_SOURCE.equals(element.getDestination().getDestinationType())) {
-                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
-                Preconditions.checkNotNull(element.getDestination().getExternalId(), "Unable to find attribute [externalId] in the Transformation object.");
-                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.SequenceRowDataSource.newBuilder()
-                        .setType(element.getDestination().getType())
-                        .setExternalId(element.getDestination().getExternalId())
-                        .build()));
-            }
+            updateNodeBuilder.put("destination", ImmutableMap.of("set", element.getDestination()));
         }
 
         if (element.hasConflictMode()) {
@@ -170,19 +128,19 @@ public class TransformationParser {
             updateNodeBuilder.put("isPublic", ImmutableMap.of("set", element.getIsPublic()));
         }
 
-        if (element.hasSourceApiKey()) {
+        if (element.hasSourceApiKey() && StringUtils.isNotBlank(element.getSourceApiKey())) {
             updateNodeBuilder.put("sourceApiKey", ImmutableMap.of("set", element.getSourceApiKey()));
         }
 
-        if (element.hasDestinationApiKey()) {
+        if (element.hasDestinationApiKey() && StringUtils.isNotBlank(element.getDestinationApiKey())) {
             updateNodeBuilder.put("destinationApiKey", ImmutableMap.of("set", element.getDestinationApiKey()));
         }
 
-        if (element.hasSourceOidcCredentials()) {
+        if (element.hasSourceOidcCredentials() && isValidOidcCredentials(element.getSourceOidcCredentials())) {
             updateNodeBuilder.put("sourceOidcCredentials", ImmutableMap.of("set", element.getSourceOidcCredentials()));
         }
 
-        if (element.hasDestinationOidcCredentials()) {
+        if (element.hasDestinationOidcCredentials() && isValidOidcCredentials(element.getDestinationOidcCredentials())) {
             updateNodeBuilder.put("destinationOidcCredentials", ImmutableMap.of("set", element.getDestinationOidcCredentials()));
         }
 
@@ -219,29 +177,7 @@ public class TransformationParser {
         }
 
         if (element.hasDestination()) {
-            Preconditions.checkNotNull(element.getDestination().getDestinationType(), "Unable to find attribute [destinationType] in the Transformation object.");
-            if (Transformation.Destination.DestinationType.DATA_SOURCE_1.equals(element.getDestination().getDestinationType())) {
-                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
-                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.DataSource.newBuilder()
-                        .setType(element.getDestination().getType().toLowerCase())
-                        .build()));
-            } else if (Transformation.Destination.DestinationType.RAW_DATA_SOURCE.equals(element.getDestination().getDestinationType())) {
-                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
-                Preconditions.checkNotNull(element.getDestination().getDatabase(), "Unable to find attribute [database] in the Transformation object.");
-                Preconditions.checkNotNull(element.getDestination().getTable(), "Unable to find attribute [table] in the Transformation object.");
-                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.RawDataSource.newBuilder()
-                        .setType(element.getDestination().getType())
-                        .setDatabase(element.getDestination().getDatabase())
-                        .setTable(element.getDestination().getTable())
-                        .build()));
-            } else if (Transformation.Destination.DestinationType.SEQUENCE_RAW_DATA_SOURCE.equals(element.getDestination().getDestinationType())) {
-                Preconditions.checkNotNull(element.getDestination().getType(), "Unable to find attribute [type] in the Transformation object.");
-                Preconditions.checkNotNull(element.getDestination().getExternalId(), "Unable to find attribute [externalId] in the Transformation object.");
-                updateNodeBuilder.put("destination", ImmutableMap.of("set", Transformation.SequenceRowDataSource.newBuilder()
-                        .setType(element.getDestination().getType())
-                        .setExternalId(element.getDestination().getExternalId())
-                        .build()));
-            }
+            updateNodeBuilder.put("destination", ImmutableMap.of("set", element.getDestination()));
         } else {
             updateNodeBuilder.put("destination", ImmutableMap.of("setNull", true));
         }
@@ -260,25 +196,33 @@ public class TransformationParser {
         }
 
         if (element.hasSourceApiKey()) {
-            updateNodeBuilder.put("sourceApiKey", ImmutableMap.of("set", element.getSourceApiKey()));
+            if (StringUtils.isNotBlank(element.getSourceApiKey())) {
+                updateNodeBuilder.put("sourceApiKey", ImmutableMap.of("set", element.getSourceApiKey()));
+            }
         } else {
             updateNodeBuilder.put("sourceApiKey", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasDestinationApiKey()) {
-            updateNodeBuilder.put("destinationApiKey", ImmutableMap.of("set", element.getDestinationApiKey()));
+            if (StringUtils.isNotBlank(element.getDestinationApiKey())) {
+                updateNodeBuilder.put("destinationApiKey", ImmutableMap.of("set", element.getDestinationApiKey()));
+            }
         } else {
             updateNodeBuilder.put("destinationApiKey", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasSourceOidcCredentials()) {
-            updateNodeBuilder.put("sourceOidcCredentials", ImmutableMap.of("set", element.getSourceOidcCredentials()));
+            if (isValidOidcCredentials(element.getSourceOidcCredentials())) {
+                updateNodeBuilder.put("sourceOidcCredentials", ImmutableMap.of("set", element.getSourceOidcCredentials()));
+            }
         } else {
             updateNodeBuilder.put("sourceOidcCredentials", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasDestinationOidcCredentials()) {
-            updateNodeBuilder.put("destinationOidcCredentials", ImmutableMap.of("set", element.getDestinationOidcCredentials()));
+            if (isValidOidcCredentials(element.getDestinationOidcCredentials())) {
+                updateNodeBuilder.put("destinationOidcCredentials", ImmutableMap.of("set", element.getDestinationOidcCredentials()));
+            }
         } else {
             updateNodeBuilder.put("destinationOidcCredentials", ImmutableMap.of("setNull", true));
         }
@@ -337,39 +281,19 @@ public class TransformationParser {
             tmBuilder.setQuery(node.get("query").textValue());
         }
         if (node.path("destination").isObject()) {
-            if (node.path("destination").size() == 1) {
-                JsonNode dataSourceNode = node.path("destination");
-                tmBuilder.setDestination(Transformation.Destination.newBuilder()
-                        .setDestinationType(Transformation.Destination.DestinationType.DATA_SOURCE_1)
-                        .setType(dataSourceNode.get("type").textValue())
-                        .build());
-            } else {
-                if (node.path("destination").path("type").textValue().equals("raw")) {
-                    JsonNode rawDataSourceNode = node.path("destination");
-                    Transformation.Destination.Builder builderDest = Transformation.Destination.newBuilder();
-                    builderDest.setDestinationType(Transformation.Destination.DestinationType.RAW_DATA_SOURCE);
-                    if (rawDataSourceNode.path("type").isTextual()) {
-                        builderDest.setType(rawDataSourceNode.path("type").textValue());
-                    }
-                    if (rawDataSourceNode.path("database").isTextual()) {
-                        builderDest.setDatabase(rawDataSourceNode.path("database").textValue());
-                    }
-                    if (rawDataSourceNode.path("table").isTextual()) {
-                        builderDest.setTable(rawDataSourceNode.path("table").textValue());
-                    }
-                    tmBuilder.setDestination(builderDest.build());
-                } else if (node.path("destination").path("type").textValue().equals("sequence_rows")) {
-                    JsonNode sequenceRowDataSourceNode = node.path("destination");
-                    Transformation.Destination.Builder builderDest = Transformation.Destination.newBuilder();
-                    builderDest.setDestinationType(Transformation.Destination.DestinationType.SEQUENCE_RAW_DATA_SOURCE);
-                    if (sequenceRowDataSourceNode.path("type").isTextual()) {
-                        builderDest.setType(sequenceRowDataSourceNode.path("type").textValue());
-                    }
-                    if (sequenceRowDataSourceNode.path("externalId").isTextual()) {
-                        builderDest.setExternalId(sequenceRowDataSourceNode.path("externalId").textValue());
-                    }
-                    tmBuilder.setDestination(builderDest.build());
-                }
+            JsonNode destNode = node.path("destination");
+            Transformation.Destination.Builder builderDest = Transformation.Destination.newBuilder();
+            if (destNode.path("type").isTextual()) {
+                builderDest.setType(destNode.path("type").textValue());
+            }
+            if (destNode.path("database").isTextual()) {
+                builderDest.setDatabase(destNode.path("database").textValue());
+            }
+            if (destNode.path("table").isTextual()) {
+                builderDest.setTable(destNode.path("table").textValue());
+            }
+            if (destNode.path("externalId").isTextual()) {
+                builderDest.setExternalId(destNode.path("externalId").textValue());
             }
         }
         if (node.path("conflictMode").isTextual()) {
@@ -400,33 +324,30 @@ public class TransformationParser {
             tmBuilder.setLastUpdatedTime(node.get("lastUpdatedTime").longValue());
         }
         if (node.path("hasSourceApiKey").isBoolean()) {
-            //tmBuilder.setHasSourceApiKey(node.get("hasSourceApiKey").booleanValue());
-            //tmBuilder.setSourceApiKey("");
+            tmBuilder.setSourceApiKey("");
         }
         if (node.path("hasDestinationApiKey").isBoolean()) {
-            //tmBuilder.setHasDestinationApiKey(node.get("hasDestinationApiKey").booleanValue());
-            //tmBuilder.setDestinationApiKey("");
+            tmBuilder.setDestinationApiKey("");
         }
         if (node.path("hasSourceOidcCredentials").isBoolean()) {
-            //tmBuilder.setHasSourceOidcCredentials(node.get("hasSourceOidcCredentials").booleanValue());
-//            tmBuilder.setSourceOidcCredentials(Transformation.FlatOidcCredentials.newBuilder()
-//                    .setClientId("")
-//                    .setClientSecret("")
-//                    .setCdfProjectName("")
-//                    .setTokenUri("")
-//                    .setAudience("")
-//                    .setScopes("")
-//                    .build());
+            tmBuilder.setSourceOidcCredentials(Transformation.FlatOidcCredentials.newBuilder()
+                    .setClientId("")
+                    .setClientSecret("")
+                    .setCdfProjectName("")
+                    .setTokenUri("")
+                    .setAudience("")
+                    .setScopes("")
+                    .build());
         }
         if (node.path("hasDestinationOidcCredentials").isBoolean()) {
-//            tmBuilder.setDestinationOidcCredentials(Transformation.FlatOidcCredentials.newBuilder()
-//                    .setClientId("")
-//                    .setClientSecret("")
-//                    .setCdfProjectName("")
-//                    .setTokenUri("")
-//                    .setAudience("")
-//                    .setScopes("")
-//                    .build());
+            tmBuilder.setDestinationOidcCredentials(Transformation.FlatOidcCredentials.newBuilder()
+                    .setClientId("")
+                    .setClientSecret("")
+                    .setCdfProjectName("")
+                    .setTokenUri("")
+                    .setAudience("")
+                    .setScopes("")
+                    .build());
         }
 
         if (node.path("owner").isObject()) {
@@ -480,5 +401,12 @@ public class TransformationParser {
             }
             tmBuilder.setSchedule(scheduleBuilder.build());
         }
+    }
+
+    private static boolean isValidOidcCredentials(Transformation.FlatOidcCredentials oidcCredentials) {
+        return StringUtils.isNotBlank(oidcCredentials.getClientId())
+                && StringUtils.isNotBlank(oidcCredentials.getClientSecret())
+                && StringUtils.isNotBlank(oidcCredentials.getTokenUri())
+                && StringUtils.isNotBlank(oidcCredentials.getCdfProjectName());
     }
 }

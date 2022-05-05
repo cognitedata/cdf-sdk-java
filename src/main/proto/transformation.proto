@@ -24,32 +24,10 @@ message Transformation {
       DATA_SETS = 11;
     }
 
-    enum DestinationType {
-      DATA_SOURCE_1 = 0;
-      RAW_DATA_SOURCE = 1;
-      SEQUENCE_RAW_DATA_SOURCE = 2;
-    }
-
-    optional DestinationType destination_type = 1;
     optional string type = 2;
     optional string database = 3;
     optional string table = 4;
     string external_id = 5;
-  }
-
-  message DataSource {
-    string type = 1;
-  }
-
-  message RawDataSource {
-    string type = 1;
-    string database = 2;
-    string table = 3;
-  }
-
-  message SequenceRowDataSource {
-    string type = 1;
-    string external_id = 2;
   }
 
   message FlatOidcCredentials {

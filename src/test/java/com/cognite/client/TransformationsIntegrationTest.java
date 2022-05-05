@@ -79,9 +79,9 @@ public class TransformationsIntegrationTest {
 
             LOG.info(loggingPrefix + "------------ Start create Transformations. ------------------");
             List<Transformation> listToBeCreate = new ArrayList<>();
-            List<Transformation> generatedWithDestinationDataSource1List = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.DATA_SOURCE_1, 1);
-            List<Transformation> generatedWithDestinationRawDataSourceList = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.RAW_DATA_SOURCE, 1);
-            List<Transformation> generatedWithDestinationSequenceRowList = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.SEQUENCE_RAW_DATA_SOURCE, 2);
+            List<Transformation> generatedWithDestinationDataSource1List = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, "data_source", 1);
+            List<Transformation> generatedWithDestinationRawDataSourceList = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, "raw", 1);
+            List<Transformation> generatedWithDestinationSequenceRowList = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, "sequence_rows", 2);
             listToBeCreate.addAll(generatedWithDestinationDataSource1List);
             listToBeCreate.addAll(generatedWithDestinationRawDataSourceList);
             listToBeCreate.addAll(generatedWithDestinationSequenceRowList);
@@ -132,9 +132,9 @@ public class TransformationsIntegrationTest {
 
             LOG.info(loggingPrefix + "------------ Start create Transformations. ------------------");
             List<Transformation> listToBeCreate = new ArrayList<>();
-            List<Transformation> generatedWithDestinationDataSource1List = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.DATA_SOURCE_1, 1);
-            List<Transformation> generatedWithDestinationRawDataSourceList = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.RAW_DATA_SOURCE, 1);
-            List<Transformation> generatedWithDestinationSequenceRowList = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.SEQUENCE_RAW_DATA_SOURCE, 2);
+            List<Transformation> generatedWithDestinationDataSource1List = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, "data_source", 1);
+            List<Transformation> generatedWithDestinationRawDataSourceList = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, "raw", 1);
+            List<Transformation> generatedWithDestinationSequenceRowList = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, "sequence_rows", 2);
             listToBeCreate.addAll(generatedWithDestinationDataSource1List);
             listToBeCreate.addAll(generatedWithDestinationRawDataSourceList);
             listToBeCreate.addAll(generatedWithDestinationSequenceRowList);
@@ -198,9 +198,9 @@ public class TransformationsIntegrationTest {
 
         LOG.info(loggingPrefix + "------------ Start create Transformations. ------------------");
         List<Transformation> listToBeCreate = new ArrayList<>();
-        List<Transformation> generatedWithDestinationDataSource1List = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.DATA_SOURCE_1, 1);
-        List<Transformation> generatedWithDestinationRawDataSourceList = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.RAW_DATA_SOURCE, 1);
-        List<Transformation> generatedWithDestinationSequenceRowList = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.SEQUENCE_RAW_DATA_SOURCE, 2);
+        List<Transformation> generatedWithDestinationDataSource1List = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, "data_source", 1);
+        List<Transformation> generatedWithDestinationRawDataSourceList = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, "raw", 1);
+        List<Transformation> generatedWithDestinationSequenceRowList = DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, "sequence_rows", 2);
         listToBeCreate.addAll(generatedWithDestinationDataSource1List);
         listToBeCreate.addAll(generatedWithDestinationRawDataSourceList);
         listToBeCreate.addAll(generatedWithDestinationSequenceRowList);
