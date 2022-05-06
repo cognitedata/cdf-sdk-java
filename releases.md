@@ -27,6 +27,9 @@ Changes are grouped as follows:
 - Added `Transformations Jobs`
 - Added `Transformations Schedules`
 
+### Fixed
+- File binary upload null pointer exception when running on Android devices.
+
 ## [1.13.2] 2022-04-12
 
 ### Fixed
