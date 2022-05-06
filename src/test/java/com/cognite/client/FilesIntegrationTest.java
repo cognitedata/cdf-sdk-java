@@ -4,12 +4,15 @@ import com.cognite.client.config.ClientConfig;
 import com.cognite.client.config.TokenUrl;
 import com.cognite.client.dto.*;
 import com.cognite.client.util.DataGenerator;
+import com.google.common.collect.ImmutableMap;
+import com.cognite.client.util.Items;
 import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -20,11 +23,33 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class FilesIntegrationTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
+
+    @Test
+    void downloadValidateUri() throws Exception {
+        Instant startInstant = Instant.now();
+        String loggingPrefix = "UnitTest - downloadValidateUri() -";
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                        TestConfigProvider.getClientId(),
+                        TestConfigProvider.getClientSecret(),
+                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                .withProject(TestConfigProvider.getProject())
+                .withBaseUrl(TestConfigProvider.getHost())
+                //.withClientConfig(config)
+                ;
+        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        LOG.info(loggingPrefix + "Check download URI validation.");
+        assertThrows(Exception.class, () -> client.files()
+                .download(Items.parseItems(1, 2, 3), new URI("notSupported://myBucket"), false));
+    }
 
     @Test
     @Tag("remoteCDP")
@@ -46,7 +71,7 @@ class FilesIntegrationTest {
         }
         List<FileMetadata> fileMetadataList = DataGenerator.generateFileHeaderObjects(2);
         List<FileContainer> fileContainerInput = new ArrayList<>();
-        for (FileMetadata fileMetadata:  fileMetadataList) {
+        for (FileMetadata fileMetadata : fileMetadataList) {
             FileContainer fileContainer = FileContainer.newBuilder()
                     .setFileMetadata(fileMetadata)
                     .setFileBinary(FileBinary.newBuilder()
@@ -59,8 +84,9 @@ class FilesIntegrationTest {
         FileContainer fileContainer = FileContainer.newBuilder()
                 .setFileMetadata(DataGenerator.generateFileHeaderObjects(1).get(0))
                 .setFileBinary(FileBinary.newBuilder()
-                        .setBinaryUri(fileATemp.toUri().toString())
-                        )
+//                        .setBinaryUri("s3://testbucket/README.md")
+                                .setBinaryUri(fileATemp.toUri().toString())
+                )
                 .build();
         fileContainerInput.add(fileContainer);
 
@@ -71,11 +97,11 @@ class FilesIntegrationTest {
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofClientCredentials(
-                    TestConfigProvider.getClientId(),
-                    TestConfigProvider.getClientSecret(),
-                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
-                    .withBaseUrl(TestConfigProvider.getHost())
+                        TestConfigProvider.getClientId(),
+                        TestConfigProvider.getClientSecret(),
+                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                .withProject(TestConfigProvider.getProject())
+                .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -157,7 +183,7 @@ class FilesIntegrationTest {
 
         List<FileMetadata> fileMetadataList = DataGenerator.generateFileHeaderObjects(2);
         List<FileContainer> fileContainerInput = new ArrayList<>();
-        for (FileMetadata fileMetadata:  fileMetadataList) {
+        for (FileMetadata fileMetadata : fileMetadataList) {
             FileContainer fileContainer = FileContainer.newBuilder()
                     .setFileMetadata(fileMetadata)
                     .build();
@@ -210,7 +236,51 @@ class FilesIntegrationTest {
             assertEquals(fileContainerInput.size(), listFilesResults.size());
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
 
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
+    }
 
+    @Test
+    @Tag("remoteCDP")
+    void readFilestoBucket() throws Exception {
+        Instant startInstant = Instant.now();
+
+        String loggingPrefix = "UnitTest - readFiles() -";
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                        TestConfigProvider.getClientId(),
+                        TestConfigProvider.getClientSecret(),
+                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                .withProject(TestConfigProvider.getProject())
+                .withBaseUrl(TestConfigProvider.getHost());
+        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        try {
+            LOG.info(loggingPrefix + "Start reading file metadata.");
+            List<FileMetadata> listFilesResults = new ArrayList<>();
+            client.files()
+                    .list(Request.create()
+                            .withRequestParameters(ImmutableMap.of("limit", 2)))
+                    .forEachRemaining(listFilesResults::addAll);
+            LOG.info(loggingPrefix + "Finished reading file metadata. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            LOG.info(loggingPrefix + "Start deleting files.");
+            List<Item> readItems = listFilesResults.stream()
+                    .map(fileMetadata -> Item.newBuilder()
+                            .setId(fileMetadata.getId())
+                            .build())
+                    .collect(Collectors.toList());
+            final List<FileBinary> fileBinaries =
+                    client.files().downloadFileBinaries(readItems, URI.create("s3://testbucket"), true);
+
+            fileBinaries.forEach(s -> LOG.info(String.format("File %s maps to %s", s.getBinaryUri(), s.getId())));
         } catch (Exception e) {
             LOG.error(e.toString());
             throw new RuntimeException(e);

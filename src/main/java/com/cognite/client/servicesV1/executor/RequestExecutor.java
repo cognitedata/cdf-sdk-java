@@ -214,7 +214,7 @@ public abstract class RequestExecutor {
                 // if the call was not successful, throw an error
                 if (!response.isSuccessful() && !getValidResponseCodes().contains(responseCode)) {
                     throw new IOException(
-                            "Reading from Fusion: Unexpected response code: " + responseCode + ". "
+                            "Response from Fusion: Unexpected response code: " + responseCode + ". "
                                     + response.toString() + System.lineSeparator()
                                     + "Response body: " + response.body().string() + System.lineSeparator()
                                     + "Response headers: " + response.headers().toString() + System.lineSeparator()
@@ -222,7 +222,7 @@ public abstract class RequestExecutor {
                 }
                 // check the response
                 if (response.body() == null) {
-                    throw new Exception("Reading from Fusion: Successful response, but the body is null. "
+                    throw new Exception("Response from Fusion: Successful response, but the body is null. "
                                                 + response.toString() + System.lineSeparator()
                                                 + "Response headers: " + response.headers().toString());
                 }
@@ -248,13 +248,13 @@ public abstract class RequestExecutor {
                 if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(e))
                         || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
                     apiRetryCounter++;
-                    LOG.warn(loggingPrefix + "Transient error when reading from Fusion (request id: " + requestId
+                    LOG.warn(loggingPrefix + "Transient error when receiving response from Fusion (request id: " + requestId
                             + ", response code: " + responseCode
                             + "). Retrying...", e);
 
                 } else {
                     // not transient, just re-throw
-                    LOG.error(loggingPrefix + "Non-transient error occurred when reading from Fusion. Request id: " + requestId
+                    LOG.error(loggingPrefix + "Non-transient error occurred when receiving response from Fusion. Request id: " + requestId
                             + ", Response code: " + responseCode, e);
                     throw e;
                 }

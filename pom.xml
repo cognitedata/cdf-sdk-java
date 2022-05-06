@@ -6,7 +6,7 @@
 
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>1.12.0-SNAPSHOT</version>
+    <version>1.14.0-SNAPSHOT</version>
     <licenses>
         <license>
             <name>Apache 2</name>
@@ -44,13 +44,14 @@
         <auto.version>1.9</auto.version>
 
         <nimbusds.version>9.22.1</nimbusds.version>
+        <awss3.version>1.12.153</awss3.version>
         <jgrapht.version>1.5.1</jgrapht.version>
         <okhttp3.version>4.9.3</okhttp3.version>
-        <jackson.version>2.13.1</jackson.version>
+        <jackson.version>2.13.2.1</jackson.version>
         <slf4j.version>1.7.33</slf4j.version>
         <guava.version>31.0.1-jre</guava.version>
         <commons.lang.version>3.12.0</commons.lang.version>
-        <logback.classic.version>1.2.10</logback.classic.version>
+        <logback.classic.version>1.2.11</logback.classic.version>
         <junit.version>5.8.2</junit.version>
         <mockito.version>4.3.1</mockito.version>
 
@@ -69,6 +70,7 @@
         <maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
         <maven-dependency-plugin.version>3.1.2</maven-dependency-plugin.version>
         <maven-shade-plugin.version>3.2.4</maven-shade-plugin.version>
+        <protoc-jar-maven-plugin.version>3.11.4</protoc-jar-maven-plugin.version>
         <os-maven-plugin.version>1.6.2</os-maven-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
         <maven-javadoc-plugin.version>3.2.0</maven-javadoc-plugin.version>
@@ -104,6 +106,11 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
+            <version>${awss3.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jgrapht</groupId>
@@ -189,74 +196,31 @@
         </extensions>
 
         <plugins>
-            <!-- copy protoc binary into build directory -->
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>${maven-dependency-plugin.version}</version>
+                <groupId>com.github.os72</groupId>
+                <artifactId>protoc-jar-maven-plugin</artifactId>
+                <version>${protoc-jar-maven-plugin.version}</version>
                 <executions>
                     <execution>
-                        <id>copy-protoc</id>
                         <phase>generate-sources</phase>
                         <goals>
-                            <goal>copy</goal>
+                            <goal>run</goal>
                         </goals>
                         <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>com.google.protobuf</groupId>
-                                    <artifactId>protoc</artifactId>
-                                    <version>${protobuf.version}</version>
-                                    <classifier>${os.detected.classifier}</classifier>
-                                    <type>exe</type>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>${project.build.directory}</outputDirectory>
-                                </artifactItem>
-                            </artifactItems>
+                            <protocVersion>${protobuf.version}</protocVersion>
+                            <includeMavenTypes>direct</includeMavenTypes>
+                            <includeDirectories>
+                                <include>src/main/proto</include>
+                            </includeDirectories>
+                            <inputDirectories>
+                                <include>src/main/proto</include>
+                            </inputDirectories>
+                            <outputDirectory>${protobuf.output.directory}</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- compile proto buffer files using copied protoc binary -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <version>${maven-antrun-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>exec-protoc</id>
-                        <phase>generate-sources</phase>
-                        <configuration>
-                            <target>
-                                <property name="protoc.filename"
-                                          value="protoc-${protobuf.version}-${os.detected.classifier}.exe"/>
-                                <property name="protoc.filepath"
-                                          value="${project.build.directory}/${protoc.filename}"/>
-                                <chmod file="${protoc.filepath}" perm="ugo+rx"/>
-                                <mkdir dir="${protobuf.output.directory}"/>
-                                <path id="protobuf.input.filepaths.path">
-                                    <fileset dir="${protobuf.input.directory}">
-                                        <include name="**/*.proto"/>
-                                    </fileset>
-                                </path>
-                                <pathconvert pathsep=" " property="protobuf.input.filepaths"
-                                             refid="protobuf.input.filepaths.path"/>
-                                <exec executable="${protoc.filepath}" failonerror="true">
-                                    <arg value="-I"/>
-                                    <arg value="${protobuf.input.directory}"/>
-                                    <arg value="--java_out"/>
-                                    <arg value="${protobuf.output.directory}"/>
-                                    <arg line="${protobuf.input.filepaths}"/>
-                                </exec>
-                            </target>
-                        </configuration>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -276,6 +240,7 @@
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
@@ -342,11 +307,11 @@
                         </goals>
                         <configuration>
                             <minimizeJar>false</minimizeJar>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <createDependencyReducedPom>true</createDependencyReducedPom>
+                            <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
                             <artifactSet>
                                 <includes>
                                     <include>com.squareup.okhttp3:okhttp</include>
-                                    <include>org.jetbrains.kotlin:kotlin-stdlib</include>
                                     <include>com.squareup.okio:okio</include>
                                 </includes>
                             </artifactSet>

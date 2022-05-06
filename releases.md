@@ -17,9 +17,44 @@ Changes are grouped as follows:
 
 ### Short term
 
-- Geo-location attribute and resource type.
+- Geo-location attribute and resource type
 
-## [1.12.0-SNAPSHOT]
+## [1.14.0-SNAPSHOT]
+
+### Fixed
+- File binary upload null pointer exception when running on Android devices.
+
+## [1.13.2] 2022-04-12
+
+### Fixed
+
+- Fix shaded dependencies. Some of the shaded Kotlin libraries caused conflicts when using the SDK from a Kotlin environment.
+- Fix duplicated protobuf class files.
+- Fix dependency vulnerability. Bump `jackson-databind` to `v2.13.2.1`.
+
+## [1.13.1] 2022-03-22
+
+### Fixed
+
+- File binary download retrying on `SSLException` and `UnknownHostException`. Both may indicate a saturated link for a 
+long-running job (which file binary downloads often are).
+- Writing `sequence` columns representing integers could cause exceptions.
+
+## [1.13.0] 2022-03-11
+
+### Added
+
+- Files API supports S3 buckets as intermediate store for both read from and write to. 
+
+## [1.12.1] 2022-03-10
+
+### Fixed
+
+- `Files.download()` took a `Path` argument instead of `URI`. 
+
+###
+
+## [1.12.0] 2022-03-09
 
 ### Added
 
