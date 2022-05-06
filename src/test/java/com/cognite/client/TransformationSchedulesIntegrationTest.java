@@ -39,7 +39,7 @@ public class TransformationSchedulesIntegrationTest {
             LOG.info(loggingPrefix + "------------ Start creating Transformations. ------------------");
             List<Transformation> listToBeCreate = new ArrayList<>();
             List<Transformation> generatedWithDestinationDataSource1List =
-                    DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.DATA_SOURCE_1, 2,
+                    DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, "data_source", 2,
                             TestConfigProvider.getClientId(),
                             TestConfigProvider.getClientSecret(),
                             TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()).toString(),
@@ -100,7 +100,7 @@ public class TransformationSchedulesIntegrationTest {
             LOG.info(loggingPrefix + "------------ Start creating Transformations. ------------------");
             List<Transformation> listToBeCreate = new ArrayList<>();
             List<Transformation> generatedWithDestinationDataSource1List =
-                    DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.DATA_SOURCE_1, 2,
+                    DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, "data_source", 2,
                             TestConfigProvider.getClientId(),
                             TestConfigProvider.getClientSecret(),
                             TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()).toString(),
@@ -190,7 +190,7 @@ public class TransformationSchedulesIntegrationTest {
             LOG.info(loggingPrefix + "------------ Start creating Transformations. ------------------");
             List<Transformation> listToBeCreate = new ArrayList<>();
             List<Transformation> generatedWithDestinationDataSource1List =
-                    DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.DATA_SOURCE_1, 2,
+                    DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, "data_source", 2,
                             TestConfigProvider.getClientId(),
                             TestConfigProvider.getClientSecret(),
                             TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()).toString(),

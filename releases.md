@@ -25,6 +25,7 @@ Changes are grouped as follows:
 
 - Added `Transformations`
 - Added `Transformations Jobs`
+- Added `Transformations Schedules`
 
 ## [1.13.2] 2022-04-12
 
