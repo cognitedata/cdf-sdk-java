@@ -48,14 +48,12 @@ public class TransformationJobsParser {
             if (root.path("destination").size() == 1) {
                 JsonNode dataSourceNode = root.path("destination");
                 tmBuilder.setDestination(Transformation.Destination.newBuilder()
-                        .setDestinationType(Transformation.Destination.DestinationType.DATA_SOURCE_1)
                         .setType(dataSourceNode.get("type").textValue())
                         .build());
             } else {
                 if (root.path("destination").path("type").textValue().equals("raw")) {
                     JsonNode rawDataSourceNode = root.path("destination");
                     Transformation.Destination.Builder builderDest = Transformation.Destination.newBuilder();
-                    builderDest.setDestinationType(Transformation.Destination.DestinationType.RAW_DATA_SOURCE);
                     if (rawDataSourceNode.path("type").isTextual()) {
                         builderDest.setType(rawDataSourceNode.path("type").textValue());
                     }
@@ -69,7 +67,6 @@ public class TransformationJobsParser {
                 } else if (root.path("destination").path("type").textValue().equals("sequence_rows")) {
                     JsonNode sequenceRowDataSourceNode = root.path("destination");
                     Transformation.Destination.Builder builderDest = Transformation.Destination.newBuilder();
-                    builderDest.setDestinationType(Transformation.Destination.DestinationType.SEQUENCE_RAW_DATA_SOURCE);
                     if (sequenceRowDataSourceNode.path("type").isTextual()) {
                         builderDest.setType(sequenceRowDataSourceNode.path("type").textValue());
                     }
