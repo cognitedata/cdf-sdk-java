@@ -31,7 +31,7 @@ public class TransformationSchedulesIntegrationTest {
     void writeListScheduleAndDelete() throws Exception {
         try {
             Instant startInstant = Instant.now();
-            String loggingPrefix = "UnitTest - writeListAndDelete() -";
+            String loggingPrefix = "UnitTest - writeListScheduleAndDelete() -";
             LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
             CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
             Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
@@ -56,7 +56,7 @@ public class TransformationSchedulesIntegrationTest {
                         DataGenerator.generateTransformationSchedules(COUNT_TO_BE_CREATE_TD, trans.getExternalId(), "*/5 * * * *", false);
 
                 List<Transformation.Schedule> createdListSchedules =
-                        client.transformation().schedules().upsert(listNewSchedules);
+                        client.transformation().schedules().schedule(listNewSchedules);
                 assertEquals(listNewSchedules.size(), createdListSchedules.size());
                 LOG.info(loggingPrefix + "Finished creating Transformations Schedules. Duration: {}",
                         Duration.between(startInstant, Instant.now()));
@@ -92,7 +92,7 @@ public class TransformationSchedulesIntegrationTest {
     void writeEditScheduleRetrieveAndDelete() throws Exception {
         try {
             Instant startInstant = Instant.now();
-            String loggingPrefix = "UnitTest - writeListAndDelete() -";
+            String loggingPrefix = "UnitTest - writeEditScheduleRetrieveAndDelete() -";
             LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
             CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
             Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
@@ -117,7 +117,7 @@ public class TransformationSchedulesIntegrationTest {
                         DataGenerator.generateTransformationSchedules(COUNT_TO_BE_CREATE_TD, trans.getExternalId(), "*/5 * * * *", false);
 
                 List<Transformation.Schedule> createdListSchedules =
-                        client.transformation().schedules().upsert(listNewSchedules);
+                        client.transformation().schedules().schedule(listNewSchedules);
                 assertEquals(listNewSchedules.size(), createdListSchedules.size());
                 LOG.info(loggingPrefix + "Finished creating Transformations Schedules. Duration: {}",
                         Duration.between(startInstant, Instant.now()));
@@ -131,7 +131,7 @@ public class TransformationSchedulesIntegrationTest {
                         .collect(Collectors.toList());
 
                 List<Transformation.Schedule> updatedList =
-                        client.transformation().schedules().upsert(editedInput);
+                        client.transformation().schedules().schedule(editedInput);
                 assertEquals(createdList.size(), updatedList.size());
                 updatedList.forEach(updated -> {
                     assertTrue(Boolean.TRUE.equals(updated.getIsPaused()));
@@ -157,6 +157,101 @@ public class TransformationSchedulesIntegrationTest {
 
                 LOG.info(loggingPrefix + "Finished retrieving Transformations Schedules. Duration: {}",
                         Duration.between(startInstant, Instant.now()));
+            }
+
+            LOG.info(loggingPrefix + "Start deleting Transformations.");
+            List<Item> deleteItemsInput = new ArrayList<>();
+            createdList.stream()
+                    .map(tra -> Item.newBuilder()
+                            .setExternalId(tra.getExternalId())
+                            .build())
+                    .forEach(item -> deleteItemsInput.add(item));
+            List<Item> deleteItemsResults = client.transformation().delete(deleteItemsInput);
+            LOG.info(loggingPrefix + "Finished deleting Transformations. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
+
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void writeScheduleUnScheduleAndDelete() throws Exception {
+        try {
+            Instant startInstant = Instant.now();
+            String loggingPrefix = "UnitTest - writeScheduleUnScheduleAndDelete() -";
+            LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+            CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
+            Long dataSetId = getOrCreateDataSet(startInstant, loggingPrefix, client);
+
+            LOG.info(loggingPrefix + "------------ Start creating Transformations. ------------------");
+            List<Transformation> listToBeCreate = new ArrayList<>();
+            List<Transformation> generatedWithDestinationDataSource1List =
+                    DataGenerator.generateTransformations(COUNT_TO_BE_CREATE_TD, dataSetId, Transformation.Destination.DestinationType.DATA_SOURCE_1, 2,
+                            TestConfigProvider.getClientId(),
+                            TestConfigProvider.getClientSecret(),
+                            TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()).toString(),
+                            TestConfigProvider.getProject());
+            listToBeCreate.addAll(generatedWithDestinationDataSource1List);
+            List<Transformation> createdList = client.transformation().upsert(listToBeCreate);
+            LOG.info(loggingPrefix + "------------ Finished creating Transformations. Duration: {} -----------",
+                    Duration.between(startInstant, Instant.now()));
+            assertEquals(listToBeCreate.size(), createdList.size());
+
+            for (Transformation trans : listToBeCreate) {
+                LOG.info(loggingPrefix + "------------ Start creating Transformations Schedules ------------------");
+                List<Transformation.Schedule> listNewSchedules =
+                        DataGenerator.generateTransformationSchedules(COUNT_TO_BE_CREATE_TD, trans.getExternalId(), "*/5 * * * *", false);
+
+                List<Transformation.Schedule> createdListSchedules =
+                        client.transformation().schedules().schedule(listNewSchedules);
+                assertEquals(listNewSchedules.size(), createdListSchedules.size());
+                LOG.info(loggingPrefix + "Finished creating Transformations Schedules. Duration: {}",
+                        Duration.between(startInstant, Instant.now()));
+
+                LOG.info(loggingPrefix + "------------ Starting retrieving Transformations Schedules ------------------");
+
+                List<Item> itemsToRetrieve = new ArrayList<>();
+                createdList.stream()
+                        .map(tra -> Item.newBuilder()
+                                .setExternalId(tra.getExternalId())
+                                .build())
+                        .forEach(item -> itemsToRetrieve.add(item));
+                List<Transformation.Schedule> retrievedItems =
+                        client.transformation().schedules().retrieve(itemsToRetrieve);
+                assertNotNull(retrievedItems);
+                assertTrue(retrievedItems.size()>0);
+                assertEquals(createdListSchedules.size(), retrievedItems.size());
+
+                LOG.info(loggingPrefix + "Finished retrieving Transformations Schedules. Duration: {}",
+                        Duration.between(startInstant, Instant.now()));
+
+                LOG.info(loggingPrefix + "------------ Start unscheduling Transformations Schedules ------------------");
+                List<Item> deleteScheduleItemsInput = new ArrayList<>();
+                createdListSchedules.stream()
+                        .map(tra -> Item.newBuilder()
+                                .setExternalId(tra.getExternalId())
+                                .build())
+                        .forEach(item -> deleteScheduleItemsInput.add(item));
+
+                Boolean isUnSchedule =
+                        client.transformation().schedules().unSchedule(deleteScheduleItemsInput);
+                assertTrue(isUnSchedule);
+                LOG.info(loggingPrefix + "Finished unscheduling Transformations Schedules. Duration: {}",
+                        Duration.between(startInstant, Instant.now()));
+
+                createdList.stream()
+                        .map(tra -> Item.newBuilder()
+                                .setExternalId(tra.getExternalId())
+                                .build())
+                        .forEach(item -> itemsToRetrieve.add(item));
+                retrievedItems =
+                        client.transformation().schedules().retrieve(itemsToRetrieve);
+
+                assertTrue(retrievedItems.size()==0);
             }
 
             LOG.info(loggingPrefix + "Start deleting Transformations.");

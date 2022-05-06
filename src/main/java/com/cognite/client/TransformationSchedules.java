@@ -2,19 +2,23 @@ package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
+import com.cognite.client.dto.Event;
 import com.cognite.client.dto.Item;
 import com.cognite.client.dto.Transformation;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
+import com.cognite.client.servicesV1.ResponseItems;
 import com.cognite.client.servicesV1.parser.TransformationJobsParser;
 import com.cognite.client.servicesV1.parser.TransformationParser;
 import com.cognite.client.servicesV1.parser.TransformationSchedulesParser;
 import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @AutoValue
@@ -86,7 +90,19 @@ public abstract class TransformationSchedules extends ApiBase {
         return AdapterIterator.of(listJson(ResourceType.TRANSFORMATIONS_SCHEDULES, requestParameters, partitions), this::parseTransformationSchedules);
     }
 
-    public List<Transformation.Schedule> upsert(List<Transformation.Schedule> schedules) throws Exception {
+    /**
+     * Creates or updates a set of {@link Transformation.Schedule} objects.
+     * <p>
+     * If it is a new {@link Transformation.Schedule} object (based on {@code id / externalId}, then it will be created.
+     * <p>
+     * If an {@link Transformation.Schedule} object already exists in Cognite Data Fusion, it will be updated. The update behavior
+     * is specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
+     *
+     * @param schedules The Transformation.Schedule to upsert.
+     * @return The upserted Transformation.Schedule.
+     * @throws Exception
+     */
+    public List<Transformation.Schedule> schedule(List<Transformation.Schedule> schedules) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter createItemWriter = connector.writeTransformationSchedules();
         ConnectorServiceV1.ItemWriter updateItemWriter = connector.updateTransformationSchedules();
@@ -105,6 +121,30 @@ public abstract class TransformationSchedules extends ApiBase {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Delete schedules
+     *
+     * @param items
+     * @return The item(s) {@code externalId / id} to delete.
+     * @throws Exception
+     */
+    public Boolean unSchedule(List<Item> items) throws Exception {
+        ConnectorServiceV1 connector = getClient().getConnectorService();
+        ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteTransformationSchedules();
+
+        DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig())
+                .addParameter("ignoreUnknownIds", true);
+
+        return deleteItems.deleteItems(items).isEmpty() ? false : true;
+    }
+
+    /**
+     * Retrieve Transformation.Schedule by {@code externalId / id}.
+     *
+     * @param items The item(s) {@code externalId / id} to retrieve.
+     * @return The retrieved Transformation.Schedule.
+     * @throws Exception
+     */
     public List<Transformation.Schedule> retrieve(List<Item> items) throws Exception {
         return retrieveJson(ResourceType.TRANSFORMATIONS_SCHEDULES, items).stream()
                 .map(this::parseTransformationSchedules)

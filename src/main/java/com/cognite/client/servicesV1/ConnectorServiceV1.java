@@ -2339,6 +2339,24 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
     }
 
+    /**
+     * Delete Transformations in Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @return
+     */
+    public ItemWriter deleteTransformationSchedules() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("transformations/schedules/delete")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
     @AutoValue.Builder
     public abstract static class Builder {
         public abstract Builder setClient(CogniteClient value);
