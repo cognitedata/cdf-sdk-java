@@ -2670,6 +2670,12 @@ public abstract class ConnectorServiceV1 implements Serializable {
 
     @AutoValue
     public static abstract class ItemWriter extends ConnectorBase {
+        private static ImmutableList<Integer> VALID_RESPONSE_CODES = ImmutableList.of(
+                400,    // Missing items
+                404,    // Missing column when writing sequences rows
+                409,
+                422
+        );
 
         static Builder builder() {
             return new com.cognite.client.servicesV1.AutoValue_ConnectorServiceV1_ItemWriter.Builder()
@@ -2682,7 +2688,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                     .setRequestExecutor(RequestExecutor.of(client.getHttpClient())
                             .withExecutor(client.getExecutorService())
                             .withMaxRetries(client.getClientConfig().getMaxRetries())
-                            .withValidResponseCodes(ImmutableList.of(400, 409, 422)))
+                            .withValidResponseCodes(VALID_RESPONSE_CODES))
                     .setRequestProvider(requestProvider)
                     .build();
         }
