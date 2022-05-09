@@ -48,18 +48,7 @@ message Geometry {
     }
 }
 
-message Asfdasdf {
-    enum ValueType {
-        DOUBLE = 0;
-        STRING = 1;
-        LONG = 2;
-    }
-
-    string external_id = 1;
-    optional string name = 2;
-    optional string description = 3;
-    ValueType value_type = 4;
-    map<string, string> metadata = 5;
-    optional int64 created_time = 6;
-    optional int64 last_updated_time = 7;
+message Feature {
+    Geometry geometry = 1;
+    google.protobuf.Struct properties = 2;
 }
