@@ -852,6 +852,10 @@ public abstract class SequenceRows extends ApiBase {
 
     /**
      * Adds column(s) to sequence headers for the input sequence body list.
+     * 1. Identify the missing column external id. Verify that it is a missing column case
+     * 2. Retrieve the relevant current sequence headers from CDF
+     * 3. Compare the CDF sequence headers with the sequence bodies column definitions
+     * 4. Update the sequence headers with additional column definitions
      *
      * @param sequenceList
      * @param missingColumns
@@ -865,12 +869,17 @@ public abstract class SequenceRows extends ApiBase {
             String columnExternalId = matcher.group(1);
 
             // Find the sequence bodies containing the missing column
+            /*
             List<SequenceBody> sequenceBodies = sequenceList.stream()
                     .filter(sequenceBody -> sequenceBody.getColumnsList().stream()
                             .anyMatch(column -> column.getExternalId().equalsIgnoreCase(columnExternalId)))
                     .collect(Collectors.toList());
 
+             */
 
+            Map<String, SequenceBody> sequenceBodyMap = mapToId(sequenceList);
+
+            // Retrieve the current sequence headers in
 
         } else {
             LOG.warn("addSequenceColumnsForRows() - Unable to identify missing column from CDF response: {}",
