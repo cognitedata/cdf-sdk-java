@@ -80,7 +80,7 @@ public class DataGenerator {
     public static List<SequenceMetadata> generateSequenceMetadata(int noObjects) {
         List<SequenceMetadata> objects = new ArrayList<>(noObjects);
         for (int i = 0; i < noObjects; i++) {
-            int noColumns = ThreadLocalRandom.current().nextInt(2,200);
+            int noColumns = ThreadLocalRandom.current().nextInt(2,400);
             objects.add(SequenceMetadata.newBuilder()
                     .setExternalId(RandomStringUtils.randomAlphanumeric(20))
                     .setName("test_sequence_" + RandomStringUtils.randomAlphanumeric(5))
