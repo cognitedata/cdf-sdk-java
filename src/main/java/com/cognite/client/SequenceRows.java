@@ -862,27 +862,82 @@ public abstract class SequenceRows extends ApiBase {
      * @throws Exception
      */
     private void addSequenceColumnsForRows(List<SequenceBody> sequenceList, String missingColumns) throws Exception {
+        String loggingPrefix = "addSequenceColumnsForRows() - ";
+
         // Identify the missing column externalId
         Pattern regEx = Pattern.compile("^Can't find column '(\\S+)'");
         Matcher matcher = regEx.matcher(missingColumns);
         if (matcher.find()) {
             String columnExternalId = matcher.group(1);
-
-            // Find the sequence bodies containing the missing column
-            /*
-            List<SequenceBody> sequenceBodies = sequenceList.stream()
-                    .filter(sequenceBody -> sequenceBody.getColumnsList().stream()
-                            .anyMatch(column -> column.getExternalId().equalsIgnoreCase(columnExternalId)))
-                    .collect(Collectors.toList());
-
-             */
+            LOG.debug(loggingPrefix + "Identified missing column externalId: {}", columnExternalId);
 
             Map<String, SequenceBody> sequenceBodyMap = mapToId(sequenceList);
+            String[] seqExtIds = new String[sequenceBodyMap.keySet().size()];
+            sequenceBodyMap.keySet().toArray(seqExtIds);
+            LOG.debug(loggingPrefix + "Checking {} sequence headers for column schema", seqExtIds.length);
 
-            // Retrieve the current sequence headers in
+            // Retrieve the current sequence headers in CDF
+            List<SequenceMetadata> sequenceHeaderCdf = getClient()
+                    .sequences().retrieve(seqExtIds);
 
+            // Compare column schemas to identify new columns
+            List<SequenceMetadata> sequenceHeaderToUpdate = new ArrayList<>();
+            for (Map.Entry<String, SequenceBody> entry : sequenceBodyMap.entrySet()) {
+                // Find the CDF sequence header matching the current sequence body
+                SequenceMetadata currentHeader = sequenceHeaderCdf.stream()
+                        .filter(rows -> rows.getExternalId().equals(entry.getKey()))
+                        .findFirst()
+                        .orElseThrow(() -> new NoSuchElementException(String.format(loggingPrefix
+                                + "Missing sequence column extId %s for sequence extId %s. Not able to update column "
+                                + "schema because the sequence header cannot be retrieved from CDF",
+                                columnExternalId,
+                                entry.getKey())));
+
+                // Check if the sequence body contains additional columns on top of what the sequence header defines.
+                // We also need to identify the correct value type for the column. Since the column externalId and
+                // value (type) are in different arrays, we must use an index based iteration.
+                List<SequenceColumn> newColumns = new ArrayList<>();
+                List<String> existingColumnExtIds = currentHeader.getColumnsList().stream()
+                        .map(SequenceColumn::getExternalId)
+                        .collect(Collectors.toList());
+                for (int i = 0; i < entry.getValue().getColumnsCount(); i++) {
+                    SequenceColumn column = entry.getValue().getColumns(i).toBuilder()
+                            .putMetadata("source", "Java SDK upsert logic")
+                            .build();
+
+                    if (!existingColumnExtIds.contains(column.getExternalId())) {
+                        // We have a new column. Identify the value type as well
+                        Value columnValue = entry.getValue().getRows(0).getValues(i);
+                        switch (columnValue.getKindCase()) {
+                            case STRING_VALUE:
+                                column = column.toBuilder().setValueType(SequenceColumn.ValueType.STRING).build();
+                                break;
+                            case NUMBER_VALUE:
+                                column = column.toBuilder().setValueType(SequenceColumn.ValueType.DOUBLE).build();
+                                break;
+                            default:
+                                throw new NoSuchElementException(String.format(loggingPrefix
+                                + "Cannot identify a valid value type for the extra column extId %s for sequence %s. "
+                                + "Inspecting column value gives KindCase: %.",
+                                        column.getExternalId(),
+                                        entry.getKey(),
+                                        columnValue.getKindCase()));
+                        }
+                        newColumns.add(column);
+                    }
+                }
+                if (newColumns.size() > 0) {
+                    // We have new columns. Let's add them to the sequence header
+                    currentHeader = currentHeader.toBuilder()
+                            .addAllColumns(newColumns)
+                            .build();
+                    sequenceHeaderToUpdate.add(currentHeader);
+                }
+            }
+            getClient().sequences().upsert(sequenceHeaderToUpdate);
+            LOG.debug(loggingPrefix + "Updated the column schema for {} sequences", sequenceHeaderToUpdate.size());
         } else {
-            LOG.warn("addSequenceColumnsForRows() - Unable to identify missing column from CDF response: {}",
+            LOG.warn(loggingPrefix + "Unable to identify missing column from CDF response: {}",
                     missingColumns);
         }
     }
