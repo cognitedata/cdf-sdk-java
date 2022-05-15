@@ -263,9 +263,11 @@ public abstract class SequenceRows extends ApiBase {
                     throw new Exception(message);
                 }
 
+                // Add the original sequence bodies to the retry list
+                retrySequenceBodyList.addAll(responseMap.get(responseItems));
+
                 // Get the missing items and add the original sequence bodies to the retry list
                 missingItems.addAll(parseItems(responseItems.getMissingItems()));
-                retrySequenceBodyList.addAll(responseMap.get(responseItems));
 
                 // Check if the cause is missing columns
                 if (responseItems.getStatus().size() > 0
@@ -323,10 +325,10 @@ public abstract class SequenceRows extends ApiBase {
 
             /*
             Hande missing columns. CDF does not report all missing columns--just the first occurence. Therefore we cannot
-            guarantee to handle all
+            guarantee to handle all missing columns.
              */
             for (Map.Entry<List<SequenceBody>, String> entry : missingColumns.entrySet()) {
-
+                addSequenceColumnsForRows(entry.getKey(), entry.getValue());
             }
 
             // Retry the failed sequence body upsert
