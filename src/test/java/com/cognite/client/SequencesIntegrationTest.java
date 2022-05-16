@@ -122,6 +122,102 @@ class SequencesIntegrationTest {
                     Duration.between(startInstant, Instant.now()));
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
+            Thread.sleep(10000); // Wait for evt. consistency
+
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+            LOG.info(loggingPrefix + "Start reading sequences headers.");
+            List<SequenceMetadata> listSequencesResults = new ArrayList<>();
+            client.sequences()
+                    .list(Request.create()
+                            .withFilterMetadataParameter("source", DataGenerator.sourceValue))
+                    .forEachRemaining(sequences -> listSequencesResults.addAll(sequences));
+            LOG.info(loggingPrefix + "Finished reading sequences headers. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+            LOG.info(loggingPrefix + "Start reading sequences rows.");
+            List<SequenceBody> listSequencesRowsResults = new ArrayList<>();
+            List<Item> sequenceBodyRequestItems = listSequencesResults.stream()
+                    .map(sequenceMetadata -> Item.newBuilder().setId(sequenceMetadata.getId()).build())
+                    .collect(Collectors.toList());
+            client.sequences().rows()
+                    .retrieveComplete(sequenceBodyRequestItems)
+                    .forEachRemaining(sequenceBodies -> listSequencesRowsResults.addAll(sequenceBodies));
+            LOG.info(loggingPrefix + "Finished reading sequences rows. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+            LOG.info(loggingPrefix + "Start deleting sequences rows.");
+            List<SequenceBody> deleteRowsInput = listSequencesRowsResults;
+            List<SequenceBody> deleteRowsResults = client.sequences().rows().delete(deleteRowsInput);
+            LOG.info(loggingPrefix + "Finished deleting sequences rows. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+            LOG.info(loggingPrefix + "Start deleting sequences.");
+            List<Item> deleteItemsInput = new ArrayList<>();
+            listSequencesResults.stream()
+                    .map(sequences -> Item.newBuilder()
+                            .setExternalId(sequences.getExternalId())
+                            .build())
+                    .forEach(item -> deleteItemsInput.add(item));
+
+            List<Item> deleteItemsResults = client.sequences().delete(deleteItemsInput);
+            LOG.info(loggingPrefix + "Finished deleting sequences. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            assertEquals(upsertSequencesList.size(), listSequencesResults.size());
+            assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void writeEditReadAndDeleteSequencesRows() throws Exception {
+        Instant startInstant = Instant.now();
+        String loggingPrefix = "UnitTest - writeEditReadAndDeleteSequencesRows() -";
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                        TestConfigProvider.getClientId(),
+                        TestConfigProvider.getClientSecret(),
+                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                .withProject(TestConfigProvider.getProject())
+                .withBaseUrl(TestConfigProvider.getHost())
+                //.withClientConfig(config)
+                ;
+        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        try {
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+            LOG.info(loggingPrefix + "Start upserting sequences headers.");
+            List<SequenceMetadata> upsertSequencesList = DataGenerator.generateSequenceMetadata(11);
+            client.sequences().upsert(upsertSequencesList);
+            LOG.info(loggingPrefix + "Finished upserting sequences headers. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            Thread.sleep(1000); // Pause... just in case
+
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+            LOG.info(loggingPrefix + "Start upserting sequences rows.");
+            List<SequenceBody> upsertSequenceBodyList = new ArrayList<>();
+            upsertSequencesList.forEach(sequence ->
+                    upsertSequenceBodyList.add(DataGenerator.generateSequenceRows(sequence, 56)));
+            List<SequenceBody> upsertSequenceBodyResponse = client.sequences().rows().upsert(upsertSequenceBodyList);
+            LOG.info(loggingPrefix + "Finished upserting sequences rows. Duration: {}",
+                    Duration.between(startInstant, Instant.now()));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
             Thread.sleep(5000); // Wait for evt. consistency
 
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
