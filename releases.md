@@ -23,7 +23,7 @@ Changes are grouped as follows:
 
 ### Added
 
-- Geo-location attribute to files resource type
+- Geo-location attribute to files resource type (Experimental. Geo-location proto-structure is a subject of future changes) 
 
 ### Fixed
 - File binary upload null pointer exception when running on Android devices.
