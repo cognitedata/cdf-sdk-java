@@ -21,6 +21,10 @@ Changes are grouped as follows:
 
 ## [1.14.0-SNAPSHOT]
 
+### Added
+
+- `Sequences` upsert support including modified column schema. The `upsert` functionality includes both modified `sequences headers`/`SequenceMetadata` and `sequences rows`/`SequenceBody`.
+
 ### Fixed
 - File binary upload null pointer exception when running on Android devices.
 

@@ -37,6 +37,9 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.cognite.client.servicesV1.ConnectorConstants.*;
 
@@ -229,7 +232,8 @@ public abstract class SequenceRows extends ApiBase {
         /*
         Start the upsert:
         1. Write all sequences to the Cognite API.
-        2. If one (or more) of the sequences fail, it is most likely because of missing headers. Add temp headers.
+        2. If one (or more) of the sequences fail, it is most likely because of missing headers or missing columns.
+            Add temp headers or extra columns.
         3. Retry the failed sequences
         */
         Map<ResponseItems<String>, List<SequenceBody>> responseMap = splitAndUpsertSeqBody(sequenceBodies, createItemWriter);
@@ -240,9 +244,11 @@ public abstract class SequenceRows extends ApiBase {
 
         // Check for unsuccessful request
         List<Item> missingItems = new ArrayList<>();
-        List<SequenceBody> retrySequenceBodyList = new ArrayList<>(sequenceBodies.size());
-        List<ResponseItems<String>> successfulBatches = new ArrayList<>(sequenceBodies.size());
+        Map<List<SequenceBody>, String> missingColumns = new HashMap<>();
+        List<SequenceBody> retrySequenceBodyList = new ArrayList<>();
+        List<ResponseItems<String>> successfulBatches = new ArrayList<>();
         boolean requestsAreSuccessful = true;
+        String errorMessage = "";
         for (ResponseItems<String> responseItems : responseMap.keySet()) {
             requestsAreSuccessful = requestsAreSuccessful && responseItems.isSuccessful();
             if (!responseItems.isSuccessful()) {
@@ -257,19 +263,39 @@ public abstract class SequenceRows extends ApiBase {
                     throw new Exception(message);
                 }
 
+                // Add the original sequence bodies to the retry list
+                retrySequenceBodyList.addAll(responseMap.get(responseItems));
+
                 // Get the missing items and add the original sequence bodies to the retry list
                 missingItems.addAll(parseItems(responseItems.getMissingItems()));
-                retrySequenceBodyList.addAll(responseMap.get(responseItems));
+
+                // Check if the cause is missing columns
+                if (responseItems.getStatus().size() > 0
+                        && responseItems.getStatus().get(0).equalsIgnoreCase("404")
+                        && responseItems.getErrorMessage().size() > 0
+                        && responseItems.getErrorMessage().get(0).startsWith("Can't find column")) {
+                    missingColumns.put(responseMap.get(responseItems), responseItems.getErrorMessage().get(0));
+                }
+
+                // Add the most recent error response so we can report on it later
+                errorMessage = responseItems.getResponseBodyAsString();
             } else {
                 successfulBatches.add(responseItems);
             }
         }
 
         if (!requestsAreSuccessful) {
-            LOG.warn(batchLogPrefix + "Write sequence rows failed. Most likely due to missing sequence header / metadata. "
-                    + "Will add minimum sequence metadata and retry the sequence rows insert.");
+            LOG.warn(batchLogPrefix + "Write sequence rows failed. Most likely due to missing sequence header / metadata"
+                    + " or missing columns. Will add minimum sequence metadata or the extra column(s)"
+                    + " and retry the sequence rows insert.");
             LOG.info(batchLogPrefix + "Number of missing entries reported by CDF: {}", missingItems.size());
+            LOG.info(batchLogPrefix + "Number of missing columns reported by CDF: {}", missingColumns.size());
 
+            /*
+            Handle missing sequence headers. Since the CDF API is nice and reports all missing headers back to us,
+            we can iterate through them and add a minimum header for all sequences in question before retrying the
+            rows upsert.
+             */
             // check if the missing items are based on internal id--not supported
             List<SequenceBody> missingSequences = new ArrayList<>(missingItems.size());
             for (Item item : missingItems) {
@@ -293,14 +319,24 @@ public abstract class SequenceRows extends ApiBase {
                 LOG.debug(batchLogPrefix + "Start writing default sequence headers for {} items",
                         missingSequences.size());
                 writeSeqHeaderForRows(missingSequences);
+                LOG.debug(batchLogPrefix + "Finished writing default headers.",
+                        retrySequenceBodyList.size());
+            }
+
+            /*
+            Hande missing columns. CDF does not report all missing columns--just the first occurence. Therefore we cannot
+            guarantee to handle all missing columns.
+             */
+            for (Map.Entry<List<SequenceBody>, String> entry : missingColumns.entrySet()) {
+                addSequenceColumnsForRows(entry.getKey(), entry.getValue());
             }
 
             // Retry the failed sequence body upsert
-            LOG.debug(batchLogPrefix + "Finished writing default headers. Will retry {} sequence body items.",
-                    retrySequenceBodyList.size());
             if (retrySequenceBodyList.isEmpty()) {
                 LOG.warn(batchLogPrefix + "Write sequences rows failed, but cannot identify sequences to retry.");
             } else {
+                LOG.debug(batchLogPrefix + "Will retry {} sequence body items.",
+                        retrySequenceBodyList.size());
                 Map<ResponseItems<String>, List<SequenceBody>> retryResponseMap =
                         splitAndUpsertSeqBody(retrySequenceBodyList, createItemWriter);
 
@@ -308,13 +344,16 @@ public abstract class SequenceRows extends ApiBase {
                 requestsAreSuccessful = true;
                 for (ResponseItems<String> responseItems : retryResponseMap.keySet()) {
                     requestsAreSuccessful = requestsAreSuccessful && responseItems.isSuccessful();
+                    if (!responseItems.isSuccessful()) {
+                        // Add the most recent error response so we can report on it later
+                        errorMessage = responseItems.getResponseBodyAsString();
+                    }
                 }
             }
-
         }
 
         if (!requestsAreSuccessful) {
-            String message = batchLogPrefix + "Failed to write sequences rows.";
+            String message = String.format(batchLogPrefix + "Failed to write sequences rows: %n%s", errorMessage);
             LOG.error(message);
             throw new Exception(message);
         }
@@ -811,6 +850,98 @@ public abstract class SequenceRows extends ApiBase {
                 .setExternalId(body.getExternalId())
                 .addAllColumns(body.getColumnsList())
                 .build();
+    }
+
+    /**
+     * Adds column(s) to sequence headers for the input sequence body list.
+     * 1. Identify the missing column external id. Verify that it is a missing column case
+     * 2. Retrieve the relevant current sequence headers from CDF
+     * 3. Compare the CDF sequence headers with the sequence bodies column definitions
+     * 4. Update the sequence headers with additional column definitions
+     *
+     * @param sequenceList
+     * @param missingColumns
+     * @throws Exception
+     */
+    private void addSequenceColumnsForRows(List<SequenceBody> sequenceList, String missingColumns) throws Exception {
+        String loggingPrefix = "addSequenceColumnsForRows() - ";
+
+        // Identify the missing column externalId
+        Pattern regEx = Pattern.compile("^Can't find column '(\\S+)'");
+        Matcher matcher = regEx.matcher(missingColumns);
+        if (matcher.find()) {
+            String columnExternalId = matcher.group(1);
+            LOG.debug(loggingPrefix + "Identified missing column externalId: {}", columnExternalId);
+
+            Map<String, SequenceBody> sequenceBodyMap = mapToId(sequenceList);
+            String[] seqExtIds = new String[sequenceBodyMap.keySet().size()];
+            sequenceBodyMap.keySet().toArray(seqExtIds);
+            LOG.debug(loggingPrefix + "Checking {} sequence headers for column schema", seqExtIds.length);
+
+            // Retrieve the current sequence headers in CDF
+            List<SequenceMetadata> sequenceHeaderCdf = getClient()
+                    .sequences().retrieve(seqExtIds);
+
+            // Compare column schemas to identify new columns
+            List<SequenceMetadata> sequenceHeaderToUpdate = new ArrayList<>();
+            for (Map.Entry<String, SequenceBody> entry : sequenceBodyMap.entrySet()) {
+                // Find the CDF sequence header matching the current sequence body
+                SequenceMetadata currentHeader = sequenceHeaderCdf.stream()
+                        .filter(rows -> rows.getExternalId().equals(entry.getKey()))
+                        .findFirst()
+                        .orElseThrow(() -> new NoSuchElementException(String.format(loggingPrefix
+                                + "Missing sequence column extId %s for sequence extId %s. Not able to update column "
+                                + "schema because the sequence header cannot be retrieved from CDF",
+                                columnExternalId,
+                                entry.getKey())));
+
+                // Check if the sequence body contains additional columns on top of what the sequence header defines.
+                // We also need to identify the correct value type for the column. Since the column externalId and
+                // value (type) are in different arrays, we must use an index based iteration.
+                List<SequenceColumn> newColumns = new ArrayList<>();
+                List<String> existingColumnExtIds = currentHeader.getColumnsList().stream()
+                        .map(SequenceColumn::getExternalId)
+                        .collect(Collectors.toList());
+                for (int i = 0; i < entry.getValue().getColumnsCount(); i++) {
+                    SequenceColumn column = entry.getValue().getColumns(i).toBuilder()
+                            .putMetadata("source", "Java SDK upsert logic")
+                            .build();
+
+                    if (!existingColumnExtIds.contains(column.getExternalId())) {
+                        // We have a new column. Identify the value type as well
+                        Value columnValue = entry.getValue().getRows(0).getValues(i);
+                        switch (columnValue.getKindCase()) {
+                            case STRING_VALUE:
+                                column = column.toBuilder().setValueType(SequenceColumn.ValueType.STRING).build();
+                                break;
+                            case NUMBER_VALUE:
+                                column = column.toBuilder().setValueType(SequenceColumn.ValueType.DOUBLE).build();
+                                break;
+                            default:
+                                throw new NoSuchElementException(String.format(loggingPrefix
+                                + "Cannot identify a valid value type for the extra column extId %s for sequence %s. "
+                                + "Inspecting column value gives KindCase: %.",
+                                        column.getExternalId(),
+                                        entry.getKey(),
+                                        columnValue.getKindCase()));
+                        }
+                        newColumns.add(column);
+                    }
+                }
+                if (newColumns.size() > 0) {
+                    // We have new columns. Let's add them to the sequence header
+                    currentHeader = currentHeader.toBuilder()
+                            .addAllColumns(newColumns)
+                            .build();
+                    sequenceHeaderToUpdate.add(currentHeader);
+                }
+            }
+            getClient().sequences().upsert(sequenceHeaderToUpdate);
+            LOG.debug(loggingPrefix + "Updated the column schema for {} sequences", sequenceHeaderToUpdate.size());
+        } else {
+            LOG.warn(loggingPrefix + "Unable to identify missing column from CDF response: {}",
+                    missingColumns);
+        }
     }
 
     /**

@@ -52,13 +52,13 @@ class EventsIntegrationTest {
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
             LOG.info(loggingPrefix + "Start upserting events.");
-            List<Event> upsertEventsList = DataGenerator.generateEvents(13800);
+            List<Event> upsertEventsList = DataGenerator.generateEvents(11800);
             client.events().upsert(upsertEventsList);
             LOG.info(loggingPrefix + "Finished upserting events. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-            Thread.sleep(20000); // wait for eventual consistency
+            Thread.sleep(25000); // wait for eventual consistency
 
             LOG.info(loggingPrefix + "Start reading events.");
             List<Event> listEventsResults = new ArrayList<>();
@@ -119,7 +119,7 @@ class EventsIntegrationTest {
                     Duration.between(startInstant, Instant.now()));
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-            Thread.sleep(3000); // wait for eventual consistency
+            Thread.sleep(5000); // wait for eventual consistency
 
             LOG.info(loggingPrefix + "Start updating events.");
             List<Event> editedEventsInput = upsertedEvents.stream()
@@ -229,12 +229,12 @@ class EventsIntegrationTest {
 
         try {
             LOG.info(loggingPrefix + "Start upserting events.");
-            List<Event> upsertEventsList = DataGenerator.generateEvents(16800);
+            List<Event> upsertEventsList = DataGenerator.generateEvents(11367);
             client.events().upsert(upsertEventsList);
             LOG.info(loggingPrefix + "Finished upserting events. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
-            Thread.sleep(15000); // wait for eventual consistency
+            Thread.sleep(25000); // wait for eventual consistency
 
             LOG.info(loggingPrefix + "Start listing events.");
             List<Event> listEventsResults = new ArrayList<>();

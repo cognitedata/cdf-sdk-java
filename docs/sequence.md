@@ -251,18 +251,26 @@ List<SequenceMetadata> retrievedSequencesById =
 
 ### Update sequences
 
-Update one or more sequences.
+Update one or more sequences. The behavior of the update/upsert depends on the `upsert mode` of the client:
+- `UpsertMode.UPDATE` (default): all configured sequence attributes will be updated in CDF. Attributes that are not configured will retain their original value. Any columns that are specified will either be created/added (in case of new columns) or updated (in case of existing columns). No columns will be deleted.
+- `UpsertMode.REPLACE`: all configured sequence attributes will be updated in CDF. Attributes that are not configured will be removed/set to null. Any columns that are specified will either be created/added (in case of new columns) or updated (in case of existing columns). Existing columns that are not a part of the sequence object will be deleted.
 
 ```java
-List<SequenceMetadata> upsertedTimeseries = find();
+List<SequenceMetadata> upsertedSequences = find();
 
-List<SequenceMetadata> editedSequencesInput = 
-upsertedTimeseries.stream()
+List<SequenceMetadata> editedSequencesInput = upsertedSequences.stream()
     .map(sequences -> sequences.toBuilder()
         .setDescription("new-value")
         .clearMetadata()
         .putMetadata("new-key", "new-value")
-    .build())
+        .addColumns(SequenceColumn.newBuilder()
+            .setExternalId("my-new-column-ext-id")
+            .setName("new-column")
+            .setDescription("A new column")
+            .setValueType(SequenceColumn.ValueType.STRING)
+            .putMetadata("column-metadata-key", "column-metadata-value")
+            .build())
+        .build())
     .collect(Collectors.toList());
 
 List<SequenceMetadata> sequencesUpdateResults = 
@@ -304,6 +312,10 @@ List<Item> deleteItemsResults =
 ```
 
 ### Insert rows
+
+Insert rows into a sequence. If the row exists from before, then the specified columns will be overwritten. Columns that are not specified in the row object will retain their original value in CDF. 
+
+If your row contains columns that are not a part of the sequence columns schema, then the SDK will try to update the sequence columns schema for you so the row can be inserted/updated. This is done on a best-effort basis.
 
 ```java
 

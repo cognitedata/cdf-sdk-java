@@ -19,6 +19,7 @@ package com.cognite.client;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Aggregate;
+import com.cognite.client.dto.DataSet;
 import com.cognite.client.dto.SequenceMetadata;
 import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
@@ -184,15 +185,19 @@ public abstract class Sequences extends ApiBase {
 
         UpsertItems<SequenceMetadata> upsertItems = UpsertItems.of(createItemWriter, this::toRequestInsertItem, getClient().buildAuthConfig())
                 .withUpdateItemWriter(updateItemWriter)
-                .withUpdateMappingFunction(this::toRequestUpdateItem)
+                .withItemMappingFunction(this::toItem)
+                .withRetrieveFunction(this::retrieveWrapper)
+                .withUpdateMappingBiFunction(this::toRequestUpdateItem)
                 .withIdFunction(this::getSequenceId)
+                .withEqualFunction((SequenceMetadata a, SequenceMetadata b) ->
+                        a.getId() == b.getId() || (a.hasExternalId() && b.hasExternalId() && a.getExternalId().equals(b.getExternalId())))
                 .withBatchingFunction(this::splitSequenceMetadataIntoBatches);
 
         if (getClient().getClientConfig().getUpsertMode() == UpsertMode.REPLACE) {
-            upsertItems = upsertItems.withUpdateMappingFunction(this::toRequestReplaceItem);
+            upsertItems = upsertItems.withUpdateMappingBiFunction(this::toRequestReplaceItem);
         }
 
-        return upsertItems.upsertViaCreateAndUpdate(sequences).stream()
+        return upsertItems.upsertViaGetCreateAndUpdateDiff(sequences).stream()
                 .map(this::parseSequences)
                 .collect(Collectors.toList());
     }
@@ -246,6 +251,26 @@ public abstract class Sequences extends ApiBase {
     }
 
     /*
+    Returns an Item reflecting the input dataset. This will extract the dataset externalId
+    and populate the Item with it.
+     */
+    private Item toItem(SequenceMetadata sequenceMetadata) {
+        return Item.newBuilder().setExternalId(sequenceMetadata.getExternalId()).build();
+    }
+
+    /*
+    Wrapping the retrieve function because we need to handle the exception--an ugly workaround since lambdas don't deal very well
+    with exceptions.
+     */
+    private List<SequenceMetadata> retrieveWrapper(List<Item> items) {
+        try {
+            return retrieve(items);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /*
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
     deal very well with exception.
      */
@@ -273,6 +298,7 @@ public abstract class Sequences extends ApiBase {
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
     deal very well with exceptions.
      */
+    @Deprecated
     private Map<String, Object> toRequestUpdateItem(SequenceMetadata item) {
         try {
             return SequenceParser.toRequestUpdateItem(item);
@@ -285,9 +311,34 @@ public abstract class Sequences extends ApiBase {
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
     deal very well with exceptions.
      */
+    private Map<String, Object> toRequestUpdateItem(SequenceMetadata existingItem, SequenceMetadata updatedItem) {
+        try {
+            return SequenceParser.toRequestUpdateItem(existingItem, updatedItem);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /*
+    Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
+    deal very well with exceptions.
+     */
+    @Deprecated
     private Map<String, Object> toRequestReplaceItem(SequenceMetadata item) {
         try {
             return SequenceParser.toRequestReplaceItem(item);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /*
+    Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
+    deal very well with exceptions.
+     */
+    private Map<String, Object> toRequestReplaceItem(SequenceMetadata existingItem, SequenceMetadata updatedItem) {
+        try {
+            return SequenceParser.toRequestReplaceItem(existingItem, updatedItem);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
