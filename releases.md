@@ -19,12 +19,12 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type
 
-## [1.14.0-SNAPSHOT]
+## [1.14.0]
 
 ### Added
 
-- Geo-location attribute to files resource type (Experimental. Geo-location proto-structure is a subject of future changes) 
-- `Sequences` upsert support including modified column schema. The `upsert` functionality includes both modified `sequences headers`/`SequenceMetadata` and `sequences rows`/`SequenceBody`.
+- Experimental: Geo-location attribute to files resource type (Geo-location proto-structure is a subject of future changes) 
+- `Sequences` upsert support including modified column schema. The `upsert` functionality includes both modified `sequences headers`/`SequenceMetadata` and `sequences rows`/`SequenceBody`. For more information, please refer to the documentation: [https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/sequence.md#update-sequences](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/sequence.md#update-sequences) and [https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/sequence.md#insert-rows](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/sequence.md#insert-rows)
 
 ### Fixed
 - File binary upload null pointer exception when running on Android devices.
