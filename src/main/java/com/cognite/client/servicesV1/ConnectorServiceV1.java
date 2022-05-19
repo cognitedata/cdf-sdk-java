@@ -350,8 +350,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> readSequencesById() {
-        LOG.debug(loggingPrefix + "Initiating read sequences by id service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("sequences/byids")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -369,8 +367,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter writeSequencesHeaders() {
-        LOG.debug(loggingPrefix + "Initiating write sequences headers service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("sequences")
                 .setRequest(Request.create())
@@ -389,8 +385,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter updateSequencesHeaders() {
-        LOG.debug(loggingPrefix + "Initiating update sequences headers service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("sequences/update")
                 .setRequest(Request.create())
@@ -409,8 +403,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter deleteSequencesHeaders() {
-        LOG.debug(loggingPrefix + "Initiating delete sequences service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("sequences/delete")
                 .setRequest(Request.create())
@@ -429,8 +421,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ResultFutureIterator<String> readSequencesRows(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read sequences rows service.");
-
         PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
                 .setEndpoint("sequences/data/list")
                 .setRequest(queryParameters)
@@ -449,8 +439,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter writeSequencesRows() {
-        LOG.debug(loggingPrefix + "Initiating write sequences rows service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("sequences/data")
                 .setRequest(Request.create())
@@ -469,8 +457,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter deleteSequencesRows() {
-        LOG.debug(loggingPrefix + "Initiating delete sequences service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("sequences/data/delete")
                 .setRequest(Request.create())
@@ -2684,6 +2670,12 @@ public abstract class ConnectorServiceV1 implements Serializable {
 
     @AutoValue
     public static abstract class ItemWriter extends ConnectorBase {
+        private static ImmutableList<Integer> VALID_RESPONSE_CODES = ImmutableList.of(
+                400,    // Missing items
+                404,    // Missing column when writing sequences rows
+                409,
+                422
+        );
 
         static Builder builder() {
             return new com.cognite.client.servicesV1.AutoValue_ConnectorServiceV1_ItemWriter.Builder()
@@ -2696,7 +2688,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                     .setRequestExecutor(RequestExecutor.of(client.getHttpClient())
                             .withExecutor(client.getExecutorService())
                             .withMaxRetries(client.getClientConfig().getMaxRetries())
-                            .withValidResponseCodes(ImmutableList.of(400, 409, 422)))
+                            .withValidResponseCodes(VALID_RESPONSE_CODES))
                     .setRequestProvider(requestProvider)
                     .build();
         }
@@ -3076,7 +3068,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
     public static abstract class FileWriter extends ConnectorBase {
         private final String randomIdString = RandomStringUtils.randomAlphanumeric(5);
         private final String loggingPrefix = "FileWriter [" + randomIdString + "] -";
-        private final ObjectMapper objectMapper = JsonUtil.getObjectMapperInstance();
 
         // Using a dedicated http client for file binary
         final static OkHttpClient httpClient = new OkHttpClient.Builder()

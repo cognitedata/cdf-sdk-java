@@ -187,7 +187,7 @@ public abstract class RequestExecutor {
      *
      * */
     public ResponseBinary executeRequest(Request request) throws Exception {
-        LOG.debug(loggingPrefix + "Executing request batch to [{}]", request.url().toString());
+        LOG.debug(loggingPrefix + "Executing request to [{}]", request.url().toString());
         Long apiLatency = 0L;
         int apiRetryCounter = 0;
 

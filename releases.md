@@ -24,6 +24,7 @@ Changes are grouped as follows:
 ### Added
 
 - Geo-location attribute to files resource type (Experimental. Geo-location proto-structure is a subject of future changes) 
+- `Sequences` upsert support including modified column schema. The `upsert` functionality includes both modified `sequences headers`/`SequenceMetadata` and `sequences rows`/`SequenceBody`.
 
 ### Fixed
 - File binary upload null pointer exception when running on Android devices.
