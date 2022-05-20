@@ -461,18 +461,6 @@ abstract class ApiBase {
             case TRANSFORMATIONS_NOTIFICATIONS:
                 results = connector.readTransformationNotifications(requestParameters);
                 break;
-            case TRANSFORMATIONS:
-                results = connector.readTransformations(requestParameters);
-                break;
-            case TRANSFORMATIONS_JOBS:
-                results = connector.readTransformationJobs(requestParameters);
-                break;
-            case TRANSFORMATIONS_JOB_METRICS:
-                results = connector.readTransformationJobMetrics(requestParameters);
-                break;
-            case TRANSFORMATIONS_SCHEDULES:
-                results = connector.readTransformationSchedules(requestParameters);
-                break;
             default:
                 throw new Exception("Not a supported resource type: " + resourceType);
         }
