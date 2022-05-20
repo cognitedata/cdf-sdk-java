@@ -429,15 +429,16 @@ public class FileParser {
         if (element.hasDataSetId()) {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
+        if (element.hasGeoLocation()) {
+            updateNodeBuilder.put("geoLocation", ImmutableMap.of("set", getGeoLocationJson(element.getGeoLocation())));
+        }
+
         if (element.getLabelsCount() > 0) {
             List<Map<String, String>> labels = new ArrayList<>();
             for (String label : element.getLabelsList()) {
                 labels.add(ImmutableMap.of("externalId", label));
             }
             updateNodeBuilder.put("labels", ImmutableMap.of("add", labels));
-        }
-        if (element.hasGeoLocation()) {
-            mapBuilder.put("geoLocation", ImmutableMap.of("set", getGeoLocationJson(element.getGeoLocation())));
         }
 
         mapBuilder.put("update", updateNodeBuilder.build());
@@ -514,6 +515,12 @@ public class FileParser {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("setNull", true));
         }
 
+        if (element.hasGeoLocation()) {
+            updateNodeBuilder.put("geoLocation", ImmutableMap.of("set", getGeoLocationJson(element.getGeoLocation())));
+        } else {
+            updateNodeBuilder.put("geoLocation", ImmutableMap.of("setNull", true));
+        }
+
         List<Map<String, String>> labels = new ArrayList<>();
         for (String label : element.getLabelsList()) {
             labels.add(ImmutableMap.of("externalId", label));
@@ -522,9 +529,6 @@ public class FileParser {
 
         mapBuilder.put("update", updateNodeBuilder.build());
 
-        if (element.hasGeoLocation()) {
-            mapBuilder.put("geoLocation", ImmutableMap.of("set", getGeoLocationJson(element.getGeoLocation())));
-        }
         return mapBuilder.build();
     }
 
