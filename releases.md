@@ -21,6 +21,11 @@ Changes are grouped as follows:
 
 ## [1.15.0-SNAPSHOT]
 
+### Fixed
+
+- File metadata updates: Fix CDF API payload format
+
+
 ## [1.14.0] 2022-05-19
 
 ### Added
