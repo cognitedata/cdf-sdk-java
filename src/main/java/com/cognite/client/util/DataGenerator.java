@@ -81,26 +81,32 @@ public class DataGenerator {
     public static List<SequenceMetadata> generateSequenceMetadata(int noObjects) {
         List<SequenceMetadata> objects = new ArrayList<>(noObjects);
         for (int i = 0; i < noObjects; i++) {
-            List<SequenceColumn> columns = new ArrayList<>();
-            int noColumns = ThreadLocalRandom.current().nextInt(2,200);
-            for (int j = 0; j < noColumns; j++) {
-                columns.add(SequenceColumn.newBuilder()
-                        .setExternalId(RandomStringUtils.randomAlphanumeric(50))
-                        .setName("test_column_" + RandomStringUtils.randomAlphanumeric(5))
-                        .setDescription(RandomStringUtils.randomAlphanumeric(50))
-                        .setValueTypeValue(ThreadLocalRandom.current().nextInt(0,2))
-                        .build());
-            }
-
+            int noColumns = ThreadLocalRandom.current().nextInt(2,250);
             objects.add(SequenceMetadata.newBuilder()
                     .setExternalId(RandomStringUtils.randomAlphanumeric(20))
                     .setName("test_sequence_" + RandomStringUtils.randomAlphanumeric(5))
                     .setDescription(RandomStringUtils.randomAlphanumeric(50))
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)
-                    .addAllColumns(columns)
+                    .addAllColumns(generateSequenceColumnHeader(noColumns))
                     .build());
         }
+        return objects;
+    }
+
+    public static List<SequenceColumn> generateSequenceColumnHeader(int noObjects) {
+        List<SequenceColumn> objects = new ArrayList<>();
+        for (int i = 0; i < noObjects; i++) {
+            objects.add(SequenceColumn.newBuilder()
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(50))
+                    .setName("test_column_" + RandomStringUtils.randomAlphanumeric(5))
+                    .setDescription(RandomStringUtils.randomAlphanumeric(50))
+                    .setValueTypeValue(ThreadLocalRandom.current().nextInt(0,2))
+                    .putMetadata("type", DataGenerator.sourceValue)
+                    .putMetadata(sourceKey, DataGenerator.sourceValue)
+                    .build());
+        }
+
         return objects;
     }
 

@@ -238,9 +238,9 @@ public abstract class DataPoints extends ApiBase {
 
         /*
         Start the upsert:
-        1. Write all sequences to the Cognite API.
-        2. If one (or more) of the sequences fail, it is most likely because of missing headers. Add temp headers.
-        3. Retry the failed sequences
+        1. Write all data points to the Cognite API.
+        2. If one (or more) of the data points fail, it is most likely because of missing headers. Add temp headers.
+        3. Retry the failed data points.
         */
         Map<ResponseItems<String>, List<List<TimeseriesPointPost>>> responseMap =
                 splitAndUpsertDataPoints(dataPoints, createItemWriter);

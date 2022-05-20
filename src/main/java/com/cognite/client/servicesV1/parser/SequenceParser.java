@@ -20,15 +20,21 @@ import com.cognite.client.dto.SequenceBody;
 import com.cognite.client.dto.SequenceColumn;
 import com.cognite.client.dto.SequenceMetadata;
 import com.cognite.client.dto.SequenceRow;
+import com.cognite.client.servicesV1.util.JsonUtil;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Value;
 import com.google.protobuf.util.Values;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static com.cognite.client.servicesV1.ConnectorConstants.MAX_LOG_ELEMENT_LENGTH;
 
@@ -38,7 +44,8 @@ import static com.cognite.client.servicesV1.ConnectorConstants.MAX_LOG_ELEMENT_L
  */
 public class SequenceParser {
     static final String logPrefix = "SequenceParser - ";
-    static final ObjectMapper objectMapper = new ObjectMapper();
+    static final Logger LOG = LoggerFactory.getLogger(SequenceParser.class);
+    static final ObjectReader objectReader = JsonUtil.getObjectMapperInstance().reader();
 
     private static final ImmutableBiMap<String, SequenceColumn.ValueType> valueTypeMap = ImmutableBiMap
             .<String, SequenceColumn.ValueType>builder()
@@ -55,7 +62,7 @@ public class SequenceParser {
      * @throws Exception
      */
     public static SequenceMetadata parseSequenceMetadata(String json) throws Exception {
-        JsonNode root = objectMapper.readTree(json);
+        JsonNode root = objectReader.readTree(json);
         SequenceMetadata.Builder builder = SequenceMetadata.newBuilder();
         String itemExcerpt = json.substring(0, Math.min(json.length() - 1, MAX_LOG_ELEMENT_LENGTH));
 
@@ -123,7 +130,7 @@ public class SequenceParser {
      * @throws Exception
      */
     public static SequenceBody parseSequenceBody(String json) throws Exception {
-        JsonNode root = objectMapper.readTree(json);
+        JsonNode root = objectReader.readTree(json);
         SequenceBody.Builder builder = SequenceBody.newBuilder();
         String itemExcerpt = json.substring(0, Math.min(json.length() - 1, MAX_LOG_ELEMENT_LENGTH));
 
@@ -176,7 +183,7 @@ public class SequenceParser {
      * @throws Exception
      */
     private static SequenceColumn parseSequenceColumn(String json) throws Exception {
-        JsonNode root = objectMapper.readTree(json);
+        JsonNode root = objectReader.readTree(json);
         SequenceColumn.Builder builder = SequenceColumn.newBuilder();
         String itemExcerpt = json.substring(0, Math.min(json.length() - 1, MAX_LOG_ELEMENT_LENGTH));
 
@@ -230,7 +237,7 @@ public class SequenceParser {
      * @throws Exception
      */
     private static SequenceRow parseSequenceRow(String json) throws Exception {
-        JsonNode root = objectMapper.readTree(json);
+        JsonNode root = objectReader.readTree(json);
         SequenceRow.Builder builder = SequenceRow.newBuilder();
         String itemExcerpt = json.substring(0, Math.min(json.length() - 1, MAX_LOG_ELEMENT_LENGTH));
 
@@ -387,7 +394,7 @@ public class SequenceParser {
      * @param element
      * @return
      */
-    public static ImmutableMap<String, Object> toRequestInsertItem(SequenceColumn element) {
+    private static ImmutableMap<String, Object> toRequestInsertItem(SequenceColumn element) {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
 
         mapBuilder.put("externalId", element.getExternalId());
@@ -412,20 +419,88 @@ public class SequenceParser {
      * An update item object updates an existing sequence header object with new values for all provided fields.
      * Fields that are not in the update object retain their original value.
      *
-     * @param element
-     * @return
+     * This method will also perform an update of the column definitions. It does so by comparing the {@code newElement}
+     * with the {@code existingElement} and perform the following actions:
+     * - New columns will be created.
+     * - Existing columns will keep their data type (string, numeric, etc.) and externalId, but other attributes
+     * will be updated. Attributes that are not specified in the {@code newElement} object will retain their original value.
+     * - Deleted columns will not be touched. I.e. no columns will be deleted from CDF.
+     *
+     * @param newElement The new/updated sequence header/metadata.
+     * @param existingElement The existing sequence header/metadata.
+     * @return The update object in "javafied Json" structure.
      */
-    public static Map<String, Object> toRequestUpdateItem(SequenceMetadata element) {
+    public static Map<String, Object> toRequestUpdateItem(SequenceMetadata newElement,
+                                                          SequenceMetadata existingElement) throws Exception {
+        Preconditions.checkArgument(newElement.hasExternalId() || newElement.hasId(),
+                logPrefix + "New sequence header/metadata must have externalId or Id in order to be written as an update");
+        Preconditions.checkArgument(existingElement.hasExternalId() || existingElement.hasId(),
+                logPrefix + "Existing sequence header/metadata must have externalId or Id in order to be written as an update");
+
+        String logPrefix = SequenceParser.logPrefix + "toRequestUpdateItem() -";
+
+        // Get the main updateItem payload
+        ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
+        ImmutableMap.Builder<String, Object> updateNodeBuilder = toRequestUpdateItemHeaderNodeBuilder(newElement);
+
+        if (newElement.hasExternalId()) {
+            mapBuilder.put("externalId", newElement.getExternalId());
+        } else {
+            mapBuilder.put("id", newElement.getId());
+        }
+
+        // Add the column diff
+        if (newElement.getColumnsCount() > 0) {
+            List<Map<String, Object>> columnListAdd = buildNewColumnsObject(newElement, existingElement);
+            List<Map<String, Object>> columnListUpdate = buildModifyColumnsObject(newElement, existingElement, SequenceParser::toRequestUpdateItem);
+
+            updateNodeBuilder.put("columns", ImmutableMap.of(
+                    "modify", columnListUpdate,
+                    "add", columnListAdd));
+            LOG.debug(logPrefix + "Column changes detected. New/added columns: {}. Updated columns: {}",
+                    columnListAdd.size(),
+                    columnListUpdate.size());
+        } else {
+            LOG.debug(logPrefix + "No column changes detected.");
+        }
+
+        mapBuilder.put("update", updateNodeBuilder.build());
+        return mapBuilder.build();
+    }
+
+    /**
+     * Builds a request update item object from {@link SequenceMetadata}.
+     *
+     * An update item object updates an existing sequence header object with new values for all provided fields.
+     * Fields that are not in the update object retain their original value.
+     *
+     * This method will not take the column definition into account. You need to use the
+     * {@link #toRequestUpdateItem(SequenceMetadata, SequenceMetadata)} method to include column definition upsert.
+     *
+     * @param element The sequence header/metadata to update
+     * @return The update object in "javafied Json" structure
+     */
+    public static ImmutableMap<String, Object> toRequestUpdateItem(SequenceMetadata element) {
         Preconditions.checkArgument(element.hasExternalId() || element.hasId(),
                 logPrefix + "Element must have externalId or Id in order to be written as an update");
 
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
-        ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
+        ImmutableMap.Builder<String, Object> updateNodeBuilder = toRequestUpdateItemHeaderNodeBuilder(element);
         if (element.hasExternalId()) {
             mapBuilder.put("externalId", element.getExternalId());
         } else {
             mapBuilder.put("id", element.getId());
         }
+
+        mapBuilder.put("update", updateNodeBuilder.build());
+        return mapBuilder.build();
+    }
+
+    /*
+    Builds the shared part (main body payload) of the Sequence update object. I.e. the non-column parts.
+     */
+    private static ImmutableMap.Builder<String, Object> toRequestUpdateItemHeaderNodeBuilder(SequenceMetadata element) {
+        ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
 
         if (element.hasName()) {
             updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
@@ -442,15 +517,203 @@ public class SequenceParser {
         if (element.hasDataSetId()) {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
+
+        return updateNodeBuilder;
+    }
+
+    /**
+     * Builds a request update item object from {@link SequenceColumn}.
+     *
+     * @param element
+     * @return
+     */
+    private static ImmutableMap<String, Object> toRequestUpdateItem(SequenceColumn element) {
+        ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
+        ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
+
+        mapBuilder.put("externalId", element.getExternalId());
+
+        if (element.hasName()) {
+            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
+        }
+        if (element.hasDescription()) {
+            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
+        }
+        if (element.getMetadataCount() > 0) {
+            updateNodeBuilder.put("metadata", ImmutableMap.of("add", element.getMetadataMap()));
+        }
+
         mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();
     }
 
     /**
+     * Builds a request replace item object from {@link SequenceMetadata}.
+     *
+     * A replace item object replaces an existing sequence header object with new values for all provided fields.
+     * Fields that are not in the update object are set to null.
+     *
+     * This method will also perform an update of the column definitions. It does so by comparing the {@code newElement}
+     * with the {@code existingElement} and perform the following actions:
+     * - New columns will be created.
+     * - Existing columns will keep their data type (string, numeric, etc.) and externalId, but other attributes
+     * will be replaced. Attributes that are not specified in the {@code newElement} object will be set to null.
+     * - Deleted columns will be removed.
+     *
+     * @param newElement The new/updated sequence header/metadata.
+     * @param existingElement The existing sequence header/metadata.
+     * @return The replace object in "javafied Json" structure.
+     */
+    public static Map<String, Object> toRequestReplaceItem(SequenceMetadata newElement,
+                                                          SequenceMetadata existingElement) throws Exception {
+        Preconditions.checkArgument(newElement.hasExternalId() || newElement.hasId(),
+                logPrefix + "New sequence header/metadata must have externalId or Id in order to be written as an update");
+        Preconditions.checkArgument(existingElement.hasExternalId() || existingElement.hasId(),
+                logPrefix + "Existing sequence header/metadata must have externalId or Id in order to be written as an update");
+
+        String logPrefix = SequenceParser.logPrefix + "toRequestReplaceItem() -";
+
+        // Get the main updateItem payload
+        ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
+        ImmutableMap.Builder<String, Object> updateNodeBuilder = toRequestReplaceItemHeaderNodeBuilder(newElement);
+
+        if (newElement.hasExternalId()) {
+            mapBuilder.put("externalId", newElement.getExternalId());
+        } else {
+            mapBuilder.put("id", newElement.getId());
+        }
+
+        /*
+        Add the column diff
+        */
+        List<Map<String, Object>> columnListAdd = buildNewColumnsObject(newElement, existingElement);
+        List<Map<String, Object>> columnListUpdate = buildModifyColumnsObject(newElement, existingElement, SequenceParser::toRequestReplaceItem);
+        List<Map<String, Object>> columnListDelete = buildDeleteColumnsObject(newElement, existingElement);
+
+        updateNodeBuilder.put("columns", ImmutableMap.of(
+                "modify", columnListUpdate,
+                "add", columnListAdd,
+                "remove", columnListDelete));
+        LOG.debug(logPrefix + "Column changes detected. New/added columns: {}. Updated columns: {}. Deleted columns: {}",
+                columnListAdd.size(),
+                columnListUpdate.size(),
+                columnListDelete.size());
+
+        mapBuilder.put("update", updateNodeBuilder.build());
+        return mapBuilder.build();
+    }
+
+    /**
+     * Builds the request create object for new columns.
+     *
+     * The columns in the new and existing element are compared. New columns will be identified and mapped to a
+     * request create object form.
+     *
+     * @param newElement The existing {@link SequenceMetadata} element.
+     * @param existingElement The new (target state) {@link SequenceMetadata} element.
+     * @return A list of new columns in their request create format.
+     */
+    private static List<Map<String, Object>> buildNewColumnsObject(SequenceMetadata newElement,
+                                                                   SequenceMetadata existingElement) {
+        // Get the existing columns. Will be used to identify new and changed columns
+        List<String> existingColumns = existingElement.getColumnsList().stream()
+                .map(SequenceColumn::getExternalId)
+                .collect(Collectors.toList());
+
+        return newElement.getColumnsList().stream()
+                .filter(column -> !existingColumns.contains(column.getExternalId()))
+                .map(column -> toRequestInsertItem(column))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Builds the request update/replace object for new columns.
+     *
+     * The columns in the new and existing element are compared. Existing columns (to be modified) will be identified
+     * and mapped to a request update/replace object form.
+     *
+     * @param newElement The existing {@link SequenceMetadata} element.
+     * @param existingElement The new (target state) {@link SequenceMetadata} element.
+     * @param updateMappingFunction The mapping function used for building the update object. Controls {@code update} vs.
+     *                              {@code replace}.
+     * @return A list of modified columns in their request update/replace format.
+     * @throws Exception If the modified columns do not represent the same {@code ValueType} as the existing columns
+     */
+    private static List<Map<String, Object>> buildModifyColumnsObject(SequenceMetadata newElement,
+                                                                      SequenceMetadata existingElement,
+                                                                      Function<SequenceColumn, Map<String, Object>> updateMappingFunction) throws Exception {
+        // Get the existing columns. Will be used to identify new and changed columns
+        Map<String, SequenceColumn> existingColumns = existingElement.getColumnsList().stream()
+                .collect(Collectors.toMap(SequenceColumn::getExternalId, Function.identity()));
+
+        Predicate<SequenceColumn> columnExists = column -> existingColumns.containsKey(column.getExternalId());
+        Predicate<SequenceColumn> valueTypeEquals =
+                column -> column.getValueType().equals(existingColumns.get(column.getExternalId()).getValueType());
+
+        List<Map<String, Object>> columnListUpdate = newElement.getColumnsList().stream()
+                .filter(columnExists)
+                .filter(valueTypeEquals)
+                .map(updateMappingFunction)
+                .collect(Collectors.toList());
+
+        List<SequenceColumn> columnListViolate = newElement.getColumnsList().stream()
+                .filter(columnExists)
+                .filter(valueTypeEquals.negate())
+                .collect(Collectors.toList());
+
+        // If we have column value type violations, report them + throw exception
+        if (columnListViolate.size() > 0) {
+            String columnViolationsTopN = columnListViolate.stream()
+                    .limit(10)
+                    .map(column -> String.format("Column extId: %s, existing value type: %s, new value type: %s.%n",
+                            column.getExternalId(),
+                            existingColumns.get(column.getExternalId()).getValueType(),
+                            column.getValueType()))
+                    .collect(Collectors.joining());
+
+            String message = String.format(logPrefix + "Mismatch between column value types for %d columns. "
+                            + "Columns that are updated cannot change value type. Columns (max 10): %n%s",
+                    columnListViolate.size(),
+                    columnViolationsTopN);
+
+            LOG.error(message);
+            throw new Exception(message);
+        }
+
+        return columnListUpdate;
+    }
+
+    /**
+     * Builds the request delete object for columns that should be removed.
+     *
+     * The columns in the new and existing element are compared. Columns to be deleted will be identified and mapped to a
+     * request delete object form.
+     *
+     * @param newElement The existing {@link SequenceMetadata} element.
+     * @param existingElement The new (target state) {@link SequenceMetadata} element.
+     * @return A list of deleted columns in their request delete format.
+     */
+    private static List<Map<String, Object>> buildDeleteColumnsObject(SequenceMetadata newElement,
+                                                                      SequenceMetadata existingElement) {
+        // Get the id of the new columns. Will be used to identify deleted columns
+        List<String> newColumns = newElement.getColumnsList().stream()
+                .map(SequenceColumn::getExternalId)
+                .collect(Collectors.toList());
+
+        return existingElement.getColumnsList().stream()
+                .filter(column -> !newColumns.contains(column.getExternalId()))
+                .map(column -> ImmutableMap.<String, Object>of("externalId", column.getExternalId()))
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Builds a request insert item object from {@link SequenceMetadata}.
      *
-     * A replace item object replaces an existingTS header object with new values for all provided fields.
+     * A replace item object replaces an existing sequence header object with new values for all provided fields.
      * Fields that are not in the update object are set to null.
+     *
+     * This method will not take the column definition into account. You need to use the
+     * {@link #toRequestReplaceItem(SequenceMetadata, SequenceMetadata)} method to include column definition upsert.
      *
      * @param element
      * @return
@@ -460,12 +723,22 @@ public class SequenceParser {
                 logPrefix + "Element must have externalId or Id in order to be written as an update");
 
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
-        ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
+        ImmutableMap.Builder<String, Object> updateNodeBuilder = toRequestReplaceItemHeaderNodeBuilder(element);
         if (element.hasExternalId()) {
             mapBuilder.put("externalId", element.getExternalId());
         } else {
             mapBuilder.put("id", element.getId());
         }
+
+        mapBuilder.put("update", updateNodeBuilder.build());
+        return mapBuilder.build();
+    }
+
+    /*
+    Builds the shared part (main body payload) of the Sequence replace object. I.e. the non-column parts.
+     */
+    private static ImmutableMap.Builder<String, Object> toRequestReplaceItemHeaderNodeBuilder(SequenceMetadata element) {
+        ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
 
         if (element.hasName()) {
             updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
@@ -495,6 +768,40 @@ public class SequenceParser {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         } else {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("setNull", true));
+        }
+
+        return updateNodeBuilder;
+    }
+
+    /**
+     * Builds a request replace item object from {@link SequenceColumn}.
+     *
+     * @param element
+     * @return
+     */
+    private static ImmutableMap<String, Object> toRequestReplaceItem(SequenceColumn element) {
+        ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
+        ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
+
+        mapBuilder.put("externalId", element.getExternalId());
+
+        if (element.hasName()) {
+            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
+        } else {
+            updateNodeBuilder.put("name", ImmutableMap.of("setNull", true));
+        }
+
+        if (element.hasDescription()) {
+            updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
+        }
+        else {
+            updateNodeBuilder.put("description", ImmutableMap.of("setNull", true));
+        }
+
+        if (element.getMetadataCount() > 0) {
+            updateNodeBuilder.put("metadata", ImmutableMap.of("set", element.getMetadataMap()));
+        } else {
+            updateNodeBuilder.put("metadata", ImmutableMap.of("set", ImmutableMap.<String, String>of()));
         }
 
         mapBuilder.put("update", updateNodeBuilder.build());

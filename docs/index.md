@@ -23,5 +23,11 @@ map directly to the API's definitions.
 - [The Asset resource type. The secret sauce for handling the asset-hierarchy](assets.md)
 - [Relationships, powering the Cognite Data Fusion graph](relationships.md)
 - [Raw, flexible wide-column store](raw.md)
-- [Time series--TBD]
+- [Time series](timeSeries.md)
+- [Sequences, high-performance tabular data structure](sequence.md)
+- [Events](events.md)
+- [Files](files.md)
+- [3D](threeD.md)
 - [Contextualization](contextualization.md)
+- [Data sets, organising your data products](dataSets.md)
+- [Labels, making your data easier to find](labels.md)

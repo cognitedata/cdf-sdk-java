@@ -105,7 +105,7 @@ public class RawParser {
     /**
      * Parses the main proto Struct (Json object equivalent) into a POJO representation.
      */
-    private static Map<String, Object> parseStructToMap(Struct input) {
+    static Map<String, Object> parseStructToMap(Struct input) {
         Map<String, Object> map = new HashMap<>();
         for (Map.Entry<String, Value> entry : input.getFieldsMap().entrySet()) {
             map.put(entry.getKey(), RawParser.parseValueToObject(entry.getValue()));
