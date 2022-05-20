@@ -19,7 +19,13 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type
 
-## [1.15.0-SNAPSHOT]
+## [1.15.0] 2022-05-20
+
+### Added
+
+- Added `Transformations`
+- Added `Transformations Jobs`
+- Added `Transformations Schedules`
 
 ### Fixed
 
@@ -32,12 +38,6 @@ Changes are grouped as follows:
 
 - Experimental: Geo-location attribute to files resource type (Geo-location proto-structure is a subject of future changes) 
 - `Sequences` upsert support including modified column schema. The `upsert` functionality includes both modified `sequences headers`/`SequenceMetadata` and `sequences rows`/`SequenceBody`. For more information, please refer to the documentation: [https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/sequence.md#update-sequences](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/sequence.md#update-sequences) and [https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/sequence.md#insert-rows](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/sequence.md#insert-rows)
-
-### Added
-
-- Added `Transformations`
-- Added `Transformations Jobs`
-- Added `Transformations Schedules`
 
 ### Fixed
 - File binary upload null pointer exception when running on Android devices.
