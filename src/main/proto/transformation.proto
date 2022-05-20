@@ -84,6 +84,21 @@ message Transformation {
     optional bool is_paused = 6;
   }
 
+  message Notification {
+
+    message Subscribe {
+      optional int64 transformation_id = 1;
+      optional string transformation_external_id = 2;
+      optional string destination = 3;
+    }
+
+    optional int64 id = 1;
+    optional int64 created_time = 2;
+    optional int64 last_updated_time = 3;
+    optional int64 transformation_id = 4;
+    optional string destination = 5;
+  }
+
   optional int64 id = 1;
   string name = 2;
   optional string query = 3;
