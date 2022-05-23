@@ -86,7 +86,7 @@ message Transformation {
 
   message Notification {
 
-    message Subscribe {
+    message Subscription {
       optional int64 transformation_id = 1;
       optional string transformation_external_id = 2;
       optional string destination = 3;

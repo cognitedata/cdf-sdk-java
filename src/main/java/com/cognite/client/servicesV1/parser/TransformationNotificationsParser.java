@@ -58,14 +58,14 @@ public class TransformationNotificationsParser {
     }
 
     /**
-     * Builds a request insert item object from {@link Transformation.Notification.Subscribe}.
+     * Builds a request insert item object from {@link Transformation.Notification.Subscription}.
      *
      * An insert item object creates a new Transformation.Notification.Subscribe object in the Cognite system.
      *
      * @param element
      * @return
      */
-    public static Map<String, Object> toRequestInsertItem(Transformation.Notification.Subscribe element) throws Exception {
+    public static Map<String, Object> toRequestInsertItem(Transformation.Notification.Subscription element) throws Exception {
         Preconditions.checkNotNull(element, "Input cannot be null.");
         Preconditions.checkArgument(element.hasTransformationId() || element.hasTransformationExternalId(),
                 "Element must have [transformationId or transformationExternalId] in order to be written");

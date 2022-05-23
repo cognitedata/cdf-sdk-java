@@ -90,7 +90,7 @@ public abstract class TransformationNotifications extends ApiBase {
      * @return
      * @throws Exception
      */
-    public List<Transformation.Notification> subscribe(List<Transformation.Notification.Subscribe> subscribes) throws Exception {
+    public List<Transformation.Notification> subscribe(List<Transformation.Notification.Subscription> subscribes) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter createItemWriter = connector.writeTransformationNotifications();
 
@@ -117,18 +117,17 @@ public abstract class TransformationNotifications extends ApiBase {
 
     /**
      * Delete notifications
-     *
      * @param items The item(s) {@code externalId / id} to delete.
      * @return
      * @throws Exception
      */
-    public Boolean delete(List<Item> items) throws Exception {
+    public List<Item> delete(List<Item> items) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteTransformationNotifications();
 
         DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig());
 
-        return deleteItems.deleteItems(items).isEmpty() ? false : true;
+        return deleteItems.deleteItems(items);
     }
 
     /*
@@ -155,7 +154,7 @@ public abstract class TransformationNotifications extends ApiBase {
         }
     }
 
-    private Map<String, Object> toRequestInsertItem(Transformation.Notification.Subscribe element) {
+    private Map<String, Object> toRequestInsertItem(Transformation.Notification.Subscription element) {
         try {
             return TransformationNotificationsParser.toRequestInsertItem(element);
         } catch (Exception e)  {

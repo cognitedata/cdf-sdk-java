@@ -58,9 +58,9 @@ public class TransformationNotificationsIntegrationTest {
             assertEquals(listToBeCreate.size(), createdList.size());
 
             LOG.info(loggingPrefix + "Start subscribing Notifications Transformations.");
-            List<Transformation.Notification.Subscribe> subscribes = new ArrayList<>();
+            List<Transformation.Notification.Subscription> subscribes = new ArrayList<>();
             for (Transformation transformation : createdList) {
-                subscribes.add(Transformation.Notification.Subscribe.newBuilder()
+                subscribes.add(Transformation.Notification.Subscription.newBuilder()
                         .setDestination(transformation.getOwner().getUser()+"@test.com")
                         .setTransformationId(transformation.getId())
                         .build());
@@ -87,8 +87,10 @@ public class TransformationNotificationsIntegrationTest {
                             .setId(sub.getId())
                             .build())
                     .forEach(item -> deleteNotificationsInput.add(item));
-            Boolean isDeleted = client.transformation().notifications().delete(deleteNotificationsInput);
-            assertTrue(isDeleted);
+            List<Item> deletedItems = client.transformation().notifications().delete(deleteNotificationsInput);
+            assertNotNull(deletedItems);
+            assertTrue(deletedItems.size()>0);
+            deleteNotificationsInput.forEach(toBeDeleted -> assertTrue(deletedItems.contains(toBeDeleted)));
 
             listNotifications.clear();
             itNotifications =
