@@ -38,7 +38,7 @@ public abstract class DefaultResponseParser implements ResponseParser<String>, S
 
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
     protected final ObjectMapper objectMapper = new ObjectMapper();
-    protected final String instanceId = RandomStringUtils.randomAlphanumeric(6);
+    protected final String instanceId = RandomStringUtils.randomAlphanumeric(4);
 
     /**
      * Extract the next cursor from a response body.
@@ -65,7 +65,8 @@ public abstract class DefaultResponseParser implements ResponseParser<String>, S
             LOG.debug(loggingPrefix + "Next cursor found: {}", node.textValue());
             return Optional.of(node.textValue());
         } else {
-            LOG.debug(loggingPrefix + "Next cursor not found in Json payload: \r\n" + json
+            LOG.debug(loggingPrefix + "Next cursor not found in Json payload.");
+            LOG.trace(loggingPrefix + "Json payload: \r\n" + json
                     .substring(0, Math.min(MAX_LENGTH_JSON_LOG, json.length())));
             return Optional.empty();
         }
@@ -95,7 +96,8 @@ public abstract class DefaultResponseParser implements ResponseParser<String>, S
 
         JsonNode node = objectMapper.readTree(json).path("items");
         if (!node.isArray()) {
-            LOG.info(loggingPrefix + "items not found in Json payload: \r\n" + json
+            LOG.info(loggingPrefix + "items not found in Json payload.");
+            LOG.trace(loggingPrefix + "Json payload: \r\n" + json
                     .substring(0, Math.min(MAX_LENGTH_JSON_LOG, json.length())));
             return ImmutableList.of();
         }

@@ -43,7 +43,7 @@ class SecurityCategoriesIntegrationTest {
             LOG.info(loggingPrefix + "Start creating security categories.");
             List<SecurityCategory> createSecurityCategoriesList = DataGenerator.generateSecurityGroups(20);
             client.securityCategories().create(createSecurityCategoriesList);
-            LOG.info(loggingPrefix + "Finished creating labels. Duration: {}",
+            LOG.info(loggingPrefix + "Finished creating security categories. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
 
             Thread.sleep(5000); // wait for eventual consistency

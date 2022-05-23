@@ -6,6 +6,7 @@ import com.google.protobuf.util.Structs;
 import com.google.protobuf.util.Values;
 import org.apache.commons.lang3.RandomStringUtils;
 
+import java.net.URL;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -80,26 +81,32 @@ public class DataGenerator {
     public static List<SequenceMetadata> generateSequenceMetadata(int noObjects) {
         List<SequenceMetadata> objects = new ArrayList<>(noObjects);
         for (int i = 0; i < noObjects; i++) {
-            List<SequenceColumn> columns = new ArrayList<>();
-            int noColumns = ThreadLocalRandom.current().nextInt(2,200);
-            for (int j = 0; j < noColumns; j++) {
-                columns.add(SequenceColumn.newBuilder()
-                        .setExternalId(RandomStringUtils.randomAlphanumeric(50))
-                        .setName("test_column_" + RandomStringUtils.randomAlphanumeric(5))
-                        .setDescription(RandomStringUtils.randomAlphanumeric(50))
-                        .setValueTypeValue(ThreadLocalRandom.current().nextInt(0,2))
-                        .build());
-            }
-
+            int noColumns = ThreadLocalRandom.current().nextInt(2,250);
             objects.add(SequenceMetadata.newBuilder()
                     .setExternalId(RandomStringUtils.randomAlphanumeric(20))
                     .setName("test_sequence_" + RandomStringUtils.randomAlphanumeric(5))
                     .setDescription(RandomStringUtils.randomAlphanumeric(50))
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)
-                    .addAllColumns(columns)
+                    .addAllColumns(generateSequenceColumnHeader(noColumns))
                     .build());
         }
+        return objects;
+    }
+
+    public static List<SequenceColumn> generateSequenceColumnHeader(int noObjects) {
+        List<SequenceColumn> objects = new ArrayList<>();
+        for (int i = 0; i < noObjects; i++) {
+            objects.add(SequenceColumn.newBuilder()
+                    .setExternalId(RandomStringUtils.randomAlphanumeric(50))
+                    .setName("test_column_" + RandomStringUtils.randomAlphanumeric(5))
+                    .setDescription(RandomStringUtils.randomAlphanumeric(50))
+                    .setValueTypeValue(ThreadLocalRandom.current().nextInt(0,2))
+                    .putMetadata("type", DataGenerator.sourceValue)
+                    .putMetadata(sourceKey, DataGenerator.sourceValue)
+                    .build());
+        }
+
         return objects;
     }
 
@@ -409,4 +416,94 @@ public class DataGenerator {
         return objects;
     }
 
+    /**
+     *
+     * @param noObjects
+     * @param dataSetId
+     * @param destinationType 1 = DataSource1, 2 = RawDataSource and 3 = SequenceRowDataSource
+     * @param typeOfCredentials 1 = ApiKey and 2 = OidcCredentials
+     * @return
+     */
+    public static List<Transformation> generateTransformations(Integer noObjects, long dataSetId, String destinationType, int typeOfCredentials) {
+        return generateTransformations(noObjects, dataSetId, destinationType, typeOfCredentials, "ClientId","ClientSecret","https://login.microsoftonline.com/TENENT_ID/oauth2/v2.0/token", "CdfProjectName");
+    }
+
+    /**
+     *
+     * @param noObjects
+     * @param dataSetId
+     * @param destinationType 1 = DataSource1, 2 = RawDataSource and 3 = SequenceRowDataSource
+     * @param typeOfCredentials 1 = ApiKey and 2 = OidcCredentials
+     * @param clientId
+     * @param clientSecret
+     * @param tokenUri
+     * @param cdfProjectName
+     * @return
+     */
+    public static List<Transformation> generateTransformations(Integer noObjects, long dataSetId, String destinationType, int typeOfCredentials, String clientId, String clientSecret, String tokenUri, String cdfProjectName) {
+        List<Transformation> objects = new ArrayList<>(noObjects);
+        for (int i = 0; i < noObjects; i++) {
+            Transformation.Builder builder = Transformation.newBuilder()
+                    .setName("TransformationTestSDK-"+RandomStringUtils.randomAlphanumeric(10))
+                    .setQuery("select * from teste")
+                    .setConflictMode("upsert")
+                    .setIsPublic(true)
+                    .setExternalId("TestSKD-"+RandomStringUtils.randomAlphanumeric(10))
+                    .setIgnoreNullFields(true)
+                    .setDataSetId(dataSetId);
+
+            if ("raw".equals(destinationType)) {
+                builder.setDestination(Transformation.Destination.newBuilder()
+                        .setType("raw")
+                        .setDatabase("Test")
+                        .setTable("Test")
+                        .build());
+            } else if ("sequence_rows".equals(destinationType)) {
+                builder.setDestination(Transformation.Destination.newBuilder()
+                        .setType("sequence_rows")
+                        .setExternalId("Test-sequence_rows")
+                        .build());
+            } else {
+                builder.setDestination(Transformation.Destination.newBuilder()
+                        .setType(Transformation.Destination.DataSourceType.ASSETS.toString())
+                        .build());
+            }
+
+            if (typeOfCredentials == 1) {
+                builder.setSourceApiKey("TesteApiKey");
+                builder.setDestinationApiKey("TesteApiKey");
+            } else if(typeOfCredentials == 2) {
+                builder.setSourceOidcCredentials(Transformation.FlatOidcCredentials.newBuilder()
+                        .setClientId(clientId)
+                        .setClientSecret(clientSecret)
+                        .setScopes("https://greenfield.cognitedata.com/.default")
+                        .setTokenUri(tokenUri.toString())
+                        .setCdfProjectName(cdfProjectName)
+                        .setAudience("")
+                        .build());
+                builder.setDestinationOidcCredentials(Transformation.FlatOidcCredentials.newBuilder()
+                        .setClientId(clientId)
+                        .setClientSecret(clientSecret)
+                        .setScopes("https://greenfield.cognitedata.com/.default")
+                        .setTokenUri(tokenUri.toString())
+                        .setCdfProjectName(cdfProjectName)
+                        .setAudience("")
+                        .build());
+            }
+            objects.add(builder.build());
+        }
+        return objects;
+    }
+
+    public static List<Transformation.Schedule> generateTransformationSchedules(Integer noObjects, String transformationExternalId, String interval, Boolean isPaused) {
+        List<Transformation.Schedule> objects = new ArrayList<>(noObjects);
+        for (int i = 0; i < noObjects; i++) {
+            objects.add(Transformation.Schedule.newBuilder()
+                            .setExternalId(transformationExternalId)
+                            .setInterval(interval)
+                            .setIsPaused(isPaused)
+                    .build());
+        }
+        return objects;
+    }
 }

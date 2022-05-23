@@ -3,6 +3,7 @@ package com.cognite.client;
 import com.cognite.client.config.AuthConfig;
 import com.cognite.client.dto.LoginStatus;
 import com.cognite.client.config.ClientConfig;
+import com.cognite.client.dto.Transformation;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
@@ -525,6 +526,15 @@ public abstract class CogniteClient implements Serializable {
      */
     public ThreeD threeD() {
         return ThreeD.of(this);
+    }
+
+    /**
+     * Returns {@link Transformation} representing Transformation api endpoints.
+     *
+     * @return The Transformation api endpoints.
+     */
+    public Transformations transformation() {
+        return Transformations.of(this);
     }
 
     /**

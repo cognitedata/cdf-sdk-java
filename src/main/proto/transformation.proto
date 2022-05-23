@@ -1,0 +1,107 @@
+syntax = "proto3";
+
+package com.cognite.beam.proto;
+
+option java_package = "com.cognite.client.dto";
+option java_multiple_files = true;
+
+message Transformation {
+
+  message Destination {
+
+    enum DataSourceType {
+      ASSETS = 0;
+      TIMESERIES = 1;
+      ASSET_HIERARCHY = 2;
+      EVENTS = 3;
+      DATAPOINTS = 4;
+      STRING_DATAPOINTS = 5;
+      SEQUENCES = 6;
+      SEQUENCE_ROWS = 7;
+      FILES = 8;
+      LABELS = 9;
+      RELATIONSHIPS = 10;
+      DATA_SETS = 11;
+    }
+
+    optional string type = 2;
+    optional string database = 3;
+    optional string table = 4;
+    string external_id = 5;
+  }
+
+  message FlatOidcCredentials {
+    string client_id = 1;
+    string client_secret = 2;
+    string scopes = 3;
+    string token_uri = 4;
+    string cdf_project_name = 5;
+    string audience = 6;
+  }
+
+  message TransformBlockedInfo {
+    string reason = 1;
+    int64 created_time = 2;
+  }
+
+  message Owner {
+    string user = 1;
+  }
+
+  message Job {
+
+    message Metric {
+      optional int64 timestamp = 1;
+      optional string name = 2;
+      optional int64 count = 3;
+    }
+
+
+    int32 id = 1;
+    string uuid = 2;
+    int32 transformation_id = 3;
+    string transformation_external_id = 4;
+    string source_project = 5;
+    string destination_project = 6;
+    optional Destination destination = 7;
+    string conflict_mode = 8;
+    string query = 9;
+    optional int64 created_time = 10;
+    optional int64 started_time = 11;
+    optional int64 finished_time = 12;
+    optional int64 last_seen_time = 13;
+    optional string error = 14;
+    bool ignore_null_fields = 15;
+    string status = 16;
+  }
+
+  message Schedule {
+    optional int32 id = 1;
+    optional string external_id = 2;
+    optional int64 created_time = 3;
+    optional int64 last_updated_time = 4;
+    optional string interval = 5;
+    optional bool is_paused = 6;
+  }
+
+  optional int64 id = 1;
+  string name = 2;
+  optional string query = 3;
+  optional Destination destination = 4;
+  optional string conflict_mode = 5;
+  optional bool is_public = 6;
+  optional string source_api_key = 7;
+  optional string destination_api_key = 8;
+  optional FlatOidcCredentials source_oidc_credentials = 9;
+  optional FlatOidcCredentials destination_oidc_credentials = 10;
+  string external_id = 11;
+  bool ignore_null_fields = 12;
+  optional int64 data_set_id = 13;
+  optional TransformBlockedInfo blocked = 14;
+  optional int64 created_time = 15;
+  optional int64 last_updated_time = 16;
+  optional Owner owner = 17;
+  optional Job last_finished_job = 18;
+  optional Job running_job = 19;
+  optional Schedule schedule = 20;
+}

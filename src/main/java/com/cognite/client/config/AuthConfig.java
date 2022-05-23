@@ -21,6 +21,13 @@ import com.google.auto.value.AutoValue;
 import javax.annotation.Nullable;
 import java.io.Serializable;
 
+/**
+ * Class representing the Cognite Data Fusion (CDF) project information:
+ * - Host. The default host is {@code https://api.cognitedata.com}.
+ * - Project. This is the name of a specific, isolated CDF environment.
+ *
+ * This information is used to uniquely identify which Cognite Data Fusion project/environment to connect with.
+ */
 @AutoValue
 public abstract class AuthConfig implements Serializable {
   private final static String DEFAULT_HOST = "https://api.cognitedata.com";
@@ -40,20 +47,26 @@ public abstract class AuthConfig implements Serializable {
   public abstract AuthConfig.Builder toBuilder();
 
   /**
-   * Returns a new {@link AuthConfig} that represents the specified host.
-   * @param value The project id interact with.
+   * Configure a specific Cognite Data Fusion host.
+   *
+   * This is relevant configuration for users of dedicated clusters or with custom routing configurations.
+   *
+   * The default host is {@code https://api.cognitedata.com}.
+   *
+   * @param host The CDF host to connect to.
    */
-  public AuthConfig withHost(String value) {
-    return toBuilder().setHost(value).build();
+  public AuthConfig withHost(String host) {
+    return toBuilder().setHost(host).build();
   }
 
 
   /**
-   * Returns a new {@link AuthConfig} that represents the specified project.
-   * @param value The project id interact with.
+   * Set the Cognite Data Fusion project (environment) to connect with.
+   *
+   * @param project The project id to interact with.
    */
-  public AuthConfig withProject(String value) {
-    return toBuilder().setProject(value).build();
+  public AuthConfig withProject(String project) {
+    return toBuilder().setProject(project).build();
   }
 
   @Override
