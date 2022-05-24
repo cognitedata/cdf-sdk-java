@@ -7,3 +7,4 @@ target/
 .factorypath
 *.iml
 /dependency-reduced-pom.xml
+/docs/build/
