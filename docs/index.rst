@@ -19,26 +19,6 @@ To install this package:
 
    pip install cognite-sdk
 
-To upgrade the version of this package:
-
-.. code-block:: bash
-
-   pip install cognite-sdk --upgrade
-
-To install this package without the pandas and NumPy support:
-
-.. code-block:: bash
-
-   pip install cognite-sdk-core
-
-To install with pandas, geopandas and shapely support (equivalent to installing `cognite-sdk`).
-However, this gives you the option to only have pandas (and NumPy) support without geopandas.
-
-.. code-block:: bash
-
-   pip install cognite-sdk-core[pandas, geo]
-
-
 Contents
 ^^^^^^^^
 .. cognite here is cognite.rst which has the tree and it is mapped
