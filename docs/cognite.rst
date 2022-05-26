@@ -177,76 +177,6 @@ You can use the same pattern to retrieve all time series or files related to a s
     >>> related_files = subtree.files()
     >>> related_time_series = subtree.time_series()
 
-Settings
-========
-Client configuration
---------------------
-You can pass configuration arguments directly to the :code:`CogniteClient` constructor, for example to configure the base url of your requests and additional headers. For a list of all configuration arguments, see the `CogniteClient`_ class definition.
-
-Environment configuration
--------------------------
-You can set default configurations with these environment variables:
-
-.. code:: bash
-
-    # Can be overrided by Client Configuration
-    $ export COGNITE_API_KEY = <your-api-key>
-    $ export COGNITE_PROJECT = <your-default-project>
-    $ export COGNITE_BASE_URL = http://<host>:<port>
-    $ export COGNITE_CLIENT_NAME = <user-defined-client-or-app-name>
-    $ export COGNITE_MAX_WORKERS = <number-of-workers>
-    $ export COGNITE_TIMEOUT = <num-of-seconds>
-    $ export COGNITE_FILE_TRANSFER_TIMEOUT = <num-of-seconds>
-
-    # Global Configuration
-    $ export COGNITE_DISABLE_PYPI_VERSION_CHECK = "0"
-    $ export COGNITE_DISABLE_GZIP = "0"
-    $ export COGNITE_DISABLE_SSL = "0"
-    $ export COGNITE_MAX_RETRIES = <number-of-retries>
-    $ export COGNITE_MAX_RETRY_BACKOFF = <number-of-seconds>
-    $ export COGNITE_MAX_CONNECTION_POOL_SIZE = <number-of-connections-in-pool>
-    $ export COGNITE_STATUS_FORCELIST = "429,502,503"
-
-Concurrency and connection pooling
-----------------------------------
-This library does not expose API limits to the user. If your request exceeds API limits, the SDK splits your
-request into chunks and performs the sub-requests in parallel. To control how many concurrent requests you send
-to the API, you can either pass the :code:`max_workers` attribute when you instantiate the :code:`CogniteClient` or set the :code:`COGNITE_MAX_WORKERS` environment variable.
-
-If you are working with multiple instances of :code:`CogniteClient`, all instances will share the same connection pool.
-If you have several instances, you can increase the max connection pool size to reuse connections if you are performing a large amount of concurrent requests. You can increase the max connection pool size by setting the :code:`COGNITE_MAX_CONNECTION_POOL_SIZE` environment variable.
-
-Extensions and core library
-============================
-Pandas integration
-------------------
-The SDK is tightly integrated with the `pandas <https://pandas.pydata.org/pandas-docs/stable/>`_ library.
-You can use the :code:`.to_pandas()` method on pretty much any object and get a pandas data frame describing the data.
-
-This is particularly useful when you are working with time series data and with tabular data from the Raw API.
-
-Matplotlib integration
-----------------------
-You can use the :code:`.plot()` method on any time series or data points result that the SDK returns. The method takes keyword
-arguments which are passed on to the underlying matplotlib plot function, allowing you to configure for example the
-size and layout of your plots.
-
-You need to install the matplotlib package manually:
-
-.. code:: bash
-
-    $ pip install matplotlib
-
-:code:`cognite-sdk` vs. :code:`cognite-sdk-core`
-------------------------------------------------
-If your application doesn't require the functionality from the :code:`pandas`
-or :code:`numpy` dependencies, you should install the :code:`cognite-sdk-core` library.
-
-The two libraries are exactly the same, except that :code:`cognite-sdk-core` does not specify :code:`pandas`
-or :code:`numpy` as dependencies. This means that :code:`cognite-sdk-core` only has a subset
-of the features available through the :code:`cognite-sdk` package. If you attempt to use functionality
-that :code:`cognite-sdk-core` does not support, a :code:`CogniteImportError` is raised.
-
 API
 ===
 CogniteClient
@@ -276,33 +206,12 @@ Retrieve an asset by id
 ^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: cognite.client._api.assets.AssetsAPI.retrieve
 
-Retrieve multiple assets by id
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: cognite.client._api.assets.AssetsAPI.retrieve_multiple
-
-Retrieve an asset subtree
-^^^^^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: cognite.client._api.assets.AssetsAPI.retrieve_subtree
-
-List assets
-^^^^^^^^^^^
-.. automethod:: cognite.client._api.assets.AssetsAPI.list
-
-Aggregate assets
 ^^^^^^^^^^^^^^^^
 .. automethod:: cognite.client._api.assets.AssetsAPI.aggregate
 
 Search for assets
 ^^^^^^^^^^^^^^^^^
 .. automethod:: cognite.client._api.assets.AssetsAPI.search
-
-Create assets
-^^^^^^^^^^^^^
-.. automethod:: cognite.client._api.assets.AssetsAPI.create
-
-Create asset hierarchy
-^^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: cognite.client._api.assets.AssetsAPI.create_hierarchy
 
 Delete assets
 ^^^^^^^^^^^^^
@@ -311,14 +220,3 @@ Delete assets
 Update assets
 ^^^^^^^^^^^^^
 .. automethod:: cognite.client._api.assets.AssetsAPI.update
-
-Data classes
-^^^^^^^^^^^^
-.. automodule:: cognite.client.data_classes.assets
-    :members:
-    :show-inheritance:
-
-Experimental features
-=====================
-.. WARNING::
-    These features are subject to breaking changes and should not be used in production code.

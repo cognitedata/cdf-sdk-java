@@ -25,4 +25,3 @@ Contents
 
 .. toctree::
    cognite
-   harish
