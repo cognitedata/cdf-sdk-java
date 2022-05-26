@@ -17,6 +17,7 @@
 package com.cognite.client.util.geo;
 
 import com.cognite.client.dto.geo.Point;
+import com.google.common.base.Preconditions;
 
 /**
  * Helper class for working with {@link Point} objects.
@@ -30,7 +31,7 @@ public class Points {
      *
      * @param lon The longitude decimal degrees value of the point.
      * @param lat The latitude decimal degrees value of the point.
-     * @return The {@link Point} representing the geo location.
+     * @return The {@link Point} representing the geolocation.
      */
     public static Point of(double lon, double lat) {
         return Point.newBuilder()
@@ -40,7 +41,7 @@ public class Points {
     }
 
     /**
-     * Create a {@link Point} object based on longitude (easting) and latitude (northing) coordinates.
+     * Create a {@link Point} object based on longitude (easting), latitude (northing) and elevation coordinates.
      *
      * The coordinate datum is World Geodetic System 1984 (WGS 84), with longitude and latitude units of decimal degrees.
      * The elevation is expressed in height in meters above or below the WGS 84 reference ellipsoid.
@@ -48,7 +49,7 @@ public class Points {
      * @param lon The longitude decimal degrees value of the point.
      * @param lat The latitude decimal degrees value of the point.
      * @param elevation The elevation in meters.
-     * @return The {@link Point} representing the geo location.
+     * @return The {@link Point} representing the geolocation.
      */
     public static Point of(double lon, double lat, double elevation) {
         return Point.newBuilder()
@@ -56,5 +57,28 @@ public class Points {
                 .setLat(lat)
                 .setElev(elevation)
                 .build();
+    }
+
+    /**
+     * Create a {@link Point} object based on longitude (easting), latitude (northing) and (optional) elevation coordinates.
+     *
+     * The coordinate datum is World Geodetic System 1984 (WGS 84), with longitude and latitude units of decimal degrees.
+     * The elevation is expressed in height in meters above or below the WGS 84 reference ellipsoid.
+     *
+     * The input arguments must be supplied in the order of longitude (1st), latitude (2nd) and elevation (3rd). The
+     * elevation component is optional. I.e. you must supply minimum 2 input arguments.
+     *
+     * @param coordinates The long, lat and (optional) elevation of the point.
+     * @return The {@link Point} representing the geolocation.
+     */
+    public static Point of(double[] coordinates) throws Exception {
+        Preconditions.checkState(coordinates.length > 1,
+                String.format("Each point entry must contain minimum 2 coordinates. Invalid entry: %s", coordinates));
+
+        if (coordinates.length > 2) {
+            return of(coordinates[0], coordinates[1], coordinates[2]);
+        } else {
+            return of(coordinates[0], coordinates[1]);
+        }
     }
 }
