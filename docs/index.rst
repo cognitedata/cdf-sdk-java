@@ -41,9 +41,6 @@ However, this gives you the option to only have pandas (and NumPy) support witho
 
 Contents
 ^^^^^^^^
+.. cognite here is cognite.rst which has the tree and it is mapped from here
 .. toctree::
    cognite
-
-Examples
-^^^^^^^^
-For a collection of scripts and Jupyter Notebooks that explain how to perform various tasks in Cognite Data Fusion (CDF) using Python, see the GitHub repository `here <https://github.com/  cognitedata/cognite-python-docs>`__.
