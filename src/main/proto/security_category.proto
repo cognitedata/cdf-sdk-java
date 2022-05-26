@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package com.cognite.beam.proto;
+package com.cognite.client.dto;
 
 option java_package = "com.cognite.client.dto";
 option java_multiple_files = true;

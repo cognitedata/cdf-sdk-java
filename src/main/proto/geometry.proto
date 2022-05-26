@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package com.cognite.beam.proto;
+package com.cognite.client.dto.geo;
 
 import "google/protobuf/struct.proto";
 
-option java_package = "com.cognite.client.dto";
+option java_package = "com.cognite.client.dto.geo";
 option java_multiple_files = true;
 
 /*
