@@ -464,9 +464,9 @@ Download a single file to a specific path
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: cognite.client._api.files.FilesAPI.download_to_path
 
-ApiBase
+Assets List Java
 ^^^^^^^^^^^^^^^^^^^^^^^^
-.. automethod:: src.main.java.com.cognite.client.ApiBase.buildPartitionsList
+.. automethod:: src.main.java.com.cognite.client.Assets.list
 
 
 Experimental features
