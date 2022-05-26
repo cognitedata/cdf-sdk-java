@@ -19,13 +19,19 @@ Changes are grouped as follows:
 
 - Geo-location attribute and resource type
 
+## [1.16.0-SNAPSHOT]
+
+### Added
+
+- Added `Transformation Notifications`
+
 ## [1.15.0] 2022-05-20
 
 ### Added
 
 - Added `Transformations`
-- Added `Transformations Jobs`
-- Added `Transformations Schedules`
+- Added `Transformation Jobs`
+- Added `Transformation Schedules`
 
 ### Fixed
 

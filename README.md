@@ -62,6 +62,9 @@ information ([https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.m
 
 #### TRANSFORMATIONS
 - Transformations
+- Transformation Jobs
+- Transformation Schedules
+- Transformation Notifications
 
 ## Quickstart
 ```java

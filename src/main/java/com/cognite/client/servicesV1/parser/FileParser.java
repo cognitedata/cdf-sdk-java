@@ -340,7 +340,7 @@ public class FileParser {
                 "Point", "MultiPoint", "Polygon", "MultiPolygon", "LineString", "MultiLineString"
         );
         root.put("type", names.get(geometry.getCoordinatesCase().getNumber() - 1));
-        final HashMap<Integer, Function<GeoLocationGeometry, String>> serializers = new HashMap<>();
+        final HashMap<Integer, Function<GeoLocationGeometry, Collection>> serializers = new HashMap<>();
         serializers.put(1, g -> serialize(g.getCoordinatesPoint()));
         serializers.put(2, g -> serialize(g.getCoordinatesMultiPoint()));
         serializers.put(3, g -> serialize(g.getCoordinatesPolygon()));
@@ -351,34 +351,28 @@ public class FileParser {
         return root;
     }
 
-    private static String serialize(PointCoordinates points) {
-        return String.format("[%s]",
-                points.getCoordinatesList().stream().map(Object::toString).collect(Collectors.joining(",")));
+    private static Collection<Double> serialize(PointCoordinates points) {
+        return points.getCoordinatesList();
     }
 
-    private static String serialize(MultiPointCoordinates points) {
-        return String.format("[%s]",
-                points.getCoordinatesList().stream().map(FileParser::serialize).collect(Collectors.joining(",")));
+    private static Collection<Collection<Double>> serialize(MultiPointCoordinates points) {
+        return points.getCoordinatesList().stream().map(FileParser::serialize).collect(Collectors.toList());
     }
 
-    private static String serialize(PolygonCoordinates polygon) {
-        return String.format("[%s]",
-                polygon.getCoordinatesList().stream().map(FileParser::serialize).collect(Collectors.joining(",")));
+    private static Collection<Collection<Collection<Double>>> serialize(PolygonCoordinates polygon) {
+        return polygon.getCoordinatesList().stream().map(FileParser::serialize).collect(Collectors.toList());
     }
 
-    private static String serialize(MultiPolygonCoordinates polygon) {
-        return String.format("[%s]",
-                polygon.getCoordinatesList().stream().map(FileParser::serialize).collect(Collectors.joining(",")));
+    private static Collection<Collection<Collection<Collection<Double>>>> serialize(MultiPolygonCoordinates polygon) {
+        return polygon.getCoordinatesList().stream().map(FileParser::serialize).collect(Collectors.toList());
     }
 
-    private static String serialize(LineCoordinates line) {
-        return String.format("[%s]",
-                line.getCoordinatesList().stream().map(FileParser::serialize).collect(Collectors.joining(",")));
+    private static Collection<Collection<Double>> serialize(LineCoordinates line) {
+        return line.getCoordinatesList().stream().map(FileParser::serialize).collect(Collectors.toList());
     }
 
-    private static String serialize(MultiLineCoordinates multiline) {
-        return String.format("[%s]",
-                multiline.getCoordinatesList().stream().map(FileParser::serialize).collect(Collectors.joining(",")));
+    private static Collection<Collection<Collection<Double>>> serialize(MultiLineCoordinates multiline) {
+        return multiline.getCoordinatesList().stream().map(FileParser::serialize).collect(Collectors.toList());
     }
 
     /**

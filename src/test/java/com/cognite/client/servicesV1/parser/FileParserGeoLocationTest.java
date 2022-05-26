@@ -4,11 +4,13 @@ import com.cognite.client.dto.*;
 import com.google.common.collect.ImmutableList;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
-import static com.cognite.client.servicesV1.parser.FileParser.getGeoLocationJson;
-import static com.cognite.client.servicesV1.parser.FileParser.parseFileMetadata;
+import static com.cognite.client.servicesV1.parser.FileParser.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
 class FileParserGeoLocationTest {
@@ -45,7 +47,7 @@ class FileParserGeoLocationTest {
         final Map<String, Object> map = getGeoLocationJson(defaultInstance);
         assertEquals("Feature", map.get("type"));
         assertEquals("Point", ((Map<String, Object>) map.get("geometry")).get("type"));
-        assertEquals("[0.5,0.3]", ((Map<String, Object>) map.get("geometry")).get("coordinates"));
+        assertEquals(List.of(0.5, 0.3), ((Map<String, Collection>) map.get("geometry")).get("coordinates"));
     }
 
     @Test
@@ -59,7 +61,7 @@ class FileParserGeoLocationTest {
         final Map<String, Object> map = getGeoLocationJson(defaultInstance);
         assertEquals("Feature", map.get("type"));
         assertEquals("MultiPoint", ((Map<String, Object>) map.get("geometry")).get("type"));
-        assertEquals("[[0.5,0.3],[0.3,0.5]]", ((Map<String, Object>) map.get("geometry")).get("coordinates"));
+        assertEquals(List.of(List.of(0.5, 0.3),List.of(0.3, 0.5)), ((Map<String, Collection>) map.get("geometry")).get("coordinates"));
     }
 
     @Test
@@ -73,7 +75,10 @@ class FileParserGeoLocationTest {
         final Map<String, Object> map = getGeoLocationJson(defaultInstance);
         assertEquals("Feature", map.get("type"));
         assertEquals("MultiPolygon", ((Map<String, Object>) map.get("geometry")).get("type"));
-        assertEquals("[[[[0.5,0.3],[0.3,0.5]],[[0.5,0.3],[0.3,0.5]]],[[[0.5,0.3],[0.3,0.5]],[[0.5,0.3],[0.3,0.5]]]]", ((Map<String, Object>) map.get("geometry")).get("coordinates"));
+        final List<Double> l = List.of(0.5, 0.3);
+        final List<Double> r = List.of(0.3, 0.5);
+        final List<List<Double>> combo = List.of(l, r);
+        assertEquals(List.of(List.of(combo, combo), List.of(combo, combo)), ((Map<String, Object>) map.get("geometry")).get("coordinates"));
     }
 
     @Test
@@ -120,6 +125,8 @@ class FileParserGeoLocationTest {
         FileMetadata f = parseFileMetadata(fileMetadata);
         assertEquals("Feature", f.getGeoLocation().getType());
         assertEquals(2, f.getGeoLocation().getGeometry().getCoordinatesMultiPolygon().getCoordinatesCount());
+        final Map<String, Object> stringObjectMap = toRequestUpdateItem(f);
+        assertNotNull(stringObjectMap);
     }
 
 }
