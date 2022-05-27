@@ -15,13 +15,12 @@ Installation
 ^^^^^^^^^^^^
 To install this package:
 
-.. code-block:: bash
+.. java:type:: public interface List<E> extends Collection<E>, Iterable<E>
 
    pip install cognite-sdk
 
 Contents
 ^^^^^^^^
-.. cognite here is cognite.rst which has the tree and it is mapped
 
 .. toctree::
    cognite
