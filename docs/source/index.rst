@@ -7,13 +7,15 @@ Welcome to cdf-sdk-java's documentation!
 ========================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Contents:
 
 Contents
 ^^^^^^^^
 .. toctree::
    cognite
+
+#.. include:: ../assets.md
 
 Indices and tables
 ==================
