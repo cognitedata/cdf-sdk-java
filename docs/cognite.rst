@@ -35,5 +35,4 @@ Retrieve an asset by id
 ^^^^^^^^^^^^^^^^^^^^^^^
 .. automethod:: cognite.client._api.assets.AssetsAPI.retrieve
 
-^^^^^^^^^^^^^^^^
 
