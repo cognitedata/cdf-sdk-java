@@ -17,6 +17,7 @@
 package com.cognite.client.servicesV1.parser;
 
 import com.cognite.client.dto.geo.*;
+import com.cognite.client.util.geo.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -109,13 +110,43 @@ public class GeoParser {
             throw new Exception(message);
         }
 
+        String coordinatesPath = "coordinates";
         if (root.path("geometry").isObject()
                 && root.path("geometry").path("type").isTextual()
-                && root.path("geometry").path("coordinates").isArray()) {
+                && root.path("geometry").path(coordinatesPath).isArray()) {
+
             JsonNode geometry = root.path("geometry");
             String type = geometry.path("type").textValue();
-
-
+            switch (type) {
+                case "Point":
+                    featureBuilder.setGeometry(Geometries.of(
+                            Points.of(objectMapper.treeToValue(geometry.path(coordinatesPath), double[].class))));
+                    break;
+                case "LineString":
+                    featureBuilder.setGeometry(Geometries.of(
+                            LineStrings.of(objectMapper.treeToValue(geometry.path(coordinatesPath), double[][].class))));
+                    break;
+                case "Polygon":
+                    featureBuilder.setGeometry(Geometries.of(
+                            Polygons.of(objectMapper.treeToValue(geometry.path(coordinatesPath), double[][][].class))));
+                    break;
+                case "MultiPoint":
+                    featureBuilder.setGeometry(Geometries.of(
+                            MultiPoints.of(objectMapper.treeToValue(geometry.path(coordinatesPath), double[][].class))));
+                    break;
+                case "MultiLineString":
+                    featureBuilder.setGeometry(Geometries.of(
+                            MultiLineStrings.of(objectMapper.treeToValue(geometry.path(coordinatesPath), double[][][].class))));
+                    break;
+                case "MultiPolygon":
+                    featureBuilder.setGeometry(Geometries.of(
+                            MultiPolygons.of(objectMapper.treeToValue(geometry.path(coordinatesPath), double[][][][].class))));
+                    break;
+                default:
+                    throw new Exception(String.format(logPrefix + "Invalid geometry type: %s.%n Json excerpt: %s",
+                            type,
+                            logItemExcerpt));
+            }
         } else {
             String message = String.format(logPrefix + "Unable to parse attribute: geometry. Item excerpt: %n%s",
                     logItemExcerpt);
