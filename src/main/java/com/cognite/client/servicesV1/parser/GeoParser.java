@@ -20,15 +20,11 @@ import com.cognite.client.dto.geo.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Struct;
 import com.google.protobuf.util.JsonFormat;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.cognite.client.servicesV1.ConnectorConstants.MAX_LOG_ELEMENT_LENGTH;
 
@@ -54,9 +50,42 @@ public class GeoParser {
         // Fixed string that always accompanies a Feature
         mapBuilder.put("type", "Feature");
 
-        if (element.hasGeometry()) {
+        if (element.hasGeometry()
+                && element.getGeometry().getGeometryTypeCase() != Geometry.GeometryTypeCase.GEOMETRYTYPE_NOT_SET) {
+            Map<String, Object> geoMap = new HashMap<>();
+            String geometryTypeKey = "type";
+            String geometryCoordinatesKey = "coordinates";
             Geometry geometry = element.getGeometry();
-
+            switch (geometry.getGeometryTypeCase()) {
+                case POINT:
+                    geoMap.put(geometryTypeKey, "Point");
+                    geoMap.put(geometryCoordinatesKey, parseCoordinates(geometry.getPoint()));
+                    break;
+                case LINE_STRING:
+                    geoMap.put(geometryTypeKey, "LineString");
+                    geoMap.put(geometryCoordinatesKey, parseCoordinates(geometry.getLineString()));
+                    break;
+                case POLYGON:
+                    geoMap.put(geometryTypeKey, "Polygon");
+                    geoMap.put(geometryCoordinatesKey, parseCoordinates(geometry.getPolygon()));
+                    break;
+                case MULTI_POINT:
+                    geoMap.put(geometryTypeKey, "MultiPoint");
+                    geoMap.put(geometryCoordinatesKey, parseCoordinates(geometry.getMultiPoint()));
+                    break;
+                case MULTI_LINE_STRING:
+                    geoMap.put(geometryTypeKey, "MultiLineString");
+                    geoMap.put(geometryCoordinatesKey, parseCoordinates(geometry.getMultiLineString()));
+                    break;
+                case MULTI_POLYGON:
+                    geoMap.put(geometryTypeKey, "MultiPolygon");
+                    geoMap.put(geometryCoordinatesKey, parseCoordinates(geometry.getMultiPolygon()));
+                    break;
+            }
+            mapBuilder.put("geometry", geoMap);
+        } else {
+            // GeoJson specifies that the geometry attribute must be explicitly set to null if it is unallocated.
+            mapBuilder.put("geometry", null);
         }
 
         if (element.hasProperties()) {
@@ -71,8 +100,27 @@ public class GeoParser {
         String logItemExcerpt = geoJson.substring(0, Math.min(geoJson.length() - 1, MAX_LOG_ELEMENT_LENGTH));
 
         JsonNode root = objectMapper.readTree(geoJson);
-
         Feature.Builder featureBuilder = Feature.newBuilder();
+
+        // The Json object must contain an attribute "type" with the value "Feature"
+        if (!(root.path("type").isTextual() && root.path("type").textValue().equals("Feature"))) {
+            String message = String.format(logPrefix + "Unable to parse attribute: type. Item excerpt: %n%s",
+                    logItemExcerpt);
+            throw new Exception(message);
+        }
+
+        if (root.path("geometry").isObject()
+                && root.path("geometry").path("type").isTextual()
+                && root.path("geometry").path("coordinates").isArray()) {
+            JsonNode geometry = root.path("geometry");
+            String type = geometry.path("type").textValue();
+
+
+        } else {
+            String message = String.format(logPrefix + "Unable to parse attribute: geometry. Item excerpt: %n%s",
+                    logItemExcerpt);
+            throw new Exception(message);
+        }
 
         if (root.path("properties").isObject()) {
             Struct.Builder structBuilder = Struct.newBuilder();
