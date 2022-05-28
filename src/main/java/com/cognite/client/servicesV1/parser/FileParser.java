@@ -146,116 +146,10 @@ public class FileParser {
         }
 
         if (root.path("geoLocation").isObject()) {
-            final JsonNode locationNode = root.path("geoLocation");
-            final GeoLocation.Builder geoLocationBuilder = GeoLocation.newBuilder();
-            geoLocationBuilder.setType(locationNode.path("type").textValue());
-
-            if (locationNode.path("properties").isObject()) {
-                Struct.Builder structBuilder = Struct.newBuilder();
-                JsonFormat.parser()
-                        .merge(objectMapper.writeValueAsString(locationNode.get("properties")), structBuilder);
-                geoLocationBuilder.setProperties(structBuilder.build());
-            }
-            if (locationNode.path("geometry").isObject()) {
-                Preconditions.checkNotNull(locationNode.path("geometry").path("type"));
-                Preconditions.checkArgument(locationNode.path("geometry").path("type").isTextual());
-
-                final HashMap<String, Function<JsonNode, GeoLocationGeometry>> functionHashMap = new HashMap<>();
-                functionHashMap.put("Point", node -> GeoLocationGeometry.newBuilder()
-                        .setCoordinatesPoint(getPointCoordinates(node.path("coordinates")))
-                        .build()
-                );
-
-                functionHashMap.put("MultiPoint", node -> GeoLocationGeometry.newBuilder()
-                        .setCoordinatesMultiPoint(getMultiPointCoordinates(node.path("coordinates")))
-                        .build()
-                );
-
-                functionHashMap.put("Polygon", node -> GeoLocationGeometry.newBuilder()
-                        .setCoordinatesPolygon(getPolygonCoordinates(node.path("coordinates")))
-                        .build()
-                );
-
-                functionHashMap.put("MultiPolygon", node -> GeoLocationGeometry.newBuilder()
-                        .setCoordinatesMultiPolygon(getMultiPolygonCoordinates(node.path("coordinates")))
-                        .build()
-                );
-
-                functionHashMap.put("LineString", node -> GeoLocationGeometry.newBuilder()
-                        .setCoordinatesLineString(getLineCoordinates(node.path("coordinates")))
-                        .build()
-                );
-
-                functionHashMap.put("MultiLineString", node -> GeoLocationGeometry.newBuilder()
-                        .setCoordinatesMultiLine(getMultiLineCoordinates(node.path("coordinates")))
-                        .build()
-                );
-
-                geoLocationBuilder.setGeometry(
-                        functionHashMap
-                                .getOrDefault(locationNode.path("geometry").path("type").textValue(),
-                                        node -> {
-                                            // we should not be here, but who knows...
-                                            throw new IllegalStateException("JSON has unknown type: " + node.path("type").textValue());
-                                        })
-                                .apply(locationNode.path("geometry")));
-            } else {
-                throw new IllegalStateException("FileMetadata: geometry property is required inside geoLocation");
-            }
-            fileMetaBuilder.setGeoLocation(geoLocationBuilder.build());
+            fileMetaBuilder.setGeoLocation(GeoParser.parseFeature(root.path("geoLocation").toString()));
         }
 
         return fileMetaBuilder.build();
-    }
-
-    private static PointCoordinates getPointCoordinates(JsonNode node) {
-        final PointCoordinates.Builder coordinatesBuilder = PointCoordinates.newBuilder();
-        for (JsonNode n : node) {
-            if (n.isIntegralNumber()) {
-                coordinatesBuilder.addCoordinates(n.doubleValue());
-            }
-        }
-        return coordinatesBuilder.build();
-    }
-
-    private static MultiPointCoordinates getMultiPointCoordinates(JsonNode node) {
-        final MultiPointCoordinates.Builder coordinatesBuilder = MultiPointCoordinates.newBuilder();
-        for (JsonNode n : node) {
-            coordinatesBuilder.addCoordinates(getPointCoordinates(n));
-        }
-        return coordinatesBuilder.build();
-    }
-
-    private static PolygonCoordinates getPolygonCoordinates(JsonNode node) {
-        final PolygonCoordinates.Builder coordinatesBuilder = PolygonCoordinates.newBuilder();
-        for (JsonNode n : node) {
-            coordinatesBuilder.addCoordinates(getMultiPointCoordinates(n));
-        }
-        return coordinatesBuilder.build();
-    }
-
-    private static MultiPolygonCoordinates getMultiPolygonCoordinates(JsonNode node) {
-        final MultiPolygonCoordinates.Builder coordinatesBuilder = MultiPolygonCoordinates.newBuilder();
-        for (JsonNode n : node) {
-            coordinatesBuilder.addCoordinates(getPolygonCoordinates(n));
-        }
-        return coordinatesBuilder.build();
-    }
-
-    private static LineCoordinates getLineCoordinates(JsonNode node) {
-        final LineCoordinates.Builder coordinatesBuilder = LineCoordinates.newBuilder();
-        for (JsonNode n : node) {
-            coordinatesBuilder.addCoordinates(getPointCoordinates(n));
-        }
-        return coordinatesBuilder.build();
-    }
-
-    private static MultiLineCoordinates getMultiLineCoordinates(JsonNode node) {
-        final MultiLineCoordinates.Builder coordinatesBuilder = MultiLineCoordinates.newBuilder();
-        for (JsonNode n : node) {
-            coordinatesBuilder.addCoordinates(getLineCoordinates(n));
-        }
-        return coordinatesBuilder.build();
     }
 
     /**
@@ -317,62 +211,10 @@ public class FileParser {
             mapBuilder.put("labels", labels);
         }
         if (element.hasGeoLocation()) {
-            mapBuilder.put("geoLocation", getGeoLocationJson(element.getGeoLocation()));
+            mapBuilder.put("geoLocation", GeoParser.parseFeatureToMap(element.getGeoLocation()));
         }
 
         return mapBuilder.build();
-    }
-
-    static Map<String, Object> getGeoLocationJson(GeoLocation location) {
-        final HashMap<String, Object> geoLocation = new HashMap<>();
-        geoLocation.put("type", location.getType());
-        geoLocation.put("geometry", getGeometry(location.getGeometry()));
-        if (location.hasProperties()) {
-            geoLocation.put("properties", RawParser.parseStructToMap(location.getProperties()));
-        }
-        return geoLocation;
-    }
-
-    private static Map<String, Object> getGeometry(GeoLocationGeometry geometry) {
-        final HashMap<String, Object> root = new HashMap<>();
-        // List referencing order of protobuf definition
-        final List<String> names = List.of(
-                "Point", "MultiPoint", "Polygon", "MultiPolygon", "LineString", "MultiLineString"
-        );
-        root.put("type", names.get(geometry.getCoordinatesCase().getNumber() - 1));
-        final HashMap<Integer, Function<GeoLocationGeometry, Collection>> serializers = new HashMap<>();
-        serializers.put(1, g -> serialize(g.getCoordinatesPoint()));
-        serializers.put(2, g -> serialize(g.getCoordinatesMultiPoint()));
-        serializers.put(3, g -> serialize(g.getCoordinatesPolygon()));
-        serializers.put(4, g -> serialize(g.getCoordinatesMultiPolygon()));
-        serializers.put(5, g -> serialize(g.getCoordinatesLineString()));
-        serializers.put(6, g -> serialize(g.getCoordinatesMultiLine()));
-        root.put("coordinates", serializers.get(geometry.getCoordinatesCase().getNumber()).apply(geometry));
-        return root;
-    }
-
-    private static Collection<Double> serialize(PointCoordinates points) {
-        return points.getCoordinatesList();
-    }
-
-    private static Collection<Collection<Double>> serialize(MultiPointCoordinates points) {
-        return points.getCoordinatesList().stream().map(FileParser::serialize).collect(Collectors.toList());
-    }
-
-    private static Collection<Collection<Collection<Double>>> serialize(PolygonCoordinates polygon) {
-        return polygon.getCoordinatesList().stream().map(FileParser::serialize).collect(Collectors.toList());
-    }
-
-    private static Collection<Collection<Collection<Collection<Double>>>> serialize(MultiPolygonCoordinates polygon) {
-        return polygon.getCoordinatesList().stream().map(FileParser::serialize).collect(Collectors.toList());
-    }
-
-    private static Collection<Collection<Double>> serialize(LineCoordinates line) {
-        return line.getCoordinatesList().stream().map(FileParser::serialize).collect(Collectors.toList());
-    }
-
-    private static Collection<Collection<Collection<Double>>> serialize(MultiLineCoordinates multiline) {
-        return multiline.getCoordinatesList().stream().map(FileParser::serialize).collect(Collectors.toList());
     }
 
     /**
@@ -424,7 +266,7 @@ public class FileParser {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
         if (element.hasGeoLocation()) {
-            updateNodeBuilder.put("geoLocation", ImmutableMap.of("set", getGeoLocationJson(element.getGeoLocation())));
+            updateNodeBuilder.put("geoLocation", ImmutableMap.of("set", GeoParser.parseFeatureToMap(element.getGeoLocation())));
         }
 
         if (element.getLabelsCount() > 0) {
@@ -510,7 +352,7 @@ public class FileParser {
         }
 
         if (element.hasGeoLocation()) {
-            updateNodeBuilder.put("geoLocation", ImmutableMap.of("set", getGeoLocationJson(element.getGeoLocation())));
+            updateNodeBuilder.put("geoLocation", ImmutableMap.of("set", GeoParser.parseFeatureToMap(element.getGeoLocation())));
         } else {
             updateNodeBuilder.put("geoLocation", ImmutableMap.of("setNull", true));
         }
