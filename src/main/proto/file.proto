@@ -1,52 +1,11 @@
 syntax = "proto3";
 
-package com.cognite.beam.proto;
+package com.cognite.client.dto;
 
 option java_package = "com.cognite.client.dto";
 option java_multiple_files = true;
 
-import "google/protobuf/struct.proto";
-
-message PointCoordinates {
-    repeated double coordinates = 1;
-}
-
-message MultiPointCoordinates {
-    repeated PointCoordinates coordinates = 1;
-}
-
-message PolygonCoordinates {
-    repeated MultiPointCoordinates coordinates = 1;
-}
-
-message MultiPolygonCoordinates {
-    repeated PolygonCoordinates coordinates = 1;
-}
-
-message LineCoordinates {
-    repeated PointCoordinates coordinates = 1;
-}
-
-message MultiLineCoordinates {
-    repeated LineCoordinates coordinates = 1;
-}
-
-message GeoLocationGeometry {
-    oneof coordinates {
-        PointCoordinates coordinatesPoint = 1;
-        MultiPointCoordinates coordinatesMultiPoint = 2;
-        PolygonCoordinates coordinatesPolygon = 3;
-        MultiPolygonCoordinates coordinatesMultiPolygon = 4;
-        LineCoordinates coordinatesLineString = 5;
-        MultiLineCoordinates coordinatesMultiLine = 6;
-    }
-}
-
-message GeoLocation {
-    string type = 1;
-    GeoLocationGeometry geometry = 2;
-    optional google.protobuf.Struct properties = 3;
-}
+import "geometry.proto";
 
 message FileContainer {
     FileMetadata file_metadata = 1;
@@ -71,7 +30,7 @@ message FileMetadata {
     optional int64 data_set_id = 15;
     repeated int64 security_categories = 16;
     repeated string labels = 17;
-    optional GeoLocation geo_location = 18;
+    optional geo.Feature geo_location = 18;
 }
 
 message FileBinary {

@@ -1,15 +1,18 @@
 syntax = "proto3";
 
-package com.cognite.beam.proto;
+package com.cognite.client.dto.geo;
 
 import "google/protobuf/struct.proto";
 
-option java_package = "com.cognite.client.dto";
+option java_package = "com.cognite.client.dto.geo";
 option java_multiple_files = true;
 
 /*
 A Point is the basic geometry object. It represents a single coordinate point consisting of
 longitude / latitude (or easting / northing) and an optional elevation.
+
+The coordinate datum is World Geodetic System 1984 (WGS 84), with longitude and latitude units of decimal degrees.
+The optional elevation is expressed in height in meters above or below the WGS 84 reference ellipsoid.
  */
 message Point {
   double lon = 1;

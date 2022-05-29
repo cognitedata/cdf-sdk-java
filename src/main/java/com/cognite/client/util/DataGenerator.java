@@ -1,6 +1,11 @@
 package com.cognite.client.util;
 
 import com.cognite.client.dto.*;
+import com.cognite.client.dto.geo.Feature;
+import com.cognite.client.dto.geo.Polygon;
+import com.cognite.client.util.geo.Geometries;
+import com.cognite.client.util.geo.MultiPolygons;
+import com.cognite.client.util.geo.Polygons;
 import com.google.protobuf.*;
 import com.google.protobuf.util.Structs;
 import com.google.protobuf.util.Values;
@@ -30,19 +35,41 @@ public class DataGenerator {
                     .setExternalId(RandomStringUtils.randomAlphanumeric(10))
                     .setName("test_file_" + RandomStringUtils.randomAlphanumeric(5) + ".test")
                     .setSource(sourceValue)
-                            .setGeoLocation(GeoLocation.newBuilder()
-                                    .setType("Feature")
-                                    .setGeometry(GeoLocationGeometry.newBuilder()
-                                            .setCoordinatesLineString(LineCoordinates.newBuilder()
-                                                    .addCoordinates(PointCoordinates.newBuilder().addAllCoordinates(List.of(34d, 34d)))
-                                                    .addCoordinates(PointCoordinates.newBuilder().addAllCoordinates(List.of(35d, 35d))))
-                                    )
+                            .setGeoLocation(generateGeoFeature(1).get(0)
                             )
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)
                     .build());
         }
         return objects;
+    }
+
+    public static List<Feature> generateGeoFeature(int noObjects) {
+        List<Feature> objects = new ArrayList<>();
+        for (int i = 0; i < noObjects; i++) {
+            objects.add(
+                    Feature.newBuilder()
+                            .setGeometry(Geometries.of(MultiPolygons.of(List.of(generateGeoPolygon(), generateGeoPolygon()))))
+                            .setProperties(Structs.of("type", Values.of(DataGenerator.sourceValue),
+                                    sourceKey, Values.of(DataGenerator.sourceValue)))
+                            .build()
+            );
+        }
+        return objects;
+    }
+
+    private static Polygon generateGeoPolygon() {
+        double[][][] coordinates = {
+                {{10.0, 15.0}, {15.0, 20.0}, {16.0, 15.0}, {10.0, 15.0}}
+        };
+        Polygon returnObject;
+        try {
+            returnObject = Polygons.of(coordinates);
+        } catch (Exception e) {
+            returnObject = Polygon.newBuilder().build();
+            System.err.println(e);
+        }
+        return returnObject;
     }
 
     public static List<TimeseriesMetadata> generateTsHeaderObjects(int noObjects) {

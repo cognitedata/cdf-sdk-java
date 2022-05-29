@@ -50,7 +50,7 @@ public class RawParser {
         Preconditions.checkNotNull(dbName, "dbName cannot be null");
         Preconditions.checkNotNull(dbTable, "dbTable cannot be null");
         Preconditions.checkNotNull(rowJson, "rowJson cannot be null");
-        String logItemExerpt = rowJson.substring(0, Math.min(rowJson.length() - 1, MAX_LOG_ELEMENT_LENGTH));
+        String logItemExcerpt = rowJson.substring(0, Math.min(rowJson.length() - 1, MAX_LOG_ELEMENT_LENGTH));
 
         JsonNode root = objectMapper.readTree(rowJson);
         RawRow.Builder rowBuilder = RawRow.newBuilder()
@@ -63,14 +63,14 @@ public class RawParser {
         } else {
             throw new Exception(logPrefix
                     + "Unable to parse attribute: key. Item exerpt: "
-                    + logItemExerpt);
+                    + logItemExcerpt);
         }
         if (root.path("lastUpdatedTime").isIntegralNumber()) {
             rowBuilder.setLastUpdatedTime(root.get("lastUpdatedTime").longValue());
         } else {
             throw new Exception(logPrefix
                     + "Unable to parse attribute: lastUpdatedTime. Item exerpt: "
-                    + logItemExerpt);
+                    + logItemExcerpt);
         }
         if (root.path("columns").isObject()) {
             Struct.Builder structBuilder = Struct.newBuilder();
@@ -79,7 +79,7 @@ public class RawParser {
         } else {
             throw new Exception(logPrefix
                     + "Unable to parse attribute: columns. Item exerpt: "
-                    + logItemExerpt);
+                    + logItemExcerpt);
         }
 
        return rowBuilder.build();
@@ -97,55 +97,8 @@ public class RawParser {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         mapBuilder.put("key", element.getKey());
         if (element.hasColumns()) {
-            mapBuilder.put("columns", RawParser.parseStructToMap(element.getColumns()));
+            mapBuilder.put("columns", StructParser.parseStructToMap(element.getColumns()));
         }
         return mapBuilder.build();
-    }
-
-    /**
-     * Parses the main proto Struct (Json object equivalent) into a POJO representation.
-     */
-    static Map<String, Object> parseStructToMap(Struct input) {
-        Map<String, Object> map = new HashMap<>();
-        for (Map.Entry<String, Value> entry : input.getFieldsMap().entrySet()) {
-            map.put(entry.getKey(), RawParser.parseValueToObject(entry.getValue()));
-        }
-        return map;
-    }
-
-    /**
-     * Parses the proto Value to POJO. This is needed to translate the proto Json representation into the Java object
-     * representation used by the request parameters object.
-     * @param input
-     * @return
-     */
-    private static Object parseValueToObject(Value input) {
-        if (input.getKindCase() == Value.KindCase.NULL_VALUE) {
-            return null;
-        }
-        if (input.getKindCase() == Value.KindCase.BOOL_VALUE) {
-            return Boolean.valueOf(input.getBoolValue());
-        }
-        if (input.getKindCase() == Value.KindCase.STRING_VALUE) {
-            return String.valueOf(input.getStringValue());
-        }
-        if (input.getKindCase() == Value.KindCase.NUMBER_VALUE) {
-            return Double.valueOf(input.getNumberValue());
-        }
-        if (input.getKindCase() == Value.KindCase.LIST_VALUE) {
-            ImmutableList.Builder<Object> listBuilder = ImmutableList.builder();
-            for (Value listElement : input.getListValue().getValuesList()) {
-                if (listElement.getKindCase() != Value.KindCase.NULL_VALUE) {
-                    // Nulls are skipped.
-                    listBuilder.add(RawParser.parseValueToObject(listElement));
-                }
-            }
-            return listBuilder.build();
-        }
-        if (input.getKindCase() == Value.KindCase.STRUCT_VALUE) {
-            return RawParser.parseStructToMap(input.getStructValue());
-        }
-        // If no compatible type is found (should not happen!) then just return null
-        return null;
     }
 }
