@@ -43,9 +43,8 @@ public class GeoParser {
      *
      * @param element
      * @return
-     * @throws Exception
      */
-    public static Map<String, Object> parseFeatureToMap(Feature element) throws Exception {
+    public static Map<String, Object> parseFeatureToMap(Feature element) {
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
 
         // Fixed string that always accompanies a Feature
