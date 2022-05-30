@@ -17,13 +17,12 @@ Changes are grouped as follows:
 
 ### Short term
 
-- Geo-location attribute and resource type
-
-## [1.16.0-SNAPSHOT]
+## [1.16.0] 2022-05-30
 
 ### Added
 
 - Added `Transformation Notifications`
+- Geo-location attribute on the `files` resource type is supported.
 
 ## [1.15.0] 2022-05-20
 

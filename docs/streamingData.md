@@ -71,7 +71,7 @@ An important consideration in this context is eventual consistency; most resourc
 become readable/queryable in an eventually consistent manner. In more practical terms that means it will take a few 
 seconds from an object is created/updated in Cognite Data Fusion until you can safely read/query it. Exactly how many 
 seconds, depends a bit on the current load on the system. For example, if there is a spike in load (say, a large update 
-of millions of events), then the system may need 10, 20, 30 seconds to settle down. 
+of millions of events), then the system may need 20 - 30 seconds to settle down. 
 
 In light of this, you need to balance streaming freshness/latency with consistency. If you opt for low latency (say 
 5 sec `polling offset`) then you sacrifice consistency and the stream will most likely miss some updates. On the other 
