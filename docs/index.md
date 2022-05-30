@@ -31,3 +31,4 @@ map directly to the API's definitions.
 - [Contextualization](contextualization.md)
 - [Data sets, organising your data products](dataSets.md)
 - [Labels, making your data easier to find](labels.md)
+- [Geolocation](geoLocation.md)
