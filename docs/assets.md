@@ -97,3 +97,205 @@ List<Asset> myAssetHierarchy = new ArrayList<>();
 populateMyAssets(myAssetHierarchy)  // Fill the collection with all assets
 boolean isValid = cogniteClient.assets().verifyAssetHierarchyIntegrity(myInputAssets);
 ```
+
+### Filter assets
+Use advanced filtering options to find assets.
+
+```java
+
+List<Asset> listAssetsResults = new ArrayList<>();
+client.assets()
+        .list(Request.create()
+        .withFilterParameter("source", DataGenerator.sourceValue))
+        .forEachRemaining(listAssetsResults::addAll);
+
+```
+
+Options filter:
+- filter:
+  - name:
+      - string
+      - The name of the asset.
+  - parentIds:
+    - Array of integers <int64> (CogniteInternalId) [ 1 .. 100 ] items [ items &lt;int64&gt; [ 1 .. 9007199254740991 ] ]
+    - Return only the direct descendants of the specified assets.
+  - parentExternalIds:
+      - Array of strings (CogniteExternalId) [ 1 .. 100 ] items [ items <= 255 characters ]
+      - Return only the direct descendants of the specified assets.
+  - assetSubtreeIds:
+      - Array of AssetInternalId (object) or AssetExternalId (object) (AssetIdEither) [ 1 .. 100 ] items [ items ]
+      - Only include assets in subtrees rooted at the specified assets (including the roots given). If the total size of the given subtrees exceeds 100,000 assets, an error will be returned.
+      - One Of:
+        - AssetInternalId:
+          - id
+            - integer `<int64>` (CogniteInternalId) [ 1 .. 9007199254740991 ]
+            - A server-generated ID for the object.                
+        - AssetExternalId:
+          - externalId
+            - string (CogniteExternalId) <= 255 characters
+            - The external ID provided by the client. Must be unique for the resource type. 
+  - dataSetIds:
+      - Array of DataSetInternalId (object) or DataSetExternalId (object) (DataSetIdEither) <= 100 items unique [ items ]
+      - One Of:
+        - DataSetInternalId:
+          - id
+            - integer `<int64>` (CogniteInternalId) [ 1 .. 9007199254740991 ]
+            - A server-generated ID for the object.                
+        - DataSetExternalId:
+          - externalId
+            - string (CogniteExternalId) <= 255 characters
+            - The external ID provided by the client. Must be unique for the resource type.
+  - metadata
+    - object (AssetMetadata)
+    - Custom, application specific metadata. String key -> String value. Limits: Maximum length of key is 128 bytes, value 10240 bytes, up to 256 key-value pairs, of total size at most 10240.
+  - source
+    - string (AssetSource) <= 128 characters
+    - The source of the asset.
+  - createdTime:
+    - object (EpochTimestampRange)
+    - Range between two timestamps (inclusive).
+      - max:
+        - integer <int64> >= 0
+        - Maximum timestamp (inclusive). The timestamp is represented as number of milliseconds since 00:00:00 Thursday, 1 January 1970, Coordinated Universal Time (UTC), minus leap seconds.
+      - min:
+        - integer <int64> >= 0
+        - Minimum timestamp (inclusive). The timestamp is represented as number of milliseconds since 00:00:00 Thursday, 1 January 1970, Coordinated Universal Time (UTC), minus leap seconds.
+  - lastUpdatedTime:
+    - object (EpochTimestampRange)
+    - Range between two timestamps (inclusive).
+      - max:
+        - integer <int64> >= 0
+        - Maximum timestamp (inclusive). The timestamp is represented as number of milliseconds since 00:00:00 Thursday, 1 January 1970, Coordinated Universal Time (UTC), minus leap seconds.
+      - min:
+        - integer <int64> >= 0
+        - Minimum timestamp (inclusive). The timestamp is represented as number of milliseconds since 00:00:00 Thursday, 1 January 1970, Coordinated Universal Time (UTC), minus leap seconds.
+  - root
+    - boolean
+    - Whether the filtered assets are root assets, or not. Set to True to only list root assets.
+  - externalIdPrefix
+    - string (CogniteExternalIdPrefix) <= 255 characters
+    - Filter by this (case-sensitive) prefix for the external ID.
+  - labels:
+    - LabelContainsAnyFilter (object) or LabelContainsAllFilter (object) (LabelFilter)
+    - Return only the resource matching the specified label constraints.
+    - One of:
+      - LabelContainsAnyFilter:
+        - externalId An external ID to a predefined label definition.
+        - string <= 255 characters
+        - The resource item contains at least one of the listed labels.
+      - LabelContainsAllFilter:
+        - externalId An external ID to a predefined label definition.
+        - string <= 255 characters
+        - The resource item contains at least all the listed labels.
+
+
+### Retrieve assets
+Retrieve assets by IDs or external IDs.
+
+```java
+
+List<Item> retrieveByExternalIds = List.of(Item.newBuilder()
+        .setExternalId("10")
+        .build());
+List<Asset> retrieveResults = client.assets()
+        .retrieve(retrieveByExternalIds);//by list of items
+List<Asset> retrieveResults = client.assets()
+        .retrieve("10", "20");//by varargs of String
+
+List<Item> retrieveByInternalIds = List.of(Item.newBuilder()
+        .setId(10)
+        .build());
+List<Asset> retrieveResults = client.assets()
+        .retrieve(retrieveByInternalIds);//by list of items
+List<Asset> retrieveResults = client.assets()
+        .retrieve(10, 20);//by varargs of Long
+
+```
+
+### Aggregate assets
+Use advanced filtering options to aggregate assets.
+
+```java
+
+Aggregate aggregateResult = client.assets()
+                    .aggregate(Request.create()
+                            .withFilterParameter("source", "source"));
+
+```
+
+Options filter:
+- filter:
+  - name:
+    - string
+    - The name of the asset.
+  - parentIds:
+    - Array of integers <int64> (CogniteInternalId) [ 1 .. 100 ] items [ items &lt;int64&gt; [ 1 .. 9007199254740991 ] ]
+    - Return only the direct descendants of the specified assets.
+  - parentExternalIds:
+    - Array of strings (CogniteExternalId) [ 1 .. 100 ] items [ items <= 255 characters ]
+    - Return only the direct descendants of the specified assets.
+  - assetSubtreeIds:
+    - Array of AssetInternalId (object) or AssetExternalId (object) (AssetIdEither) [ 1 .. 100 ] items [ items ]
+    - Only include assets in subtrees rooted at the specified assets (including the roots given). If the total size of the given subtrees exceeds 100,000 assets, an error will be returned.
+    - One Of:
+      - AssetInternalId:
+        - id
+          - integer `<int64>` (CogniteInternalId) [ 1 .. 9007199254740991 ]
+          - A server-generated ID for the object.
+      - AssetExternalId:
+        - externalId
+          - string (CogniteExternalId) <= 255 characters
+          - The external ID provided by the client. Must be unique for the resource type.
+  - dataSetIds:
+    - Array of DataSetInternalId (object) or DataSetExternalId (object) (DataSetIdEither) <= 100 items unique [ items ]
+    - One Of:
+      - DataSetInternalId:
+        - id
+          - integer `<int64>` (CogniteInternalId) [ 1 .. 9007199254740991 ]
+          - A server-generated ID for the object.
+      - DataSetExternalId:
+        - externalId
+          - string (CogniteExternalId) <= 255 characters
+          - The external ID provided by the client. Must be unique for the resource type.
+  - metadata
+    - object (AssetMetadata)
+    - Custom, application specific metadata. String key -> String value. Limits: Maximum length of key is 128 bytes, value 10240 bytes, up to 256 key-value pairs, of total size at most 10240.
+  - source
+    - string (AssetSource) <= 128 characters
+    - The source of the asset.
+  - createdTime:
+    - object (EpochTimestampRange)
+    - Range between two timestamps (inclusive).
+      - max:
+        - integer <int64> >= 0
+        - Maximum timestamp (inclusive). The timestamp is represented as number of milliseconds since 00:00:00 Thursday, 1 January 1970, Coordinated Universal Time (UTC), minus leap seconds.
+      - min:
+        - integer <int64> >= 0
+        - Minimum timestamp (inclusive). The timestamp is represented as number of milliseconds since 00:00:00 Thursday, 1 January 1970, Coordinated Universal Time (UTC), minus leap seconds.
+  - lastUpdatedTime:
+    - object (EpochTimestampRange)
+    - Range between two timestamps (inclusive).
+      - max:
+        - integer <int64> >= 0
+        - Maximum timestamp (inclusive). The timestamp is represented as number of milliseconds since 00:00:00 Thursday, 1 January 1970, Coordinated Universal Time (UTC), minus leap seconds.
+      - min:
+        - integer <int64> >= 0
+        - Minimum timestamp (inclusive). The timestamp is represented as number of milliseconds since 00:00:00 Thursday, 1 January 1970, Coordinated Universal Time (UTC), minus leap seconds.
+  - root
+    - boolean
+    - Whether the filtered assets are root assets, or not. Set to True to only list root assets.
+  - externalIdPrefix
+    - string (CogniteExternalIdPrefix) <= 255 characters
+    - Filter by this (case-sensitive) prefix for the external ID.
+  - labels:
+    - LabelContainsAnyFilter (object) or LabelContainsAllFilter (object) (LabelFilter)
+    - Return only the resource matching the specified label constraints.
+    - One of:
+      - LabelContainsAnyFilter:
+        - externalId An external ID to a predefined label definition.
+        - string <= 255 characters
+        - The resource item contains at least one of the listed labels.
+      - LabelContainsAllFilter:
+        - externalId An external ID to a predefined label definition.
+        - string <= 255 characters
+        - The resource item contains at least all the listed labels.
