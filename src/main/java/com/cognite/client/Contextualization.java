@@ -48,6 +48,13 @@ public abstract class Contextualization extends ApiBase {
     /**
      * Returns {@link EntityMatching} representing the entity matching api services.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.contextualization().entityMatching();
+     * }
+     * </pre>
+     *
      * @return The entity matching api object.
      */
     public EntityMatching entityMatching() {
@@ -56,6 +63,13 @@ public abstract class Contextualization extends ApiBase {
 
     /**
      * Returns {@link EngineeringDiagrams} representing the engineering diagrams api services.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.contextualization().engineeringDiagrams();
+     * }
+     * </pre>
      *
      * @return The engineering diagrams api object.
      */
