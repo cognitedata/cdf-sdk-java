@@ -17,6 +17,13 @@ Changes are grouped as follows:
 
 ### Short term
 
+## [1.17.0-SNAPSHOT]
+
+### Changed
+
+- Improve javadoc `Assets`
+
+
 ## [1.16.0] 2022-05-30
 
 ### Added
