@@ -55,6 +55,9 @@ public abstract class Contextualization extends ApiBase {
      * }
      * </pre>
      *
+     * @see CogniteClient
+     * @see CogniteClient#contextualization()
+     *
      * @return The entity matching api object.
      */
     public EntityMatching entityMatching() {
@@ -70,6 +73,9 @@ public abstract class Contextualization extends ApiBase {
      *     client.contextualization().engineeringDiagrams();
      * }
      * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#contextualization()
      *
      * @return The engineering diagrams api object.
      */
