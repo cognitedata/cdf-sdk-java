@@ -74,6 +74,20 @@ public abstract class EngineeringDiagrams extends ApiBase {
      *
      * The detection will perform complete matches (i.e. partial matches are not accepted).
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<DiagramResponse> detectResults = client.contextualization()
+     *                     .engineeringDiagrams()
+     *                     .detectAnnotations(fileItems, entities, "searchText", true);
+     * }
+     * </pre>
+     *
+     * @see #detectAnnotations(Collection,Collection,String,boolean,int,boolean)
+     * @see CogniteClient
+     * @see CogniteClient#contextualization()
+     * @see Contextualization#engineeringDiagrams()
+     *
      * @param files The engineering diagram files to process.
      * @param entities The entities to use for matching.
      * @param searchField The entity attribute to use for string matching.
@@ -91,6 +105,20 @@ public abstract class EngineeringDiagrams extends ApiBase {
     /**
      * Detect references to assets and files, etc. from an engineering diagram and annotate them with bounding boxes.
      * The engineering diagram must be a PDF file or an image with JPEG, PNG or TIFF format.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<DiagramResponse> detectResults = client.contextualization()
+     *                     .engineeringDiagrams()
+     *                     .detectAnnotations(fileItems, entities, "searchText", false, 2, true);
+     * }
+     * </pre>
+     *
+     * @see #detectAnnotations(Collection,boolean)
+     * @see CogniteClient
+     * @see CogniteClient#contextualization()
+     * @see Contextualization#engineeringDiagrams()
      *
      * @param files The engineering diagram files to process.
      * @param entities The entities to use for matching.
@@ -157,6 +185,20 @@ public abstract class EngineeringDiagrams extends ApiBase {
     /**
      * Detect references to assets and files, etc. from an engineering diagram and annotate them with bounding boxes.
      * The engineering diagram must be a PDF file or an image with JPEG, PNG or TIFF format.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<DiagramResponse> detectResults = client.contextualization()
+     *                     .engineeringDiagrams()
+     *                     .detectAnnotations(List.of(Request.create()), true);
+     * }
+     * </pre>
+     *
+     * @see #detectAnnotations(Collection,boolean)
+     * @see CogniteClient
+     * @see CogniteClient#contextualization()
+     * @see Contextualization#engineeringDiagrams()
      *
      * All input parameters are provided via the request object.
      * @param requests Input parameters for the detect annotations job(s).
@@ -227,6 +269,20 @@ public abstract class EngineeringDiagrams extends ApiBase {
     /**
      * Convert an engineering diagram (P&ID) in PDF format to an interactive SVG where the provided
      * annotations are highlighted.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Collection<DiagramResponse> annotationsList = // collection of DiagramResponse;
+     *     List<DiagramResponse> result = client.contextualization()
+     *                     .engineeringDiagrams()
+     *                     convert(annotationsList, false);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#contextualization()
+     * @see Contextualization#engineeringDiagrams()
      *
      * @param annotationsList Original engineering diagram with annotations.
      * @param grayscale Set to {@code true} to return the SVG/PNG in greyscale (reduces the file size).
