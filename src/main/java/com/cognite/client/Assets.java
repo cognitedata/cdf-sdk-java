@@ -88,6 +88,9 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * }
      * </pre>
      *
+     * @see CogniteClient
+     * @see CogniteClient#assets()
+     *
      * @see #list(Request)
      */
     public Iterator<List<Asset>> list() throws Exception {
@@ -116,6 +119,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * </pre>
      *
      * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#assets()
      *
      * @param requestParameters the filters to use for retrieving the assets.
      * @return an {@link Iterator} to page through the results set.
@@ -149,6 +154,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * </pre>
      *
      * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#assets()
      *
      * @param requestParameters the filters to use for retrieving the assets.
      * @param partitions the partitions to include.
@@ -184,6 +191,9 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * }
      * </pre>
      *
+     * @see CogniteClient
+     * @see CogniteClient#assets()
+     *
      * @return The publisher producing the stream of assets. Call {@code start()} to start the stream.
      */
     public Publisher<Asset> stream() {
@@ -201,6 +211,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * </pre>
      *
      * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#assets()
      *
      * @param externalId The {@code externalIds} to retrieve
      * @return The retrieved assets.
@@ -221,6 +233,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * </pre>
      *
      * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#assets()
      *
      * @param id The {@code ids} to retrieve
      * @return The retrieved assets.
@@ -242,6 +256,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * </pre>
      *
      * @see #retrieveJson(ResourceType,Collection)
+     * @see CogniteClient
+     * @see CogniteClient#assets()
      *
      * @param items The item(s) {@code externalId / id} to retrieve.
      * @return The retrieved assets.
@@ -270,6 +286,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * </pre>
      *
      * @see #aggregate(ResourceType,Request)
+     * @see CogniteClient
+     * @see CogniteClient#assets()
      *
      * @param requestParameters The filtering and aggregates specification
      * @return The aggregation results.
@@ -297,6 +315,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * </pre>
      *
      * @see #synchronizeHierarchy(Collection)
+     * @see CogniteClient
+     * @see CogniteClient#assets()
      *
      * @param assetHierarchies The input asset hierarchies--this represents the target state of the synchronization.
      * @return the synchronized assets.
@@ -372,6 +392,9 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      *      List<Asset> upsertedAssets = client.assets().synchronizeHierarchy(originalAssetList);
      * }
      * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#assets()
      *
      * @param assetHierarchy The input asset hierarchy--this represents the target state of the synchronization.
      * @return the synchronized assets.
@@ -518,6 +541,9 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * }
      * </pre>
      *
+     * @see CogniteClient
+     * @see CogniteClient#assets()
+     *
      * @param assets The assets to upsert.
      * @return The upserted assets.
      * @throws Exception
@@ -612,6 +638,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * </pre>
      *
      * @see #delete(List,boolean)
+     * @see CogniteClient
+     * @see CogniteClient#assets()
      *
      * @param items a list of {@link Item} representing the assets (externalId / id) to be deleted
      * @return The deleted events via {@link Item}
@@ -636,6 +664,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * </pre>
      *
      * @see DeleteItems#deleteItems(List)
+     * @see CogniteClient
+     * @see CogniteClient#assets()
      *
      * @param items a list of {@link Item} representing the assets (externalId / id) to be deleted
      * @param recursive Set to {@code true} to recursively delete all subtrees under the specified items.
