@@ -657,13 +657,6 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * Find and return the root nodes (if any) in the assets collection. A root node is an asset that doesn't
      * specify a parent external id reference.
      *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *     List<Asset> rootNodes = identifyRootNodes(assetHierarchy);
-     * }
-     * </pre>
-     *
      * @param assets The assets to search for root nodes.
      * @return a list of asset root nodes.
      */
@@ -683,15 +676,6 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
     /**
      * Check if two asset objects are equal in terms of their main payload. Internal attributes like ids and
      * internal timestamps are ignored.
-     *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *     Asset one = //object Asset;
-     *     Asset other = //object Asset;
-     *     boolean isEqual = isEqual(one, other);
-     * }
-     * </pre>
      *
      * @param one The first asset to compare.
      * @param other The second asset to compare.
@@ -764,14 +748,6 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * - No circular references.
      * - If both parentExternalId and parentId are set, then parentExternalId takes precedence in the sort.
      *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *     Collection<Asset> assets = //collection of Asset;
-     *     List<Asset> sortedAssets = topologicalSort(assets);
-     * }
-     * </pre>
-     *
      * @param assets A collection of {@link Asset} to be topologically sorted.
      * @return The sorted assets collection.
      * @throws Exception if one (or more) of the constraints are not fulfilled.
@@ -830,13 +806,6 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
     /**
      * Checks the assets for {@code externalId}.
      *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *     Collection<Asset> assetHierarchies = //collection of Asset;
-     *     boolean result = checkExternalId(assetHierarchies, "loggingPrefix");
-     * }
-     * </pre>
      *
      * @param assets The assets to check.
      * @return true if all assets contain {@code externalId}. False if one or more assets do not have {@code externalId}.
@@ -878,14 +847,6 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
 
     /**
      * Checks the assets for duplicates. The duplicates check is based on {@code externalId}.
-     *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *     Collection<Asset> assets = //collection of Asset;
-     *     boolean result = checkDuplicates(assets, "loggingIdentifier");
-     * }
-     * </pre>
      *
      * @param assets The assets to check.
      * @return true if no duplicates are detected. False if one or more duplicates are detected.
@@ -931,14 +892,6 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * Checks the assets for self-reference. That is, the asset's {@code parentExternalId} references
      * its own {@code externalId}.
      *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *     Collection<Asset> assets = //collection of Asset;
-     *     boolean result = checkSelfReference(assets, "loggingIdentifier");
-     * }
-     * </pre>
-     *
      * @param assets The assets to check.
      * @return true if no self-references are detected. False if one or more self-reference are detected.
      */
@@ -982,14 +935,6 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
 
     /**
      * Checks the assets for circular references.
-     *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *     Collection<Asset> assets = //collection of Asset;
-     *     boolean result = checkCircularReferences(assets, "loggingIdentifier");
-     * }
-     * </pre>
      *
      * @param assets The assets to check.
      * @return True if circular references are detected. False if no circular references are detected.
@@ -1037,14 +982,6 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * asset hierarchy. It performs the following checks:
      * - One and only one root node (an asset with no parent reference).
      * - All other assets reference an asset in this collection.
-     *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *     Collection<Asset> assets = //collection of Asset;
-     *     boolean result = checkReferentialIntegrity(assets, "loggingIdentifier");
-     * }
-     * </pre>
      *
      * @param assets The assets to check.
      * @return True if integrity is intact. False otherwise.
