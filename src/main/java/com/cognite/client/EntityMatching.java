@@ -78,6 +78,24 @@ public abstract class EntityMatching extends ApiBase {
      * the sources/targets from the model training.
      *
      * The default number of matches is 1 and score threshold used for matching is 0.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     String modelExternalId = // modelExternalId;
+     *     List<Struct> sources = // sources ;
+     *     List<Struct> targets = // targets;
+     *     List<EntityMatchResult> result = client.contextualization()
+     *                     .entityMatching()
+     *                     .predict(modelExternalId, sources, targets);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#contextualization()
+     * @see Contextualization#entityMatching()
+     * @see #predict(String, List, Collection, int)
+     *
      * @param modelExternalId The external id of the matching model to use.
      * @param sources A list of entities to match from. If the list is empty, the model training sources will be used.
      * @param targets A list of entities to match to. If the list is empty, the model traning targets will be used.
@@ -97,6 +115,24 @@ public abstract class EntityMatching extends ApiBase {
      * the sources/targets from the model training.
      *
      * The default score threshold used for matching is 0.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     String modelExternalId = // modelExternalId;
+     *     List<Struct> sources = // sources ;
+     *     List<Struct> targets = // targets;
+     *     List<EntityMatchResult> result = client.contextualization()
+     *                     .entityMatching()
+     *                     .predict(modelExternalId, sources, targets, 1);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#contextualization()
+     * @see Contextualization#entityMatching()
+     * @see #predict(String, List, Collection, int, double)
+     *
      * @param modelExternalId The external id of the matching model to use.
      * @param sources A list of entities to match from. If the list is empty, the model training sources will be used.
      * @param targets A list of entities to match to. If the list is empty, the model traning targets will be used.
@@ -116,6 +152,22 @@ public abstract class EntityMatching extends ApiBase {
      *
      * If either sources or targets are empty lists, the entity matcher will use
      * the sources/targets from the model training.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     String modelExternalId = // modelExternalId;
+     *     List<Struct> sources = // sources ;
+     *     List<Struct> targets = // targets;
+     *     List<EntityMatchResult> result = client.contextualization()
+     *                     .entityMatching()
+     *                     .predict(modelExternalId, sources, targets, 1, 0d);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#contextualization()
+     * @see Contextualization#entityMatching()
      *
      * @param modelExternalId The external id of the matching model to use.
      * @param sources A list of entities to match from. If the list is empty, the model training sources will be used.
@@ -172,6 +224,24 @@ public abstract class EntityMatching extends ApiBase {
      * the sources/targets from the model training.
      *
      * The default number of matches is 1 and score threshold used for matching is 0.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Long modelId = // modelId;
+     *     List<Struct> sources = // sources ;
+     *     List<Struct> targets = // targets;
+     *     List<EntityMatchResult> result = client.contextualization()
+     *                     .entityMatching()
+     *                     .predict(modelId, sources, targets);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#contextualization()
+     * @see Contextualization#entityMatching()
+     * @see #predict(long, List, Collection, int)
+     *
      * @param modelId The internal id of the matching model to use.
      * @param sources A list of entities to match from. If the list is empty, the model training sources will be used.
      * @param targets A list of entities to match to. If the list is empty, the model traning targets will be used.
@@ -191,6 +261,24 @@ public abstract class EntityMatching extends ApiBase {
      * the sources/targets from the model training.
      *
      * The default score threshold used for matching is 0.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Long modelId = // modelId;
+     *     List<Struct> sources = // sources ;
+     *     List<Struct> targets = // targets;
+     *     List<EntityMatchResult> result = client.contextualization()
+     *                     .entityMatching()
+     *                     .predict(modelId, sources, targets, 1);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#contextualization()
+     * @see Contextualization#entityMatching()
+     * @see #predict(long, List, Collection, int, double)
+     *
      * @param modelId The internal id of the matching model to use.
      * @param sources A list of entities to match from. If the list is empty, the model training sources will be used.
      * @param targets A list of entities to match to. If the list is empty, the model traning targets will be used.
@@ -210,6 +298,22 @@ public abstract class EntityMatching extends ApiBase {
      *
      * If either sources or targets are empty lists, the entity matcher will use
      * the sources/targets from the model training.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Long modelId = // modelId;
+     *     List<Struct> sources = // sources ;
+     *     List<Struct> targets = // targets;
+     *     List<EntityMatchResult> result = client.contextualization()
+     *                     .entityMatching()
+     *                     .predict(modelId, sources, targets, 1, 0d);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#contextualization()
+     * @see Contextualization#entityMatching()
      *
      * @param modelId The internal id of the matching model to use.
      * @param sources A list of entities to match from. If the list is empty, the model training sources will be used.
@@ -263,6 +367,22 @@ public abstract class EntityMatching extends ApiBase {
      *
      * If either sources or targets are empty lists, the entity matcher will use
      * the sources/targets from the model training.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Struct> sourceBatch = // List of Struct
+     *     List<Request> requestBatches = new ArrayList<>();
+     *     requestBatches.add(Request.create().withRootParameter("sources", sourceBatch));
+     *     List<EntityMatchResult> result = client.contextualization()
+     *                     .entityMatching()
+     *                     .predict(requestBatches);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#contextualization()
+     * @see Contextualization#entityMatching()
      *
      * All input parameters are provided via the request object.
      * @param requests input parameters for the predict jobs.
@@ -326,6 +446,28 @@ public abstract class EntityMatching extends ApiBase {
      * This is also known as fuzzy joining. If there are no trueMatches (labeled data), you train a
      * static (unsupervised) model, otherwise a machine learned (supervised) model is trained.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Struct> sources = // sources ;
+     *     List<Struct> targets = // targets;
+     *     String[] modelTypes = {"simple", "insensitive", "bigram", "frequencyweightedbigram",
+     *                     "bigramextratokenizers", "bigramcombo"};
+     *     Request entityMatchFitRequest = Request.create()
+     *                 .withRootParameter("sources",  sources)
+     *                 .withRootParameter("targets", targets)
+     *                 .withRootParameter("matchFields", Map.of("source", "name", "target", "externalId"))
+     *                 .withRootParameter("featureType", modelTypes[1]);
+     *
+     *     List<EntityMatchModel> models = client.contextualization().entityMatching()
+     *                 .create(List.of(entityMatchFitRequest));
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#contextualization()
+     * @see Contextualization#entityMatching()
+     *
      * All input parameters are provided via the request object.
      * @param requests Input parameters for the create model job(s).
      * @return The created entity match models
@@ -386,6 +528,20 @@ public abstract class EntityMatching extends ApiBase {
      *
      * The models to delete are identified via their {@code externalId / id} by submitting a list of
      * {@link Item}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Item> entityMatchingModels = List.of(Item.newBuilder().setExternalId("1").build());
+     *     List<Item> deleteItemsResults = client.contextualization().entityMatching()
+     *                                              .delete(entityMatchingModels);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#contextualization()
+     * @see Contextualization#entityMatching()
+     * @see DeleteItems#deleteItems(List)
      *
      * @param entityMatchingModels a list of {@link Item} representing the entity matching models (externalId / id)
      *                             to be deleted
