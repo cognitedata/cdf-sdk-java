@@ -91,6 +91,20 @@ public abstract class Files extends ApiBase {
     /**
      * Returns all {@link FileMetadata} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<FileMetadata> listResults = new ArrayList<>();
+     *     client.files()
+     *             .list()
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request)
+     * @see CogniteClient
+     * @see CogniteClient#files()
+     *
      * @see #list(Request)
      */
     public Iterator<List<FileMetadata>> list() throws Exception {
@@ -107,6 +121,21 @@ public abstract class Files extends ApiBase {
      * The assets are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<FileMetadata> listResults = new ArrayList<>();
+     *      client.files()
+     *              .list(Request.create()
+     *                             .withFilterParameter("source", "source"))
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#files()
+     *
      * @param requestParameters the filters to use for retrieving the assets.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
@@ -118,7 +147,7 @@ public abstract class Files extends ApiBase {
     }
 
     /**
-     * Returns all {@link Event} objects that matches the filters set in the {@link Request} for the
+     * Returns all {@link FileMetadata} objects that matches the filters set in the {@link Request} for the
      * specified partitions. This is method is intended for advanced use cases where you need direct control over
      * the individual partitions. For example, when using the SDK in a distributed computing environment.
      *
@@ -126,7 +155,23 @@ public abstract class Files extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
-     * @param requestParameters the filters to use for retrieving the assets.
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<FileMetadata> listResults = new ArrayList<>();
+     *      client.files()
+     *              .list(Request.create()
+     *                             .withFilterParameter("source", "source"),
+     *                                  "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#files()
+     *
+     * @param requestParameters the filters to use for retrieving the files.
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
@@ -137,6 +182,17 @@ public abstract class Files extends ApiBase {
 
     /**
      * Retrieve files by {@code externalId}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<FileMetadata> retrievedFiles = client.files().retrieve("1","2");
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#files()
      *
      * @param externalId The {@code externalIds} to retrieve
      * @return The retrieved files.
@@ -149,6 +205,17 @@ public abstract class Files extends ApiBase {
     /**
      * Retrieve files by {@code internal id}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<FileMetadata> retrievedFiles = client.files().retrieve(1,2);
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#files()
+     *
      * @param id The {@code ids} to retrieve
      * @return The retrieved files.
      * @throws Exception
@@ -159,6 +226,18 @@ public abstract class Files extends ApiBase {
 
     /**
      * Retrieve files by {@code externalId / id}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
+     *      List<Event> retrievedFiles = client.files().retrieve(items);
+     * }
+     * </pre>
+     *
+     * @see #retrieveJson(ResourceType,Collection)
+     * @see CogniteClient
+     * @see CogniteClient#files()
      *
      * @param items The item(s) {@code externalId / id} to retrieve.
      * @return The retrieved file headers.
@@ -177,6 +256,19 @@ public abstract class Files extends ApiBase {
      * Multiple aggregation types are supported. Please refer to the Cognite API specification for more information
      * on the possible settings.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Aggregate aggregateResult = client.files()
+     *                  .aggregate(Request.create()
+     *                  .withFilterParameter("source", "source"));
+     * }
+     * </pre>
+     *
+     * @see #aggregate(ResourceType,Request)
+     * @see CogniteClient
+     * @see CogniteClient#files()
+     *
      * @param requestParameters The filtering and aggregates specification
      * @return The aggregation results.
      * @throws Exception
@@ -193,6 +285,17 @@ public abstract class Files extends ApiBase {
      *
      * If an {@link FileMetadata} object already exists in Cognite Data Fusion, it will be updated. The update behavior
      * is specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<FileMetadata> fileMetadataList = // List of Files;
+     *      client.files().upsert(fileMetadataList);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#files()
      *
      * @param fileMetadataList The file headers / metadata to upsert.
      * @return The upserted file headers.
@@ -487,6 +590,34 @@ public abstract class Files extends ApiBase {
      * The file binary can either be placed in-memory in the file container (as a byte string)
      * or referenced (by URI) to a blob store.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Path fileAOriginal = Paths.get("path + file");
+     *      List<FileContainer> files = new ArrayList<>();
+     *      FileMetadata fileMetadata = FileMetadata.newBuilder()
+     *           .setExternalId("10")
+     *           .setName("test_file_.test")
+     *           .setSource("sdk-data-generator")
+     *           .putMetadata("type", "sdk-data-generator")
+     *          .build();
+     *
+     *      FileContainer fileContainer = FileContainer.newBuilder()
+     *           .setFileMetadata(fileMetadata)
+     *           .setFileBinary(FileBinary.newBuilder()
+     *                .setBinaryUri(fileAOriginal.toUri().toString()))
+     *           .build();
+     *      files.add(fileContainer);
+     *
+     *      List<FileMetadata> uploadFileResult =
+     *                  client.files().upload(files);
+     * }
+     * </pre>
+     *
+     * @see #upload(List, boolean)
+     * @see CogniteClient
+     * @see CogniteClient#files()
+     *
      * @param files The files to upload.
      * @return The file metadata / headers for the uploaded files.
      * @throws Exception
@@ -505,6 +636,33 @@ public abstract class Files extends ApiBase {
      * from the (URI referenced) blob store after a successful upload to Cognite Data Fusion. This can
      * Be useful in situations where you perform large scala data transfers utilizing a temp backing
      * store.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Path fileAOriginal = Paths.get("path + file");
+     *      List<FileContainer> files = new ArrayList<>();
+     *      FileMetadata fileMetadata = FileMetadata.newBuilder()
+     *           .setExternalId("10")
+     *           .setName("test_file_.test")
+     *           .setSource("sdk-data-generator")
+     *           .putMetadata("type", "sdk-data-generator")
+     *          .build();
+     *
+     *      FileContainer fileContainer = FileContainer.newBuilder()
+     *           .setFileMetadata(fileMetadata)
+     *           .setFileBinary(FileBinary.newBuilder()
+     *                .setBinaryUri(fileAOriginal.toUri().toString()))
+     *           .build();
+     *      files.add(fileContainer);
+     *
+     *      List<FileMetadata> uploadFileResult =
+     *                  client.files().upload(files, true);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#files()
      *
      * @param files The files to upload.
      * @param deleteTempFile Set to true to remove the URI binary after upload. Set to false to keep the URI binary.
@@ -599,6 +757,19 @@ public abstract class Files extends ApiBase {
      * the file metadata/header {@code fileName} attribute. For remote storage we will use a randomly generated
      * filename.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> files = List.of(Item.newBuilder().setId(10).build());
+     *      List<FileContainer> downloadFilesResults =
+     *                  client.files().download(files, Paths.get("").toUri(), false);
+     * }
+     * </pre>
+     *
+     * @see #downloadFileBinaries(List,URI,boolean)
+     * @see CogniteClient
+     * @see CogniteClient#files()
+     *
      * @param files The list of files to download.
      * @param downloadUri The URI to the download storage
      * @param preferByteStream Set to true to return byte streams when possible, set to false to always store
@@ -688,6 +859,19 @@ public abstract class Files extends ApiBase {
      * int the {@link FileContainer} returned from this method. The {@link FileContainer} will host the
      * {@link URI} reference to the binary.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> files = List.of(Item.newBuilder().setId(10).build());
+     *      List<FileContainer> downloadFilesResults =
+     *                  client.files().downloadToPath(files, Paths.get(""));
+     * }
+     * </pre>
+     *
+     * @see #download(List,URI,boolean)
+     * @see CogniteClient
+     * @see CogniteClient#files()
+     *
      * @param files The list of files to download.
      * @param downloadPath The {@link Path} to the download storage.
      * @return File containers with file headers and references/byte streams of the binary.
@@ -732,6 +916,19 @@ public abstract class Files extends ApiBase {
      * Examples: {@code file://localhost/home/files/, file:///home/files/, file:///c:/temp/}
      * - Google Cloud Storage. Specify the temp path as {@code gs://<my-storage-bucket>/<my-path>/}.
      * - S3 object storage. Specify the temp path as {@code s3://<my-storage-bucket>/<my-path>/}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> fileItems = List.of(Item.newBuilder().setId(10).build());
+     *      List<FileBinary> fileBinaries =
+     *                     client.files()
+     *                           .downloadFileBinaries(fileItems, URI.create("s3://testbucket"), true);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#files()
      *
      * @param fileItems The list of files to download.
      * @param tempStoragePath The URI to the download storage. Set to null to only perform in-memory download.
@@ -898,6 +1095,18 @@ public abstract class Files extends ApiBase {
      *
      * The files to delete are identified via their {@code externalId / id} by submitting a list of
      * {@link Item}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Item> files = List.of(Item.newBuilder().setExternalId("1").build());
+     *     List<Item> deletedItemsResults = client.files().delete(files);
+     * }
+     * </pre>
+     *
+     * @see DeleteItems#deleteItems(List)
+     * @see CogniteClient
+     * @see CogniteClient#files()
      *
      * @param files a list of {@link Item} representing the events (externalId / id) to be deleted
      * @return The deleted events via {@link Item}
