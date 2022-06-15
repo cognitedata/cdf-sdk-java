@@ -54,7 +54,7 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      * as the entry point to this class.
      *
      * @param client The {@link CogniteClient} to use for configuration settings.
-     * @return the assets api object.
+     * @return the events api object.
      */
     public static Events of(CogniteClient client) {
         return Events.builder()
@@ -109,7 +109,7 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      * @see CogniteClient
      * @see CogniteClient#events()
      *
-     * @param requestParameters the filters to use for retrieving the assets.
+     * @param requestParameters the filters to use for retrieving the events.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
      */
@@ -144,7 +144,7 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      * @see CogniteClient
      * @see CogniteClient#events()
      *
-     * @param requestParameters the filters to use for retrieving the assets.
+     * @param requestParameters the filters to use for retrieving the events.
      * @param partitions        the partitions to include.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
@@ -297,7 +297,7 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      * <h2>Example:</h2>
      * <pre>
      * {@code
-     *      List<Asset> events = // List of Events;
+     *      List<Event> events = // List of Events;
      *      client.events().upsert(events);
      * }
      * </pre>
