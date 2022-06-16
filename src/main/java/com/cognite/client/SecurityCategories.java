@@ -61,7 +61,19 @@ public abstract class SecurityCategories extends ApiBase {
     /**
      * Returns all {@link SecurityCategory} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<SecurityCategory> listResults = new ArrayList<>();
+     *     client.securityCategories()
+     *             .list()
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
      * @see #list(Request)
+     * @see CogniteClient
+     * @see CogniteClient#securityCategories()
      */
     public Iterator<List<SecurityCategory>> list() throws Exception {
         return this.list(Request.create());
@@ -76,6 +88,22 @@ public abstract class SecurityCategories extends ApiBase {
      *
      * The security categories are retrieved using multiple, parallel request streams towards the Cognite api. The
      * number of parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<SecurityCategory> listResults = new ArrayList<>();
+     *      client.securityCategories()
+     *              .list(Request.create()
+     *                             .withRootParameter("sort", "ASC"))
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#securityCategories()
+     *
      * @param requestParameters
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
@@ -95,7 +123,23 @@ public abstract class SecurityCategories extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
-     * @param requestParameters The filters to use for retrieving the timeseries.
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<SecurityCategory> listResults = new ArrayList<>();
+     *      client.securityCategories()
+     *              .list(Request.create()
+     *                             .withRootParameter("sort", "ASC"),
+     *                                  "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#securityCategories()
+     *
+     * @param requestParameters The filters to use for retrieving the SecurityCategory.
      * @param partitions The partitions to include
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
@@ -106,6 +150,18 @@ public abstract class SecurityCategories extends ApiBase {
 
     /**
      * Creates a set of {@link SecurityCategory} objects.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<SecurityCategory> securityCategories = //List of SecurityCategory;
+     *      client.securityCategories().create(securityCategories);
+     * }
+     * </pre>
+     *
+     * @see UpsertItems#create(List)
+     * @see CogniteClient
+     * @see CogniteClient#securityCategories()
      *
      * @param securityCategories The security categories to upsert
      * @return The upserted security categories
@@ -128,6 +184,17 @@ public abstract class SecurityCategories extends ApiBase {
      *
      * The security categories to delete are identified via their {@code id} by submitting a list of
      * {@link SecurityCategory}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<SecurityCategory> securityCategories = // List of SecurityCategory;
+     *     List<SecurityCategory> deletedItemsResults = client.securityCategories().delete(securityCategories);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#securityCategories()
      *
      * @param securityCategories A list of {@link SecurityCategory} representing the security categories (id) to be deleted
      * @return The deleted security categories via {@link Item}
