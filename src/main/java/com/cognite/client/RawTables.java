@@ -16,6 +16,7 @@
 
 package com.cognite.client;
 
+import com.cognite.client.config.AuthConfig;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ResponseItems;
 import com.cognite.client.util.Partition;
@@ -62,6 +63,22 @@ public abstract class RawTables extends ApiBase {
     /**
      * Returns all tables (names) in a database.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<String> listResults = new ArrayList<>();
+     *     client.raw()
+     *           .tables()
+     *           .list("dbName")
+     *           .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see ConnectorServiceV1#readRawTableNames(String, AuthConfig)
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#tables()
+     *
      * @param dbName the data base to list tables for.
      * @return an {@link Iterator} to page through the table names.
      * @throws Exception
@@ -76,6 +93,21 @@ public abstract class RawTables extends ApiBase {
 
     /**
      * Creates tables in a Raw database.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.raw()
+     *           .tables()
+     *           .create("dbName", List.of("tables"), true);
+     * }
+     * </pre>
+     *
+     * @see ConnectorServiceV1#writeRawTableNames(String)
+     * @see com.cognite.client.servicesV1.ConnectorServiceV1.ItemWriter#writeItems(Request)
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#tables()
      *
      * @param dbName The Raw database to create tables in.
      * @param tables The tables to create.
@@ -123,6 +155,22 @@ public abstract class RawTables extends ApiBase {
 
     /**
      * Deletes a set of tables from a Raw database.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<String> deleteItemsResults =
+     *         client.raw()
+     *               .tables()
+     *               .delete("dbName", List.of("tables"));
+     * }
+     * </pre>
+     *
+     * @see ConnectorServiceV1#deleteRawTableNames(String)
+     * @see com.cognite.client.servicesV1.ConnectorServiceV1.ItemWriter#writeItems(Request)
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#tables()
      *
      * @param dbName The Raw database to create tables in.
      * @param tables The tables to delete.
