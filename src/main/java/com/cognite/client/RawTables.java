@@ -74,7 +74,6 @@ public abstract class RawTables extends ApiBase {
      * }
      * </pre>
      *
-     * @see ConnectorServiceV1#readRawTableNames(String, AuthConfig)
      * @see CogniteClient
      * @see CogniteClient#raw()
      * @see Raw#tables()
@@ -103,8 +102,6 @@ public abstract class RawTables extends ApiBase {
      * }
      * </pre>
      *
-     * @see ConnectorServiceV1#writeRawTableNames(String)
-     * @see com.cognite.client.servicesV1.ConnectorServiceV1.ItemWriter#writeItems(Request)
      * @see CogniteClient
      * @see CogniteClient#raw()
      * @see Raw#tables()
@@ -166,8 +163,6 @@ public abstract class RawTables extends ApiBase {
      * }
      * </pre>
      *
-     * @see ConnectorServiceV1#deleteRawTableNames(String)
-     * @see com.cognite.client.servicesV1.ConnectorServiceV1.ItemWriter#writeItems(Request)
      * @see CogniteClient
      * @see CogniteClient#raw()
      * @see Raw#tables()

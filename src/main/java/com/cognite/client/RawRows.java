@@ -354,8 +354,6 @@ public abstract class RawRows extends ApiBase {
      * }
      * </pre>
      *
-     * @see ConnectorServiceV1#readRawRow
-     * @see ItemReader#getItemsAsync(Request)
      * @see CogniteClient
      * @see CogniteClient#raw()
      * @see Raw#rows()
@@ -487,8 +485,6 @@ public abstract class RawRows extends ApiBase {
      * </pre>
      *
      * @see ClientConfig#getNoListPartitions()
-     * @see ConnectorServiceV1#readCursorsRawRows()
-     * @see ItemReader#getItems(Request)
      * @see CogniteClient
      * @see CogniteClient#raw()
      * @see Raw#rows()
@@ -545,8 +541,6 @@ public abstract class RawRows extends ApiBase {
      * }
      * </pre>
      *
-     * @see ConnectorServiceV1#writeRawRows()
-     * @see com.cognite.client.servicesV1.ConnectorServiceV1.ItemWriter#writeItemsAsync(Request)
      * @see CogniteClient
      * @see CogniteClient#raw()
      * @see Raw#rows()
@@ -695,8 +689,6 @@ public abstract class RawRows extends ApiBase {
      * }
      * </pre>
      *
-     * @see ConnectorServiceV1#deleteRawRows()
-     * @see com.cognite.client.servicesV1.ConnectorServiceV1.ItemWriter#writeItemsAsync(Request)
      * @see CogniteClient
      * @see CogniteClient#raw()
      * @see Raw#rows()

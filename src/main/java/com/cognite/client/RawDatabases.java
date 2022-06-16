@@ -73,7 +73,6 @@ public abstract class RawDatabases extends ApiBase {
      * }
      * </pre>
      *
-     * @see ConnectorServiceV1#readRawDbNames(AuthConfig)
      * @see CogniteClient
      * @see CogniteClient#raw()
      * @see Raw#databases()
@@ -101,7 +100,6 @@ public abstract class RawDatabases extends ApiBase {
      * }
      * </pre>
      *
-     * @see com.cognite.client.servicesV1.ConnectorServiceV1.ItemWriter#writeItems(Request)
      * @see CogniteClient
      * @see CogniteClient#raw()
      * @see Raw#databases()
@@ -182,7 +180,6 @@ public abstract class RawDatabases extends ApiBase {
      * }
      * </pre>
      *
-     * @see com.cognite.client.servicesV1.ConnectorServiceV1.ItemWriter#writeItems(Request)
      * @see CogniteClient
      * @see CogniteClient#raw()
      * @see Raw#databases()
