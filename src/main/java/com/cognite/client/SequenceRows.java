@@ -88,6 +88,23 @@ public abstract class SequenceRows extends ApiBase {
      * The sequence bodies are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<SequenceBody> listResults = new ArrayList<>();
+     *      client
+     *          .sequences()
+     *          .rows()
+     *          .retrieve(Request.create.withRootParameter("id", 1L))
+     *          .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
+     * @see Sequences#rows()
+     *
      * @param requestParameters the filters to use for retrieving sequences bodies.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
@@ -109,6 +126,22 @@ public abstract class SequenceRows extends ApiBase {
      *
      * The sequence bodies are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<SequenceBody> listResults = new ArrayList<>();
+     *      client
+     *          .sequences()
+     *          .rows()
+     *          .retrieve(List.of(Request.create.withRootParameter("id", 1L)))
+     *          .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
+     * @see Sequences#rows()
      *
      * @param requestParametersList the filters to use for retrieving sequences bodies.
      * @return an {@link Iterator} to page through the results set.
@@ -132,6 +165,23 @@ public abstract class SequenceRows extends ApiBase {
      * Retrieves {@link SequenceBody} by {@code externalId}.
      * Refer to {@link #retrieveComplete(List)} for more information.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<SequenceBody> listResults = new ArrayList<>();
+     *      client
+     *          .sequences()
+     *          .rows()
+     *          .retrieveComplete("1", "2")
+     *          .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #retrieveComplete(List)
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
+     * @see Sequences#rows()
+     *
      * @param externalId The {@code externalIds} to retrieve
      * @return The retrieved sequence bodies.
      * @throws Exception
@@ -143,6 +193,23 @@ public abstract class SequenceRows extends ApiBase {
     /**
      * Retrieves {@link SequenceBody} by {@code internal id}.
      * Refer to {@link #retrieveComplete(List)} for more information.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<SequenceBody> listResults = new ArrayList<>();
+     *      client
+     *          .sequences()
+     *          .rows()
+     *          .retrieveComplete(1, 2)
+     *          .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #retrieveComplete(List)
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
+     * @see Sequences#rows()
      *
      * @param id The {@code ids} to retrieve
      * @return The retrieved sequence bodies.
@@ -159,6 +226,19 @@ public abstract class SequenceRows extends ApiBase {
      *
      * The sequence bodies are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
+     *      List<SequenceBody> retrievedSequenceBody = client.sequences().rows().retrieve(items);
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
+     * @see Sequences#rows()
      *
      * @param items The sequences {@code externalId / id} to retrieve rows for.
      * @return The retrieved sequence rows / bodies.
@@ -197,6 +277,18 @@ public abstract class SequenceRows extends ApiBase {
      * 1. Write all {@link SequenceBody} objects to the Cognite API.
      * 2. If one (or more) of the objects fail, check if it is because of missing sequence objects--create temp headers.
      * 3. Retry the failed {@link SequenceBody} objects.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<SequenceBody> sequenceBodies = // List of SequenceBody;
+     *      client.sequences().rows().upsert(sequenceBodies);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
+     * @see Sequences#rows()
      *
      * @param sequenceBodies The sequences rows to upsert
      * @return The upserted sequences rows
@@ -374,6 +466,18 @@ public abstract class SequenceRows extends ApiBase {
      * This method will delete the rows specified via the sequence externalId/id + row number list in the input
      * {@link SequenceBody} objects. You don't need to specify columns or values. All columns will always be removed
      * from the listed row numbers.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<SequenceBody> sequenceRows = // List of SequenceBody;
+     *     List<SequenceBody> deletedItemsResults = client.sequences().rows().delete(sequenceRows);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
+     * @see Sequences#rows()
      *
      * @param sequenceRows
      * @return The deleted rows
