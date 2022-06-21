@@ -6,7 +6,7 @@ import com.google.common.base.Preconditions;
 import java.io.Serializable;
 import java.time.Duration;
 
-import static com.cognite.client.servicesV1.ConnectorConstants.DEFAULT_ASYNC_API_JOB_POLLING_INTERVAL;
+import static com.cognite.client.servicesV1.ConnectorConstants.DEFAULT_ASYNC_API_JOB_TIMEOUT;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -43,6 +43,10 @@ public abstract class ClientConfig implements Serializable {
     private static final int MIN_ENTITY_MATCHING_MAX_BATCH_SIZE = 1;
     private static final int MAX_ENTITY_MATCHING_MAX_BATCH_SIZE = 20000;
 
+    // Timeouts for async api jobs (i.e. the context api)
+    private static final Duration MIN_ASYNC_API_JOB_TIMEOUT = Duration.ofSeconds(90);
+    private static final Duration MAX_ASYNC_API_JOB_TIMEOUT = Duration.ofHours(24);
+
     private static Builder builder() {
         return new AutoValue_ClientConfig.Builder()
                 .setSdkIdentifier(SDK_IDENTIFIER)
@@ -53,7 +57,7 @@ public abstract class ClientConfig implements Serializable {
                 .setNoListPartitions(DEFAULT_LIST_PARTITIONS)
                 .setUpsertMode(DEFAULT_UPSERT_MODE)
                 .setEntityMatchingMaxBatchSize(DEFAULT_ENTITY_MATCHING_MAX_BATCH_SIZE)
-                .setAsyncApiJobTimeout(DEFAULT_ASYNC_API_JOB_POLLING_INTERVAL);
+                .setAsyncApiJobTimeout(DEFAULT_ASYNC_API_JOB_TIMEOUT);
     }
 
     /**
@@ -81,8 +85,8 @@ public abstract class ClientConfig implements Serializable {
      * Set the app identifier. The identifier is encoded in the api calls to the Cognite instance and can be
      * used for tracing and statistics.
      *
-     * @param identifier the application identifier
-     * @return the {@link ClientConfig} with the setting applied
+     * @param identifier the application identifier.
+     * @return the {@link ClientConfig} with the setting applied.
      */
     public ClientConfig withAppIdentifier(String identifier) {
         Preconditions.checkNotNull(identifier, "Identifier cannot be null");
@@ -94,8 +98,8 @@ public abstract class ClientConfig implements Serializable {
      * Set the session identifier. The identifier is encoded in the api calls to the Cognite instance and can be
      * used for tracing and statistics.
      *
-     * @param identifier the session identifier
-     * @return the {@link ClientConfig} with the setting applied
+     * @param identifier the session identifier.
+     * @return the {@link ClientConfig} with the setting applied.
      */
     public ClientConfig withSessionIdentifier(String identifier) {
         Preconditions.checkNotNull(identifier, "Identifier cannot be null");
@@ -108,8 +112,8 @@ public abstract class ClientConfig implements Serializable {
      *
      * The default setting is 5. This should be sufficient for most scenarios.
      *
-     * @param retries the {@link ClientConfig} with the setting applied
-     * @return the {@link ClientConfig} with the setting applied
+     * @param retries the maximum number of retries before failing a request.
+     * @return the {@link ClientConfig} with the setting applied.
      */
     public ClientConfig withMaxRetries(int retries) {
         Preconditions.checkArgument(retries <= MAX_RETRIES && retries >= MIN_RETRIES,
@@ -119,10 +123,10 @@ public abstract class ClientConfig implements Serializable {
 
     /**
      * Specifies the maximum number of workers to use for the Cognite API requests. The default setting is
-     * eight workers per (virtual) CPU core.
+     * eight workers.
      *
-     * @param noWorkers max number of workers
-     * @return the {@link ClientConfig} with the setting applied
+     * @param noWorkers max number of workers.
+     * @return the {@link ClientConfig} with the setting applied.
      */
     public ClientConfig withNoWorkers(int noWorkers) {
         return toBuilder().setNoWorkers(noWorkers).build();
@@ -134,8 +138,8 @@ public abstract class ClientConfig implements Serializable {
      *
      * The default setting is eight partitions.
      *
-     * @param noPartitions the number of partitions for list requests
-     * @return the {@link ClientConfig} with the setting applied
+     * @param noPartitions the number of partitions for list requests.
+     * @return the {@link ClientConfig} with the setting applied.
      */
     public ClientConfig withNoListPartitions(int noPartitions) {
         return toBuilder().setNoListPartitions(noPartitions).build();
@@ -153,7 +157,7 @@ public abstract class ClientConfig implements Serializable {
      * <code>UpsertMode.REPLACE</code> will replace the entire target object with the provided fields
      * (<code>id</code> and <code>externalId</code> will remain unchanged).
      *
-     * @param mode the upsert mode
+     * @param mode the upsert mode.
      * @return the {@link ClientConfig} with the setting applied
      */
     public ClientConfig withUpsertMode(UpsertMode mode) {
@@ -162,19 +166,34 @@ public abstract class ClientConfig implements Serializable {
 
     /**
      * Sets the max batch size when executing entity matching operations.
-     * @param value
-     * @return
+     *
+     * @param batchSize the max batch size.
+     * @return the {@link ClientConfig} with the setting applied.
      */
-    public ClientConfig withEntityMatchingMaxBatchSize(int value) {
-        checkArgument(value >= MIN_ENTITY_MATCHING_MAX_BATCH_SIZE
-                        && value <= MAX_ENTITY_MATCHING_MAX_BATCH_SIZE,
+    public ClientConfig withEntityMatchingMaxBatchSize(int batchSize) {
+        checkArgument(batchSize >= MIN_ENTITY_MATCHING_MAX_BATCH_SIZE
+                        && batchSize <= MAX_ENTITY_MATCHING_MAX_BATCH_SIZE,
                 String.format("Max context batch size must be between %d and %d", MIN_ENTITY_MATCHING_MAX_BATCH_SIZE,
                         MAX_ENTITY_MATCHING_MAX_BATCH_SIZE));
 
-        return toBuilder().setEntityMatchingMaxBatchSize(value).build();
+        return toBuilder().setEntityMatchingMaxBatchSize(batchSize).build();
     }
 
+    /**
+     * Sets the timeout for waiting for async api jobs to finish. Async api jobs includes the CDF context api endpoints
+     * like entity matching and engineering diagram parsing.
+     *
+     * The default timeout is 20 minutes.
+     *
+     * @param timeout The async timeout expressed as {@link Duration}.
+     * @return the {@link ClientConfig} with the setting applied.
+     */
     public ClientConfig withAsyncApiJobTimeout(Duration timeout) {
+        checkArgument(timeout.compareTo(MIN_ASYNC_API_JOB_TIMEOUT) >= 0
+                        && timeout.compareTo(MAX_ASYNC_API_JOB_TIMEOUT) <= 0,
+                String.format("Async job timeout must be between %s and %s", MIN_ASYNC_API_JOB_TIMEOUT,
+                        MAX_ASYNC_API_JOB_TIMEOUT));
+
         return toBuilder().setAsyncApiJobTimeout(timeout).build();
     }
 

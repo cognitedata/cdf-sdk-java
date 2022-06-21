@@ -2684,6 +2684,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                     .setRequestProvider(jobStartRequestProvider)
                     .setJobResultRequestProvider(jobResultRequestProvider)
                     .setResponseParser(responseParser)
+                    .setJobTimeoutDuration(client.getClientConfig().getAsyncApiJobTimeout())
                     .build();
         }
 
@@ -2718,22 +2719,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
          */
         AsyncJobReader<T> withJobResultRequestProvider(RequestProvider requestProvider) {
             return toBuilder().setJobResultRequestProvider(requestProvider).build();
-        }
-
-        /**
-         * Sets the timeout for the api job. This reader will wait for up to the timeout duration for the api
-         * to complete the job.
-         *
-         * When the timeout is triggered, the reader will respond with the current job status (most likely
-         * "Queued" or "Running").
-         *
-         * The default timeout is 15 minutes.
-         *
-         * @param timeout
-         * @return
-         */
-        AsyncJobReader<T> withJobTimeout(Duration timeout) {
-            return toBuilder().setJobTimeoutDuration(timeout).build();
         }
 
         /**
