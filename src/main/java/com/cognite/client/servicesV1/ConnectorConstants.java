@@ -40,7 +40,7 @@ public final class ConnectorConstants {
     public static final int MAX_MAX_RETRIES = 20;
     public static final String DEFAULT_ENDPOINT = "";
     public static final Duration DEFAULT_ASYNC_API_JOB_TIMEOUT = Duration.ofMinutes(20);
-    public static final Duration DEFAULT_ASYNC_API_JOB_POLLING_INTERVAL = Duration.ofSeconds(2);
+    public static final Duration DEFAULT_ASYNC_API_JOB_POLLING_INTERVAL = Duration.ofSeconds(4);
 
     /*
     Default batch sizes for api requests
