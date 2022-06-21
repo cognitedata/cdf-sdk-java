@@ -1676,8 +1676,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> entityMatcherPredict() {
-        LOG.debug(loggingPrefix + "Initiating entity matcher predict service.");
-
         PostJsonRequestProvider jobStartRequestProvider =
                 PostJsonRequestProvider.builder()
                         .setEndpoint("context/entitymatching/predict")
@@ -1707,8 +1705,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public Connector<String> entityMatcherFit() {
-        LOG.debug(loggingPrefix + "Initiating entity matcher training service.");
-
         PostJsonRequestProvider jobStartRequestProvider =
                 PostJsonRequestProvider.builder()
                         .setEndpoint("context/entitymatching")
@@ -1739,8 +1735,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public Iterator<CompletableFuture<ResponseItems<String>>> readThreeDModels(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read 3d models service.");
-
         ThreeDRequestProvider requestProvider = ThreeDRequestProvider.builder()
                 .setEndpoint("3d/models")
                 .setRequest(queryParameters)

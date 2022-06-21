@@ -27,7 +27,7 @@ public final class ConnectorConstants {
     /*
     API request identifiers
      */
-    public final static String SDK_IDENTIFIER = "cdf-sdk-java-1.17.x";
+    public final static String SDK_IDENTIFIER = "cdf-sdk-java-1.x.x";
     public final static String DEFAULT_APP_IDENTIFIER = "cdf-sdk-java";
     public final static String DEFAULT_SESSION_IDENTIFIER = "cdf-sdk-java";
 

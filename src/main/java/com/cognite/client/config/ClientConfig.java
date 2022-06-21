@@ -4,7 +4,9 @@ import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 
 import java.io.Serializable;
+import java.time.Duration;
 
+import static com.cognite.client.servicesV1.ConnectorConstants.DEFAULT_ASYNC_API_JOB_POLLING_INTERVAL;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -50,7 +52,8 @@ public abstract class ClientConfig implements Serializable {
                 .setNoWorkers(DEFAULT_CPU_THREADS)
                 .setNoListPartitions(DEFAULT_LIST_PARTITIONS)
                 .setUpsertMode(DEFAULT_UPSERT_MODE)
-                .setEntityMatchingMaxBatchSize(DEFAULT_ENTITY_MATCHING_MAX_BATCH_SIZE);
+                .setEntityMatchingMaxBatchSize(DEFAULT_ENTITY_MATCHING_MAX_BATCH_SIZE)
+                .setAsyncApiJobTimeout(DEFAULT_ASYNC_API_JOB_POLLING_INTERVAL);
     }
 
     /**
@@ -72,6 +75,7 @@ public abstract class ClientConfig implements Serializable {
     public abstract int getNoListPartitions();
     public abstract UpsertMode getUpsertMode();
     public abstract int getEntityMatchingMaxBatchSize();
+    public abstract Duration getAsyncApiJobTimeout();
 
     /**
      * Set the app identifier. The identifier is encoded in the api calls to the Cognite instance and can be
@@ -170,6 +174,10 @@ public abstract class ClientConfig implements Serializable {
         return toBuilder().setEntityMatchingMaxBatchSize(value).build();
     }
 
+    public ClientConfig withAsyncApiJobTimeout(Duration timeout) {
+        return toBuilder().setAsyncApiJobTimeout(timeout).build();
+    }
+
     @AutoValue.Builder
     static abstract class Builder {
         abstract Builder setSdkIdentifier(String value);
@@ -180,6 +188,7 @@ public abstract class ClientConfig implements Serializable {
         abstract Builder setNoListPartitions(int value);
         abstract Builder setUpsertMode(UpsertMode value);
         abstract Builder setEntityMatchingMaxBatchSize(int value);
+        abstract Builder setAsyncApiJobTimeout(Duration value);
 
         abstract ClientConfig build();
     }
