@@ -72,7 +72,7 @@ public abstract class Sequences extends ApiBase {
      * </pre>
      *
      * @see CogniteClient
-     * @see CogniteClient#contextualization()
+     * @see CogniteClient#sequences()
      *
      * @return The sequences data / rows api object.
      */
@@ -283,6 +283,7 @@ public abstract class Sequences extends ApiBase {
      * }
      * </pre>
      *
+     * @see UpsertItems#upsertViaGetCreateAndUpdateDiff(List)
      * @see CogniteClient
      * @see CogniteClient#sequences()
      *
@@ -327,9 +328,9 @@ public abstract class Sequences extends ApiBase {
      * }
      * </pre>
      *
+     * @see DeleteItems#deleteItems(List)
      * @see CogniteClient
      * @see CogniteClient#sequences()
-     * @see Sequences#rows()
      *
      * @param sequences A list of {@link Item} representing the sequences (externalId / id) to be deleted
      * @return The deleted sequences via {@link Item}
