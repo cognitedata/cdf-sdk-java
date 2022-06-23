@@ -27,6 +27,16 @@ public abstract class ThreeD extends ApiBase {
     /**
      * Returns {@link ThreeDModels} representing 3D Models api endpoints.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.threeD().models();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     *
      * @return The ThreeDModels api endpoints.
      */
     public ThreeDModels models() {
@@ -35,6 +45,16 @@ public abstract class ThreeD extends ApiBase {
 
     /**
      * Returns {@link ThreeDFiles} 3D Files api endpoints.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.threeD().files();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
      *
      * @return The ThreeDFiles api endpoints.
      */
