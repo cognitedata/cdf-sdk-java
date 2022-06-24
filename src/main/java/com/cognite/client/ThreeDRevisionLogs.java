@@ -42,6 +42,28 @@ public abstract class ThreeDRevisionLogs extends ApiBase {
     /**
      * Retrieves 3D Revision Logs by modeId and revisionId
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Long modelId = 1L;
+     *      Long revisionId = 1L;
+     *      List<ThreeDOutput> retrievedThreeDOutputs =
+     *                                      client
+     *                                      .threeD()
+     *                                      .models()
+     *                                      .revisions()
+     *                                      .revisionLogs()
+     *                                      .retrieve(modelId,revisionId);
+     * }
+     * </pre>
+     *
+     * @see #retrieve(Long,Long,Request)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#revisionLogs()
+     *
      * @param modelId The id of ThreeDModel object
      * @param revisionId The id of ThreeDModelRevision object
      */
@@ -52,6 +74,28 @@ public abstract class ThreeDRevisionLogs extends ApiBase {
     /**
      *
      * Retrieves 3D Revision Logs by modeId and revisionId
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Long modelId = 1L;
+     *      Long revisionId = 1L;
+     *      Request requestParameters = Request.create().withRootParameter("severity", Long.valueOf(3));
+     *      List<ThreeDOutput> retrievedThreeDOutputs =
+     *                                      client
+     *                                      .threeD()
+     *                                      .models()
+     *                                      .revisions()
+     *                                      .revisionLogs()
+     *                                      .retrieve(modelId,revisionId,requestParameters);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#revisionLogs()
      *
      * @param modelId The id of ThreeDModel object
      * @param revisionId The id of ThreeDModelRevision object

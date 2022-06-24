@@ -42,6 +42,28 @@ public abstract class ThreeDOutputs extends ApiBase {
     /**
      * Retrieves 3D Available Outputs by modeId and revisionId
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Long modelId = 1L;
+     *      Long revisionId = 1L;
+     *      List<ThreeDOutput> retrievedThreeDOutputs =
+     *                                      client
+     *                                      .threeD()
+     *                                      .models()
+     *                                      .revisions()
+     *                                      .outputs()
+     *                                      .retrieve(modelId,revisionId);
+     * }
+     * </pre>
+     *
+     * @see #retrieve(Long,Long,Request)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#outputs()
+     *
      * @param modelId The id of ThreeDModel object
      * @param revisionId The id of ThreeDModelRevision object
      */
@@ -49,6 +71,36 @@ public abstract class ThreeDOutputs extends ApiBase {
         return retrieve(modelId, revisionId, Request.create());
     }
 
+    /**
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Long modelId = 1L;
+     *      Long revisionId = 1L;
+     *      Request requestParameters = Request.create().withRootParameter("format", "ept-pointcloud");
+     *      List<ThreeDOutput> retrievedThreeDOutputs =
+     *                                      client
+     *                                      .threeD()
+     *                                      .models()
+     *                                      .revisions()
+     *                                      .outputs()
+     *                                      .retrieve(modelId,revisionId,requestParameters);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#outputs()
+     *
+     * @param modelId The id of ThreeDModel object
+     * @param revisionId The id of ThreeDModelRevision object
+     * @param requestParameters the filters to use for retrieving the 3D outputs.
+     * @return
+     * @throws Exception
+     */
     public List<ThreeDOutput> retrieve(Long modelId, Long revisionId, Request requestParameters) throws Exception {
         String loggingPrefix = "retrieve() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         ConnectorServiceV1 connector = getClient().getConnectorService();
