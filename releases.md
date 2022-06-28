@@ -23,6 +23,11 @@ Changes are grouped as follows:
 
 - Configurable timeout for async api jobs (i.e. `entity matching` and `engineering diagram parsing`). Use `ClientConfig.withAsyncApiJobTimeout(Duration timeout)` to specify a custom timeout. The default timeout is 20 mins.
 
+### Changed
+
+- Improve javadoc `Assets`
+
+
 ## [1.16.0] 2022-05-30
 
 ### Added

@@ -17,6 +17,7 @@
 package com.cognite.client;
 
 import com.cognite.client.config.AuthConfig;
+import com.cognite.client.config.ClientConfig;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.Item;
@@ -70,6 +71,14 @@ abstract class ApiBase {
      * The number of partitions indicate the number of parallel read streams. Employ one partition specification
      * per read stream.
      *
+     * <h2>Example:</h2>
+     *
+     * <pre>
+     * {@code
+     *      List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
+     * }
+     * </pre>
+     *
      * @param noPartitions The total number of partitions
      * @return a {@link List} of partition specifications
      */
@@ -93,6 +102,15 @@ abstract class ApiBase {
      * This method support parallel retrieval via a set of {@code partition} specifications. The specified partitions
      * will be collected and merged together before being returned via the {@link Iterator}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Iterator<List<String>> result = listJson(resourceType, requestParameters, partitions);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String,String...)
+     *
      * @param resourceType      The resource type to query / filter / list. Ex. {@code event, asset, time series}.
      * @param requestParameters The query / filter specification. Follows the Cognite api request parameters.
      * @param partitions        An optional set of partitions to read via.
@@ -115,6 +133,13 @@ abstract class ApiBase {
      *
      * This method support parallel retrieval via a set of {@code partition} specifications. The specified partitions
      * will be collected and merged together before being returned via the {@link Iterator}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Iterator<List<String>> result = listJson(resourceType, requestParameters, partitionKey, partitions);
+     * }
+     * </pre>
      *
      * @param resourceType      The resource type to query / filter / list. Ex. {@code event, asset, time series}.
      * @param requestParameters The query / filter specification. Follows the Cognite api request parameters.
@@ -162,6 +187,16 @@ abstract class ApiBase {
      *
      * Will ignore unknown ids by default.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Collection<Item> items = //Collection of items with ids;
+     *      List<String> result = retrieveJson(resourceType, items);
+     * }
+     * </pre>
+     *
+     * @see #retrieveJson(ResourceType,Collection,Map)
+     *
      * @param resourceType The item resource type ({@link com.cognite.client.dto.Event},
      *                     {@link com.cognite.client.dto.Asset}, etc.) to retrieve.
      * @param items        The item(s) {@code externalId / id} to retrieve.
@@ -177,6 +212,15 @@ abstract class ApiBase {
      *
      * This version allows you to explicitly set additional parameters for the retrieve request. For example:
      * {@code <"ignoreUnknownIds", true>} and {@code <"fetchResources", true>}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Collection<Item> items = //Collection of items with ids;
+     *      Map<String, Object> parameters = //Parameters;
+     *      List<String> result = retrieveJson(resourceType, items, parameters);
+     * }
+     * </pre>
      *
      * @param resourceType The item resource type ({@link com.cognite.client.dto.Event},
      *                     {@link com.cognite.client.dto.Asset}, etc.) to retrieve.
@@ -307,6 +351,13 @@ abstract class ApiBase {
      * The default aggregation is a total item count based on the (optional) filters in the request. Some
      * resource types, for example {@link com.cognite.client.dto.Event}, supports multiple types of aggregation.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Aggregate aggregateResult = aggregate(resourceType,requestParameters);
+     * }
+     * </pre>
+     *
      * @param resourceType      The resource type to perform aggregation of.
      * @param requestParameters The request containing filters.
      * @return The aggregation result.
@@ -368,6 +419,13 @@ abstract class ApiBase {
      * 1) API key.
      *
      * When using an api key, this service will look up the corresponding project/tenant to issue requests to.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Request requestParams = addAuthInfo(request);
+     * }
+     * </pre>
      *
      * @param request The request to enrich with auth information.
      * @return The request parameters with auth info added to it.
@@ -471,6 +529,14 @@ abstract class ApiBase {
     /**
      * Parses a list of item object in json representation to typed objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<String> input = //List of json;
+     *      List<Item> resultList = parseItems(input);
+     * }
+     * </pre>
+     *
      * @param input the item list in Json string representation
      * @return the parsed item objects
      * @throws Exception
@@ -485,6 +551,14 @@ abstract class ApiBase {
 
     /**
      * Converts a list of {@link Item} to a request object structure (that can later be parsed to Json).
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Collection<Item> itemList = //Collection of items;
+     *      List<Map<String, Object>> result = toRequestItems(itemList);
+     * }
+     * </pre>
      *
      * @param itemList The items to parse.
      * @return The items in request item object form.
@@ -503,6 +577,14 @@ abstract class ApiBase {
 
     /**
      * De-duplicates a collection of {@link Item}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Collection<Item> itemList = //Collection of items;
+     *      List<Item> result = deDuplicate(itemList);
+     * }
+     * </pre>
      *
      * @param itemList
      * @return
@@ -526,6 +608,14 @@ abstract class ApiBase {
     /**
      * Returns true if all items contain either an externalId or id.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Collection<Item> items = //Collection of items;
+     *      boolean result = itemsHaveId(items);
+     * }
+     * </pre>
+     *
      * @param items
      * @return
      */
@@ -544,6 +634,14 @@ abstract class ApiBase {
      *
      * Via the identity mapping, this function will also perform deduplication of the input items.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Collection<Item> items = //Collection of items;
+     *      Map<String, Item> result = mapItemToId(items);
+     * }
+     * </pre>
+     *
      * @param items the items to map to externalId / id.
      * @return the {@link Map} with all items mapped to externalId / id.
      */
@@ -557,6 +655,14 @@ abstract class ApiBase {
 
     /**
      * Try parsing the specified Json path as a {@link String}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      String json = //String of json object
+     *      String result = parseString(json, "name");
+     * }
+     * </pre>
      *
      * @param itemJson  The Json string
      * @param fieldName The Json path to parse
@@ -572,6 +678,14 @@ abstract class ApiBase {
 
     /**
      * Returns the name attribute value from a json input.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      String json = //String of json object
+     *      String result = parseName(json);
+     * }
+     * </pre>
      *
      * @param json the json to parse
      * @return The name value
