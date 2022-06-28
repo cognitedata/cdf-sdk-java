@@ -40,6 +40,11 @@ public abstract class AuthConfig implements Serializable {
   public static AuthConfig create() {
     return AuthConfig.builder().build();
   }
+  public static AuthConfig of(String cdfProject) {
+    return AuthConfig.builder()
+            .setProject(cdfProject)
+            .build();
+  }
 
   @Nullable public abstract String getProject();
   public abstract String getHost();
