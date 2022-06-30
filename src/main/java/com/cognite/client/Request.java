@@ -94,6 +94,16 @@ public abstract class Request implements Serializable {
      * - Valid primitives are String, Integer, Double, Float, Long, Boolean.
      * - Valid containers are Map (Json Object) and List (Json array).
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Request.create().withRequestParameters(ImmutableMap.of("limit", 2))
+     * }
+     * </pre>
+     *
+     * @see Request
+     * @see Request#create()
+     *
      * @param requestParameters
      * @return The request object with the parameter applied.
      */
@@ -105,6 +115,18 @@ public abstract class Request implements Serializable {
     /**
      * Adds the complete request body as a protobuf object.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Message requestBody;
+     *     Request.create().withProtoRequestBody(requestBody);
+     * }
+     * </pre>
+     *
+     * @see Message
+     * @see Request
+     * @see Request#create()
+     *
      * @param requestBody
      * @return The request object with the parameter applied.
      */
@@ -115,6 +137,18 @@ public abstract class Request implements Serializable {
     /**
      * Adds the complete request parameter structure based on Json. Calling this method will overwrite
      * any previously added parameters.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     String value = //Object json string;
+     *     Request parameters = Request.create()
+     *                 .withRequestJson(value);
+     * }
+     * </pre>
+     *
+     * @see Request
+     * @see Request#create()
      *
      * @param value
      * @return The request object with the parameter applied.
@@ -129,6 +163,18 @@ public abstract class Request implements Serializable {
 
     /**
      * Adds a new parameter to the root level.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Object object;
+     *     Request parameters = Request.create()
+     *                 .withRootParameter("key",object);
+     * }
+     * </pre>
+     *
+     * @see Request
+     * @see Request#create()
      *
      * @param key
      * @param value
@@ -147,6 +193,18 @@ public abstract class Request implements Serializable {
 
     /**
      * Adds a new parameter to the filter node.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Object object;
+     *     Request parameters = Request.create()
+     *                 .withFilterParameter("key",object);
+     * }
+     * </pre>
+     *
+     * @see Request
+     * @see Request#create()
      *
      * @param key
      * @param value
@@ -172,6 +230,17 @@ public abstract class Request implements Serializable {
 
     /**
      * Adds a new parameter to the filter.metadata node.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Request parameters = Request.create()
+     *                 .withFilterMetadataParameter("key","value");
+     * }
+     * </pre>
+     *
+     * @see Request
+     * @see Request#create()
      *
      * @param key
      * @param value
@@ -208,6 +277,21 @@ public abstract class Request implements Serializable {
      *
      * For most write operations the maximum number of items per request is 1k. For time series datapoints
      * the maximum number of items is 10k, with a maximum of 100k data points.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Map<String, Object>> requestItems = new ArrayList<>();
+     *      Map<String, Object> requestItem = new HashMap<>();
+     *      requestItem.put("externalId", 1);
+     *      requestItems.add(requestItem);
+     *      Request parameters = Request.create()
+     *                  .withItems(requestItems);
+     * }
+     * </pre>
+     *
+     * @see Request
+     * @see Request#create()
      *
      * @param items
      * @return The request object with the parameter applied.
@@ -281,6 +365,16 @@ public abstract class Request implements Serializable {
      *
      * You can use this method when requesting a data item by id, for example when requesting a set of events.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Request parameters = Request.create().withItemExternalIds("externalId");
+     * }
+     * </pre>
+     *
+     * @see Request
+     * @see Request#create()
+     *
      * @param externalId
      * @return The request object with the parameter applied.
      */
@@ -301,6 +395,17 @@ public abstract class Request implements Serializable {
      * You can use this method when requesting a data item by id, for example when requesting the data points
      * from a time series.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Long internalId = 1L;
+     *      Request parameters = Request.create().withItemInternalId(internalId);
+     * }
+     * </pre>
+     *
+     * @see Request
+     * @see Request#create()
+     *
      * @param internalId
      * @return The request object with the parameter applied.
      */
@@ -313,6 +418,16 @@ public abstract class Request implements Serializable {
      * Convenience method for setting the external id for requesting multiple items.
      *
      * You can use this method when requesting a data item by id, for example when requesting a set of events.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Request parameters = Request.create().withItemInternalId(1,2);
+     * }
+     * </pre>
+     *
+     * @see Request
+     * @see Request#create()
      *
      * @param internalId
      * @return The request object with the parameter applied.
@@ -357,6 +472,18 @@ public abstract class Request implements Serializable {
      * You can use this method if you need detailed, per-request control over auth config. In most cases, however,
      * you will configure this once on the {@link CogniteClient}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      AuthConfig authConfig = //AuthConfig object;
+     *      Request parameters = Request.create().withAuthConfig(authConfig);
+     * }
+     * </pre>
+     *
+     * @see AuthConfig
+     * @see Request
+     * @see Request#create()
+     *
      * @param config The auth config
      * @return The request object with the configuration applied.
      */
@@ -364,6 +491,20 @@ public abstract class Request implements Serializable {
         return toBuilder().setAuthConfig(config).build();
     }
 
+    /**
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      String requestParametersAsJson = Request.create().getRequestParametersAsJson();
+     * }
+     * </pre>
+     *
+     * @see Request
+     * @see Request#create()
+     *
+     * @return
+     * @throws JsonProcessingException
+     */
     public String getRequestParametersAsJson() throws JsonProcessingException {
         return objectWriter.writeValueAsString(getRequestParameters());
     }
@@ -374,6 +515,17 @@ public abstract class Request implements Serializable {
      *
      * Please note that all entries (with a key of type {@code String}) under the filter node are returned, potentially
      * including nested collections (such as metadata).
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Request parameters = Request.create();
+     *      parameters.getFilterParameters().get("key");
+     * }
+     * </pre>
+     *
+     * @see Request
+     * @see Request#create()
      *
      * @return
      */
@@ -396,6 +548,17 @@ public abstract class Request implements Serializable {
      * Returns the collection of metadata specific filter parameters as a Map. The parameters must have both a key and
      * value of type String in order to be included in the return collection.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Request parameters = Request.create();
+     *      parameters.getMetadataFilterParameters().get("key");
+     * }
+     * </pre>
+     *
+     * @see Request
+     * @see Request#create()
+     *
      * @return
      */
     public ImmutableMap<String, String> getMetadataFilterParameters() {
@@ -415,6 +578,17 @@ public abstract class Request implements Serializable {
 
     /**
      * Returns the list of items. This is typically the main payload of a write request (create, update or delete).
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Request parameters = Request.create();
+     *      parameters.getItems();
+     * }
+     * </pre>
+     *
+     * @see Request
+     * @see Request#create()
      *
      * @return
      */
