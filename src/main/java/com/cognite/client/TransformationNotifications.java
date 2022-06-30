@@ -39,7 +39,21 @@ public abstract class TransformationNotifications extends ApiBase {
     /**
      * Returns all {@link Transformation.Notification} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Transformation.Notification> listResults = new ArrayList<>();
+     *     client.transformation()
+     *             .notifications()
+     *             .list()
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
      * @see #list(Request)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#notifications()
      */
     public Iterator<List<Transformation.Notification>> list() throws Exception {
         return this.list(Request.create());
@@ -54,6 +68,23 @@ public abstract class TransformationNotifications extends ApiBase {
      *
      * The Transformations are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Transformation.Notification> listResults = new ArrayList<>();
+     *     client.transformation()
+     *             .notifications()
+     *             .list(Request.create()
+     *                                 .withRootParameter("transformationId", 1L))
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#notifications()
      *
      * @param requestParameters the filters to use for retrieving timeseries.
      * @return an {@link Iterator} to page through the results set.
@@ -74,6 +105,24 @@ public abstract class TransformationNotifications extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Transformation.Notification> listResults = new ArrayList<>();
+     *     client.transformation()
+     *             .notifications()
+     *             .list(Request.create()
+     *                                 .withRootParameter("transformationId", 1L),
+     *                                      "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#notifications()
+     *
      * @param requestParameters the filters to use for retrieving the timeseries.
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
@@ -85,6 +134,22 @@ public abstract class TransformationNotifications extends ApiBase {
 
     /**
      * Subscribe to receive notifications
+     * PS: Full example in file <a href="https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/transformations.md"><b>transformations.md</b></a>
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Transformation.Notification.Subscription> subscribes = // List of Subscription;
+     *     List<Transformation.Notification> createdSubscribes =
+     *                     client.transformation()
+     *                           .notifications()
+     *                           .subscribe(subscribes);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#notifications()
      *
      * @param subscribes Contains email and id of transformation
      * @return
@@ -117,7 +182,24 @@ public abstract class TransformationNotifications extends ApiBase {
 
     /**
      * Delete notifications
-     * @param items The item(s) {@code externalId / id} to delete.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Item> items = List.of(Item.newBuilder().setId(1).build());
+     *     List<Item> deletedItemsResults =
+     *                      client.transformation()
+     *                            .notifications()
+     *                            .delete(items);
+     * }
+     * </pre>
+     *
+     * @see DeleteItems#deleteItems(List)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#notifications()
+     *
+     * @param items The item(s) {@code id} to delete.
      * @return
      * @throws Exception
      */

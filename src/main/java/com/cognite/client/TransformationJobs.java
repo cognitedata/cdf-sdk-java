@@ -10,6 +10,7 @@ import com.cognite.client.servicesV1.parser.TransformationParser;
 import com.cognite.client.servicesV1.request.PostJsonRequestProvider;
 import com.google.auto.value.AutoValue;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -38,9 +39,20 @@ public abstract class TransformationJobs extends ApiBase {
     }
 
     /**
-     * Returns {@link TransformationJobs} representing TransformationJobs api endpoints.
+     * Returns {@link TransformationJobMetrics} representing TransformationJobMetrics api endpoints.
      *
-     * @return The TransformationJobs api endpoints.
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.transformation().jobs().metrics();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#jobs()
+     *
+     * @return The TransformationJobMetrics api endpoints.
      */
     public TransformationJobMetrics metrics() {
         return TransformationJobMetrics.of(getClient());
@@ -48,6 +60,19 @@ public abstract class TransformationJobs extends ApiBase {
 
     /**
      * Start running the job
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Long internalID = 1L;
+     *      Transformation.Job job =
+     *              client.transformation().jobs().run(internalID);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see #run(Request)
      *
      * @param internalID Transformation Internal ID
      * @return the job details
@@ -61,6 +86,19 @@ public abstract class TransformationJobs extends ApiBase {
     /**
      * Start running the job
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Long externalID = 1L;
+     *      Transformation.Job job =
+     *              client.transformation().jobs().run(externalID);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see #run(Request)
+     *
      * @param externalID Transformation external ID
      * @return the job details
      * @throws Exception
@@ -72,6 +110,19 @@ public abstract class TransformationJobs extends ApiBase {
 
     /**
      * Stop running job
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Long internalID = 1L;
+     *      Boolean jobResult =
+     *              client.transformation().jobs().cancel(internalID);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see #cancel(Request)
      *
      * @param internalID Transformation Internal ID
      * @return
@@ -85,6 +136,19 @@ public abstract class TransformationJobs extends ApiBase {
     /**
      * Stop running the job
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Long externalID = 1L;
+     *      Boolean jobResult =
+     *              client.transformation().jobs().cancel(externalID);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see #cancel(Request)
+     *
      * @param externalID Transformation external ID
      * @return
      * @throws Exception
@@ -97,7 +161,21 @@ public abstract class TransformationJobs extends ApiBase {
     /**
      * Returns all {@link Transformation.Job} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Transformation.Job> listResults = new ArrayList<>();
+     *     client.transformation()
+     *             .jobs()
+     *             .list()
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
      * @see #list(Request)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#jobs()
      */
     public Iterator<List<Transformation.Job>> list() throws Exception {
         return this.list(Request.create());
@@ -112,6 +190,23 @@ public abstract class TransformationJobs extends ApiBase {
      *
      * The Transformation.Job are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Transformation.Job> listResults = new ArrayList<>();
+     *     client.transformation()
+     *             .jobs()
+     *             .list(Request.create()
+     *                                 .withRootParameter("transformationId", 1));
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#jobs()
      *
      * @param requestParameters the filters to use for retrieving Transformation Job.
      * @return an {@link Iterator} to page through the results set.
@@ -132,6 +227,24 @@ public abstract class TransformationJobs extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Transformation.Job> listResults = new ArrayList<>();
+     *      client.transformation()
+     *              .jobs()
+     *              .list(Request.create()
+     *                             .withRootParameter("transformationId", 1),
+     *                                  "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#jobs()
+     *
      * @param requestParameters the filters to use for retrieving the Transformation Job.
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
@@ -141,11 +254,33 @@ public abstract class TransformationJobs extends ApiBase {
         return AdapterIterator.of(listJson(ResourceType.TRANSFORMATIONS_JOBS, requestParameters, partitions), this::parseTransformationJobs);
     }
 
+    /**
+     *
+     * Retrieve Transformation Jobs by {@code externalId / id}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
+     *      List<Transformation.Job> retrievedTransformationJobs = client.transformation().jobs().retrieve(items);
+     * }
+     * </pre>
+     *
+     * @see #retrieveJson(ResourceType, Collection)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#jobs()
+     *
+     * @param items The item(s) {@code externalId / id} to retrieve.
+     * @return
+     * @throws Exception
+     */
     public List<Transformation.Job> retrieve(List<Item> items) throws Exception {
         return retrieveJson(ResourceType.TRANSFORMATIONS_JOBS, items).stream()
                 .map(this::parseTransformationJobs)
                 .collect(Collectors.toList());
     }
+
 
     private Transformation.Job run(Request request) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();

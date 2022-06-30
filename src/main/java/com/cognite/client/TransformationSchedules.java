@@ -14,10 +14,7 @@ import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -46,7 +43,21 @@ public abstract class TransformationSchedules extends ApiBase {
     /**
      * Returns all {@link Transformation.Schedule} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Transformation.Schedule> listResults = new ArrayList<>();
+     *     client.transformation()
+     *             .schedules()
+     *             .list()
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
      * @see #list(Request)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#schedules()
      */
     public Iterator<List<Transformation.Schedule>> list() throws Exception {
         return this.list(Request.create());
@@ -61,6 +72,23 @@ public abstract class TransformationSchedules extends ApiBase {
      *
      * The Transformation.Job are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Transformation.Schedule> listResults = new ArrayList<>();
+     *     client.transformation()
+     *             .schedules()
+     *             .list(Request.create()
+     *                                 .withRootParameter("includePublic", true))
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#schedules()
      *
      * @param requestParameters the filters to use for retrieving Transformation Job.
      * @return an {@link Iterator} to page through the results set.
@@ -81,6 +109,24 @@ public abstract class TransformationSchedules extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Transformation.Schedule> listResults = new ArrayList<>();
+     *     client.transformation()
+     *             .schedules()
+     *             .list(Request.create()
+     *                                 .withRootParameter("includePublic", true),
+     *                                      "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#schedules()
+     *
      * @param requestParameters the filters to use for retrieving the Transformation Job.
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
@@ -92,11 +138,28 @@ public abstract class TransformationSchedules extends ApiBase {
 
     /**
      * Creates or updates a set of {@link Transformation.Schedule} objects.
+     * PS: Full example in file <a href="https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/transformations.md"><b>transformations.md</b></a>
      * <p>
      * If it is a new {@link Transformation.Schedule} object (based on {@code id / externalId}, then it will be created.
      * <p>
      * If an {@link Transformation.Schedule} object already exists in Cognite Data Fusion, it will be updated. The update behavior
      * is specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Transformation.Schedule> schedules = // List of Schedules;
+     *     List<Transformation.Schedule> createdListSchedules =
+     *                           client.transformation()
+     *                                 .schedules()
+     *                                 .schedule(schedules);
+     * }
+     * </pre>
+     *
+     * @see UpsertItems#upsertViaCreateAndUpdate(List)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#schedules()
      *
      * @param schedules The Transformation.Schedule to upsert.
      * @return The upserted Transformation.Schedule.
@@ -124,6 +187,21 @@ public abstract class TransformationSchedules extends ApiBase {
     /**
      * Delete schedules
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Item> items = List.of(Item.newBuilder().setId(1).build());
+     *     client.transformation()
+     *           .schedules()
+     *           .unSchedule(items);
+     * }
+     * </pre>
+     *
+     * @see DeleteItems#deleteItems(List)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#schedules()
+     *
      * @param items
      * @return The item(s) {@code externalId / id} to delete.
      * @throws Exception
@@ -140,6 +218,22 @@ public abstract class TransformationSchedules extends ApiBase {
 
     /**
      * Retrieve Transformation.Schedule by {@code externalId / id}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
+     *      List<Transformation> retrievedSchedules =
+     *                                  client.transformation()
+     *                                        .schedules()
+     *                                        .retrieve(items);
+     * }
+     * </pre>
+     *
+     * @see #retrieveJson(ResourceType, Collection)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#schedules()
      *
      * @param items The item(s) {@code externalId / id} to retrieve.
      * @return The retrieved Transformation.Schedule.

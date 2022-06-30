@@ -31,6 +31,32 @@ public abstract class TransformationJobMetrics extends ApiBase {
                 .build();
     }
 
+    /**
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Integer jobId = 1;
+     *     List<Transformation.Job.Metric> listResults = new ArrayList<>();
+     *     client.transformation()
+     *             .jobs()
+     *             .metrics()
+     *             .list(jobId)
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #buildPartitionsList(int)
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     * @see Transformations#jobs()
+     * @see TransformationJobs#metrics()
+     *
+     * @param jobId Transformation Job ID
+     * @return an {@link Iterator} to page through the results set.
+     * @throws Exception
+     */
     public Iterator<List<Transformation.Job.Metric>> list(Integer jobId) throws Exception {
         Request request = Request.create().withRootParameter("jobId", jobId);
         List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
