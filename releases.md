@@ -26,7 +26,42 @@ Changes are grouped as follows:
 ### Changed
 
 - Improve javadoc `Assets`
-
+- Improve javadoc `Contextualization`
+- Improve javadoc `DataPoints`
+- Improve javadoc `Datasets`
+- Improve javadoc `EngineeringDiagrams`
+- Improve javadoc `EntityMatching`
+- Improve javadoc `Events`
+- Improve javadoc `Experimental`
+- Improve javadoc `ExtractionPipelineRuns`
+- Improve javadoc `ExtractionPipelines`
+- Improve javadoc `Files`
+- Improve javadoc `Labels`
+- Improve javadoc `Login`
+- Improve javadoc `Raw`
+- Improve javadoc `RawDatabases`
+- Improve javadoc `RawRows`
+- Improve javadoc `RawTables`
+- Improve javadoc `Relationships`
+- Improve javadoc `Request`
+- Improve javadoc `SecurityCategories`
+- Improve javadoc `SequenceRows`
+- Improve javadoc `Sequences`
+- Improve javadoc `ThreeD`
+- Improve javadoc `ThreeDAssetMappings`
+- Improve javadoc `ThreeDFiles`
+- Improve javadoc `ThreeDModels`
+- Improve javadoc `ThreeDModelsRevisions`
+- Improve javadoc `ThreeDNodes`
+- Improve javadoc `ThreeDOutputs`
+- Improve javadoc `ThreeDRevisionLogs`
+- Improve javadoc `Timeseries`
+- Improve javadoc `TransformationJobMetrics`
+- Improve javadoc `TransformationJobs`
+- Improve javadoc `TransformationNotifications`
+- Improve javadoc `Transformation`
+- Improve javadoc `TransformationSchedules`
+- 
 
 ## [1.16.0] 2022-05-30
 
