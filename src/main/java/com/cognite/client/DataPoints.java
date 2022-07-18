@@ -109,6 +109,20 @@ public abstract class DataPoints extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<TimeseriesPoint> results = new ArrayList<>();
+     *      client.timeseries().dataPoints()
+     *           .retrieve(Request.create().withRootParameter("includeOutsidePoints", true))
+     *           .forEachRemaining(items-> results.addAll(items));
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     * @see Timeseries#dataPoints()
+     *
      * @param requestParameters the filters to use for retrieving the timeseries.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
@@ -148,6 +162,21 @@ public abstract class DataPoints extends ApiBase {
      * Retrieve all {@link TimeseriesPoint}/data points for the specified time series ({@code externalId}).
      * Refer to {@link #retrieveComplete(List)} for more information.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<TimeseriesPoint> results = new ArrayList<>();
+     *      client.timeseries().dataPoints()
+     *           .retrieveComplete("10", "20")
+     *           .forEachRemaining(result -> results.addAll(result));
+     * }
+     * </pre>
+     *
+     * @see #retrieveComplete(List)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     * @see Timeseries#dataPoints()
+     *
      * @param externalId The {@code externalIds} of the time series to retrieve
      * @return The time series data points.
      * @throws Exception
@@ -159,6 +188,21 @@ public abstract class DataPoints extends ApiBase {
     /**
      * Retrieve all {@link TimeseriesPoint}/data points for the specified time series ({@code id}).
      * Refer to {@link #retrieveComplete(List)} for more information.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<TimeseriesPoint> results = new ArrayList<>();
+     *      client.timeseries().dataPoints()
+     *           .retrieveComplete(10, 20)
+     *           .forEachRemaining(result -> results.addAll(result));
+     * }
+     * </pre>
+     *
+     * @see #retrieveComplete(List)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     * @see Timeseries#dataPoints()
      *
      * @param id The {@code ids} of the time series to retrieve
      * @return The time series data points.
@@ -174,6 +218,22 @@ public abstract class DataPoints extends ApiBase {
      * the results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> byInternalIds = List.of(Item.newBuilder().setId(10).build());
+     *      client.timeseries().dataPoints()
+     *              .retrieveComplete(byInternalIds)
+     *              .forEachRemaining(result -> results.addAll(result));
+     * }
+     * </pre>
+     *
+     * @see #retrieve(Request)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     * @see Timeseries#dataPoints()
+     *
      * @param items
      * @return The time series data points.
      * @throws Exception
@@ -212,6 +272,26 @@ public abstract class DataPoints extends ApiBase {
      * 1. Write all {@link TimeseriesPointPost} objects to the Cognite API.
      * 2. If one (or more) of the objects fail, check if it is because of missing time series objects--create temp headers.
      * 3. Retry the failed {@link TimeseriesPointPost} objects.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<TimeseriesMetadata> upsertTimeseriesList = List.of(TimeseriesMetadata.newBuilder()
+     *          .setExternalId("10")
+     *          .setName("test_ts")
+     *          .setIsString(false)
+     *          .setIsStep(false)
+     *          .setDescription("Description")
+     *          .setUnit("TestUnits")
+     *          .putMetadata("type", "sdk-data-generator")
+     *          .putMetadata("sdk-data-generator", "sdk-data-generator")
+     *      .build());
+     *      client.timeseries().upsert(upsertTimeseriesList);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
      *
      * @param dataPoints The data points to upsert
      * @return The upserted data points
@@ -352,6 +432,20 @@ public abstract class DataPoints extends ApiBase {
      * Retrieves the latest (newest) data point for a time series.
      * Refer to {@link #retrieveLatest(List)} for more information.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<TimeseriesPoint> result =
+     *           client.timeseries().dataPoints()
+     *              .retrieveLatest("10", "20");
+     * }
+     * </pre>
+     *
+     * @see #retrieveLatest(List)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     * @see Timeseries#dataPoints()
+     *
      * @param externalId The {@code externalIds} of the time series to retrieve
      * @return The time series data points.
      * @throws Exception
@@ -363,6 +457,20 @@ public abstract class DataPoints extends ApiBase {
     /**
      * Retrieves the latest (newest) data point for a time series.
      * Refer to {@link #retrieveLatest(List)} for more information.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<TimeseriesPoint> result =
+     *           client.timeseries().dataPoints()
+     *              .retrieveLatest(10, 20);
+     * }
+     * </pre>
+     *
+     * @see #retrieveLatest(List)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     * @see Timeseries#dataPoints()
      *
      * @param id The {@code ids} of the time series to retrieve
      * @return The time series data points.
@@ -379,6 +487,20 @@ public abstract class DataPoints extends ApiBase {
      *
      * Optionally, you can specify {@code Item.exclusiveEnd} to set an upper time boundary. That is,
      * the response will contain the latest data point before the upper time boundary.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> byInternalIds = List.of(Item.newBuilder().setId(10).build());
+     *      List<TimeseriesPoint> result =
+     *              client.timeseries().dataPoints()
+     *                  .retrieveLatest(byInternalIds);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     * @see Timeseries#dataPoints()
      *
      * @param items The time series to retrieve data point(s) from.
      * @return The latest data point(s)
@@ -478,6 +600,20 @@ public abstract class DataPoints extends ApiBase {
      * Retrieve the first (eldest) data point for a time series.
      * Refer to {@link #retrieveFirst(List)} for more information.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<TimeseriesPoint> result =
+     *           client.timeseries().dataPoints()
+     *              .retrieveFirst("10", "20");
+     * }
+     * </pre>
+     *
+     * @see #retrieveFirst(List)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     * @see Timeseries#dataPoints()
+     *
      * @param externalId The {@code externalIds} of the time series to retrieve
      * @return The time series data points.
      * @throws Exception
@@ -489,6 +625,20 @@ public abstract class DataPoints extends ApiBase {
     /**
      * Retrieve the first (eldest) data point for a time series.
      * Refer to {@link #retrieveFirst(List)} for more information.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<TimeseriesPoint> result =
+     *           client.timeseries().dataPoints()
+     *              .retrieveFirst(10, 20);
+     * }
+     * </pre>
+     *
+     * @see #retrieveFirst(List)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     * @see Timeseries#dataPoints()
      *
      * @param id The {@code ids} of the time series to retrieve
      * @return The time series data points.
@@ -502,6 +652,20 @@ public abstract class DataPoints extends ApiBase {
      * Retrieve the first (eldest) data point for a time series.
      *
      * The {@link Item} must specify the externalId / id of the time series.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> byInternalIds = List.of(Item.newBuilder().setId(10).build());
+     *      List<TimeseriesPoint> result =
+     *              client.timeseries().dataPoints()
+     *                  .retrieveFirst(byInternalIds);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     * @see Timeseries#dataPoints()
      *
      * @param items The time series to retrieve data point(s) from.
      * @return The first data point(s)
@@ -590,6 +754,30 @@ public abstract class DataPoints extends ApiBase {
         return results;
     }
 
+    /**
+     * Deletes a set of dataPoints.
+     *
+     * The dataPoints to delete are identified via their {@code externalId / id} by submitting a list of
+     * {@link Item}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Item> deleteItemsInput = List.of(Item.newBuilder().setExternalId("1").build());
+     *     List<Item> deleteItemsResults = client.timeseries().dataPoints().delete(deleteItemsInput);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     * @see Timeseries#dataPoints()
+     *
+     * @see DeleteItems#deleteItems(List)
+     *
+     * @param dataPoints
+     * @return
+     * @throws Exception
+     */
     public List<Item> delete(List<Item> dataPoints) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteDatapoints();
@@ -795,6 +983,8 @@ public abstract class DataPoints extends ApiBase {
      * Writes a (large) batch of {@link TimeseriesPointPost} by splitting it up into multiple, parallel requests.
      *
      * The response from each individual request is returned along with its part of the input.
+     *
+     *
      * @param dataPoints
      * @param dataPointsWriter
      * @return
@@ -894,6 +1084,7 @@ public abstract class DataPoints extends ApiBase {
      *  This method will send the entire input in a single request. It does not
      *  split the input into multiple batches. If you have a large batch of {@link TimeseriesPointPost} that
      *  you would like to split across multiple requests, use the {@code splitAndUpsertDataPoints} method.
+     *
      *
      * @param dataPointsBatch
      * @param dataPointsWriter
@@ -1034,6 +1225,7 @@ public abstract class DataPoints extends ApiBase {
     /**
      * Returns the UTF8 byte count for string data points. If it is a numeric data point, the count will be 0.
      *
+     *
      * @param point The data point to check for character count.
      * @return The number of string characters.
      */
@@ -1047,6 +1239,7 @@ public abstract class DataPoints extends ApiBase {
 
     /**
      * Inserts default time series headers for the input data points list.
+     *
      */
     private void writeTsHeaderForPoints(List<TimeseriesPointPost> dataPoints) throws Exception {
         List<TimeseriesMetadata> tsMetadataList = new ArrayList<>();
@@ -1060,6 +1253,7 @@ public abstract class DataPoints extends ApiBase {
     /**
      * Builds a single sequence header with default values. It relies on information completeness
      * related to the columns as these cannot be updated at a later time.
+     *
      */
     private TimeseriesMetadata generateDefaultTimeseriesMetadata(TimeseriesPointPost dataPoint) {
         Preconditions.checkArgument(dataPoint.getIdTypeCase() == TimeseriesPointPost.IdTypeCase.EXTERNAL_ID,
@@ -1078,6 +1272,7 @@ public abstract class DataPoints extends ApiBase {
      * Per-item query specification is not supported for retrieve / read requests.
      * @param item The item to check for query specification.
      * @return true if a specification is detected, false if the item does not carry a specification.
+     *
      */
     private boolean itemHasQuerySpecification(Map<String, Object> item) {
         boolean hasSpecification = false;
@@ -1094,6 +1289,13 @@ public abstract class DataPoints extends ApiBase {
 
     /**
      * Check if a time series request item contains an id specification ({@code externalId / id}).
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      itemHasId(item);
+     * }
+     * </pre>
      *
      * @param item The item to check for id.
      * @return true if an id is found, false if not.
@@ -1131,6 +1333,15 @@ public abstract class DataPoints extends ApiBase {
      *
      * This method is intended for advanced use cases with distributed computing frameworks that
      * implement their own split and parallelization algorithms.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      double maxFrequency = getMaxFrequency(requestParameters,
+     *                     Instant.ofEpochMilli(startTimestamp),
+     *                     Instant.ofEpochMilli(endTimestamp));
+     * }
+     * </pre>
      *
      * @param requestParameters
      * @param startOfWindow
@@ -1237,6 +1448,8 @@ public abstract class DataPoints extends ApiBase {
      *
      * This method is intended for advanced use cases with distributed computing frameworks that
      * implement their own split and parallelization algorithms.
+     *
+     *
      * @param query
      * @return
      * @throws Exception
