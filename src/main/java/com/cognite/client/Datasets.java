@@ -28,10 +28,7 @@ import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -66,7 +63,19 @@ public abstract class Datasets extends ApiBase {
     /**
      * Returns all {@link DataSet} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<DataSet> listDataSetsResults = new ArrayList<>();
+     *     client.datasets()
+     *           .list()
+     *           .forEachRemaining(batch -> listDataSetsResults.addAll(batch));
+     * }
+     * </pre>
+     *
      * @see #list(Request)
+     * @see CogniteClient
+     * @see CogniteClient#datasets()
      */
     public Iterator<List<DataSet>> list() throws Exception {
         return this.list(Request.create());
@@ -81,6 +90,21 @@ public abstract class Datasets extends ApiBase {
      *
      * The datasets are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<DataSet> listDataSetsResults = new ArrayList<>();
+     *     client.datasets()
+     *           .list(Request.create()
+     *                            .withFilterParameter("writeProtected", true))
+     *           .forEachRemaining(batch -> listDataSetsResults.addAll(batch));
+     * }
+     * </pre>
+     *
+     * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#datasets()
      *
      * @param requestParameters The filters to use for retrieving datasets.
      * @return An {@link Iterator} to page through the results set.
@@ -101,6 +125,22 @@ public abstract class Datasets extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you have
      * to stream these results into your own data strcture.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<DataSet> listDataSetsResults = new ArrayList<>();
+     *     client.datasets()
+     *           .list(Request.create()
+     *                            .withFilterParameter("writeProtected", true),
+     *                                 "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *           .forEachRemaining(batch -> listDataSetsResults.addAll(batch));
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#datasets()
+     *
      * @param requestParameters The filters to use for retrieving the datasets
      * @param partitions        The partitions to include
      * @return An {@link Iterator} to page through the results set
@@ -113,6 +153,17 @@ public abstract class Datasets extends ApiBase {
     /**
      * Retrieve datasets by {@code externalId}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<DataSet> retrievedDataSets = client.datasets().retrieve("1","2");
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#datasets()
+     *
      * @param externalId The {@code externalIds} to retrieve
      * @return The retrieved datasets.
      * @throws Exception
@@ -124,6 +175,17 @@ public abstract class Datasets extends ApiBase {
     /**
      * Retrieve datasets by {@code internal id}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<DataSet> retrievedDataSets = client.datasets().retrieve(1,2);
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#datasets()
+     *
      * @param id The {@code ids} to retrieve
      * @return The retrieved datasets.
      * @throws Exception
@@ -134,6 +196,18 @@ public abstract class Datasets extends ApiBase {
 
     /**
      * Retrieves datasets by {@code externalId / id}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
+     *      List<DataSet> retrievedDataSets = client.datasets().retrieve(items);
+     * }
+     * </pre>
+     *
+     * @see #retrieveJson(ResourceType, Collection)
+     * @see CogniteClient
+     * @see CogniteClient#datasets()
      *
      * @param items The item(s) {@code externalId / id} to retrieve.
      * @return The retrieved datasets.
@@ -152,6 +226,19 @@ public abstract class Datasets extends ApiBase {
      * aggregation types are supported. Please refer to the Cognite API specification for more information on the
      * possible settings.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Aggregate aggregateResult = client.datasets()
+     *                  .aggregate(Request.create()
+     *                  .withFilterParameter("writeProtected", true));
+     * }
+     * </pre>
+     *
+     * @see #aggregate(ResourceType,Request)
+     * @see CogniteClient
+     * @see CogniteClient#datasets()
+     *
      * @param requestParameters The filtering and aggregates specification.
      * @return The aggregation results.
      * @throws Exception
@@ -168,6 +255,17 @@ public abstract class Datasets extends ApiBase {
      *
      * If an {@link Iterator} object already exists in Cognite Data Fusion, it will be updated. The update behaviour is
      * specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<DataSet> upsertDataSetsList = // List of DataSet;
+     *      client.datasets().upsert(upsertDataSetsList);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#datasets()
      *
      * @param datasets The datasets to upsert
      * @return The upserted datasets
