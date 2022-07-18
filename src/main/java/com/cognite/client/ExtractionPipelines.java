@@ -28,10 +28,7 @@ import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -66,6 +63,16 @@ public abstract class ExtractionPipelines extends ApiBase {
     /**
      * Returns {@link ExtractionPipelineRuns} representing the extraction pipeline runs api endpoint.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.extractionPipelines().runs();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#extractionPipelines()
+     *
      * @return the extraction pipeline runs api object
      */
     public ExtractionPipelineRuns runs() {
@@ -75,7 +82,19 @@ public abstract class ExtractionPipelines extends ApiBase {
     /**
      * Returns all {@link ExtractionPipeline} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<ExtractionPipeline> listResults = new ArrayList<>();
+     *     client.extractionPipelines()
+     *                     .list()
+     *                     .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
      * @see #list(Request)
+     * @see CogniteClient
+     * @see CogniteClient#extractionPipelines()
      */
     public Iterator<List<ExtractionPipeline>> list() throws Exception {
         return this.list(Request.create());
@@ -87,6 +106,21 @@ public abstract class ExtractionPipelines extends ApiBase {
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<ExtractionPipeline> listResults = new ArrayList<>();
+     *      client.extractionPipelines()
+     *              .list(Request.create()
+     *                             .withFilterParameter("source", "source"))
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#extractionPipelines()
      *
      * @param requestParameters the filters to use for retrieving the assets.
      * @return an {@link Iterator} to page through the results set.
@@ -114,6 +148,22 @@ public abstract class ExtractionPipelines extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<ExtractionPipeline> listResults = new ArrayList<>();
+     *      client.extractionPipelines()
+     *              .list(Request.create()
+     *                             .withFilterParameter("source", "source"),
+     *                                  "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#extractionPipelines()
+     *
      * @param requestParameters the filters to use for retrieving the assets.
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
@@ -126,6 +176,18 @@ public abstract class ExtractionPipelines extends ApiBase {
     /**
      * Retrieve extraction pipelines by {@code externalId}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<ExtractionPipeline> retrievedExtractionPipeline =
+     *                          client.extractionPipelines().retrieve("1","2");
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#extractionPipelines()
+     *
      * @param externalId The {@code externalIds} to retrieve
      * @return The retrieved extraction pipelines.
      * @throws Exception
@@ -137,6 +199,18 @@ public abstract class ExtractionPipelines extends ApiBase {
     /**
      * Retrieve extraction pipelines by {@code internal id}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<ExtractionPipeline> retrievedExtractionPipeline =
+     *                          client.extractionPipelines().retrieve(1,2);
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#extractionPipelines()
+     *
      * @param id The {@code ids} to retrieve
      * @return The retrieved extraction pipelines.
      * @throws Exception
@@ -147,6 +221,19 @@ public abstract class ExtractionPipelines extends ApiBase {
 
     /**
      * Retrieve extraction pipelines by id.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
+     *      List<ExtractionPipeline> retrievedExtractionPipeline =
+     *                          client.extractionPipelines().retrieve(items);
+     * }
+     * </pre>
+     *
+     * @see #retrieveJson(ResourceType, Collection)
+     * @see CogniteClient
+     * @see CogniteClient#extractionPipelines()
      *
      * @param items The item(s) {@code externalId / id} to retrieve.
      * @return The retrieved extraction pipelines.
@@ -165,6 +252,18 @@ public abstract class ExtractionPipelines extends ApiBase {
      *
      * If an {@link ExtractionPipeline} object already exists in Cognite Data Fusion, it will be updated. The update behavior
      * is specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<ExtractionPipeline> pipelines = // List of Events;
+     *      client.extractionPipelines().upsert(pipelines);
+     * }
+     * </pre>
+     *
+     * @see UpsertItems#upsertViaCreateAndUpdate(List)
+     * @see CogniteClient
+     * @see CogniteClient#extractionPipelines()
      *
      * @param pipelines The extraction pipelines to upsert.
      * @return The upserted extraction pipelines.
@@ -195,11 +294,23 @@ public abstract class ExtractionPipelines extends ApiBase {
      * The extraction pipelines to delete are identified via their {@code externalId / id} by submitting a list of
      * {@link Item}.
      *
-     * @param events a list of {@link Item} representing the extraction pipelines (externalId / id) to be deleted
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Item> pipelines = List.of(Item.newBuilder().setExternalId("1").build());
+     *     List<Item> deletedItemsResults = client.extractionPipelines().delete(pipelines);
+     * }
+     * </pre>
+     *
+     * @see DeleteItems#deleteItems(List)
+     * @see CogniteClient
+     * @see CogniteClient#extractionPipelines()
+     *
+     * @param pipelines a list of {@link Item} representing the extraction pipelines (externalId / id) to be deleted
      * @return The deleted extraction pipelines via {@link Item}
      * @throws Exception
      */
-    public List<Item> delete(List<Item> events) throws Exception {
+    public List<Item> delete(List<Item> pipelines) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteExtractionPipelines();
 
@@ -207,7 +318,7 @@ public abstract class ExtractionPipelines extends ApiBase {
                 //.addParameter("ignoreUnknownIds", true)
                 ;
 
-        return deleteItems.deleteItems(events);
+        return deleteItems.deleteItems(pipelines);
     }
 
     /*

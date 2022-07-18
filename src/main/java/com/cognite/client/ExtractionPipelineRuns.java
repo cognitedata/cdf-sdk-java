@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 /**
  * This class represents the Cognite extraction pipelines api endpoint.
  *
- * It provides methods for reading and writing {@link Event}.
+ * It provides methods for reading and writing {@link ExtractionPipelineRuns}.
  */
 @AutoValue
 public abstract class ExtractionPipelineRuns extends ApiBase {
@@ -63,7 +63,21 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
     /**
      * Returns all {@link ExtractionPipelineRun} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<ExtractionPipelineRun> listResults = new ArrayList<>();
+     *     client.extractionPipelines()
+     *             .runs()
+     *             .list()
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
      * @see #list(Request)
+     * @see CogniteClient
+     * @see CogniteClient#extractionPipelines()
+     * @see ExtractionPipelines#runs()
      */
     public Iterator<List<ExtractionPipelineRun>> list() throws Exception {
         return this.list(Request.create());
@@ -75,6 +89,23 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<ExtractionPipelineRun> listResults = new ArrayList<>();
+     *      client.extractionPipelines()
+     *              .runs()
+     *              .list(Request.create()
+     *                             .withFilterParameter("statuses", List.of("success", "failure", "seen")))
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#extractionPipelines()
+     * @see ExtractionPipelines#runs()
      *
      * @param requestParameters the filters to use for retrieving the assets.
      * @return an {@link Iterator} to page through the results set.
@@ -102,6 +133,24 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<ExtractionPipelineRun> listResults = new ArrayList<>();
+     *      client.extractionPipelines()
+     *              .runs()
+     *              .list(Request.create()
+     *                             .withFilterParameter("statuses", List.of("success", "failure", "seen")),
+     *                                  "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#extractionPipelines()
+     * @see ExtractionPipelines#runs()
+     *
      * @param requestParameters the filters to use for retrieving the assets.
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
@@ -114,6 +163,19 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
 
     /**
      * Creates a set of {@link ExtractionPipelineRun} objects.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<ExtractionPipelineRun> runs = // List of Extraction Pipeline Run;
+     *      client.extractionPipelines().runs().upsert(runs);
+     * }
+     * </pre>
+     *
+     * @see UpsertItems#create(List)
+     * @see CogniteClient
+     * @see CogniteClient#extractionPipelines()
+     * @see ExtractionPipelines#runs()
      *
      * @param runs The extraction pipelines to create.
      * @return The created extraction pipelines.
