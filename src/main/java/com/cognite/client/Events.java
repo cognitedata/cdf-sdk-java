@@ -54,7 +54,7 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      * as the entry point to this class.
      *
      * @param client The {@link CogniteClient} to use for configuration settings.
-     * @return the assets api object.
+     * @return the events api object.
      */
     public static Events of(CogniteClient client) {
         return Events.builder()
@@ -65,7 +65,20 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
     /**
      * Returns all {@link Event} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Event> listResults = new ArrayList<>();
+     *     client.events()
+     *             .list()
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
      * @see #list(Request)
+     * @see CogniteClient
+     * @see CogniteClient#events()
+     *
      */
     public Iterator<List<Event>> list() throws Exception {
         return this.list(Request.create());
@@ -81,7 +94,22 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      * The events are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
      *
-     * @param requestParameters the filters to use for retrieving the assets.
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Event> listResults = new ArrayList<>();
+     *      client.events()
+     *              .list(Request.create()
+     *                             .withFilterParameter("source", "source"))
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#events()
+     *
+     * @param requestParameters the filters to use for retrieving the events.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
      */
@@ -100,7 +128,23 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
-     * @param requestParameters the filters to use for retrieving the assets.
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Event> listResults = new ArrayList<>();
+     *      client.events()
+     *              .list(Request.create()
+     *                             .withFilterParameter("source", "source"),
+     *                                  "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#events()
+     *
+     * @param requestParameters the filters to use for retrieving the events.
      * @param partitions        the partitions to include.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
@@ -115,6 +159,29 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      * When an {@link Event} is created or updated, it will be captured by the publisher and emitted to the registered
      * consumer.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Event> eventList = new CopyOnWriteArrayList<>();
+     *      Publisher<Event> publisher = client.events().stream()
+     *                     .withRequest(Request.create()
+     *                             .withFilterMetadataParameter("source", "source"))
+     *                     .withStartTime(Instant.now())
+     *                     .withEndTime(Instant.now().plusSeconds(25))
+     *                     .withPollingInterval(Duration.ofSeconds(2))
+     *                     .withPollingOffset(Duration.ofSeconds(15L))
+     *                     .withConsumer(batch -> {
+     *                         eventList.addAll(batch);
+     *                     });
+     *      Future<Boolean> streamer = publisher.start();
+     *      Boolean result = streamer.get();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#events()
+     * @see java.util.concurrent.CopyOnWriteArrayList
+     *
      * @return The publisher producing the stream of events. Call {@code start()} to start the stream.
      */
     public Publisher<Event> stream() {
@@ -123,6 +190,17 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
 
     /**
      * Retrieve events by {@code externalId}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Event> retrievedEvent = client.events().retrieve("1","2");
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#events()
      *
      * @param externalId The {@code externalIds} to retrieve
      * @return The retrieved events.
@@ -135,6 +213,17 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
     /**
      * Retrieve events by {@code internal id}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Event> retrievedEvent = client.events().retrieve(1,2);
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#events()
+     *
      * @param id The {@code ids} to retrieve
      * @return The retrieved events.
      * @throws Exception
@@ -145,6 +234,18 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
 
     /**
      * Retrieve events by {@code externalId / id}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
+     *      List<Event> retrievedEvents = client.events().retrieve(items);
+     * }
+     * </pre>
+     *
+     * @see #retrieveJson(ResourceType,Collection)
+     * @see CogniteClient
+     * @see CogniteClient#events()
      *
      * @param items The item(s) {@code externalId / id} to retrieve.
      * @return The retrieved events.
@@ -163,6 +264,19 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      * Multiple aggregation types are supported. Please refer to the Cognite API specification for more information
      * on the possible settings.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Aggregate aggregateResult = client.events()
+     *                  .aggregate(Request.create()
+     *                  .withFilterParameter("source", "source"));
+     * }
+     * </pre>
+     *
+     * @see #aggregate(ResourceType,Request)
+     * @see CogniteClient
+     * @see CogniteClient#events()
+     *
      * @param requestParameters The filtering and aggregates specification
      * @return The aggregation results.
      * @throws Exception
@@ -179,6 +293,18 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      * <p>
      * If an {@link Event} object already exists in Cognite Data Fusion, it will be updated. The update behavior
      * is specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Event> events = // List of Events;
+     *      client.events().upsert(events);
+     * }
+     * </pre>
+     *
+     * @see UpsertItems#upsertViaCreateAndUpdate(List)
+     * @see CogniteClient
+     * @see CogniteClient#events()
      *
      * @param events The events to upsert.
      * @return The upserted events.
@@ -208,6 +334,18 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      * <p>
      * The events to delete are identified via their {@code externalId / id} by submitting a list of
      * {@link Item}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Item> events = List.of(Item.newBuilder().setExternalId("1").build());
+     *     List<Item> deletedItemsResults = client.events().delete(events);
+     * }
+     * </pre>
+     *
+     * @see DeleteItems#deleteItems(List)
+     * @see CogniteClient
+     * @see CogniteClient#events()
      *
      * @param events a list of {@link Item} representing the events (externalId / id) to be deleted
      * @return The deleted events via {@link Item}
