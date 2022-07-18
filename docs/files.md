@@ -219,7 +219,11 @@ List<FileContainer> downloadFilesResults =
 List<Item> downloadByInternallIds = List.of(Item.newBuilder() 
           .setId(10).build()); 
 List<FileContainer> downloadFilesResults = 
-          client.files().downloadToPath(downloadByInternallIds, Paths.get("")); 
+          client.files().downloadToPath(downloadByInternallIds, Paths.get(""));
+
+List<Item> fileItems = List.of(Item.newBuilder().setId(10).build());
+List<FileBinary> fileBinaries =
+        client.files().downloadFileBinaries(fileItems, URI.create("s3://testbucket"), true);
 ```
 
 ### Update files
