@@ -27,7 +27,7 @@ public final class ConnectorConstants {
     /*
     API request identifiers
      */
-    public final static String SDK_IDENTIFIER = "cdf-sdk-java-1.2.x";
+    public final static String SDK_IDENTIFIER = "cdf-sdk-java-1.x.x";
     public final static String DEFAULT_APP_IDENTIFIER = "cdf-sdk-java";
     public final static String DEFAULT_SESSION_IDENTIFIER = "cdf-sdk-java";
 
@@ -39,8 +39,8 @@ public final class ConnectorConstants {
     public static final int MIN_MAX_RETRIES = 1;
     public static final int MAX_MAX_RETRIES = 20;
     public static final String DEFAULT_ENDPOINT = "";
-    public static final Duration DEFAULT_ASYNC_API_JOB_TIMEOUT = Duration.ofMinutes(15);
-    public static final Duration DEFAULT_ASYNC_API_JOB_POLLING_INTERVAL = Duration.ofSeconds(2);
+    public static final Duration DEFAULT_ASYNC_API_JOB_TIMEOUT = Duration.ofMinutes(20);
+    public static final Duration DEFAULT_ASYNC_API_JOB_POLLING_INTERVAL = Duration.ofSeconds(4);
 
     /*
     Default batch sizes for api requests
