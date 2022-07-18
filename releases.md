@@ -26,7 +26,7 @@ Changes are grouped as follows:
 ### Changed
 
 - Improve javadoc `Assets`
-
+- Improve javadoc `Contextualization`
 
 ## [1.16.0] 2022-05-30
 
