@@ -98,7 +98,7 @@ public abstract class EntityMatching extends ApiBase {
      *
      * @param modelExternalId The external id of the matching model to use.
      * @param sources A list of entities to match from. If the list is empty, the model training sources will be used.
-     * @param targets A list of entities to match to. If the list is empty, the model traning targets will be used.
+     * @param targets A list of entities to match to. If the list is empty, the model training targets will be used.
      * @return The entity matching results.
      * @throws Exception
      */
@@ -135,7 +135,7 @@ public abstract class EntityMatching extends ApiBase {
      *
      * @param modelExternalId The external id of the matching model to use.
      * @param sources A list of entities to match from. If the list is empty, the model training sources will be used.
-     * @param targets A list of entities to match to. If the list is empty, the model traning targets will be used.
+     * @param targets A list of entities to match to. If the list is empty, the model training targets will be used.
      * @param numMatches The maximum number of match candidates per source.
      * @return The entity matching results.
      * @throws Exception
@@ -171,7 +171,7 @@ public abstract class EntityMatching extends ApiBase {
      *
      * @param modelExternalId The external id of the matching model to use.
      * @param sources A list of entities to match from. If the list is empty, the model training sources will be used.
-     * @param targets A list of entities to match to. If the list is empty, the model traning targets will be used.
+     * @param targets A list of entities to match to. If the list is empty, the model training targets will be used.
      * @param numMatches The maximum number of match candidates per source.
      * @param scoreThreshold The minimum score required for a match candidate.
      * @return The entity matching results.
@@ -244,7 +244,7 @@ public abstract class EntityMatching extends ApiBase {
      *
      * @param modelId The internal id of the matching model to use.
      * @param sources A list of entities to match from. If the list is empty, the model training sources will be used.
-     * @param targets A list of entities to match to. If the list is empty, the model traning targets will be used.
+     * @param targets A list of entities to match to. If the list is empty, the model training targets will be used.
      * @return The entity matching results.
      * @throws Exception
      */
