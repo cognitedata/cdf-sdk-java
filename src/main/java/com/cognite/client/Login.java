@@ -1,6 +1,8 @@
 package com.cognite.client;
 
+import com.cognite.client.config.ResourceType;
 import com.cognite.client.dto.LoginStatus;
+import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.google.auto.value.AutoValue;
 
 @AutoValue
@@ -27,6 +29,17 @@ public abstract class Login extends ApiBase {
 
     /**
      * Returns {@link LoginStatus} representing login status api endpoints.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      LoginStatus loginStatus = client.login().loginStatusByApiKey();
+     * }
+     * </pre>
+     *
+     * @see ConnectorServiceV1#readLoginStatusByApiKey(String)
+     * @see CogniteClient
+     * @see CogniteClient#login()
      *
      * @return The LoginStatus api endpoints.
      */
