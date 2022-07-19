@@ -51,7 +51,32 @@ public abstract class ThreeDNodes extends ApiBase {
     /**
      * Returns all {@link ThreeDNode} objects.
      *
-     * @see #list(Long, Long, Request)
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Long modelId = 1L;
+     *     Long revisionId = 1L;
+     *     List<ThreeDNode> listResults = new ArrayList<>();
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .nodes()
+     *             .list(modelId,revisionId)
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Long,Long,Request)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#nodes()
+     *
+     * @param modelId The id of ThreeDModels object
+     * @param revisionId The id of ThreeDModelRevision object
+     * @return an {@link Iterator} to page through the results set.
+     * @throws Exception
      */
     public Iterator<List<ThreeDNode>> list(Long modelId, Long revisionId) throws Exception {
         return this.list(modelId, revisionId, Request.create());
@@ -67,6 +92,34 @@ public abstract class ThreeDNodes extends ApiBase {
      * The 3D nodes are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
      *
+     * PS: Full example in file <a href="https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/threeD.md"><b>threeD.md</b></a>
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Long modelId = 1L;
+     *     Long revisionId = 1L;
+     *     Request requestParameters = Request.create()
+     *           .withFilterParameter("properties", createFilterPropertiesWithCategories());
+     *     List<ThreeDNode> listResults = new ArrayList<>();
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .nodes()
+     *             .list(modelId,revisionId,requestParameters)
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Long,Long,Request)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#nodes()
+     *
+     * @param modelId The id of ThreeDModels object
+     * @param revisionId The id of ThreeDModelRevision object
      * @param requestParameters the filters to use for retrieving the 3D nodes.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
@@ -85,6 +138,35 @@ public abstract class ThreeDNodes extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * PS: Full example in file <a href="https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/threeD.md"><b>threeD.md</b></a>
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Long modelId = 1L;
+     *     Long revisionId = 1L;
+     *     Request requestParameters = Request.create()
+     *           .withFilterParameter("properties", createFilterPropertiesWithCategories());
+     *     List<ThreeDNode> listResults = new ArrayList<>();
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .nodes()
+     *             .list(modelId,revisionId,requestParameters,
+     *                              "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#nodes()
+     *
+     * @param modelId The id of ThreeDModels object
+     * @param revisionId The id of ThreeDModelRevision object
      * @param requestParameters the filters to use for retrieving the 3D nodes..
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
@@ -100,7 +182,34 @@ public abstract class ThreeDNodes extends ApiBase {
     /**
      * Returns all ancestor {@link ThreeDNode} objects.
      *
-     * @see #list(Long, Long, Request)
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Long modelId = 1L;
+     *     Long revisionId = 1L;
+     *     Long nodeId = 1L;
+     *     List<ThreeDNode> listResults = new ArrayList<>();
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .nodes()
+     *             .list(modelId,revisionId,nodeId)
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Long,Long,Long,Request)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#nodes()
+     *
+     * @param modelId The id of ThreeDModels object
+     * @param revisionId The id of ThreeDModelRevision object
+     * @param nodeId The id of ThreeDNode object
+     * @return
+     * @throws Exception
      */
     public Iterator<List<ThreeDNode>> list(Long modelId, Long revisionId, Long nodeId) throws Exception {
         return this.list(modelId, revisionId, nodeId, Request.create());
@@ -116,6 +225,32 @@ public abstract class ThreeDNodes extends ApiBase {
      * The 3D nodes are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Long modelId = 1L;
+     *     Long revisionId = 1L;
+     *     Long nodeId = 1L;
+     *     List<ThreeDNode> listResults = new ArrayList<>();
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .nodes()
+     *             .list(modelId,revisionId,nodeId, Request.create().withRootParameter("limit", 300))
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Long,Long,Long,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#nodes()
+     *
+     * @param modelId The id of ThreeDModels object
+     * @param revisionId The id of ThreeDModelRevision object
+     * @param nodeId The id of ThreeDNode object
      * @param requestParameters the filters to use for retrieving the 3D nodes.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
@@ -134,6 +269,33 @@ public abstract class ThreeDNodes extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Long modelId = 1L;
+     *     Long revisionId = 1L;
+     *     Long nodeId = 1L;
+     *     List<ThreeDNode> listResults = new ArrayList<>();
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .nodes()
+     *             .list(modelId,revisionId,nodeId, Request.create().withRootParameter("limit", 300),
+     *                                                      "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#nodes()
+     *
+     * @param modelId The id of ThreeDModels object
+     * @param revisionId The id of ThreeDModelRevision object
+     * @param nodeId The id of ThreeDNode object
      * @param requestParameters the filters to use for retrieving the 3D nodes..
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
@@ -149,6 +311,28 @@ public abstract class ThreeDNodes extends ApiBase {
 
     /**
      * Retrieves 3D Nodes by ids.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Long modelId = 1L;
+     *      Long revisionId = 1L;
+     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
+     *      List<ThreeDNode> retrievedNodes =
+     *                                      client
+     *                                      .threeD()
+     *                                      .models()
+     *                                      .revisions()
+     *                                      .nodes()
+     *                                      .retrieve(modelId,revisionId,items);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#nodes()
      *
      * @param modelId ID of ThreeDModel object
      * @param revisionId ID of ThreeDModelRevision object
@@ -209,6 +393,28 @@ public abstract class ThreeDNodes extends ApiBase {
      * The 3D nodes are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Long modelId = 1L;
+     *     Long revisionId = 1L;
+     *     List<ThreeDNode> listResults = new ArrayList<>();
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .nodes()
+     *             .filter(modelId,revisionId)
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #filter(Long,Long,Request)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#nodes()
+     *
      * @param modelId ID of ThreeDModel object
      * @param revisionId ID of ThreeDModelRevision object
      * @return an {@link Iterator} to page through the results set.
@@ -230,6 +436,32 @@ public abstract class ThreeDNodes extends ApiBase {
      *
      * The 3D nodes are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * PS: Full example in file <a href="https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/threeD.md"><b>threeD.md</b></a>
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Long modelId = 1L;
+     *     Long revisionId = 1L;
+     *     Request requestParameters = Request.create()
+     *                             .withFilterParameter("properties", createFilterPropertiesWithCategories());
+     *     List<ThreeDNode> listResults = new ArrayList<>();
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .nodes()
+     *             .filter(modelId,revisionId,requestParameters)
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #filter(Long,Long,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#nodes()
      *
      * @param modelId ID of ThreeDModel object
      * @param revisionId ID of ThreeDModelRevision object
@@ -253,6 +485,32 @@ public abstract class ThreeDNodes extends ApiBase {
      *
      * The 3D nodes are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * PS: Full example in file <a href="https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/threeD.md"><b>threeD.md</b></a>
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Long modelId = 1L;
+     *     Long revisionId = 1L;
+     *     Request requestParameters = Request.create()
+     *                             .withFilterParameter("properties", createFilterPropertiesWithCategories());
+     *     List<ThreeDNode> listResults = new ArrayList<>();
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .nodes()
+     *             .filter(modelId,revisionId,requestParameters,
+     *                              "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#nodes()
      *
      * @param modelId ID of ThreeDModel object
      * @param revisionId ID of ThreeDModelRevision object

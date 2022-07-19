@@ -48,6 +48,17 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
     /**
      * Returns {@link ThreeDOutputs} representing 3D Models available outputs api endpoints.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.threeD().models().revisions().outputs();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeDModels#revisions()
+     *
      * @return The ThreeDOutputs api endpoints.
      */
     public ThreeDOutputs outputs() {
@@ -56,6 +67,17 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
 
     /**
      * Returns {@link ThreeDRevisionLogs} representing 3D Revision Logs api endpoints.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.threeD().models().revisions().revisionLogs();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeDModels#revisions()
      *
      * @return The ThreeDRevisionLogs api endpoints.
      */
@@ -66,6 +88,17 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
     /**
      * Returns {@link ThreeDNodes} representing 3D nodes api endpoints.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.threeD().models().revisions().nodes();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeDModels#revisions()
+     *
      * @return The ThreeDNodes api endpoints.
      */
     public ThreeDNodes nodes() {
@@ -74,6 +107,17 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
 
     /**
      * Returns {@link ThreeDAssetMappings} representing 3D nodes api endpoints.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.threeD().models().revisions().assetMappings();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeDModels#revisions()
      *
      * @return The ThreeDAssetMappings api endpoints.
      */
@@ -93,6 +137,25 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
     /**
      * Returns all {@link ThreeDModelRevision} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Long modelId = 1L;
+     *     List<ThreeDModelRevision> listResults = new ArrayList<>();
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .list(modelId)
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Long,Request)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     *
      * @param modelId the id of 3d models
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
@@ -110,6 +173,26 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
      *
      * The 3D models are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Long modelId = 1L;
+     *     List<ThreeDModelRevision> listResults = new ArrayList<>();
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .list(modelId, Request.create()
+     *                          .withRootParameter("published", true))
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Long,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
      *
      * @param requestParameters the filters to use for retrieving the 3D models revisions.
      * @return an {@link Iterator} to page through the results set.
@@ -130,6 +213,27 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Long modelId = 1L;
+     *      List<ThreeDModelRevision> listResults = new ArrayList<>();
+     *      client.threeD()
+     *              .models()
+     *              .revisions()
+     *              .list(modelId, Request.create()
+     *                             .withFilterParameter("published", true),
+     *                                  "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     *
      * @param modelId The id of ThreeDModels object
      * @param requestParameters the filters to use for retrieving the 3d models revisions.
      * @param partitions the partitions to include.
@@ -143,6 +247,25 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
 
     /**
      * Retrieves 3D Models by id.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Long modelId = 1L;
+     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
+     *      List<ThreeDModelRevision> retrievedThreeDModelRevision =
+     *                                      client
+     *                                      .threeD()
+     *                                      .models()
+     *                                      .revisions()
+     *                                      .retrieve(modelId, items);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
      *
      * @param modelId The id of ThreeDModels object
      * @param items The item(s) {@code id} to retrieve.
@@ -190,6 +313,20 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
      *
      * If an {@link ThreeDModelRevision} object already exists in Cognite Data Fusion, it will be updated. The update
      * behaviour is specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Long modelId = 1L;
+     *      List<ThreeDModelRevision> threeDModelRevisions = // List of ThreeDModelRevision;
+     *      client.threeD().models().revisions().upsert(modelId,threeDModelRevisions);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
      *
      * @param modelId The id of ThreeDModels object
      * @param threeDModelRevisions The 3D Model Revisions to upsert
@@ -257,6 +394,21 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
     /**
      *  Deletes 3D Revisions.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Long modelId = 1L;
+     *     List<Item> deleteItemsInput = List.of(Item.newBuilder().setExternalId("1").build());
+     *     List<Item> deletedItemsResults = client.threeD().models().revisions().delete(modelId,deleteItemsInput);
+     * }
+     * </pre>
+     *
+     * @see DeleteItems#deleteItems(List)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     *
      * @param modelId The id of ThreeDModels object
      * @param deleteItemsInput List of {@link Item} containing the ids of 3D Model Revisions to delete
      * @return
@@ -272,7 +424,25 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
     }
 
     /**
-     * Update the Thumbnail of Revision
+     * Update the Thumbnail of Revision.
+     * PS: Full example in file <a href="https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/threeD.md"><b>threeD.md</b></a>
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     FileMetadata fileThumbnail = //Thumbnail File of FileMetadata;
+     *     Long modelId = 1L;
+     *     Long revisionId = 1L;
+     *     client.threeD().models().revisions().updateThumbnail(modelId,revisionId,fileThumbnail.getId());
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#files()
+     * @see Files#upload(List)
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
      *
      * @param modelId The id of ThreeDModels object
      * @param revisionId The id of ThreeDModelRevision object
