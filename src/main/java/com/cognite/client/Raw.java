@@ -48,6 +48,16 @@ public abstract class Raw extends ApiBase {
     /**
      * Returns {@link RawDatabases} representing the Cognite Raw Tables api endpoint.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.raw().databases();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     *
      * @return The raw tables api object.
      */
     public RawDatabases databases() {
@@ -57,6 +67,16 @@ public abstract class Raw extends ApiBase {
     /**
      * Returns {@link RawTables} representing the Cognite Raw Tables api endpoint.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.raw().tables();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     *
      * @return The raw tables api object.
      */
     public RawTables tables() {
@@ -65,6 +85,16 @@ public abstract class Raw extends ApiBase {
 
     /**
      * Returns {@link RawRows} representing the Cognite Raw rows api endpoint.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.raw().rows();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#raw()
      *
      * @return The raw rows api object.
      */

@@ -16,6 +16,8 @@
 
 package com.cognite.client;
 
+import com.cognite.client.config.AuthConfig;
+import com.cognite.client.config.ClientConfig;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.dto.RawRow;
 import com.cognite.client.servicesV1.ConnectorConstants;
@@ -73,6 +75,22 @@ public abstract class RawRows extends ApiBase {
     /**
      * Returns all rows from a table.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<RawRow> listResults = new ArrayList<>();
+     *     client.raw()
+     *           .rows()
+     *           .list("dbName", "tableName")
+     *           .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(String, String, Request)
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#rows()
+     *
      * @param dbName the database to list rows from.
      * @param tableName the table to list rows from.
      * @return an {@link Iterator} to page through the rows.
@@ -87,6 +105,22 @@ public abstract class RawRows extends ApiBase {
      * Returns all rows from a table. Only the specified columns will be returned for each row.
      *
      * If you provide an empty columns list, only the row keys will be returned.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<RawRow> listResults = new ArrayList<>();
+     *     client.raw()
+     *           .rows()
+     *           .list("dbName", "tableName", List.of("columns"))
+     *           .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(String, String, Request)
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#rows()
      *
      * @param dbName the database to list rows from.
      * @param tableName the table to list rows from.
@@ -117,6 +151,22 @@ public abstract class RawRows extends ApiBase {
      * Returns all rows from a table. Only the specified columns will be returned for each row.
      *
      * If you provide an empty columns list, only the row keys will be returned.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<RawRow> listResults = new ArrayList<>();
+     *     client.raw()
+     *           .rows()
+     *           .list("dbName", "tableName", List.of("columns"), Request.create())
+     *           .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(String, String, Request)
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#rows()
      *
      * @param dbName the database to list rows from.
      * @param tableName the table to list rows from.
@@ -155,6 +205,24 @@ public abstract class RawRows extends ApiBase {
      * The rows are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<RawRow> listResults = new ArrayList<>();
+     *     client.raw()
+     *           .rows()
+     *           .list("dbName", "tableName",
+     *                      Request.create().withRootParameter("columns", List.of("columnName")))
+     *           .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #retrieveCursors(String, String, int, Request)
+     * @see #list(String, String, Request, String...)
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#rows()
+     *
      * @param dbName the database to list rows from.
      * @param tableName the table to list rows from.
      * @param requestParameters the column and filter specification for the rows.
@@ -187,6 +255,28 @@ public abstract class RawRows extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     int noCursors = getClient().getClientConfig().getNoListPartitions();
+     *     List<String> cursors = retrieveCursors(dbName, tableName, noCursors, requestParameters);
+     *     List<RawRow> listResults = new ArrayList<>();
+     *     client.raw()
+     *           .rows()
+     *           .list("dbName", "tableName",
+     *                      Request.create().withRootParameter("columns", List.of("columnName")),
+     *                      cursors.toArray(new String[cursors.size()]))
+     *           .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see ClientConfig#getNoListPartitions()
+     * @see #retrieveCursors(String, String, int, Request)
+     * @see #list(String, String, Request, String...)
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#rows()
+     *
      * @param dbName the database to list rows from.
      * @param tableName the table to list rows from.
      * @param requestParameters the column and filter specification for the rows.
@@ -217,6 +307,32 @@ public abstract class RawRows extends ApiBase {
     /**
      * Returns a {@link RawPublisher} that can stream {@link RawRow} from a raw table.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     AtomicInteger receiveRowsCount = new AtomicInteger(0);
+     *     List<RawRow> rowList = new CopyOnWriteArrayList<>();
+     *
+     *     RawPublisher publisher = client.raw().rows().stream("dbName", "tableName")
+     *             .withStartTime(Instant.now())
+     *             .withEndTime(Instant.now().plusSeconds(20))
+     *             .withPollingInterval(Duration.ofSeconds(2))
+     *             .withConsumer(batch -> {
+     *                  receiveRowsCount.addAndGet(batch.size());
+     *                  rowList.addAll(batch);
+     *             });
+     *
+     *     Future<Boolean> streamer = publisher.start();
+     * }
+     * </pre>
+     *
+     * @see java.util.concurrent.atomic.AtomicInteger
+     * @see java.util.concurrent.CopyOnWriteArrayList
+     * @see RawPublisher
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#rows()
+     *
      * @param dbName The database to read rows from.
      * @param tableName The table to read rows from.
      * @return The publisher producing the stream of objects. Call {@code start()} to start the stream.
@@ -227,6 +343,20 @@ public abstract class RawRows extends ApiBase {
 
     /**
      * Retrieves a set of rows based on row key.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<RawRow> rowsRetrieved =
+     *         client.raw()
+     *         .rows()
+     *         .retrieve("dbName", "tableName", List.of("rowKeys"));
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#rows()
      *
      * @param dbName The database to read rows from.
      * @param tableName The table to read rows from.
@@ -306,6 +436,21 @@ public abstract class RawRows extends ApiBase {
      * Raw--for example in distributed processing frameworks. Most scenarios should just use
      * {@code list} directly as that will automatically handle parallelization for you.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<RawRow> rowsRetrieved =
+     *         client.raw()
+     *         .rows()
+     *         .retrieveCursors("dbName", "tableName", Request.create());
+     * }
+     * </pre>
+     *
+     * @see #retrieveCursors(String, String, int, Request)
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#rows()
+     *
      * @param dbName The database to retrieve row cursors from.
      * @param tableName The table to retrieve row cursors from.
      * @param requestParameters Hosts query parameters like max and min time stamps and number of cursors to request.
@@ -327,6 +472,22 @@ public abstract class RawRows extends ApiBase {
      * This is intended for advanced use cases where you need granular control of the parallel retrieval from
      * Raw--for example in distributed processing frameworks. Most scenarios should just use
      * {@code list} directly as that will automatically handle parallelization for you.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     int noCursors = getClient().getClientConfig().getNoListPartitions();
+     *     List<RawRow> rowsRetrieved =
+     *         client.raw()
+     *         .rows()
+     *         .retrieveCursors("dbName", "tableName", noCursors, Request.create());
+     * }
+     * </pre>
+     *
+     * @see ClientConfig#getNoListPartitions()
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#rows()
      *
      * @param dbName The database to retrieve row cursors from.
      * @param tableName The table to retrieve row cursors from.
@@ -367,6 +528,22 @@ public abstract class RawRows extends ApiBase {
 
     /**
      * Creates rows in raw tables.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<RawRow> rows = //List of RawRow;
+     *     Boolean ensureParent = false;
+     *     List<RawRow> createRowsResults =
+     *         client.raw()
+     *               .rows()
+     *               .upsert(rows, ensureParent);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#rows()
      *
      * @param rows The rows to upsert.
      * @param ensureParent Set to true to create the row tables if they don't already exist.
@@ -474,6 +651,22 @@ public abstract class RawRows extends ApiBase {
      *
      * If the row tables don't exist from before, they will also be created.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<RawRow> rows = //List of RawRow;
+     *     List<RawRow> createRowsResults =
+     *         client.raw()
+     *               .rows()
+     *               .upsert(rows);
+     * }
+     * </pre>
+     *
+     * @see #upsert(List, boolean)
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#rows()
+     *
      * @param rows The rows to upsert.
      * @return The created table names.
      * @throws Exception
@@ -484,6 +677,21 @@ public abstract class RawRows extends ApiBase {
 
     /**
      * Deletes a set of rows from Raw tables.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *    Collection<RawRow> rows = //Collection of RawRow;
+     *    List<RawRow> deleteRowResults =
+     *         client.raw()
+     *               .rows()
+     *               .delete(rows);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#rows()
      *
      * @param rows The row keys to delete.
      * @return The deleted rows

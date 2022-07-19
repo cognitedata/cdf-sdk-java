@@ -16,6 +16,7 @@
 
 package com.cognite.client;
 
+import com.cognite.client.config.AuthConfig;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ResponseItems;
 import com.cognite.client.util.Partition;
@@ -61,6 +62,21 @@ public abstract class RawDatabases extends ApiBase {
     /**
      * Returns all database names.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<String> listResults = new ArrayList<>();
+     *     client.raw()
+     *           .databases()
+     *           .list()
+     *           .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#databases()
+     *
      * @return an {@link Iterator} to page through the db names.
      * @throws Exception
      */
@@ -74,6 +90,19 @@ public abstract class RawDatabases extends ApiBase {
 
     /**
      * Creates Raw databases.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.raw()
+     *           .databases()
+     *           .create(List.of("databaseName"));
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#databases()
      *
      * @param databases The databases to create.
      * @return The created table names.
@@ -115,6 +144,21 @@ public abstract class RawDatabases extends ApiBase {
     /**
      * Deletes a set of Raw databases. The databases must be empty.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<String> deleteItemsResults =
+     *         client.raw()
+     *               .databases()
+     *               .delete(List.of("databaseName"));
+     * }
+     * </pre>
+     *
+     * @see #delete(List, boolean)
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#databases()
+     *
      * @param databases The Raw database to delete.
      * @return The deleted databases.
      * @throws Exception
@@ -125,6 +169,20 @@ public abstract class RawDatabases extends ApiBase {
 
     /**
      * Deletes a set of Raw databases. Allows to recursively delete the databases' tables in the same operation.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<String> deleteItemsResults =
+     *         client.raw()
+     *               .databases()
+     *               .delete(List.of("databaseName"), true);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#raw()
+     * @see Raw#databases()
      *
      * @param databases The Raw database to delete.
      * @param recursive Set to true to automatically delete the tables in the databases.
