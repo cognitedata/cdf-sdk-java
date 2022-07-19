@@ -95,7 +95,7 @@ class EntityMatchingIntegrationTest {
         Request entityMatchFitRequest = Request.create()
                 .withRootParameter("sources",  source)
                 .withRootParameter("targets", target)
-                .withRootParameter("matchFields", Map.of("source", "name", "target", "externalId"))
+                .withRootParameter("matchFields", List.of(Map.of("source", "name", "target", "externalId")))
                 .withRootParameter("featureType", featureType);
 
         List<EntityMatchModel> models = client.contextualization().entityMatching()
