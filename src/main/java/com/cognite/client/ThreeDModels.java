@@ -46,6 +46,16 @@ public abstract class ThreeDModels extends ApiBase {
     /**
      * Returns {@link ThreeDModelsRevisions} representing 3D Models Revisions api endpoints.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.threeD().models().revisions();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     *
      * @return The ThreeDModelsRevisions api endpoints.
      */
     public ThreeDModelsRevisions revisions() {
@@ -64,7 +74,21 @@ public abstract class ThreeDModels extends ApiBase {
     /**
      * Returns all {@link ThreeDModel} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<ThreeDModel> listResults = new ArrayList<>();
+     *     client.threeD()
+     *             .models()
+     *             .list()
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
      * @see #list(Request)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
      */
     public Iterator<List<ThreeDModel>> list() throws Exception {
         return this.list(Request.create());
@@ -79,6 +103,23 @@ public abstract class ThreeDModels extends ApiBase {
      *
      * The 3D models are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<ThreeDModel> listResults = new ArrayList<>();
+     *     client.threeD()
+     *             .models()
+     *             .list(Request.create()
+     *                          .withRootParameter("published", true))
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
      *
      * @param requestParameters the filters to use for retrieving the 3D models.
      * @return an {@link Iterator} to page through the results set.
@@ -99,6 +140,24 @@ public abstract class ThreeDModels extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<ThreeDModel> listResults = new ArrayList<>();
+     *      client.threeD()
+     *              .models()
+     *              .list(Request.create()
+     *                             .withFilterParameter("published", true),
+     *                                  "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     *
      * @param requestParameters the filters to use for retrieving the 3d models.
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
@@ -110,6 +169,18 @@ public abstract class ThreeDModels extends ApiBase {
 
     /**
      * Retrieves 3D Models by id.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
+     *      List<ThreeDModel> retrievedThreeDModel = client.threeD().models().retrieve(items);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
      *
      * @param items The item(s) {@code id} to retrieve.
      * @return The retrieved 3D Models.
@@ -156,6 +227,18 @@ public abstract class ThreeDModels extends ApiBase {
      *
      * If an {@link ThreeDModel} object already exists in Cognite Data Fusion, it will be updated. The update
      * behaviour is specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<ThreeDModel> threeDModels = // List of ThreeDModels;
+     *      client.threeD().models().upsert(threeDModels);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
      *
      * @param threeDModels The 3D Models to upsert
      * @return The upserted 3D Models
@@ -218,6 +301,30 @@ public abstract class ThreeDModels extends ApiBase {
         return listResponse;
     }
 
+    /**
+     *
+     * Deletes a set of ThreeDModel.
+     * <p>
+     * The threeDModels to delete are identified via their {@code externalId / id} by submitting a list of
+     * {@link Item}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Item> threeDModels = List.of(Item.newBuilder().setExternalId("1").build());
+     *     List<Item> deletedItemsResults = client.threeD().models().delete(threeDModels);
+     * }
+     * </pre>
+     *
+     * @see DeleteItems#deleteItems(List)
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     *
+     * @param threeDModels
+     * @return
+     * @throws Exception
+     */
     public List<Item> delete(List<Item> threeDModels) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteThreeDModels();

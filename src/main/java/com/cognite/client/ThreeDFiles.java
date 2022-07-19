@@ -48,6 +48,22 @@ public abstract class ThreeDFiles extends ApiBase {
      * Examples: {@code file://localhost/home/files/, file:///home/files/, file:///c:/temp/}
      * - Google Cloud Storage. Specify the temp path as {@code gs://<my-storage-bucket>/<my-path>/}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Path downloadPath = Paths.get("");
+     *     client
+     *          .threeD()
+     *          .files()
+     *          .downloadToPath("threeDFileId", downloadPath);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#files()
+     * @see #download(Long,Path,boolean)
+     *
      * @param threeDFileId The id of the 3D file to download.
      * @param downloadPath The URI to the download storage
      * @return File containers with file headers and references/byte streams of the binary.
@@ -67,6 +83,22 @@ public abstract class ThreeDFiles extends ApiBase {
      * - Local (network) disk. Specify the temp path as {@code file://<host>/<my-path>/}.
      * Examples: {@code file://localhost/home/files/, file:///home/files/, file:///c:/temp/}
      * - Google Cloud Storage. Specify the temp path as {@code gs://<my-storage-bucket>/<my-path>/}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Path downloadPath = Paths.get("");
+     *     client
+     *          .threeD()
+     *          .files()
+     *          .download("threeDFileId", downloadPath, true);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#files()
+     * @see #downloadFileBinary(Long,URI,boolean)
      *
      * @param threeDFileId The id of the 3D file to download.
      * @param downloadPath The URI to the download storage
@@ -114,6 +146,21 @@ public abstract class ThreeDFiles extends ApiBase {
      * - Local (network) disk. Specify the temp path as {@code file://<host>/<my-path>/}.
      * Examples: {@code file://localhost/home/files/, file:///home/files/, file:///c:/temp/}
      * - Google Cloud Storage. Specify the temp path as {@code gs://<my-storage-bucket>/<my-path>/}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     Path downloadPath = Paths.get("").toUri();
+     *     client
+     *          .threeD()
+     *          .files()
+     *          .downloadFileBinary("threeDFileId", downloadPath, true);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#files()
      *
      * @param threeDFileId The id of the 3D file to download.
      * @param tempStoragePath The URI to the download storage. Set to null to only perform in-memory download.
