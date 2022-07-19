@@ -27,10 +27,7 @@ import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -65,6 +62,20 @@ public abstract class Relationships extends ApiBase {
     /**
      * Returns all {@link Relationship} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Relationship> listResults = new ArrayList<>();
+     *     client.relationships()
+     *             .list()
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request)
+     * @see CogniteClient
+     * @see CogniteClient#relationships()
+     *
      * @see #list(Request)
      */
     public Iterator<List<Relationship>> list() throws Exception {
@@ -80,6 +91,21 @@ public abstract class Relationships extends ApiBase {
      *
      * The relationships are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Relationship> listResults = new ArrayList<>();
+     *      client.relationships()
+     *              .list(Request.create()
+     *                             .withRootParameter("fetchResources", true))
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#relationships()
      *
      * @param requestParameters the filters to use for retrieving the assets.
      * @return an {@link Iterator} to page through the results set.
@@ -101,6 +127,22 @@ public abstract class Relationships extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Relationship> listResults = new ArrayList<>();
+     *      client.relationships()
+     *              .list(Request.create()
+     *                             .withFilterParameter("fetchResources", true),
+     *                                  "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#relationships()
+     *
      * @param requestParameters the filters to use for retrieving the assets.
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
@@ -113,6 +155,17 @@ public abstract class Relationships extends ApiBase {
     /**
      * Retrieve relationships by {@code externalId}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Relationship> retrievedRelationship = client.relationships().retrieve("1","2");
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#relationships()
+     *
      * @param externalId The {@code externalIds} to retrieve
      * @return The retrieved relationships.
      * @throws Exception
@@ -123,6 +176,17 @@ public abstract class Relationships extends ApiBase {
 
     /**
      * Retrieve relationships by {@code internal id}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Relationship> retrievedRelationship = client.relationships().retrieve(1,2);
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#relationships()
      *
      * @param id The {@code ids} to retrieve
      * @return The retrieved relationships.
@@ -137,6 +201,18 @@ public abstract class Relationships extends ApiBase {
      *
      * Source and target objects will not be included--only the relationship object.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
+     *      List<Relationship> retrievedRelationship = client.relationships().retrieve(items);
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List, boolean)
+     * @see CogniteClient
+     * @see CogniteClient#relationships()
+     *
      * @param items The item(s) {@code externalId / id} to retrieve.
      * @return The retrieved relationships.
      * @throws Exception
@@ -149,6 +225,18 @@ public abstract class Relationships extends ApiBase {
      * Retrieve Relationships by id.
      *
      * Source and target objects will not be included--only the relationship object.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
+     *      List<Relationship> retrievedRelationship = client.relationships().retrieve(items, true);
+     * }
+     * </pre>
+     *
+     * @see #retrieveJson(ResourceType,Collection,Map)
+     * @see CogniteClient
+     * @see CogniteClient#relationships()
      *
      * @param items The item(s) {@code externalId / id} to retrieve.
      * @param fetchResources If true, will try to fetch the resources referred to in the relationship (source/target).
@@ -174,6 +262,18 @@ public abstract class Relationships extends ApiBase {
      *
      * If an {@link Relationship} object already exists in Cognite Data Fusion, it will be updated. The update behavior
      * is specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Relationship> relationships = // List of Relationships;
+     *      client.relationships().upsert(relationships);
+     * }
+     * </pre>
+     *
+     * @see UpsertItems#upsertViaCreateAndUpdate(List)
+     * @see CogniteClient
+     * @see CogniteClient#relationships()
      *
      * @param relationships The relationships to upsert.
      * @return The upserted relationships.
@@ -207,6 +307,18 @@ public abstract class Relationships extends ApiBase {
      *
      * The events to delete are identified via their {@code externalId / id} by submitting a list of
      * {@link Item}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Item> relationships = List.of(Item.newBuilder().setExternalId("1").build());
+     *     List<Item> deletedItemsResults = client.relationships().delete(relationships);
+     * }
+     * </pre>
+     *
+     * @see DeleteItems#deleteItems(List)
+     * @see CogniteClient
+     * @see CogniteClient#relationships()
      *
      * @param relationships a list of {@link Item} representing the events (externalId / id) to be deleted
      * @return The deleted events via {@link Item}
