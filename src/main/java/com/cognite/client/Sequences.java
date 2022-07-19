@@ -64,6 +64,16 @@ public abstract class Sequences extends ApiBase {
     /**
      * Returns {@link SequenceRows} representing the sequences data / rows api.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.sequences().rows();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
+     *
      * @return The sequences data / rows api object.
      */
     public SequenceRows rows() {
@@ -73,7 +83,20 @@ public abstract class Sequences extends ApiBase {
     /**
      * Returns all {@link SequenceMetadata} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<SequenceMetadata> listResults = new ArrayList<>();
+     *     client.sequences()
+     *                  .list()
+     *                  .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
      * @see #list(Request)
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
+     *
      */
     public Iterator<List<SequenceMetadata>> list() throws Exception {
         return this.list(Request.create());
@@ -88,6 +111,21 @@ public abstract class Sequences extends ApiBase {
      *
      * The sequences are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<SequenceMetadata> listResults = new ArrayList<>();
+     *      client.sequences()
+     *              .list(Request.create()
+     *                             .withFilterParameter("name", "name"))
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
      *
      * @param requestParameters The filters to use for retrieving sequences
      * @return an {@link Iterator} to page through the results set.
@@ -108,6 +146,22 @@ public abstract class Sequences extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<SequenceMetadata> listResults = new ArrayList<>();
+     *      client.sequences()
+     *              .list(Request.create()
+     *                             .withFilterParameter("name", "name"),
+     *                                  "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
+     *
      * @param requestParameters The filters to use for retrieving the timeseries.
      * @param partitions The partitions to include
      * @return an {@link Iterator} to page through the results set.
@@ -120,6 +174,17 @@ public abstract class Sequences extends ApiBase {
     /**
      * Retrieve sequences by {@code externalId}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<SequenceMetadata> retrievedSequences = client.sequences().retrieve("1","2");
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
+     *
      * @param externalId The {@code externalIds} to retrieve
      * @return The retrieved sequences.
      * @throws Exception
@@ -131,6 +196,17 @@ public abstract class Sequences extends ApiBase {
     /**
      * Retrieve sequences by {@code internal id}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<SequenceMetadata> retrievedSequences = client.sequences().retrieve(1,2);
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
+     *
      * @param id The {@code ids} to retrieve
      * @return The retrieved sequences.
      * @throws Exception
@@ -141,6 +217,18 @@ public abstract class Sequences extends ApiBase {
 
     /**
      * Retrieve sequences by {@code externalId / id}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
+     *      List<SequenceMetadata> retrievedSequences = client.sequences().retrieve(items);
+     * }
+     * </pre>
+     *
+     * @see #retrieveJson(ResourceType,Collection)
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
      *
      * @param items The item(s) {@code externalId / id} to retrieve
      * @return The retrieved sequences
@@ -159,6 +247,19 @@ public abstract class Sequences extends ApiBase {
      * Multiple aggregation types are supported, Please refer to the Cognite API specification for more information
      * on the possible settings.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Aggregate aggregateResult = client.sequences()
+     *                  .aggregate(Request.create()
+     *                  .withFilterParameter("name", "name"));
+     * }
+     * </pre>
+     *
+     * @see #aggregate(ResourceType,Request)
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
+     *
      * @param requestParameters The filtering and aggregates specification.
      * @return The aggregation results.
      * @throws Exception
@@ -173,6 +274,18 @@ public abstract class Sequences extends ApiBase {
      *
      * If it is a new {@link SequenceMetadata} object already exists in Cognite Data Fusion, it will be updated. The
      * update behaviour is specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<SequenceMetadata> sequences = // List of SequenceMetadata;
+     *      client.sequences().upsert(sequences);
+     * }
+     * </pre>
+     *
+     * @see UpsertItems#upsertViaGetCreateAndUpdateDiff(List)
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
      *
      * @param sequences The sequences to upsert
      * @return The upserted sequences
@@ -206,6 +319,18 @@ public abstract class Sequences extends ApiBase {
      * Deletes a set of Sequences.
      *
      * The sequences to delete are identified via their {@code externalId / id} by submitting a list of {@link Item}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Item> sequences = List.of(Item.newBuilder().setExternalId("1").build());
+     *     List<Item> deletedItemsResults = client.sequences().delete(sequences);
+     * }
+     * </pre>
+     *
+     * @see DeleteItems#deleteItems(List)
+     * @see CogniteClient
+     * @see CogniteClient#sequences()
      *
      * @param sequences A list of {@link Item} representing the sequences (externalId / id) to be deleted
      * @return The deleted sequences via {@link Item}
