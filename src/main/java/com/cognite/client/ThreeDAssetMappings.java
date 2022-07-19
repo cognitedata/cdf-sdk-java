@@ -53,7 +53,27 @@ public abstract class ThreeDAssetMappings extends ApiBase {
     /**
      * Returns all {@link ThreeDAssetMapping} objects.
      *
-     * @see #list(Long, Long, Request)
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<ThreeDAssetMapping> listResults = new ArrayList<>();
+     *     Long modelId, revisionId = 1L;
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .assetMappings()
+     *             .list(modelId,revisionId)
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#assetMappings()
+     * @see #list(Long,Long,Request)
+     *
      */
     public Iterator<List<ThreeDAssetMapping>> list(Long modelId, Long revisionId) throws Exception {
         return this.list(modelId, revisionId, Request.create());
@@ -68,6 +88,28 @@ public abstract class ThreeDAssetMappings extends ApiBase {
      *
      * The 3D asset mappings are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<ThreeDAssetMapping> listResults = new ArrayList<>();
+     *     Long modelId, revisionId = 1L;
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .assetMappings()
+     *             .list(modelId,revisionId, Request.create()
+     *                     .withRootParameter("limit", 1))
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#assetMappings()
+     * @see #list(Long,Long,Request, String...)
      *
      * @param requestParameters the filters to use for retrieving the 3D asset mappings.
      * @return an {@link Iterator} to page through the results set.
@@ -87,6 +129,29 @@ public abstract class ThreeDAssetMappings extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<ThreeDAssetMapping> listResults = new ArrayList<>();
+     *     Long modelId, revisionId = 1L;
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .assetMappings()
+     *             .list(modelId,revisionId, Request.create()
+     *                     .withRootParameter("limit", 1),
+     *                     "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#assetMappings()
+     * @see #listJson(ResourceType,Request,String...)
+     *
      * @param requestParameters the filters to use for retrieving the 3D asset mappings
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
@@ -102,7 +167,27 @@ public abstract class ThreeDAssetMappings extends ApiBase {
     /**
      * Returns all {@link ThreeDAssetMapping} objects.
      *
-     * @see #filter(Long, Long, Request)
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<ThreeDAssetMapping> listResults = new ArrayList<>();
+     *     Long modelId, revisionId = 1L;
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .assetMappings()
+     *             .filter(modelId,revisionId)
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#assetMappings()
+     * @see #filter(Long,Long,Request)
+     *
      */
     public Iterator<List<ThreeDAssetMapping>> filter(Long modelId, Long revisionId) throws Exception {
         return this.filter(modelId, revisionId, Request.create());
@@ -118,12 +203,32 @@ public abstract class ThreeDAssetMappings extends ApiBase {
      * The 3D asset mappings are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<ThreeDAssetMapping> listResults = new ArrayList<>();
+     *     Long modelId, revisionId = 1L;
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .assetMappings()
+     *             .filter(modelId,revisionId, Request.create()
+     *                     .withFilterParameter("assetIds", List.of(1, 2)))
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#assetMappings()
+     *
      * @param requestParameters the filters to use for retrieving the 3D asset mappings.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
      */
     public Iterator<List<ThreeDAssetMapping>> filter(Long modelId, Long revisionId, Request requestParameters) throws Exception {
-        String loggingPrefix = "filter() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         ConnectorServiceV1 connector = getClient().getConnectorService();
         Request requestParams = addAuthInfo(requestParameters);
 
@@ -135,6 +240,25 @@ public abstract class ThreeDAssetMappings extends ApiBase {
 
     /**
      * Creates a set of {@link ThreeDAssetMapping} objects.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<ThreeDAssetMapping> items = // List of ThreeDAssetMapping;
+     *     Long modelId, revisionId = 1L;
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .assetMappings()
+     *             .create(modelId,revisionId, items);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#assetMappings()
      *
      * @param modelId The id of ThreeDModels object
      * @param revisionId The id of ThreeDModelRevision object
@@ -168,6 +292,25 @@ public abstract class ThreeDAssetMappings extends ApiBase {
 
     /**
      *  Deletes 3D asset mappings.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<ThreeDAssetMapping> deleteItemsInput = // List of ThreeDAssetMapping;
+     *     Long modelId, revisionId = 1L;
+     *     client.threeD()
+     *             .models()
+     *             .revisions()
+     *             .assetMappings()
+     *             .delete(modelId,revisionId, deleteItemsInput);
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#threeD()
+     * @see ThreeD#models()
+     * @see ThreeDModels#revisions()
+     * @see ThreeDModelsRevisions#assetMappings()
      *
      * @param modelId The id of ThreeDModels object
      * @param revisionId The id of ThreeDModelRevision object
