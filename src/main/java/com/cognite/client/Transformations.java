@@ -43,6 +43,16 @@ public abstract class Transformations extends ApiBase {
     /**
      * Returns {@link TransformationJobs} representing TransformationJobs api endpoints.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.transformation().jobs();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     *
      * @return The TransformationJobs api endpoints.
      */
     public TransformationJobs jobs() {
@@ -52,6 +62,16 @@ public abstract class Transformations extends ApiBase {
     /**
      * Returns {@link TransformationSchedules} representing TransformationJobs api endpoints.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.transformation().schedules();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     *
      * @return The TransformationJobs api endpoints.
      */
     public TransformationSchedules schedules() {
@@ -60,6 +80,16 @@ public abstract class Transformations extends ApiBase {
 
     /**
      * Returns {@link TransformationNotifications} representing TransformationJobs api endpoints.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.transformation().notifications();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
      *
      * @return The TransformationNotifications api endpoints.
      */
@@ -71,7 +101,19 @@ public abstract class Transformations extends ApiBase {
     /**
      * Returns all {@link Transformation} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Transformation> listResults = new ArrayList<>();
+     *     client.transformation()
+     *             .list()
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
      * @see #list(Request)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
      */
     public Iterator<List<Transformation>> list() throws Exception {
         return this.list(Request.create());
@@ -86,6 +128,21 @@ public abstract class Transformations extends ApiBase {
      *
      * The Transformations are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Transformation> listResults = new ArrayList<>();
+     *     client.transformation()
+     *             .list(Request.create()
+     *                         .withFilterParameter("destination", true))
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
      *
      * @param requestParameters the filters to use for retrieving timeseries.
      * @return an {@link Iterator} to page through the results set.
@@ -106,6 +163,22 @@ public abstract class Transformations extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Transformation> listResults = new ArrayList<>();
+     *      client.transformation()
+     *              .list(Request.create()
+     *                             .withFilterParameter("isPublic", true),
+     *                                  "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     *
      * @param requestParameters the filters to use for retrieving the timeseries.
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
@@ -115,6 +188,31 @@ public abstract class Transformations extends ApiBase {
         return AdapterIterator.of(listJson(ResourceType.TRANSFORMATIONS, requestParameters, partitions), this::parseTransformations);
     }
 
+    /**
+     * Creates or updates a set of {@link Transformation} objects.
+     * PS: Full example in file <a href="https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/transformations.md"><b>transformations.md</b></a>
+     * <p>
+     * If it is a new {@link Transformation} object (based on {@code id / externalId}, then it will be created.
+     * <p>
+     * If an {@link Transformation} object already exists in Cognite Data Fusion, it will be updated. The update behavior
+     * is specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Transformation> transformations = // List of Transformations;
+     *      client.transformation().upsert(transformations);
+     * }
+     * </pre>
+     *
+     * @see UpsertItems#upsertViaCreateAndUpdate(List)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     *
+     * @param transformations
+     * @return
+     * @throws Exception
+     */
     public List<Transformation> upsert(List<Transformation> transformations) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter createItemWriter = connector.writeTransformation();
@@ -134,12 +232,55 @@ public abstract class Transformations extends ApiBase {
                 .collect(Collectors.toList());
     }
 
+    /**
+     *
+     * Retrieve Transformations by {@code externalId / id}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
+     *      List<Transformation> retrievedTransformation = client.transformation().retrieve(items);
+     * }
+     * </pre>
+     *
+     * @see #retrieveJson(ResourceType,Collection)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     *
+     * @param items The item(s) {@code externalId / id} to retrieve.
+     * @return The retrieved events.
+     * @throws Exception
+     */
     public List<Transformation> retrieve(List<Item> items) throws Exception {
         return retrieveJson(ResourceType.TRANSFORMATIONS, items).stream()
                 .map(this::parseTransformations)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Deletes a set of Transformations.
+     *
+     * <p>
+     * The transformations to delete are identified via their {@code externalId / id} by submitting a list of
+     * {@link Item}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Item> deleteItemsInput = List.of(Item.newBuilder().setExternalId("1").build());
+     *     List<Item> deletedItemsResults = client.transformation().delete(deleteItemsInput);
+     * }
+     * </pre>
+     *
+     * @see DeleteItems#deleteItems(List)
+     * @see CogniteClient
+     * @see CogniteClient#transformation()
+     *
+     * @param deleteItemsInput a list of {@link Item} representing the transformations (externalId / id) to be deleted
+     * @return The deleted transformations via {@link Item}
+     * @throws Exception
+     */
     public List<Item> delete(List<Item> deleteItemsInput) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteTransformations();
