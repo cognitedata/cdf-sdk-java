@@ -64,7 +64,19 @@ public abstract class Labels extends ApiBase {
     /**
      * Returns all {@link Label} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Label> listResults = new ArrayList<>();
+     *     client.labels()
+     *             .list()
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
      * @see #list(Request)
+     * @see CogniteClient
+     * @see CogniteClient#labels()
      */
     public Iterator<List<Label>> list() throws Exception {
         return this.list(Request.create());
@@ -79,6 +91,21 @@ public abstract class Labels extends ApiBase {
      *
      * The labels are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Label> listResults = new ArrayList<>();
+     *      client.labels()
+     *              .list(Request.create()
+     *                             .withFilterParameter("externalIdPrefix", "Val"))
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#labels()
      *
      * @param requestParameters The filters to use for retrieving labels.
      * @return An {@link Iterator} to page through the rsults set.
@@ -99,6 +126,22 @@ public abstract class Labels extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you neeed to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Label> listResults = new ArrayList<>();
+     *      client.labels()
+     *              .list(Request.create()
+     *                             .withFilterParameter("externalIdPrefix", "Val"),
+     *                                  "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#labels()
+     *
      * @param requestParameters The filters to use for retrieving the labels
      * @param partitions The partitions to include.
      * @return An {@link Iterator} to page through the results set.
@@ -113,6 +156,18 @@ public abstract class Labels extends ApiBase {
      *
      * If it is a new {@link Label} object already exists in Cognite Data Fusion, it will be updated. The update
      * behaviour is specified via the update mode in teh {@link com.cognite.client.config.ClientConfig} settings.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Label> labels = // List of Labels;
+     *      client.labels().upsert(labels);
+     * }
+     * </pre>
+     *
+     * @see UpsertItems#upsertViaCreateAndDelete(List)
+     * @see CogniteClient
+     * @see CogniteClient#labels()
      *
      * @param labels The labels to upsert.
      * @return The upserted labels
@@ -136,10 +191,22 @@ public abstract class Labels extends ApiBase {
     /**
      * Deletes a set of Labels.
      *
-     * The events to delete are identified via their {@code externalId / id} by submitting a list of {@link Item}.
+     * The labels to delete are identified via their {@code externalId / id} by submitting a list of {@link Item}.
      *
-     * @param labels A list of {@link Item} representing the events (externalId / id) to be deleted.
-     * @return The deleted events via {@link Item}.
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Item> labels = List.of(Item.newBuilder().setExternalId("1").build());
+     *     List<Item> deletedItemsResults = client.labels().delete(labels);
+     * }
+     * </pre>
+     *
+     * @see DeleteItems#deleteItems(List)
+     * @see CogniteClient
+     * @see CogniteClient#labels()
+     *
+     * @param labels A list of {@link Item} representing the labels (externalId / id) to be deleted.
+     * @return The deleted labels via {@link Item}.
      * @throws Exception
      */
     public List<Item> delete(List<Item> labels) throws Exception {
