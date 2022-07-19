@@ -571,9 +571,8 @@ public abstract class CogniteClient implements Serializable {
             cdfProject = loginStatus.getProject();
         }
 
-        return AuthConfig.create()
-                .withHost(getBaseUrl())
-                .withProject(cdfProject);
+        return AuthConfig.of(cdfProject)
+                .withHost(getBaseUrl());
     }
 
     /*
