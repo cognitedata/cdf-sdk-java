@@ -66,6 +66,16 @@ public abstract class Timeseries extends ApiBase {
     /**
      * Returns {@link DataPoints} representing the time series data points api.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     client.timeseries().dataPoints();
+     * }
+     * </pre>
+     *
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     *
      * @return The time series data points api object.
      */
     public DataPoints dataPoints() {
@@ -75,7 +85,19 @@ public abstract class Timeseries extends ApiBase {
     /**
      * Returns all {@link TimeseriesMetadata} objects.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<TimeseriesMetadata> listResults = new ArrayList<>();
+     *     client.timeseries()
+     *             .list()
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
      * @see #list(Request)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
      */
     public Iterator<List<TimeseriesMetadata>> list() throws Exception {
         return this.list(Request.create());
@@ -90,6 +112,21 @@ public abstract class Timeseries extends ApiBase {
      *
      * The timeseries are retrieved using multiple, parallel request streams towards the Cognite api. The number of
      * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<TimeseriesMetadata> listResults = new ArrayList<>();
+     *     client.timeseries()
+     *             .list(Request.create()
+     *                          .withFilterMetadataParameter("source", "source"))
+     *             .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #list(Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
      *
      * @param requestParameters the filters to use for retrieving timeseries.
      * @return an {@link Iterator} to page through the results set.
@@ -110,6 +147,22 @@ public abstract class Timeseries extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you
      * have to stream these results into your own data structure.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<TimeseriesMetadata> listResults = new ArrayList<>();
+     *      client.timeseries()
+     *              .list(Request.create()
+     *                             .withFilterMetadataParameter("published", true),
+     *                                  "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
+     *              .forEachRemaining(listResults::addAll);
+     * }
+     * </pre>
+     *
+     * @see #listJson(ResourceType,Request,String...)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     *
      * @param requestParameters the filters to use for retrieving the timeseries.
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
@@ -122,6 +175,17 @@ public abstract class Timeseries extends ApiBase {
     /**
      * Retrieve timeseries by {@code externalId}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<TimeseriesMetadata> retrievedTimeseries = client.timeseries().retrieve("1","2");
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     *
      * @param externalId The {@code externalIds} to retrieve
      * @return The retrieved timeseries.
      * @throws Exception
@@ -133,6 +197,17 @@ public abstract class Timeseries extends ApiBase {
     /**
      * Retrieve timeseries by {@code internal id}.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<TimeseriesMetadata> retrievedTimeseries = client.timeseries().retrieve(1,2);
+     * }
+     * </pre>
+     *
+     * @see #retrieve(List)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     *
      * @param id The {@code ids} to retrieve
      * @return The retrieved timeseries.
      * @throws Exception
@@ -143,6 +218,18 @@ public abstract class Timeseries extends ApiBase {
 
     /**
      * Retrieves timeseries by {@code externalId / id}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
+     *      List<TimeseriesMetadata> retrievedTimeseries = client.timeseries().retrieve(items);
+     * }
+     * </pre>
+     *
+     * @see #retrieveJson(ResourceType, java.util.Collection)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
      *
      * @param items The item(s) {@code externalId / id} to retrieve.
      * @return The retrieved timeseries.
@@ -161,6 +248,19 @@ public abstract class Timeseries extends ApiBase {
      * Multiple aggregation types are supported. Please refer to the Cognite API specification for more information
      * on the possible settings.
      *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Aggregate aggregateResult = client.timeseries()
+     *                  .aggregate(Request.create()
+     *                  .withFilterMetadataParameter("source", "source"));
+     * }
+     * </pre>
+     *
+     * @see #aggregate(ResourceType,Request)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     *
      * @param requestParameters The filtering and aggregates specification.
      * @return The aggregation results.
      * @throws Exception
@@ -177,6 +277,18 @@ public abstract class Timeseries extends ApiBase {
      *
      * If an {@link TimeseriesMetadata} object already exists in Cognite Data Fusion, it will be updated. The update
      * behaviour is specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      List<TimeseriesMetadata> timeseries = // List of TimeseriesMetadata;
+     *      client.timeseries().upsert(timeseries);
+     * }
+     * </pre>
+     *
+     * @see UpsertItems#upsertViaCreateAndUpdate(List)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
      *
      * @param timeseries The timeseries to upsert
      * @return The upserted timeseries
@@ -201,6 +313,29 @@ public abstract class Timeseries extends ApiBase {
                 .collect(Collectors.toList());
     }
 
+    /**
+     *
+     * Deletes a set of TimeseriesMetadata.
+     * <p>
+     * The TimeseriesMetadata to delete are identified via their {@code externalId / id} by submitting a list of
+     * {@link Item}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *     List<Item> timeseries = List.of(Item.newBuilder().setExternalId("1").build());
+     *     List<Item> deletedItemsResults = client.timeseries().delete(timeseries);
+     * }
+     * </pre>
+     *
+     * @see DeleteItems#deleteItems(List)
+     * @see CogniteClient
+     * @see CogniteClient#timeseries()
+     *
+     * @param timeseries
+     * @return
+     * @throws Exception
+     */
     public List<Item> delete(List<Item> timeseries) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteTsHeaders();
