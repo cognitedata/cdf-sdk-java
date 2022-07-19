@@ -43,17 +43,17 @@
 
         <auto.version>1.9</auto.version>
 
-        <nimbusds.version>9.33</nimbusds.version>
-        <awss3.version>1.12.196</awss3.version>
+        <nimbusds.version>9.37.2</nimbusds.version>
+        <awss3.version>1.12.239</awss3.version>
         <jgrapht.version>1.5.1</jgrapht.version>
-        <okhttp3.version>4.9.3</okhttp3.version>
-        <jackson.version>2.13.2.2</jackson.version>
+        <okhttp3.version>4.10.0</okhttp3.version>
+        <jackson.version>2.13.3</jackson.version>
         <slf4j.version>1.7.36</slf4j.version>
         <guava.version>31.1-jre</guava.version>
         <commons.lang.version>3.12.0</commons.lang.version>
         <logback.classic.version>1.2.11</logback.classic.version>
         <junit.version>5.8.2</junit.version>
-        <mockito.version>4.4.0</mockito.version>
+        <mockito.version>4.6.1</mockito.version>
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-exec-plugin.version>3.0.0</maven-exec-plugin.version>
@@ -64,7 +64,7 @@
         <!-- protobuf paths -->
         <protobuf.input.directory>${project.basedir}/src/main/proto</protobuf.input.directory>
         <protobuf.output.directory>${project.build.directory}/generated-sources/proto</protobuf.output.directory>
-        <protobuf.version>3.19.4</protobuf.version>
+        <protobuf.version>3.21.2</protobuf.version>
 
         <build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
         <maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
@@ -85,7 +85,7 @@
             <dependency>
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
-                <version>25.1.0</version>
+                <version>25.4.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
