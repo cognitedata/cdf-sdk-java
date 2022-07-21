@@ -44,7 +44,7 @@
         <auto.version>1.9</auto.version>
 
         <nimbusds.version>9.37.2</nimbusds.version>
-        <awss3.version>1.12.239</awss3.version>
+        <awss3.version>1.12.261</awss3.version>
         <jgrapht.version>1.5.1</jgrapht.version>
         <okhttp3.version>4.10.0</okhttp3.version>
         <jackson.version>2.13.3</jackson.version>
