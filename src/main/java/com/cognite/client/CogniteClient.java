@@ -319,7 +319,7 @@ public abstract class CogniteClient implements Serializable {
      */
     public CogniteClient withScopes(Collection<String> scopes) {
         Preconditions.checkArgument(getAuthType() == AuthType.CLIENT_CREDENTIALS,
-                "Scopes supported fpr client credentials mode only.");
+                "Scopes supported for client credentials mode only.");
         String host;
 
         try {
