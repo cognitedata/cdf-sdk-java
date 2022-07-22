@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
+import java.util.Optional;
 
 /**
  * This class represents a collection of response items from a Cognite API request.
@@ -132,6 +133,9 @@ public abstract class ResponseItems<T> implements Serializable {
     /**
      * Returns the main result items.
      *
+     * A response payload from Cognite Data Fusion may contain 0..* results items (typically max 1k items), so
+     * the items are returned in a list.
+     *
      * @return A list of result items.
      * @throws Exception
      */
@@ -146,6 +150,7 @@ public abstract class ResponseItems<T> implements Serializable {
     /**
      * Returns a list of duplicate items.
      *
+     * If Cognite Data Fusion reports duplicates in its response, they will be returned by this method.
      *
      * @return A list of duplicate items.
      * @throws Exception
@@ -154,24 +159,66 @@ public abstract class ResponseItems<T> implements Serializable {
         return getDuplicateResponseParser().extractItems(getResponseBinary().getResponseBodyBytes().toByteArray());
     }
 
+    /**
+     * Returns a list of missing items.
+     *
+     * If Cognite Data Fusion reports missing items, they will be returned by this method.
+     *
+     * @return a list of missing items.
+     * @throws Exception
+     */
     public ImmutableList<String> getMissingItems() throws Exception {
         return getMissingResponseParser().extractItems(getResponseBinary().getResponseBodyBytes().toByteArray());
     }
 
+    /**
+     * Returns the status message of the response.
+     *
+     * Usually, the response will contain 0..1 status message, so you should check the first item in the returned
+     * list for the status message.
+     *
+     * @return a list with the status message as item[0].
+     * @throws Exception
+     */
     public ImmutableList<String> getStatus() throws Exception {
         return getStatusResponseParser().extractItems(getResponseBinary().getResponseBodyBytes().toByteArray());
     }
 
+    /**
+     * Returns the response error message as item[0], if any.
+     *
+     * @return
+     * @throws Exception
+     */
     public ImmutableList<String> getErrorMessage() throws Exception {
         return getErrorMessageResponseParser().extractItems(getResponseBinary().getResponseBodyBytes().toByteArray());
     }
 
+    /**
+     * Returns the response body as a string.
+     *
+     * @return the response body as a string.
+     */
     public String getResponseBodyAsString() {
         return getResponseBinary().getResponseBodyBytes().toStringUtf8();
     }
 
+    /**
+     * Returns {@code true} if the request was successful, {@code false} if unsuccessful.
+     *
+     * @return {@code true} if the request was successful, {@code false} if unsuccessful.
+     */
     public boolean isSuccessful() {
         return getResponseBinary().getResponse().isSuccessful();
+    }
+
+    /**
+     * Returns the x-request-id (set by Cognite Data Fusion) if it exists in the response header.
+     *
+     * @return The x-request-id header value if it exists.
+     */
+    public Optional<String> getXRequestId() {
+        return Optional.ofNullable(getResponseBinary().getResponse().header("x-request-id"));
     }
 
     @AutoValue.Builder
