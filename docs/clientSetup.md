@@ -24,10 +24,29 @@ In order to use this flow, you need to register your client with the identity pr
 this would typically be registering your client as an "app registration". Then use the client credentials (sourced 
 from Azure AD) as inputs to the SDK:
 ```java
+String clientId = "my-client-id";
+String clientSecret = "my-client-secret"    // Remember to source this value from a secure transfer mechanism.
+                                            // For example, via secret mapped to an environment variable.
+String azureAdTenantId = "my-aad-tenant-id";
+String cdfProject = "my-cdf-project";
+
 CogniteClient client = CogniteClient.ofClientCredentials(
-                    <clientId>,
-                    <clientSecret>,
-                    TokenUrl.generateAzureAdURL(<azureAdTenantId>));
+        clientId, 
+        clientSecret, 
+        TokenUrl.generateAzureAdURL(azureAdTenantId))
+        .withProject("myCdfProject");
+
+// Using custom authentication scopes
+String cdfBaseUrl = "https://api.cognitedata.com"
+List<String> authScopes = List.of(cdfBaseUrl + "/.default", "my-second-scope");
+
+CogniteClient client = CogniteClient.ofClientCredentials(
+        clientId,
+        clientSecret,
+        TokenUrl.generateAzureAdURL(azureAdTenantId),
+        authScopes)
+        .withProject("myCdfProject")
+        .withBaseUrl(cdfBaseUrl);
 ```
 
 There are also other authentication flows under the OpenID umbrella, but the SDK don't have built-in 
@@ -49,3 +68,6 @@ You simply supply the API key when creating the client:
 ```java
 CogniteClient client = CogniteClient.ofKey(<apiKey>);
 ```
+
+### Proxy server
+
