@@ -280,37 +280,40 @@ public abstract class CogniteClient implements Serializable {
         CogniteClient.Builder returnValueBuilder = toBuilder()
                 .setBaseUrl(baseUrl);
 
+        OkHttpClient.Builder httpClientBuilder = getHttpClient().newBuilder();
+        List<Interceptor> interceptors = httpClientBuilder.interceptors();
+        boolean removed = false;
+
         // Add the auth specific config
         switch (getAuthType()) {
             case API_KEY:
-                returnValueBuilder = returnValueBuilder
-                        .setHttpClient(CogniteClient.getHttpClientBuilder()
-                                .addInterceptor(new ApiKeyInterceptor(host, getApiKey()))
-                                .build());
+                removed = interceptors.removeIf(interceptor -> interceptor instanceof ApiKeyInterceptor);
+                interceptors.add(new ApiKeyInterceptor(host, getApiKey()));
                 break;
             case TOKEN_SUPPLIER:
-                returnValueBuilder = returnValueBuilder
-                        .setHttpClient(CogniteClient.getHttpClientBuilder()
-                                .addInterceptor(new TokenInterceptor(host, getTokenSupplier()))
-                                .build());
+                removed = interceptors.removeIf(interceptor -> interceptor instanceof TokenInterceptor);
+                interceptors.add(new TokenInterceptor(host, getTokenSupplier()));
                 break;
             case CLIENT_CREDENTIALS:
                 Collection<String> scopes = List.of(baseUrl + "/.default");
                 if (null != getAuthScopes()) {
                     scopes = getAuthScopes();
                 }
-                returnValueBuilder = returnValueBuilder
-                        .setHttpClient(CogniteClient.getHttpClientBuilder()
-                                .addInterceptor(new ClientCredentialsInterceptor(host, getClientId(),
-                                        getClientSecret(), getTokenUrl(), scopes))
-                                .build());
+                removed = interceptors.removeIf(interceptor -> interceptor instanceof ClientCredentialsInterceptor);
+                interceptors.add(new ClientCredentialsInterceptor(host, getClientId(),
+                        getClientSecret(), getTokenUrl(), scopes));
                 break;
             default:
                 // This should never execute...
                 throw new RuntimeException("Unknown authentication type. Cannot configure the client.");
         }
+        if (!removed) {
+            LOG.warn("Unable to delete the old authentication config. New auth config may not work as expected.");
+        }
 
-        return returnValueBuilder.build();
+        return returnValueBuilder
+                .setHttpClient(httpClientBuilder.build())
+                .build();
     }
 
     /**
@@ -330,27 +333,19 @@ public abstract class CogniteClient implements Serializable {
             throw new RuntimeException(e);
         }
 
-        // Set the generic part of the configuration
-        CogniteClient.Builder returnValueBuilder = toBuilder()
-                .setAuthScopes(scopes);
-
-        // Add the auth specific config
-        switch (getAuthType()) {
-            case CLIENT_CREDENTIALS:
-                returnValueBuilder = returnValueBuilder
-                        .setHttpClient(CogniteClient.getHttpClientBuilder()
-                                .addInterceptor(new ClientCredentialsInterceptor(host, getClientId(),
-                                        getClientSecret(), getTokenUrl(), scopes))
-                                .build());
-                break;
-            case API_KEY:
-            case TOKEN_SUPPLIER:
-            default:
-                // This should never execute...
-                throw new RuntimeException("Unsupported authentication type. Cannot configure the client.");
+        OkHttpClient.Builder httpClientBuilder = getHttpClient().newBuilder();
+        List<Interceptor> interceptors = httpClientBuilder.interceptors();
+        boolean removed = interceptors.removeIf(interceptor -> interceptor instanceof ClientCredentialsInterceptor);
+        if (!removed) {
+            LOG.warn("Unable to delete the old authentication config. New auth config may not work as expected.");
         }
+        interceptors.add(new ClientCredentialsInterceptor(host, getClientId(),
+                getClientSecret(), getTokenUrl(), scopes));
 
-        return returnValueBuilder.build();
+        return toBuilder()
+                .setAuthScopes(scopes)
+                .setHttpClient(httpClientBuilder.build())
+                .build();
     }
 
     /**
