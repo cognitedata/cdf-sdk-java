@@ -52,7 +52,7 @@ public class TransformationJobsIntegrationTest {
             listToBeCreate.addAll(generatedWithDestinationDataSource1List);
             listToBeCreate.addAll(generatedWithDestinationRawDataSourceList);
 
-            List<Transformation> createdList = client.transformation().upsert(listToBeCreate);
+            List<Transformation> createdList = client.transformations().upsert(listToBeCreate);
             LOG.info(loggingPrefix + "------------ Finished creating Transformations. Duration: {} -----------",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(listToBeCreate.size(), createdList.size());
@@ -67,7 +67,7 @@ public class TransformationJobsIntegrationTest {
                             .setExternalId(tra.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
-            List<Item> deleteItemsResults = client.transformation().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.transformations().delete(deleteItemsInput);
             LOG.info(loggingPrefix + "Finished deleting Transformations. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
@@ -87,7 +87,7 @@ public class TransformationJobsIntegrationTest {
             LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
             CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
             LOG.info(loggingPrefix + "Start reading Transformation Jobs.");
-            Iterator<List<Transformation.Job>> listJobs = client.transformation().jobs().list();
+            Iterator<List<Transformation.Job>> listJobs = client.transformations().jobs().list();
             Transformation.Job job = null;
             while(listJobs.hasNext()) {
                 List<Transformation.Job> list = listJobs.next();
@@ -100,7 +100,7 @@ public class TransformationJobsIntegrationTest {
 
             if (job != null) {
                 listJobs = client
-                        .transformation()
+                        .transformations()
                         .jobs()
                         .list(Request.create()
                                 .withRootParameter("transformationId", job.getTransformationId()));
@@ -110,7 +110,7 @@ public class TransformationJobsIntegrationTest {
                 assertTrue(list.size()>0);
 
                 listJobs = client
-                        .transformation()
+                        .transformations()
                         .jobs()
                         .list(Request.create()
                                 .withRootParameter("transformationExternalId", job.getTransformationExternalId()));
@@ -154,7 +154,7 @@ public class TransformationJobsIntegrationTest {
             listToBeCreate.addAll(generatedWithDestinationDataSource1List);
             listToBeCreate.addAll(generatedWithDestinationRawDataSourceList);
 
-            List<Transformation> createdList = client.transformation().upsert(listToBeCreate);
+            List<Transformation> createdList = client.transformations().upsert(listToBeCreate);
             LOG.info(loggingPrefix + "------------ Finished creating Transformations. Duration: {} -----------",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(listToBeCreate.size(), createdList.size());
@@ -162,7 +162,7 @@ public class TransformationJobsIntegrationTest {
             runJobs(client, createdList);
 
             Iterator<List<Transformation.Job>> listJobs = client
-                    .transformation()
+                    .transformations()
                     .jobs()
                     .list(Request.create()
                             .withRootParameter("transformationId", createdList.get(0).getId()));
@@ -183,7 +183,7 @@ public class TransformationJobsIntegrationTest {
                             .setExternalId(tra.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
-            List<Item> deleteItemsResults = client.transformation().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.transformations().delete(deleteItemsInput);
             LOG.info(loggingPrefix + "Finished deleting Transformations. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
@@ -220,7 +220,7 @@ public class TransformationJobsIntegrationTest {
             listToBeCreate.addAll(generatedWithDestinationDataSource1List);
             listToBeCreate.addAll(generatedWithDestinationRawDataSourceList);
 
-            List<Transformation> createdList = client.transformation().upsert(listToBeCreate);
+            List<Transformation> createdList = client.transformations().upsert(listToBeCreate);
             LOG.info(loggingPrefix + "------------ Finished creating Transformations. Duration: {} -----------",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(listToBeCreate.size(), createdList.size());
@@ -236,7 +236,7 @@ public class TransformationJobsIntegrationTest {
                     .forEach(item -> retrieveItems.add(item));
 
             List<Transformation.Job> retrievedItems =
-                    client.transformation().jobs().retrieve(retrieveItems);
+                    client.transformations().jobs().retrieve(retrieveItems);
 
             LOG.info(loggingPrefix + "Finished retrieving Transformations Jobs. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
@@ -249,7 +249,7 @@ public class TransformationJobsIntegrationTest {
                             .setExternalId(tra.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
-            List<Item> deleteItemsResults = client.transformation().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.transformations().delete(deleteItemsInput);
             LOG.info(loggingPrefix + "Finished deleting Transformations. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
@@ -286,7 +286,7 @@ public class TransformationJobsIntegrationTest {
             listToBeCreate.addAll(generatedWithDestinationDataSource1List);
             listToBeCreate.addAll(generatedWithDestinationRawDataSourceList);
 
-            List<Transformation> createdList = client.transformation().upsert(listToBeCreate);
+            List<Transformation> createdList = client.transformations().upsert(listToBeCreate);
             LOG.info(loggingPrefix + "------------ Finished creating Transformations. Duration: {} -----------",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(listToBeCreate.size(), createdList.size());
@@ -297,7 +297,7 @@ public class TransformationJobsIntegrationTest {
                 try {
                     List<Transformation.Job.Metric> list = new ArrayList<>();
                     Iterator<List<Transformation.Job.Metric>> it =
-                            client.transformation().jobs().metrics().list(jobs.getId());
+                            client.transformations().jobs().metrics().list(jobs.getId());
                     it.forEachRemaining(val -> list.addAll(val));
                     assertNotNull(list);
                 } catch (Exception e) {
@@ -314,7 +314,7 @@ public class TransformationJobsIntegrationTest {
                             .setExternalId(tra.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
-            List<Item> deleteItemsResults = client.transformation().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.transformations().delete(deleteItemsInput);
             LOG.info(loggingPrefix + "Finished deleting Transformations. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
@@ -327,10 +327,10 @@ public class TransformationJobsIntegrationTest {
     private List<Transformation.Job> runJobs(CogniteClient client, List<Transformation> createdList) {
         try {
             Transformation.Job jobRead1 =
-                    client.transformation().jobs().run(createdList.get(0).getId());
+                    client.transformations().jobs().run(createdList.get(0).getId());
 
             Transformation.Job jobRead2 =
-                    client.transformation().jobs().run(createdList.get(1).getExternalId());
+                    client.transformations().jobs().run(createdList.get(1).getExternalId());
             assertNotNull(jobRead1);
             assertNotNull(jobRead2);
             assertTrue("Created".equals(jobRead1.getStatus()));
@@ -346,10 +346,10 @@ public class TransformationJobsIntegrationTest {
     private void cancelJobs(CogniteClient client, List<Transformation> createdList) {
         try {
             Boolean jobResult1 =
-                    client.transformation().jobs().cancel(createdList.get(0).getId());
+                    client.transformations().jobs().cancel(createdList.get(0).getId());
 
             Boolean jobResult2 =
-                    client.transformation().jobs().cancel(createdList.get(1).getExternalId());
+                    client.transformations().jobs().cancel(createdList.get(1).getExternalId());
 
             assertNotNull(jobResult1);
             assertNotNull(jobResult2);

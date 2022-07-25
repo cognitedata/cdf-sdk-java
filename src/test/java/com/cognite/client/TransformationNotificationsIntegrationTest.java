@@ -52,7 +52,7 @@ public class TransformationNotificationsIntegrationTest {
             listToBeCreate.addAll(generatedWithDestinationDataSource1List);
             listToBeCreate.addAll(generatedWithDestinationRawDataSourceList);
 
-            List<Transformation> createdList = client.transformation().upsert(listToBeCreate);
+            List<Transformation> createdList = client.transformations().upsert(listToBeCreate);
             LOG.info(loggingPrefix + "------------ Finished creating Transformations. Duration: {} -----------",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(listToBeCreate.size(), createdList.size());
@@ -67,7 +67,7 @@ public class TransformationNotificationsIntegrationTest {
             }
 
             List<Transformation.Notification> createdSubscribes =
-                    client.transformation().notifications().subscribe(subscribes);
+                    client.transformations().notifications().subscribe(subscribes);
             assertNotNull(createdSubscribes);
             assertTrue(createdSubscribes.size()>0);
             LOG.info(loggingPrefix + "Finished subscribing Notifications Transformations.");
@@ -75,7 +75,7 @@ public class TransformationNotificationsIntegrationTest {
             LOG.info(loggingPrefix + "Start linting Notifications Transformations.");
             List<Transformation.Notification> listNotifications = new ArrayList<>();
             Iterator<List<Transformation.Notification>> itNotifications =
-                    client.transformation().notifications().list();
+                    client.transformations().notifications().list();
             itNotifications.forEachRemaining(it -> listNotifications.addAll(it));
             createdSubscribes.forEach(created -> assertTrue(listNotifications.contains(created)));
             LOG.info(loggingPrefix + "Finished linting Notifications Transformations.");
@@ -87,14 +87,14 @@ public class TransformationNotificationsIntegrationTest {
                             .setId(sub.getId())
                             .build())
                     .forEach(item -> deleteNotificationsInput.add(item));
-            List<Item> deletedItems = client.transformation().notifications().delete(deleteNotificationsInput);
+            List<Item> deletedItems = client.transformations().notifications().delete(deleteNotificationsInput);
             assertNotNull(deletedItems);
             assertTrue(deletedItems.size()>0);
             deleteNotificationsInput.forEach(toBeDeleted -> assertTrue(deletedItems.contains(toBeDeleted)));
 
             listNotifications.clear();
             itNotifications =
-                    client.transformation().notifications().list();
+                    client.transformations().notifications().list();
             itNotifications.forEachRemaining(it -> listNotifications.addAll(it));
             createdSubscribes.forEach(created -> assertTrue(!listNotifications.contains(created)));
 
@@ -107,7 +107,7 @@ public class TransformationNotificationsIntegrationTest {
                             .setExternalId(tra.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
-            List<Item> deleteItemsResults = client.transformation().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.transformations().delete(deleteItemsInput);
             LOG.info(loggingPrefix + "Finished deleting Transformations. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
