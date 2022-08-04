@@ -45,7 +45,7 @@ public class TransformationSchedulesIntegrationTest {
                             TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()).toString(),
                             TestConfigProvider.getProject());
             listToBeCreate.addAll(generatedWithDestinationDataSource1List);
-            List<Transformation> createdList = client.transformation().upsert(listToBeCreate);
+            List<Transformation> createdList = client.transformations().upsert(listToBeCreate);
             LOG.info(loggingPrefix + "------------ Finished creating Transformations. Duration: {} -----------",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(listToBeCreate.size(), createdList.size());
@@ -56,14 +56,14 @@ public class TransformationSchedulesIntegrationTest {
                         DataGenerator.generateTransformationSchedules(COUNT_TO_BE_CREATE_TD, trans.getExternalId(), "*/5 * * * *", false);
 
                 List<Transformation.Schedule> createdListSchedules =
-                        client.transformation().schedules().schedule(listNewSchedules);
+                        client.transformations().schedules().schedule(listNewSchedules);
                 assertEquals(listNewSchedules.size(), createdListSchedules.size());
                 LOG.info(loggingPrefix + "Finished creating Transformations Schedules. Duration: {}",
                         Duration.between(startInstant, Instant.now()));
 
                 LOG.info(loggingPrefix + "------------ Starting listing Transformations Schedules ------------------");
                 List<Transformation.Schedule> listSchedules = new ArrayList<>();
-                Iterator<List<Transformation.Schedule>> it = client.transformation().schedules().list();
+                Iterator<List<Transformation.Schedule>> it = client.transformations().schedules().list();
                 it.forEachRemaining(val -> listSchedules.addAll(val));
                 LOG.info(loggingPrefix + "Finished listing Transformations Schedules. Duration: {}",
                         Duration.between(startInstant, Instant.now()));
@@ -76,7 +76,7 @@ public class TransformationSchedulesIntegrationTest {
                             .setExternalId(tra.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
-            List<Item> deleteItemsResults = client.transformation().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.transformations().delete(deleteItemsInput);
             LOG.info(loggingPrefix + "Finished deleting Transformations. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
@@ -106,7 +106,7 @@ public class TransformationSchedulesIntegrationTest {
                             TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()).toString(),
                             TestConfigProvider.getProject());
             listToBeCreate.addAll(generatedWithDestinationDataSource1List);
-            List<Transformation> createdList = client.transformation().upsert(listToBeCreate);
+            List<Transformation> createdList = client.transformations().upsert(listToBeCreate);
             LOG.info(loggingPrefix + "------------ Finished creating Transformations. Duration: {} -----------",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(listToBeCreate.size(), createdList.size());
@@ -117,7 +117,7 @@ public class TransformationSchedulesIntegrationTest {
                         DataGenerator.generateTransformationSchedules(COUNT_TO_BE_CREATE_TD, trans.getExternalId(), "*/5 * * * *", false);
 
                 List<Transformation.Schedule> createdListSchedules =
-                        client.transformation().schedules().schedule(listNewSchedules);
+                        client.transformations().schedules().schedule(listNewSchedules);
                 assertEquals(listNewSchedules.size(), createdListSchedules.size());
                 LOG.info(loggingPrefix + "Finished creating Transformations Schedules. Duration: {}",
                         Duration.between(startInstant, Instant.now()));
@@ -131,7 +131,7 @@ public class TransformationSchedulesIntegrationTest {
                         .collect(Collectors.toList());
 
                 List<Transformation.Schedule> updatedList =
-                        client.transformation().schedules().schedule(editedInput);
+                        client.transformations().schedules().schedule(editedInput);
                 assertEquals(createdList.size(), updatedList.size());
                 updatedList.forEach(updated -> {
                     assertTrue(Boolean.TRUE.equals(updated.getIsPaused()));
@@ -150,7 +150,7 @@ public class TransformationSchedulesIntegrationTest {
                                 .build())
                         .forEach(item -> itemsToRetrieve.add(item));
                 List<Transformation.Schedule> retrievedItems =
-                        client.transformation().schedules().retrieve(itemsToRetrieve);
+                        client.transformations().schedules().retrieve(itemsToRetrieve);
                 assertNotNull(retrievedItems);
                 assertTrue(retrievedItems.size()>0);
                 assertEquals(createdListSchedules.size(), retrievedItems.size());
@@ -166,7 +166,7 @@ public class TransformationSchedulesIntegrationTest {
                             .setExternalId(tra.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
-            List<Item> deleteItemsResults = client.transformation().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.transformations().delete(deleteItemsInput);
             LOG.info(loggingPrefix + "Finished deleting Transformations. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
@@ -196,7 +196,7 @@ public class TransformationSchedulesIntegrationTest {
                             TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()).toString(),
                             TestConfigProvider.getProject());
             listToBeCreate.addAll(generatedWithDestinationDataSource1List);
-            List<Transformation> createdList = client.transformation().upsert(listToBeCreate);
+            List<Transformation> createdList = client.transformations().upsert(listToBeCreate);
             LOG.info(loggingPrefix + "------------ Finished creating Transformations. Duration: {} -----------",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(listToBeCreate.size(), createdList.size());
@@ -207,7 +207,7 @@ public class TransformationSchedulesIntegrationTest {
                         DataGenerator.generateTransformationSchedules(COUNT_TO_BE_CREATE_TD, trans.getExternalId(), "*/5 * * * *", false);
 
                 List<Transformation.Schedule> createdListSchedules =
-                        client.transformation().schedules().schedule(listNewSchedules);
+                        client.transformations().schedules().schedule(listNewSchedules);
                 assertEquals(listNewSchedules.size(), createdListSchedules.size());
                 LOG.info(loggingPrefix + "Finished creating Transformations Schedules. Duration: {}",
                         Duration.between(startInstant, Instant.now()));
@@ -221,7 +221,7 @@ public class TransformationSchedulesIntegrationTest {
                                 .build())
                         .forEach(item -> itemsToRetrieve.add(item));
                 List<Transformation.Schedule> retrievedItems =
-                        client.transformation().schedules().retrieve(itemsToRetrieve);
+                        client.transformations().schedules().retrieve(itemsToRetrieve);
                 assertNotNull(retrievedItems);
                 assertTrue(retrievedItems.size()>0);
                 assertEquals(createdListSchedules.size(), retrievedItems.size());
@@ -238,7 +238,7 @@ public class TransformationSchedulesIntegrationTest {
                         .forEach(item -> deleteScheduleItemsInput.add(item));
 
                 Boolean isUnSchedule =
-                        client.transformation().schedules().unSchedule(deleteScheduleItemsInput);
+                        client.transformations().schedules().unSchedule(deleteScheduleItemsInput);
                 assertTrue(isUnSchedule);
                 LOG.info(loggingPrefix + "Finished unscheduling Transformations Schedules. Duration: {}",
                         Duration.between(startInstant, Instant.now()));
@@ -249,7 +249,7 @@ public class TransformationSchedulesIntegrationTest {
                                 .build())
                         .forEach(item -> itemsToRetrieve.add(item));
                 retrievedItems =
-                        client.transformation().schedules().retrieve(itemsToRetrieve);
+                        client.transformations().schedules().retrieve(itemsToRetrieve);
 
                 assertTrue(retrievedItems.size()==0);
             }
@@ -261,7 +261,7 @@ public class TransformationSchedulesIntegrationTest {
                             .setExternalId(tra.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
-            List<Item> deleteItemsResults = client.transformation().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.transformations().delete(deleteItemsInput);
             LOG.info(loggingPrefix + "Finished deleting Transformations. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
