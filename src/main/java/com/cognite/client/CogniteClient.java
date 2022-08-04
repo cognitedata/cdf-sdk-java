@@ -3,7 +3,6 @@ package com.cognite.client;
 import com.cognite.client.config.AuthConfig;
 import com.cognite.client.dto.LoginStatus;
 import com.cognite.client.config.ClientConfig;
-import com.cognite.client.dto.Transformation;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
@@ -13,10 +12,7 @@ import com.nimbusds.oauth2.sdk.auth.ClientSecretBasic;
 import com.nimbusds.oauth2.sdk.auth.Secret;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
-import okhttp3.ConnectionSpec;
-import okhttp3.Interceptor;
-import okhttp3.OkHttpClient;
-import okhttp3.Response;
+import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.nimbusds.oauth2.sdk.*;
@@ -236,6 +232,8 @@ public abstract class CogniteClient implements Serializable {
     @Nullable
     protected abstract URL getTokenUrl();
     @Nullable
+    protected abstract Collection<String> getAuthScopes();
+    @Nullable
     protected abstract String getApiKey();
     @Nullable
     protected abstract Supplier<String> getTokenSupplier();
@@ -282,33 +280,40 @@ public abstract class CogniteClient implements Serializable {
         CogniteClient.Builder returnValueBuilder = toBuilder()
                 .setBaseUrl(baseUrl);
 
+        OkHttpClient.Builder httpClientBuilder = getHttpClient().newBuilder();
+        List<Interceptor> interceptors = httpClientBuilder.interceptors();
+        boolean removed = false;
+
         // Add the auth specific config
         switch (getAuthType()) {
             case API_KEY:
-                returnValueBuilder = returnValueBuilder
-                        .setHttpClient(CogniteClient.getHttpClientBuilder()
-                                .addInterceptor(new ApiKeyInterceptor(host, getApiKey()))
-                                .build());
+                removed = interceptors.removeIf(interceptor -> interceptor instanceof ApiKeyInterceptor);
+                interceptors.add(new ApiKeyInterceptor(host, getApiKey()));
                 break;
             case TOKEN_SUPPLIER:
-                returnValueBuilder = returnValueBuilder
-                        .setHttpClient(CogniteClient.getHttpClientBuilder()
-                                .addInterceptor(new TokenInterceptor(host, getTokenSupplier()))
-                                .build());
+                removed = interceptors.removeIf(interceptor -> interceptor instanceof TokenInterceptor);
+                interceptors.add(new TokenInterceptor(host, getTokenSupplier()));
                 break;
             case CLIENT_CREDENTIALS:
-                returnValueBuilder = returnValueBuilder
-                        .setHttpClient(CogniteClient.getHttpClientBuilder()
-                                .addInterceptor(new ClientCredentialsInterceptor(host, getClientId(),
-                                        getClientSecret(), getTokenUrl(), List.of(baseUrl + "/.default")))
-                                .build());
+                Collection<String> scopes = List.of(baseUrl + "/.default");
+                if (null != getAuthScopes()) {
+                    scopes = getAuthScopes();
+                }
+                removed = interceptors.removeIf(interceptor -> interceptor instanceof ClientCredentialsInterceptor);
+                interceptors.add(new ClientCredentialsInterceptor(host, getClientId(),
+                        getClientSecret(), getTokenUrl(), scopes));
                 break;
             default:
                 // This should never execute...
                 throw new RuntimeException("Unknown authentication type. Cannot configure the client.");
         }
+        if (!removed) {
+            LOG.warn("Unable to delete the old authentication config. New auth config may not work as expected.");
+        }
 
-        return returnValueBuilder.build();
+        return returnValueBuilder
+                .setHttpClient(httpClientBuilder.build())
+                .build();
     }
 
     /**
@@ -319,7 +324,7 @@ public abstract class CogniteClient implements Serializable {
      */
     public CogniteClient withScopes(Collection<String> scopes) {
         Preconditions.checkArgument(getAuthType() == AuthType.CLIENT_CREDENTIALS,
-                "Scopes supported fpr client credentials mode only.");
+                "Scopes supported for client credentials mode only.");
         String host;
 
         try {
@@ -328,26 +333,19 @@ public abstract class CogniteClient implements Serializable {
             throw new RuntimeException(e);
         }
 
-        // Set the generic part of the configuration
-        CogniteClient.Builder returnValueBuilder = toBuilder();
-
-        // Add the auth specific config
-        switch (getAuthType()) {
-            case CLIENT_CREDENTIALS:
-                returnValueBuilder = returnValueBuilder
-                        .setHttpClient(CogniteClient.getHttpClientBuilder()
-                                .addInterceptor(new ClientCredentialsInterceptor(host, getClientId(),
-                                        getClientSecret(), getTokenUrl(), scopes))
-                                .build());
-                break;
-            case API_KEY:
-            case TOKEN_SUPPLIER:
-            default:
-                // This should never execute...
-                throw new RuntimeException("Unsupported authentication type. Cannot configure the client.");
+        OkHttpClient.Builder httpClientBuilder = getHttpClient().newBuilder();
+        List<Interceptor> interceptors = httpClientBuilder.interceptors();
+        boolean removed = interceptors.removeIf(interceptor -> interceptor instanceof ClientCredentialsInterceptor);
+        if (!removed) {
+            LOG.warn("Unable to delete the old authentication config. New auth config may not work as expected.");
         }
+        interceptors.add(new ClientCredentialsInterceptor(host, getClientId(),
+                getClientSecret(), getTokenUrl(), scopes));
 
-        return returnValueBuilder.build();
+        return toBuilder()
+                .setAuthScopes(scopes)
+                .setHttpClient(httpClientBuilder.build())
+                .build();
     }
 
     /**
@@ -357,18 +355,41 @@ public abstract class CogniteClient implements Serializable {
      * @return the client object with the config applied.
      */
     public CogniteClient withClientConfig(ClientConfig config) {
-        // Modify the no threads in the executor service based on the config
-        LOG.info("Setting up client with {} worker threads and {} list partitions",
-                config.getNoWorkers(),
-                config.getNoListPartitions());
+
         if (config.getNoWorkers() != NO_WORKERS) {
+            // Modify the no threads in the executor service based on the config
+            LOG.info("Setting up client with {} worker threads and {} list partitions",
+                    config.getNoWorkers(),
+                    config.getNoListPartitions());
             NO_WORKERS = config.getNoWorkers();
             executorService = new ThreadPoolExecutor(NO_WORKERS, NO_WORKERS,
                     1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
             executorService.allowCoreThreadTimeOut(true);
         }
 
-        return toBuilder().setClientConfig(config).build();
+        CogniteClient.Builder returnValueBuilder = toBuilder();
+
+        // If a proxy has been configured, add its config to the http client.
+        if (null != config.getProxyConfig()) {
+            OkHttpClient.Builder builder = getHttpClient().newBuilder()
+                    .proxy(config.getProxyConfig().getProxy());
+            if (null != config.getProxyConfig().getUsername() && null != config.getProxyConfig().getPassword()) {
+                Authenticator authenticator = new Authenticator() {
+                    @Override
+                    public okhttp3.Request authenticate(Route route, okhttp3.Response response) {
+                        String credential = Credentials.basic(config.getProxyConfig().getUsername(),
+                                config.getProxyConfig().getPassword());
+                        return response.request().newBuilder()
+                                .header("Proxy-Authorization", credential)
+                                .build();
+                    }
+                };
+                builder.proxyAuthenticator(authenticator);
+            }
+            returnValueBuilder.setHttpClient(builder.build());
+        }
+
+        return returnValueBuilder.setClientConfig(config).build();
     }
 
     /**
@@ -511,7 +532,7 @@ public abstract class CogniteClient implements Serializable {
     }
 
     /**
-     * Returns {@link LoginStatus} representing login status api endpoints.
+     * Returns {@link Login} representing login status api endpoints.
      *
      * @return The LoginStatus api endpoints.
      */
@@ -529,11 +550,11 @@ public abstract class CogniteClient implements Serializable {
     }
 
     /**
-     * Returns {@link Transformation} representing Transformation api endpoints.
+     * Returns {@link Transformations} representing Transformation api endpoints.
      *
      * @return The Transformation api endpoints.
      */
-    public Transformations transformation() {
+    public Transformations transformations() {
         return Transformations.of(this);
     }
 
@@ -590,7 +611,7 @@ public abstract class CogniteClient implements Serializable {
         }
 
         @Override
-        public Response intercept(Chain chain) throws IOException {
+        public okhttp3.Response intercept(Chain chain) throws IOException {
             if (chain.request().url().host().equalsIgnoreCase(apiHost)) {
                 // Only add auth info to requests towards the cognite api host.
 
@@ -621,7 +642,7 @@ public abstract class CogniteClient implements Serializable {
         }
 
         @Override
-        public Response intercept(Chain chain) throws IOException {
+        public okhttp3.Response intercept(Chain chain) throws IOException {
             if (chain.request().url().host().equalsIgnoreCase(apiHost)) {
                 // Only add auth info to requests towards the cognite api host.
                 String token = tokenSupplier.get();
@@ -681,7 +702,7 @@ public abstract class CogniteClient implements Serializable {
         }
 
         @Override
-        public Response intercept(Chain chain) throws IOException {
+        public okhttp3.Response intercept(Chain chain) throws IOException {
             if (chain.request().url().host().equalsIgnoreCase(apiHost)) {
                 // Only add auth info to requests towards the cognite api host.
 
@@ -777,6 +798,7 @@ public abstract class CogniteClient implements Serializable {
         abstract Builder setClientId(String value);
         abstract Builder setClientSecret(String value);
         abstract Builder setTokenUrl(URL value);
+        abstract Builder setAuthScopes(Collection<String> value);
         abstract Builder setApiKey(String value);
         abstract Builder setTokenSupplier(Supplier<String> supplier);
         abstract Builder setAuthType(AuthType value);

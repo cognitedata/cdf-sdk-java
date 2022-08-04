@@ -36,7 +36,7 @@ public class TransformationsIntegrationTest {
         CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
 
         List<Transformation> listTransformationResults = new ArrayList<>();
-        client.transformation()
+        client.transformations()
                 .list(Request.create()
                         .withFilterParameter("isPublic", true))
                 .forEachRemaining(tra -> listTransformationResults.addAll(tra));
@@ -51,7 +51,7 @@ public class TransformationsIntegrationTest {
         CogniteClient client = getCogniteClient(startInstant, loggingPrefix);
 
         List<Transformation> listTransformationResults = new ArrayList<>();
-        client.transformation()
+        client.transformations()
                 .list(Request.create()
                         .withFilterParameter("isPublic", true))
                 .forEachRemaining(tra -> listTransformationResults.addAll(tra));
@@ -63,7 +63,7 @@ public class TransformationsIntegrationTest {
                         .build())
                 .forEach(item -> tdList.add(item));
 
-        client.transformation().retrieve(tdList);
+        client.transformations().retrieve(tdList);
     }
 
     @Test
@@ -86,14 +86,14 @@ public class TransformationsIntegrationTest {
             listToBeCreate.addAll(generatedWithDestinationRawDataSourceList);
             listToBeCreate.addAll(generatedWithDestinationSequenceRowList);
 
-            List<Transformation> createdList = client.transformation().upsert(listToBeCreate);
+            List<Transformation> createdList = client.transformations().upsert(listToBeCreate);
             LOG.info(loggingPrefix + "------------ Finished creating Transformations. Duration: {} -----------",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(listToBeCreate.size(), createdList.size());
 
             LOG.info(loggingPrefix + "Start reading Transformations.");
             List<Transformation> listTransformationResults = new ArrayList<>();
-            client.transformation()
+            client.transformations()
                     .list(Request.create()
                             .withFilterParameter("name", "TransformationTestSDK"))
                     .forEachRemaining(tra -> listTransformationResults.addAll(tra));
@@ -109,7 +109,7 @@ public class TransformationsIntegrationTest {
                             .setExternalId(tra.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
-            List<Item> deleteItemsResults = client.transformation().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.transformations().delete(deleteItemsInput);
             LOG.info(loggingPrefix + "Finished deleting Transformations. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
@@ -139,14 +139,14 @@ public class TransformationsIntegrationTest {
             listToBeCreate.addAll(generatedWithDestinationRawDataSourceList);
             listToBeCreate.addAll(generatedWithDestinationSequenceRowList);
 
-            List<Transformation> createdList = client.transformation().upsert(listToBeCreate);
+            List<Transformation> createdList = client.transformations().upsert(listToBeCreate);
             LOG.info(loggingPrefix + "------------ Finished creating Transformations. Duration: {} -----------",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(listToBeCreate.size(), createdList.size());
 
             LOG.info(loggingPrefix + "Start reading Transformations.");
             List<Transformation> listTransformationResults = new ArrayList<>();
-            client.transformation()
+            client.transformations()
                     .list(Request.create()
                             .withFilterParameter("name", "TransformationTestSDK"))
                     .forEachRemaining(tra -> listTransformationResults.addAll(tra));
@@ -162,7 +162,7 @@ public class TransformationsIntegrationTest {
                             .build())
                     .collect(Collectors.toList());
 
-            List<Transformation> updatedList = client.transformation().upsert(editedInput);
+            List<Transformation> updatedList = client.transformations().upsert(editedInput);
             assertEquals(createdList.size(), updatedList.size());
             updatedList.forEach(updated -> assertTrue(updated.getQuery().equals("new-value for update")));
 
@@ -176,7 +176,7 @@ public class TransformationsIntegrationTest {
                             .setExternalId(tra.getExternalId())
                             .build())
                     .forEach(item -> deleteItemsInput.add(item));
-            List<Item> deleteItemsResults = client.transformation().delete(deleteItemsInput);
+            List<Item> deleteItemsResults = client.transformations().delete(deleteItemsInput);
             LOG.info(loggingPrefix + "Finished deleting Transformations. Duration: {}",
                     Duration.between(startInstant, Instant.now()));
             assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
@@ -205,7 +205,7 @@ public class TransformationsIntegrationTest {
         listToBeCreate.addAll(generatedWithDestinationRawDataSourceList);
         listToBeCreate.addAll(generatedWithDestinationSequenceRowList);
 
-        List<Transformation> createdList = client.transformation().upsert(listToBeCreate);
+        List<Transformation> createdList = client.transformations().upsert(listToBeCreate);
         LOG.info(loggingPrefix + "------------ Finished creating Transformations. Duration: {} -----------",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(listToBeCreate.size(), createdList.size());
@@ -218,14 +218,14 @@ public class TransformationsIntegrationTest {
                         .build())
                 .forEach(item -> tdList.add(item));
 
-        List<Transformation> retrieved = client.transformation().retrieve(tdList);
+        List<Transformation> retrieved = client.transformations().retrieve(tdList);
 
         LOG.info(loggingPrefix + "Finished retrieving Transformations. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(createdList.size(), retrieved.size());
 
         LOG.info(loggingPrefix + "Start deleting Transformations.");
-        List<Item> deleteItemsResults = client.transformation().delete(tdList);
+        List<Item> deleteItemsResults = client.transformations().delete(tdList);
         LOG.info(loggingPrefix + "Finished deleting Transformations. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
         assertEquals(retrieved.size(), deleteItemsResults.size());

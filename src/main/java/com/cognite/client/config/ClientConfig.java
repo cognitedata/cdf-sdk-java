@@ -3,6 +3,7 @@ package com.cognite.client.config;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.time.Duration;
 
@@ -80,6 +81,7 @@ public abstract class ClientConfig implements Serializable {
     public abstract UpsertMode getUpsertMode();
     public abstract int getEntityMatchingMaxBatchSize();
     public abstract Duration getAsyncApiJobTimeout();
+    @Nullable public abstract ProxyConfig getProxyConfig();
 
     /**
      * Set the app identifier. The identifier is encoded in the api calls to the Cognite instance and can be
@@ -197,6 +199,20 @@ public abstract class ClientConfig implements Serializable {
         return toBuilder().setAsyncApiJobTimeout(timeout).build();
     }
 
+    /**
+     * Specifies the proxy server configuration.
+     *
+     * The default setting is no proxy server configuration. If you need to specify a proxy server configuration,
+     * you supply a {@link ProxyConfig} object with the appropriate specification.
+     *
+     * @see ProxyConfig
+     * @param proxyConfig the proxy server configuration to use.
+     * @return the {@link ClientConfig} with the setting applied.
+     */
+    public ClientConfig withProxyConfig(ProxyConfig proxyConfig) {
+        return toBuilder().setProxyConfig(proxyConfig).build();
+    }
+
     @AutoValue.Builder
     static abstract class Builder {
         abstract Builder setSdkIdentifier(String value);
@@ -208,6 +224,7 @@ public abstract class ClientConfig implements Serializable {
         abstract Builder setUpsertMode(UpsertMode value);
         abstract Builder setEntityMatchingMaxBatchSize(int value);
         abstract Builder setAsyncApiJobTimeout(Duration value);
+        abstract Builder setProxyConfig(ProxyConfig value);
 
         abstract ClientConfig build();
     }
