@@ -27,12 +27,14 @@ import java.util.function.Consumer;
 public abstract class UploadQueue<T> {
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
-    protected static final Duration MIN_POLLING_INTERVAL = Duration.ofMillis(500L);
-    protected static final Duration DEFAULT_POLLING_INTERVAL = Duration.ofSeconds(5L);
-    protected static final Duration MAX_POLLING_INTERVAL = Duration.ofSeconds(60L);
+    protected static final Duration POLLING_INTERVAL = Duration.ofSeconds(1L);
+
+    protected static final Duration MIN_DEFAULT_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(1L);
+    protected static final Duration DEFAULT_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(10L);
+    protected static final Duration MAX_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(60L);
 
     // Internal state
-    protected AtomicBoolean abortStream = new AtomicBoolean(false);
+    protected AtomicBoolean stopStream = new AtomicBoolean(false);
 
     private static <T> Builder<T> builder() {
         return new AutoValue_UploadQueue.Builder<T>()
