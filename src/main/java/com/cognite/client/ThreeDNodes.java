@@ -66,6 +66,8 @@ public abstract class ThreeDNodes extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/get3DNodes">API Reference - List 3D nodes</a>
+     *
      * @see #list(Long,Long,Request)
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -110,6 +112,8 @@ public abstract class ThreeDNodes extends ApiBase {
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/get3DNodes">API Reference - List 3D nodes</a>
      *
      * @see #list(Long,Long,Request)
      * @see CogniteClient
@@ -158,6 +162,8 @@ public abstract class ThreeDNodes extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/get3DNodes">API Reference - List 3D nodes</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -197,6 +203,8 @@ public abstract class ThreeDNodes extends ApiBase {
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/get3DNodes">API Reference - List 3D nodes</a>
      *
      * @see #list(Long,Long,Long,Request)
      * @see CogniteClient
@@ -240,6 +248,8 @@ public abstract class ThreeDNodes extends ApiBase {
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/get3DNodes">API Reference - List 3D nodes</a>
      *
      * @see #list(Long,Long,Long,Request,String...)
      * @see CogniteClient
@@ -286,6 +296,8 @@ public abstract class ThreeDNodes extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/get3DNodes">API Reference - List 3D nodes</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -327,6 +339,8 @@ public abstract class ThreeDNodes extends ApiBase {
      *                                      .retrieve(modelId,revisionId,items);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/get3DNodesById">API Reference - Get 3D nodes by ID</a>
      *
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -408,6 +422,8 @@ public abstract class ThreeDNodes extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/filter3DNodes">API Reference - Filter 3D nodes</a>
+     *
      * @see #filter(Long,Long,Request)
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -455,6 +471,8 @@ public abstract class ThreeDNodes extends ApiBase {
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/filter3DNodes">API Reference - Filter 3D nodes</a>
      *
      * @see #filter(Long,Long,Request,String...)
      * @see CogniteClient
@@ -505,6 +523,8 @@ public abstract class ThreeDNodes extends ApiBase {
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/filter3DNodes">API Reference - Filter 3D nodes</a>
      *
      * @see CogniteClient
      * @see CogniteClient#threeD()

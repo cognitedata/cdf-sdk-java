@@ -119,6 +119,8 @@ public abstract class DataPoints extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/getMultiTimeSeriesDatapoints">API Reference - Retrieve data points</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#timeseries()
      * @see Timeseries#dataPoints()
@@ -172,6 +174,8 @@ public abstract class DataPoints extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/getMultiTimeSeriesDatapoints">API Reference - Retrieve data points</a>
+     *
      * @see #retrieveComplete(List)
      * @see CogniteClient
      * @see CogniteClient#timeseries()
@@ -198,6 +202,8 @@ public abstract class DataPoints extends ApiBase {
      *           .forEachRemaining(result -> results.addAll(result));
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/getMultiTimeSeriesDatapoints">API Reference - Retrieve data points</a>
      *
      * @see #retrieveComplete(List)
      * @see CogniteClient
@@ -228,6 +234,8 @@ public abstract class DataPoints extends ApiBase {
      *              .forEachRemaining(result -> results.addAll(result));
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/getMultiTimeSeriesDatapoints">API Reference - Retrieve data points</a>
      *
      * @see #retrieve(Request)
      * @see CogniteClient
@@ -289,6 +297,8 @@ public abstract class DataPoints extends ApiBase {
      *      client.timeseries().upsert(upsertTimeseriesList);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/postMultiTimeSeriesDatapoints">API Reference - Insert data points</a><br/>
      *
      * @see CogniteClient
      * @see CogniteClient#timeseries()
@@ -441,6 +451,8 @@ public abstract class DataPoints extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/getLatest">API Reference - Retrieve latest data point</a><br/>
+     *
      * @see #retrieveLatest(List)
      * @see CogniteClient
      * @see CogniteClient#timeseries()
@@ -466,6 +478,8 @@ public abstract class DataPoints extends ApiBase {
      *              .retrieveLatest(10, 20);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/getLatest">API Reference - Retrieve latest data point</a><br/>
      *
      * @see #retrieveLatest(List)
      * @see CogniteClient
@@ -497,6 +511,8 @@ public abstract class DataPoints extends ApiBase {
      *                  .retrieveLatest(byInternalIds);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/getLatest">API Reference - Retrieve latest data point</a><br/>
      *
      * @see CogniteClient
      * @see CogniteClient#timeseries()
@@ -609,6 +625,8 @@ public abstract class DataPoints extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/getMultiTimeSeriesDatapoints">API Reference - Retrieve data points</a><br/>
+     *
      * @see #retrieveFirst(List)
      * @see CogniteClient
      * @see CogniteClient#timeseries()
@@ -634,6 +652,8 @@ public abstract class DataPoints extends ApiBase {
      *              .retrieveFirst(10, 20);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/getMultiTimeSeriesDatapoints">API Reference - Retrieve data points</a><br/>
      *
      * @see #retrieveFirst(List)
      * @see CogniteClient
@@ -662,6 +682,8 @@ public abstract class DataPoints extends ApiBase {
      *                  .retrieveFirst(byInternalIds);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/getMultiTimeSeriesDatapoints">API Reference - Retrieve data points</a><br/>
      *
      * @see CogniteClient
      * @see CogniteClient#timeseries()
@@ -767,6 +789,8 @@ public abstract class DataPoints extends ApiBase {
      *     List<Item> deleteItemsResults = client.timeseries().dataPoints().delete(deleteItemsInput);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/deleteDatapoints">API Reference - Delete datapoints</a><br/>
      *
      * @see CogniteClient
      * @see CogniteClient#timeseries()

@@ -150,6 +150,8 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/get3DRevisions">API Reference - List 3D revisions</a>
+     *
      * @see #list(Long,Request)
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -187,6 +189,8 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/get3DRevisions">API Reference - List 3D revisions</a>
      *
      * @see #list(Long,Request,String...)
      * @see CogniteClient
@@ -228,6 +232,8 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/get3DRevisions">API Reference - List 3D revisions</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -261,6 +267,8 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
      *                                      .retrieve(modelId, items);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/get3DRevision">API Reference - Retrieve a 3D revision</a>
      *
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -322,6 +330,9 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
      *      client.threeD().models().revisions().upsert(modelId,threeDModelRevisions);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/create3DRevisions">API Reference - Create 3D revisions</a><br/>
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/update3DRevisions">API Reference - Update 3D revisions</a>
      *
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -403,6 +414,8 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/delete3DRevisions">API Reference - Delete 3D revisions</a>
+     *
      * @see DeleteItems#deleteItems(List)
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -436,6 +449,8 @@ public abstract class ThreeDModelsRevisions extends ApiBase {
      *     client.threeD().models().revisions().updateThumbnail(modelId,revisionId,fileThumbnail.getId());
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/updateThumbnail">API Reference - Update 3D revision thumbnail</a>
      *
      * @see CogniteClient
      * @see CogniteClient#files()

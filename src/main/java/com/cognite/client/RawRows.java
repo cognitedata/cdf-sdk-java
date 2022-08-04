@@ -86,6 +86,8 @@ public abstract class RawRows extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Raw/operation/getRows">API Reference - Retrieve rows from a table</a>
+     *
      * @see #list(String, String, Request)
      * @see CogniteClient
      * @see CogniteClient#raw()
@@ -116,6 +118,8 @@ public abstract class RawRows extends ApiBase {
      *           .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Raw/operation/getRows">API Reference - Retrieve rows from a table</a>
      *
      * @see #list(String, String, Request)
      * @see CogniteClient
@@ -162,6 +166,8 @@ public abstract class RawRows extends ApiBase {
      *           .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Raw/operation/getRows">API Reference - Retrieve rows from a table</a>
      *
      * @see #list(String, String, Request)
      * @see CogniteClient
@@ -217,6 +223,8 @@ public abstract class RawRows extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Raw/operation/getRows">API Reference - Retrieve rows from a table</a>
+     *
      * @see #retrieveCursors(String, String, int, Request)
      * @see #list(String, String, Request, String...)
      * @see CogniteClient
@@ -269,6 +277,8 @@ public abstract class RawRows extends ApiBase {
      *           .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Raw/operation/getRows">API Reference - Retrieve rows from a table</a>
      *
      * @see ClientConfig#getNoListPartitions()
      * @see #retrieveCursors(String, String, int, Request)
@@ -353,6 +363,8 @@ public abstract class RawRows extends ApiBase {
      *         .retrieve("dbName", "tableName", List.of("rowKeys"));
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Raw/operation/getRow">API Reference - Retrieve row by key</a>
      *
      * @see CogniteClient
      * @see CogniteClient#raw()
@@ -446,6 +458,8 @@ public abstract class RawRows extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Raw/operation/getCursors">API Reference - Retrieve cursors for parallel reads</a>
+     *
      * @see #retrieveCursors(String, String, int, Request)
      * @see CogniteClient
      * @see CogniteClient#raw()
@@ -483,6 +497,8 @@ public abstract class RawRows extends ApiBase {
      *         .retrieveCursors("dbName", "tableName", noCursors, Request.create());
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Raw/operation/getCursors">API Reference - Retrieve cursors for parallel reads</a>
      *
      * @see ClientConfig#getNoListPartitions()
      * @see CogniteClient
@@ -540,6 +556,8 @@ public abstract class RawRows extends ApiBase {
      *               .upsert(rows, ensureParent);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Raw/operation/postRows">API Reference - Insert rows into a table</a><br/>
      *
      * @see CogniteClient
      * @see CogniteClient#raw()
@@ -662,6 +680,8 @@ public abstract class RawRows extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Raw/operation/postRows">API Reference - Insert rows into a table</a><br/>
+     *
      * @see #upsert(List, boolean)
      * @see CogniteClient
      * @see CogniteClient#raw()
@@ -688,6 +708,8 @@ public abstract class RawRows extends ApiBase {
      *               .delete(rows);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Raw/operation/deleteRows">API Reference - Delete rows in a table</a><br/>
      *
      * @see CogniteClient
      * @see CogniteClient#raw()

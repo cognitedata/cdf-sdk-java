@@ -57,6 +57,8 @@ public abstract class ThreeDRevisionLogs extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/get3DLogs">API Reference - List 3D revision logs</a>
+     *
      * @see #retrieve(Long,Long,Request)
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -90,6 +92,8 @@ public abstract class ThreeDRevisionLogs extends ApiBase {
      *                                      .retrieve(modelId,revisionId,requestParameters);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/get3DLogs">API Reference - List 3D revision logs</a>
      *
      * @see CogniteClient
      * @see CogniteClient#threeD()

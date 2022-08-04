@@ -74,6 +74,8 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Assets/operation/deleteAssets">API Reference - Filter extraction pipeline runs</a>
+     *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#extractionPipelines()
@@ -101,6 +103,8 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
      *              .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Extraction-Pipelines-Runs/operation/filterRuns">API Reference - Filter extraction pipeline runs</a>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -146,6 +150,8 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Extraction-Pipelines-Runs/operation/filterRuns">API Reference - Filter extraction pipeline runs</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#extractionPipelines()
@@ -171,6 +177,8 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
      *      client.extractionPipelines().runs().upsert(runs);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Extraction-Pipelines-Runs/operation/createRuns">API Reference - Create extraction pipeline runs</a>
      *
      * @see UpsertItems#create(List)
      * @see CogniteClient

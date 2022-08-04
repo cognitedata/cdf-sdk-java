@@ -73,6 +73,8 @@ public abstract class Datasets extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/listDataSets">API Reference - Filter data sets</a>
+     *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#datasets()
@@ -101,6 +103,8 @@ public abstract class Datasets extends ApiBase {
      *           .forEachRemaining(batch -> listDataSetsResults.addAll(batch));
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/listDataSets">API Reference - Filter data sets</a>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -137,6 +141,8 @@ public abstract class Datasets extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/listDataSets">API Reference - Filter data sets</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#datasets()
@@ -160,6 +166,8 @@ public abstract class Datasets extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/getDataSets">API Reference - Retrieve data sets</a>
+     *
      * @see #retrieve(List)
      * @see CogniteClient
      * @see CogniteClient#datasets()
@@ -181,6 +189,8 @@ public abstract class Datasets extends ApiBase {
      *      List<DataSet> retrievedDataSets = client.datasets().retrieve(1,2);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/getDataSets">API Reference - Retrieve data sets</a>
      *
      * @see #retrieve(List)
      * @see CogniteClient
@@ -204,6 +214,8 @@ public abstract class Datasets extends ApiBase {
      *      List<DataSet> retrievedDataSets = client.datasets().retrieve(items);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/getDataSets">API Reference - Retrieve data sets</a>
      *
      * @see #retrieveJson(ResourceType, Collection)
      * @see CogniteClient
@@ -235,6 +247,8 @@ public abstract class Datasets extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/aggregateDataSets">API Reference - Aggregate data sets</a>
+     *
      * @see #aggregate(ResourceType,Request)
      * @see CogniteClient
      * @see CogniteClient#datasets()
@@ -263,6 +277,9 @@ public abstract class Datasets extends ApiBase {
      *      client.datasets().upsert(upsertDataSetsList);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/createDataSets">API Reference - Create data sets</a><br/>
+     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/updateDataSets">API Reference - Update the attributes of data sets.</a>
      *
      * @see CogniteClient
      * @see CogniteClient#datasets()

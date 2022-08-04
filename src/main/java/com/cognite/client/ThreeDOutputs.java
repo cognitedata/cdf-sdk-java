@@ -57,6 +57,8 @@ public abstract class ThreeDOutputs extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/list3dModelOutputs">API Reference - List available outputs</a>
+     *
      * @see #retrieve(Long,Long,Request)
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -88,6 +90,8 @@ public abstract class ThreeDOutputs extends ApiBase {
      *                                      .retrieve(modelId,revisionId,requestParameters);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Model-Revisions/operation/list3dModelOutputs">API Reference - List available outputs</a>
      *
      * @see CogniteClient
      * @see CogniteClient#threeD()

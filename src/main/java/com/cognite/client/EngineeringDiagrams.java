@@ -83,6 +83,8 @@ public abstract class EngineeringDiagrams extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Engineering-diagrams/operation/diagramDetect">API Reference - Detect annotations in engineering diagrams</a>
+     *
      * @see #detectAnnotations(Collection,Collection,String,boolean,int,boolean)
      * @see CogniteClient
      * @see CogniteClient#contextualization()
@@ -114,6 +116,8 @@ public abstract class EngineeringDiagrams extends ApiBase {
      *                     .detectAnnotations(fileItems, entities, "searchText", false, 2, true);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Engineering-diagrams/operation/diagramDetect">API Reference - Detect annotations in engineering diagrams</a>
      *
      * @see #detectAnnotations(Collection,boolean)
      * @see CogniteClient
@@ -194,6 +198,8 @@ public abstract class EngineeringDiagrams extends ApiBase {
      *                     .detectAnnotations(List.of(Request.create()), true);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Engineering-diagrams/operation/diagramDetect">API Reference - Detect annotations in engineering diagrams</a>
      *
      * @see #detectAnnotations(Collection,boolean)
      * @see CogniteClient
@@ -279,6 +285,8 @@ public abstract class EngineeringDiagrams extends ApiBase {
      *                     convert(annotationsList, false);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Engineering-diagrams/operation/diagramConvert">API Reference - Convert a diagram to image format</a>
      *
      * @see CogniteClient
      * @see CogniteClient#contextualization()

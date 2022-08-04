@@ -72,6 +72,8 @@ public abstract class Relationships extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Relationships/operation/listRelationships">API Reference - Filter relationships</a>
+     *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#relationships()
@@ -102,6 +104,8 @@ public abstract class Relationships extends ApiBase {
      *              .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Relationships/operation/listRelationships">API Reference - Filter relationships</a>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -139,6 +143,8 @@ public abstract class Relationships extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Relationships/operation/listRelationships">API Reference - Filter relationships</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#relationships()
@@ -162,6 +168,8 @@ public abstract class Relationships extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Relationships/operation/byidsRelationships">API Reference - Retrieve relationships</a>
+     *
      * @see #retrieve(List)
      * @see CogniteClient
      * @see CogniteClient#relationships()
@@ -183,6 +191,8 @@ public abstract class Relationships extends ApiBase {
      *      List<Relationship> retrievedRelationship = client.relationships().retrieve(1,2);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Relationships/operation/byidsRelationships">API Reference - Retrieve relationships</a>
      *
      * @see #retrieve(List)
      * @see CogniteClient
@@ -209,6 +219,8 @@ public abstract class Relationships extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Relationships/operation/byidsRelationships">API Reference - Retrieve relationships</a>
+     *
      * @see #retrieve(List, boolean)
      * @see CogniteClient
      * @see CogniteClient#relationships()
@@ -233,6 +245,8 @@ public abstract class Relationships extends ApiBase {
      *      List<Relationship> retrievedRelationship = client.relationships().retrieve(items, true);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Relationships/operation/byidsRelationships">API Reference - Retrieve relationships</a>
      *
      * @see #retrieveJson(ResourceType,Collection,Map)
      * @see CogniteClient
@@ -270,6 +284,9 @@ public abstract class Relationships extends ApiBase {
      *      client.relationships().upsert(relationships);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Relationships/operation/createRelationships">API Reference - Create relationships</a><br/>
+     * <a href="https://docs.cognite.com/api/v1/#tag/Relationships/operation/updateRelationships">API Reference - Update relationships</a>
      *
      * @see UpsertItems#upsertViaCreateAndUpdate(List)
      * @see CogniteClient
@@ -315,6 +332,8 @@ public abstract class Relationships extends ApiBase {
      *     List<Item> deletedItemsResults = client.relationships().delete(relationships);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Relationships/operation/deleteRelationships">API Reference - Delete relationships</a>
      *
      * @see DeleteItems#deleteItems(List)
      * @see CogniteClient

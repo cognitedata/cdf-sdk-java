@@ -88,10 +88,13 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Assets/operation/listAssets">API Reference - Filter assets</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#assets()
      *
      * @see #list(Request)
+     *
      */
     public Iterator<List<Asset>> list() throws Exception {
         return this.list(Request.create());
@@ -117,6 +120,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      *              .forEachRemaining(listAssetsResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Assets/operation/listAssets">API Reference - Filter assets</a>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -152,6 +157,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      *              .forEachRemaining(listAssetsResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Assets/operation/listAssets">API Reference - Filter assets</a>
      *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
@@ -210,6 +217,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Assets/operation/byIdsAssets">API Reference - Retrieve assets</a>
+     *
      * @see #retrieve(List)
      * @see CogniteClient
      * @see CogniteClient#assets()
@@ -231,6 +240,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      *      List<Asset> retrievedAssets = client.assets().retrieve(1,2);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Assets/operation/byIdsAssets">API Reference - Retrieve assets</a>
      *
      * @see #retrieve(List)
      * @see CogniteClient
@@ -254,6 +265,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      *      List<Asset> retrievedAssets = client.assets().retrieve(assetItems);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Assets/operation/byIdsAssets">API Reference - Retrieve assets</a>
      *
      * @see #retrieveJson(ResourceType,Collection)
      * @see CogniteClient
@@ -284,6 +297,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      *                  .withFilterParameter("source", "source"));
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Assets/operation/aggregateAssets">API Reference - Aggregate assets</a>
      *
      * @see #aggregate(ResourceType,Request)
      * @see CogniteClient
@@ -541,6 +556,9 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Assets/operation/createAssets">API Reference - Create assets</a><br/>
+     * <a href="https://docs.cognite.com/api/v1/#tag/Assets/operation/updateAssets">API Reference - Update assets</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#assets()
      *
@@ -637,6 +655,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Assets/operation/deleteAssets">API Reference - Delete assets</a>
+     *
      * @see #delete(List,boolean)
      * @see CogniteClient
      * @see CogniteClient#assets()
@@ -662,6 +682,8 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
      *     List<Item> deleteItemsResults = client.assets().delete(deleteItemsInput, true);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Assets/operation/deleteAssets">API Reference - Delete assets</a>
      *
      * @see DeleteItems#deleteItems(List)
      * @see CogniteClient
