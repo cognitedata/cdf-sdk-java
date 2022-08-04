@@ -340,7 +340,7 @@
                     <!--<excludedGroups>RemoteCDP, RemoteCDF</excludedGroups>-->
                 </configuration>
             </plugin>
-            <plugin>
+            <!--plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>${maven-exec-plugin.version}</version>
@@ -353,7 +353,7 @@
                         </systemProperty>
                     </systemProperties>
                 </configuration>
-            </plugin>
+            </plugin-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-site-plugin</artifactId>
