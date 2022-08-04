@@ -22,7 +22,7 @@ Changes are grouped as follows:
 ### Added
 
 - Configurable timeout for async api jobs (i.e. `entity matching` and `engineering diagram parsing`). Use `ClientConfig.withAsyncApiJobTimeout(Duration timeout)` to specify a custom timeout. The default timeout is 20 mins.
-- Support for configuring proxy server.
+- Support for configuring a proxy server: [Documentation](../docs/clientSetup.md#proxy-server).
 
 ### Changed
 
