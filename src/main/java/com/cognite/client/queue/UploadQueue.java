@@ -16,6 +16,8 @@ import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -33,8 +35,13 @@ public abstract class UploadQueue<T> {
     protected static final Duration DEFAULT_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(10L);
     protected static final Duration MAX_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(60L);
 
+    protected static final int DEFAULT_QUEUE_SIZE = 20_000;
+
+    protected static final int DEFAULT_BATCH_SIZE = 8_000;
+
     // Internal state
     protected AtomicBoolean stopStream = new AtomicBoolean(false);
+    protected BlockingQueue<T> queue = new ArrayBlockingQueue<>()
 
     private static <T> Builder<T> builder() {
         return new AutoValue_UploadQueue.Builder<T>()
@@ -52,10 +59,12 @@ public abstract class UploadQueue<T> {
 
     abstract Builder<T> toBuilder();
 
-    abstract ListSource<T> getSource();
-    abstract Request getRequest();
+    abstract int getMaxQueueSize();
+    abstract int getBatchSize();
+    abstract Duration getMaxUploadInterval();
+    abstract BlockingQueue<T> getQueue();
     @Nullable
-    abstract Consumer<List<T>> getConsumer();
+    abstract Consumer<List<T>> getPostUploadFunction();
 
     /**
      * Add the consumer of the data stream.
