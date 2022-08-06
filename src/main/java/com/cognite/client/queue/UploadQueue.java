@@ -133,12 +133,14 @@ public abstract class UploadQueue<T> {
     }
 
     /**
-     * Uploads the queue and calls the post upload function if applicable.
+     * Uploads the current elements in the queue.
      *
+     * This method will block the calling thread until the upload operation completes.
+     *
+     * @return The uploaded objects.
      * @throws Exception in case of an error during the upload.
      */
-    public boolean upload() throws Exception {
-        boolean returnValue = true;
+    public List<T> upload() throws Exception {
         List<T> uploadBatch = new ArrayList<>(getQueue().size());
         List<T> uploadResults = new ArrayList<>(getQueue().size());
 
@@ -148,16 +150,9 @@ public abstract class UploadQueue<T> {
         // upload to the configured target
         if (null != getUpsertTarget()) {
             uploadResults = getUpsertTarget().upsert(uploadBatch);
-        } else {
-            returnValue = false;
         }
 
-        // Call the post upload function if applicable
-        if (null != getPostUploadFunction()) {
-            getPostUploadFunction().accept(uploadResults);
-        }
-
-        return returnValue;
+        return uploadResults;
     }
 
 
