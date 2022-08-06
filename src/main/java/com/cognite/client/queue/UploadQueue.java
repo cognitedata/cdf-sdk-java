@@ -13,11 +13,11 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -41,121 +41,123 @@ public abstract class UploadQueue<T> {
 
     // Internal state
     protected AtomicBoolean stopStream = new AtomicBoolean(false);
-    protected BlockingQueue<T> queue = new ArrayBlockingQueue<>()
 
     private static <T> Builder<T> builder() {
         return new AutoValue_UploadQueue.Builder<T>()
-                .setPollingInterval(DEFAULT_POLLING_INTERVAL)
-                .setPollingOffset(DEFAULT_POLLING_OFFSET)
-                .setRequest(Request.create())
+                .setQueue(new ArrayBlockingQueue<T>(DEFAULT_QUEUE_SIZE))
+                .setBatchSize(DEFAULT_BATCH_SIZE)
+                .setMaxUploadInterval(DEFAULT_MAX_UPLOAD_INTERVAL)
                 ;
     }
 
-    public static <T> UploadQueue<T> of(ListSource<T> listSource) {
+    public static <T> UploadQueue<T> of(UpsertTarget<T> target) {
         return UploadQueue.<T>builder()
-                .setSource(listSource)
+                .setUpsertTarget(target)
                 .build();
     }
 
     abstract Builder<T> toBuilder();
 
-    abstract int getMaxQueueSize();
     abstract int getBatchSize();
     abstract Duration getMaxUploadInterval();
     abstract BlockingQueue<T> getQueue();
     @Nullable
     abstract Consumer<List<T>> getPostUploadFunction();
 
+
+    @Nullable
+    abstract UpsertTarget<T> getUpsertTarget();
+
     /**
-     * Add the consumer of the data stream.
+     * Add a post upload function.
      *
-     * The consumer will be called for each batch of {@code T}. This is potentially a blocking operation,
-     * so you should take care to process the batch efficiently (or spin off processing to a separate thread).
+     * The post upload function will be called after the successful upload of a batch of data objects to
+     * Cognite Data Fusion. The function will be given the list of objects that were uploaded.
      *
-     * @param consumer The function to call for each batch of {@code T}.
+     * The post upload function has the potential to block the upload thread, so you should ensure that it is lightweight.
+     * If you need to perform a costly operation, we recommend that you hand the costly operation over to a separate
+     * thread and let the post upload function return quickly.
+     *
+     * @param function The function to call for each batch of {@code T}.
      * @return The {@link UploadQueue} with the consumer configured.
      */
-    public UploadQueue<T> withConsumer(Consumer<List<T>> consumer) {
-        return toBuilder().setConsumer(consumer).build();
+    public UploadQueue<T> withPostUploadFunction(Consumer<List<T>> function) {
+        return toBuilder().setPostUploadFunction(function).build();
     }
 
     /**
-     * Sets the start time (i.e. the earliest possible created/changed time of the CDF Raw Row) of the data stream.
+     * Sets the queue size.
      *
-     * The default start time is at Unix epoch. I.e. the publisher will read all existing rows (if any) in the raw table.
-     * @param startTime The start time instant
+     * The queue size is the maximum number of elements that the queue can hold before starting to block on {@code put}
+     * operations.
+     *
+     * The default queue size is 20k.
+     * @param queueSize The target batch size.
      * @return The {@link UploadQueue} with the consumer configured.
      */
-    public UploadQueue<T> withStartTime(Instant startTime) {
-        Preconditions.checkArgument(startTime.isAfter(MIN_START_TIME) && startTime.isBefore(MAX_END_TIME),
-                "Start time must be after Unix Epoch and before Instant.MAX.minus(1, ChronoUnit.YEARS).");
-        return toBuilder().setStartTime(startTime).build();
+    public UploadQueue<T> withQueueSize(int queueSize) {
+        Preconditions.checkArgument(queueSize > 0, "The queue size must be a positive integer.");
+        return toBuilder().setQueue(new ArrayBlockingQueue<>(queueSize)).build();
     }
 
     /**
-     * Sets the end time (i.e. the latest possible created/changed time of the CDF Raw Row) of the data stream.
+     * Sets the batch size for upload batches.
      *
-     * The default end time is {@code Instant.MAX}. I.e. the publisher will stream data indefinitely, or until
-     * aborted.
-     * @param endTime The end time instant
+     * When the number of elements in the queue reaches the batch size, it will trigger an automatic upload
+     * (given that you have started the queue).
+     *
+     * The batch size must be less or equal to the queue size. We recommend using a queue size about double the
+     * batch size for max performance in most scenarios.
+     *
+     * The default batch size is 8k.
+     * @param batchSize The target batch size.
      * @return The {@link UploadQueue} with the consumer configured.
      */
-    public UploadQueue<T> withEndTime(Instant endTime) {
-        Preconditions.checkArgument(endTime.isAfter(MIN_START_TIME) && endTime.isBefore(MAX_END_TIME),
-                "End time must be after Unix Epoch and before Instant.MAX.minus(1, ChronoUnit.YEARS).");
-        return toBuilder().setEndTime(endTime).build();
+    public UploadQueue<T> withMaxBatchSize(int batchSize) {
+        Preconditions.checkArgument(batchSize <= (getQueue().remainingCapacity() + getQueue().size()),
+                "Batch size must be less or equal to the queue size");
+        return toBuilder().setBatchSize(batchSize).build();
+    }
+
+    public void put(T element) throws InterruptedException {
+        getQueue().put(element);
+
+        // Check the current no elements of the queue and trigger an upload on batch size
+        // The upload will happen on a separate thread.
+        if (getQueue().size() >= getBatchSize()) {
+            ExecutorService executorService = Executors.newSingleThreadExecutor();
+            executorService.submit(this::upload);
+            executorService.shutdown();
+        }
+
     }
 
     /**
-     * Sets the polling interval to check for updates to the source raw table. The default polling interval is
-     * every 5 seconds. You can configure a more or less frequent interval, down to every 0.5 seconds.
+     * Uploads the queue and calls the post upload function if applicable.
      *
-     * @param interval The interval to check the source raw table for updates.
-     * @return The {@link UploadQueue} with the consumer configured.
+     * @throws Exception in case of an error during the upload.
      */
-    public UploadQueue<T> withPollingInterval(Duration interval) {
-        Preconditions.checkArgument(interval.compareTo(MIN_POLLING_INTERVAL) > 0
-                        && interval.compareTo(MAX_POLLING_INTERVAL) < 0,
-                String.format("Polling interval must be greater than %s and less than %s.",
-                        MIN_POLLING_INTERVAL,
-                        MAX_POLLING_INTERVAL));
-        return toBuilder().setPollingInterval(interval).build();
-    }
+    public boolean upload() throws Exception {
+        boolean returnValue = true;
+        List<T> uploadBatch = new ArrayList<>(getQueue().size());
+        List<T> uploadResults = new ArrayList<>(getQueue().size());
 
-    /**
-     * Sets the polling offset. The offset is a time window "buffer" subtracted from the current time when polling
-     * for data from CDF Raw. It is intended as a safeguard for clock differences between the client (running this
-     * publisher) and the CDF service.
-     *
-     * For example, if the polling offset is 2 seconds, then this publisher will look for data updates up to (and including)
-     * T-2 seconds. That is, data will be streamed with a 2 second fixed latency/delay.
-     *
-     * @param interval The interval to check the source raw table for updates.
-     * @return The {@link UploadQueue} with the consumer configured.
-     */
-    public UploadQueue<T> withPollingOffset(Duration interval) {
-        Preconditions.checkArgument(interval.compareTo(MIN_POLLING_OFFSET) > 0
-                        && interval.compareTo(MAX_POLLING_OFFSET) < 0,
-                String.format("Polling offset must be greater than %s and less than %s.",
-                        MIN_POLLING_OFFSET,
-                        MAX_POLLING_OFFSET));
-        return toBuilder().setPollingOffset(interval).build();
-    }
+        // drain the queue
+        getQueue().drainTo(uploadBatch);
 
-    /**
-     * Sets a baseline {@link Request} to use when producing the steam of objects. The {@link Request} contains
-     * the set of filters that you want the (stream) objects to satisfy.
-     *
-     * @param request The baseline request specifying filters for the object stream.
-     * @return The {@link UploadQueue} with the consumer configured.
-     */
-    public UploadQueue<T> withRequest(Request request) {
-        Preconditions.checkArgument(0 == request.getRequestParameters().keySet()
-                .stream()
-                .filter(key -> !key.equals("filter"))
-                .count(),
-                "The request can only contain a filter node.");
-        return toBuilder().setRequest(request).build();
+        // upload to the configured target
+        if (null != getUpsertTarget()) {
+            uploadResults = getUpsertTarget().upsert(uploadBatch);
+        } else {
+            returnValue = false;
+        }
+
+        // Call the post upload function if applicable
+        if (null != getPostUploadFunction()) {
+            getPostUploadFunction().accept(uploadResults);
+        }
+
+        return returnValue;
     }
 
 
@@ -227,10 +229,12 @@ public abstract class UploadQueue<T> {
     }
 
     @AutoValue.Builder
-    abstract static class Builder<T> extends AbstractPublisher.Builder<Builder<T>> {
-        abstract Builder<T> setSource(ListSource<T> value);
-        abstract Builder<T> setConsumer(Consumer<List<T>> value);
-        abstract Builder<T> setRequest(Request value);
+    abstract static class Builder<T> {
+        abstract Builder<T> setQueue(BlockingQueue<T> value);
+        abstract Builder<T> setBatchSize(int value);
+        abstract Builder<T> setMaxUploadInterval(Duration value);
+        abstract Builder<T> setPostUploadFunction(Consumer<List<T>> value);
+        abstract Builder<T> setUpsertTarget(UpsertTarget<T> value);
 
         abstract UploadQueue<T> build();
     }
