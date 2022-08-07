@@ -1,9 +1,6 @@
 package com.cognite.client.queue;
 
 import com.cognite.client.Request;
-import com.cognite.client.stream.AbstractPublisher;
-import com.cognite.client.stream.AutoValue_Publisher;
-import com.cognite.client.stream.ListSource;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -44,6 +41,7 @@ public abstract class UploadQueue<T> {
 
     private static <T> Builder<T> builder() {
         return new AutoValue_UploadQueue.Builder<T>()
+                .setScheduledExecutor(new ScheduledThreadPoolExecutor(1))
                 .setQueue(new ArrayBlockingQueue<T>(DEFAULT_QUEUE_SIZE))
                 .setBatchSize(DEFAULT_BATCH_SIZE)
                 .setMaxUploadInterval(DEFAULT_MAX_UPLOAD_INTERVAL)
@@ -58,11 +56,15 @@ public abstract class UploadQueue<T> {
 
     abstract Builder<T> toBuilder();
 
+    abstract ScheduledThreadPoolExecutor getScheduledExecutor();
     abstract int getBatchSize();
     abstract Duration getMaxUploadInterval();
     abstract BlockingQueue<T> getQueue();
     @Nullable
     abstract Consumer<List<T>> getPostUploadFunction();
+
+    @Nullable
+    abstract Consumer<? extends Throwable> getExceptionHandlerFunction();
 
 
     @Nullable
@@ -79,10 +81,25 @@ public abstract class UploadQueue<T> {
      * thread and let the post upload function return quickly.
      *
      * @param function The function to call for each batch of {@code T}.
-     * @return The {@link UploadQueue} with the consumer configured.
+     * @return The {@link UploadQueue} with the function configured.
      */
     public UploadQueue<T> withPostUploadFunction(Consumer<List<T>> function) {
         return toBuilder().setPostUploadFunction(function).build();
+    }
+
+    /**
+     * Add an exception handler function.
+     *
+     * The exception handler function will be called in case of an exception during uploading objects to
+     * Cognite Data Fusion.
+     *
+     * We highly recommend that you add the exception handling function--if not, you risk an upload failing silently.
+     *
+     * @param function The function to call in case of an exception during upload.
+     * @return The {@link UploadQueue} with the function configured.
+     */
+    public UploadQueue<T> withExceptionHandlerFunction(Consumer<List<T>> function) {
+        return toBuilder().setExceptionHandlerFunction(function).build();
     }
 
     /**
@@ -225,12 +242,26 @@ public abstract class UploadQueue<T> {
 
     @AutoValue.Builder
     abstract static class Builder<T> {
+        abstract Builder<T> setScheduledExecutor(ScheduledThreadPoolExecutor value);
         abstract Builder<T> setQueue(BlockingQueue<T> value);
         abstract Builder<T> setBatchSize(int value);
         abstract Builder<T> setMaxUploadInterval(Duration value);
         abstract Builder<T> setPostUploadFunction(Consumer<List<T>> value);
+        abstract Builder<T> setExceptionHandlerFunction(Consumer<? extends Throwable> value);
         abstract Builder<T> setUpsertTarget(UpsertTarget<T> value);
 
-        abstract UploadQueue<T> build();
+        abstract ScheduledThreadPoolExecutor getScheduledExecutor();
+
+        abstract UploadQueue<T> autoBuild();
+        final UploadQueue<T> build() {
+            // Make sure the thread pool puts its threads to sleep to allow the JVM to exit without manual
+            // clean-up from the client.
+            ScheduledThreadPoolExecutor executor = getScheduledExecutor();
+            executor.setKeepAliveTime(2000, TimeUnit.SECONDS);
+            executor.allowCoreThreadTimeOut(true);
+            setScheduledExecutor(executor);
+
+            return autoBuild();
+        }
     }
 }
