@@ -10,10 +10,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -28,13 +25,12 @@ public abstract class UploadQueue<T> {
 
     protected static final Duration POLLING_INTERVAL = Duration.ofSeconds(1L);
 
-    protected static final Duration MIN_DEFAULT_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(1L);
+    protected static final Duration MIN_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(1L);
     protected static final Duration DEFAULT_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(10L);
-    protected static final Duration MAX_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(60L);
+    protected static final Duration MAX_MAX_UPLOAD_INTERVAL = Duration.ofMinutes(60L);
 
-    protected static final int DEFAULT_QUEUE_SIZE = 20_000;
-
-    protected static final int DEFAULT_BATCH_SIZE = 8_000;
+    protected static final int DEFAULT_QUEUE_SIZE = 10_000;
+    protected static final float QUEUE_FILL_RATE_THRESHOLD = 0.8f;
 
     // Internal state
     protected AtomicBoolean stopStream = new AtomicBoolean(false);
@@ -43,7 +39,6 @@ public abstract class UploadQueue<T> {
         return new AutoValue_UploadQueue.Builder<T>()
                 .setScheduledExecutor(new ScheduledThreadPoolExecutor(1))
                 .setQueue(new ArrayBlockingQueue<T>(DEFAULT_QUEUE_SIZE))
-                .setBatchSize(DEFAULT_BATCH_SIZE)
                 .setMaxUploadInterval(DEFAULT_MAX_UPLOAD_INTERVAL)
                 ;
     }
@@ -57,7 +52,6 @@ public abstract class UploadQueue<T> {
     abstract Builder<T> toBuilder();
 
     abstract ScheduledThreadPoolExecutor getScheduledExecutor();
-    abstract int getBatchSize();
     abstract Duration getMaxUploadInterval();
     abstract BlockingQueue<T> getQueue();
     @Nullable
@@ -98,7 +92,7 @@ public abstract class UploadQueue<T> {
      * @param function The function to call in case of an exception during upload.
      * @return The {@link UploadQueue} with the function configured.
      */
-    public UploadQueue<T> withExceptionHandlerFunction(Consumer<List<T>> function) {
+    public UploadQueue<T> withExceptionHandlerFunction(Consumer<? extends Throwable> function) {
         return toBuilder().setExceptionHandlerFunction(function).build();
     }
 
@@ -108,8 +102,11 @@ public abstract class UploadQueue<T> {
      * The queue size is the maximum number of elements that the queue can hold before starting to block on {@code put}
      * operations.
      *
-     * The default queue size is 20k.
-     * @param queueSize The target batch size.
+     * The queue will automatically be uploaded when it is 80% full, so you should set the queue size to slightly larger
+     * than your desired max batch size.
+     *
+     * The default queue size is 10k.
+     * @param queueSize The target queue size.
      * @return The {@link UploadQueue} with the consumer configured.
      */
     public UploadQueue<T> withQueueSize(int queueSize) {
@@ -118,35 +115,51 @@ public abstract class UploadQueue<T> {
     }
 
     /**
-     * Sets the batch size for upload batches.
+     * Sets the max upload interval.
      *
-     * When the number of elements in the queue reaches the batch size, it will trigger an automatic upload
-     * (given that you have started the queue).
+     * If you have activated the The queue will be uploaded to
      *
-     * The batch size must be less or equal to the queue size. We recommend using a queue size about double the
-     * batch size for max performance in most scenarios.
-     *
-     * The default batch size is 8k.
-     * @param batchSize The target batch size.
-     * @return The {@link UploadQueue} with the consumer configured.
+     * The default max upload interval is 10 seconds.
+     * @param interval The target max upload interval.
+     * @return The {@link UploadQueue} with the upload interval configured.
      */
-    public UploadQueue<T> withMaxBatchSize(int batchSize) {
-        Preconditions.checkArgument(batchSize <= (getQueue().remainingCapacity() + getQueue().size()),
-                "Batch size must be less or equal to the queue size");
-        return toBuilder().setBatchSize(batchSize).build();
+    public UploadQueue<T> withMaxUploadInterval(Duration interval) {
+        Preconditions.checkArgument(interval.compareTo(MAX_MAX_UPLOAD_INTERVAL) <= 0
+                && interval.compareTo(MIN_MAX_UPLOAD_INTERVAL) >= 0,
+                String.format("The max upload interval can be minimum %s and maxmimum %s",
+                        MIN_MAX_UPLOAD_INTERVAL, MAX_MAX_UPLOAD_INTERVAL));
+        return toBuilder().setMaxUploadInterval(interval).build();
     }
 
     public void put(T element) throws InterruptedException {
         getQueue().put(element);
 
-        // Check the current no elements of the queue and trigger an upload on batch size
+        // Check the current no elements of the queue and trigger an upload if the fill rate is above threshold
         // The upload will happen on a separate thread.
-        if (getQueue().size() >= getBatchSize()) {
-            ExecutorService executorService = Executors.newSingleThreadExecutor();
-            executorService.submit(this::upload);
-            executorService.shutdown();
+        if ((getQueue().size() / (getQueue().size() + getQueue().remainingCapacity())) > QUEUE_FILL_RATE_THRESHOLD) {
+
         }
 
+    }
+
+    /*
+    Private convenience method to decorate async upload with post upload and exception handling functions.
+     */
+    private void asyncUploadWrapper() {
+        String logPrefix = "asyncUploadWrapper() - ";
+        try {
+            List<T> uploadResults = this.upload();
+            if (null != getPostUploadFunction()) {
+                getPostUploadFunction().accept(uploadResults);
+            }
+        } catch (Exception e) {
+            LOG.warn(logPrefix + "Exception during upload of the queue: {}", e);
+            if (null != getExceptionHandlerFunction()) {
+                getExceptionHandlerFunction().accept(e);
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     /**
@@ -158,6 +171,12 @@ public abstract class UploadQueue<T> {
      * @throws Exception in case of an error during the upload.
      */
     public List<T> upload() throws Exception {
+        String logPrefix = "upload() - ";
+        if (getQueue().isEmpty()) {
+            LOG.info(logPrefix + "The queue is empty--will skip upload.");
+            return List.of();
+        }
+
         List<T> uploadBatch = new ArrayList<>(getQueue().size());
         List<T> uploadResults = new ArrayList<>(getQueue().size());
 
@@ -167,84 +186,18 @@ public abstract class UploadQueue<T> {
         // upload to the configured target
         if (null != getUpsertTarget()) {
             uploadResults = getUpsertTarget().upsert(uploadBatch);
+        } else {
+            LOG.warn(logPrefix + "No valid upload target configured for this queue.");
         }
 
+        LOG.info(logPrefix + "Uploaded {} elements to CDF.", uploadBatch.size());
         return uploadResults;
-    }
-
-
-    /**
-     * Start the main polling loop for reading rows from a raw table.
-     *
-     * @return {@code true} when the polling loop completes (at the specified end time). {@code false} if the
-     * job is aborted before the specified end time.
-     * @throws Exception
-     */
-    boolean run() throws Exception {
-        final String loggingPrefix = "streaming() [" + RandomStringUtils.randomAlphanumeric(4) + "] - ";
-        Preconditions.checkNotNull(getConsumer(),
-                loggingPrefix + "You must specify a Consumer via withConsumer(Consumer<List<RawRow>>)");
-        Preconditions.checkState(getStartTime().isBefore(getEndTime()),
-                String.format(loggingPrefix + "Start time must be before end time. Start time: %s. End time: %s",
-                        getStartTime(),
-                        getEndTime()));
-        LOG.info(loggingPrefix + "Setting up streaming read from {}. Time window start: {}. End: {}",
-                getSource().getClass().getSimpleName(),
-                getStartTime().toString(),
-                getEndTime().toString());
-        state = State.RUNNING;
-
-        // Set the time range for the first query
-        long startRange = getStartTime().toEpochMilli();
-        long endRange = Instant.now().minus(getPollingOffset()).toEpochMilli();
-
-        while (Instant.now().isBefore(getEndTime().plus(getPollingOffset())) && !abortStream.get()) {
-            endRange = Instant.now().minus(getPollingOffset()).toEpochMilli();
-            LOG.debug(loggingPrefix + "Enter polling loop with startRange: [{}] and endRange: [{}]",
-                    startRange,
-                    endRange);
-            if (startRange < endRange) {
-                Request query = getRequest()
-                        .withFilterParameter("lastUpdatedTime", Map.of(
-                                "min", startRange,
-                                "max", endRange))
-                        ;
-                LOG.debug(loggingPrefix + "Send request to read CDF: {}",
-                        query);
-
-                Iterator<List<T>> iterator = getSource().list(query);
-                while (iterator.hasNext() && !abortStream.get()) {
-                    List<T> batch = iterator.next();
-                    if (batch.size() > 0) {
-                        getConsumer().accept(batch);
-                    }
-                }
-            }
-
-            LOG.debug(loggingPrefix + "Finished polling loop with startRange: [{}] and endRange: [{}]. Sleeping for {}",
-                    startRange,
-                    endRange,
-                    getPollingInterval().toString());
-
-            startRange = endRange + 1; // endRange is inclusive in the request, so we must bump the next startRange
-
-            // Sleep for a polling interval
-            try {
-                Thread.sleep(getPollingInterval().toMillis());
-            } catch (Exception e) {
-                LOG.warn(loggingPrefix + "Exception when reading: " + e.toString());
-                abortStream.set(true);
-            }
-        }
-        state = State.STOPPED;
-        return !abortStream.get();
     }
 
     @AutoValue.Builder
     abstract static class Builder<T> {
         abstract Builder<T> setScheduledExecutor(ScheduledThreadPoolExecutor value);
         abstract Builder<T> setQueue(BlockingQueue<T> value);
-        abstract Builder<T> setBatchSize(int value);
         abstract Builder<T> setMaxUploadInterval(Duration value);
         abstract Builder<T> setPostUploadFunction(Consumer<List<T>> value);
         abstract Builder<T> setExceptionHandlerFunction(Consumer<? extends Throwable> value);
