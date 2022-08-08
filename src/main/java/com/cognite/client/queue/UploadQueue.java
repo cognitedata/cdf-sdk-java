@@ -131,15 +131,34 @@ public abstract class UploadQueue<T> {
         return toBuilder().setMaxUploadInterval(interval).build();
     }
 
+    /**
+     * Adds an element to the upload queue, waiting if necessary for space to become available.
+     *
+     * Under normal operating conditions, this method will add the element to the queue and return immediately to
+     * the caller. The upload queue will automatically upload its elements to Cognite Data Fusion when the queue is
+     * 80% full. The upload happens on a background thread and does not block the caller. However, if you over time
+     * add elements to the queue at a higher rate than it can drain itself, you may be blocked to wait for space to
+     * become available--this is a backpressure mechanism to prevent CDF from becoming overloaded.
+     *
+     * @see java.util.concurrent.BlockingQueue
+     * @param element The data element to add to the queue
+     * @throws InterruptedException if interrupted while waiting
+     */
     public void put(T element) throws InterruptedException {
+        String logPrefix = "put() - ";
         getQueue().put(element);
 
         // Check the current no elements of the queue and trigger an upload if the fill rate is above threshold
         // The upload will happen on a separate thread.
-        if ((getQueue().size() / (getQueue().size() + getQueue().remainingCapacity())) > QUEUE_FILL_RATE_THRESHOLD) {
+        if (((float) getQueue().size() / ((float) getQueue().size() + (float) getQueue().remainingCapacity())) > QUEUE_FILL_RATE_THRESHOLD) {
+            LOG.debug(logPrefix + "Will trigger queue upload. Fill rate is above threshold. Queue capacity: {}, "
+                    + "queue size: {}, remaining capacity: {}",
+                    getQueue().size() + getQueue().remainingCapacity(),
+                    getQueue().size(),
+                    getQueue().remainingCapacity());
 
+            getScheduledExecutor().execute(this::asyncUploadWrapper);
         }
-
     }
 
     /*
