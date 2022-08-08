@@ -12,8 +12,27 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 /**
+ * The UploadQueue batches together items and uploads them together to Cognite Data Fusion (CDF), both to minimize
+ * the load on the API, and also to improve throughput.
  *
- * @param <T>
+ * The queue is uploaded to CDF on three conditions:
+ * 1) When the queue is 80% full.
+ * 2) At a set interval (default is every 10 seconds).
+ * 3) When the {@link #upload()} method is called.
+ *
+ * The queue is always uploaded when 80% full. This happens on a background thread so your client can keep putting items
+ * on the queue while the upload runs in the background.
+ *
+ * The upload interval trigger must be explicitly enabled by calling the {@link #start()} method. This starts a
+ * background task that triggers a queue upload at a configurable interval. The default interval is every 10 seconds.
+ * The trigger interval works in combination with the fill rate interval--this is the recommended way to use the
+ * queue. When you are done using the queue, you should call {@link #stop()} for proper cleanup of background tasks
+ * and draining the queue.
+ *
+ * You can also trigger an upload manually by calling {@link #upload()}. This is a blocking function.
+ *
+ *
+ * @param <T> The CDF resource type to upload.
  */
 @AutoValue
 public abstract class UploadQueue<T> {
