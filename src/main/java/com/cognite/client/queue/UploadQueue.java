@@ -58,7 +58,7 @@ public abstract class UploadQueue<T> {
     abstract Consumer<List<T>> getPostUploadFunction();
 
     @Nullable
-    abstract Consumer<? extends Throwable> getExceptionHandlerFunction();
+    abstract Consumer<Exception> getExceptionHandlerFunction();
 
 
     @Nullable
@@ -200,7 +200,7 @@ public abstract class UploadQueue<T> {
         abstract Builder<T> setQueue(BlockingQueue<T> value);
         abstract Builder<T> setMaxUploadInterval(Duration value);
         abstract Builder<T> setPostUploadFunction(Consumer<List<T>> value);
-        abstract Builder<T> setExceptionHandlerFunction(Consumer<? extends Throwable> value);
+        abstract Builder<T> setExceptionHandlerFunction(Consumer<Exception> value);
         abstract Builder<T> setUpsertTarget(UpsertTarget<T> value);
 
         abstract ScheduledThreadPoolExecutor getScheduledExecutor();
