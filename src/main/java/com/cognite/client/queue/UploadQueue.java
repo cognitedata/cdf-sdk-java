@@ -1,18 +1,14 @@
 package com.cognite.client.queue;
 
-import com.cognite.client.Request;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /**
@@ -22,8 +18,6 @@ import java.util.function.Consumer;
 @AutoValue
 public abstract class UploadQueue<T> {
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
-
-    protected static final Duration POLLING_INTERVAL = Duration.ofSeconds(1L);
 
     protected static final Duration MIN_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(1L);
     protected static final Duration DEFAULT_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(10L);
@@ -117,7 +111,8 @@ public abstract class UploadQueue<T> {
     /**
      * Sets the max upload interval.
      *
-     * If you have activated the The queue will be uploaded to
+     * When you activate the queue background thread via {@link #start()}, the queue will be uploaded to
+     * Cognite Data Fusion at least every upload interval (in addition to the upload triggered at 80% queue fill rate).
      *
      * The default max upload interval is 10 seconds.
      * @param interval The target max upload interval.
