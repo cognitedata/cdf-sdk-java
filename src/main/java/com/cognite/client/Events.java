@@ -20,6 +20,7 @@ import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.Event;
 import com.cognite.client.dto.Item;
 import com.cognite.client.config.ResourceType;
+import com.cognite.client.queue.UploadQueue;
 import com.cognite.client.queue.UpsertTarget;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.EventParser;
@@ -328,6 +329,14 @@ public abstract class Events extends ApiBase implements ListSource<Event>, Upser
         return upsertItems.upsertViaCreateAndUpdate(events).stream()
                 .map(this::parseEvent)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     *
+     * @return
+     */
+    public UploadQueue<Event> uploadQueue() {
+        return UploadQueue.of(this);
     }
 
     /**
