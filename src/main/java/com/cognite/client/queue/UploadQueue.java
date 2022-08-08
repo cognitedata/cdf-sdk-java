@@ -33,7 +33,7 @@ public abstract class UploadQueue<T> {
     protected static final float QUEUE_FILL_RATE_THRESHOLD = 0.8f;
 
     // Internal state
-    protected AtomicBoolean stopStream = new AtomicBoolean(false);
+    protected ScheduledFuture<?> recurringTask;
 
     private static <T> Builder<T> builder() {
         return new AutoValue_UploadQueue.Builder<T>()
@@ -161,6 +161,61 @@ public abstract class UploadQueue<T> {
         }
     }
 
+    /**
+     * Start the upload thread to perform an upload every {@code maxUploadInterval}. The default upload interval
+     * is every 10 seconds.
+     *
+     * If the upload thread has already been started (for example by an earlier call to {@code start()} then this
+     * method does nothing and returns {@code false}.
+     *
+     * @return {@code true} if the upload thread started successfully, {@code false} if the upload thread has already
+     *  been started.
+     */
+    public boolean start() {
+        String logPrefix = "start() - ";
+        if (null != recurringTask) {
+            // The upload task has already been started.
+            LOG.warn(logPrefix + "The upload thread has already been started. Start() has no effect.");
+            return false;
+        }
+
+        recurringTask = getScheduledExecutor().scheduleAtFixedRate(this::asyncUploadWrapper,
+                1, getMaxUploadInterval().getSeconds(), TimeUnit.SECONDS);
+        LOG.info(logPrefix + "Starting background upload thread to upload at interval {}", getMaxUploadInterval());
+        return true;
+    }
+
+    /**
+     * Stops the upload thread if it is running and ensures the upload queue is empty by calling {@code upload()} one
+     * last time after shutting down the thread.
+     *
+     * @return {@code true} if the upload thread stopped successfully, {@code false} if the upload thread was not started
+     * in the first place.
+     */
+    public boolean stop() {
+        String logPrefix = "stop() -";
+        if (null == recurringTask) {
+            // The upload task has not been started.
+            LOG.warn(logPrefix + "The upload thread has not been started. Stop() has no effect.");
+            this.asyncUploadWrapper();
+            return false;
+        }
+
+        recurringTask.cancel(false);
+        if (recurringTask.isDone()) {
+            // cancellation of task was successful
+            recurringTask = null;
+            this.asyncUploadWrapper();
+            LOG.info(logPrefix + "Successfully stopped the background upload thread.");
+        } else {
+            LOG.warn(logPrefix + "Something went wrong when trying to stop the upload thread. Status isDone: {}, "
+                    + "isCanceled: {}",
+                    recurringTask.isDone(),
+                    recurringTask.isCancelled());
+        }
+        return recurringTask.isDone();
+    }
+
     /*
     Private convenience method to decorate async upload with post upload and exception handling functions.
      */
@@ -184,7 +239,9 @@ public abstract class UploadQueue<T> {
     /**
      * Uploads the current elements in the queue.
      *
-     * This method will block the calling thread until the upload operation completes.
+     * This method will block the calling thread until the upload operation completes. It does not call the
+     * {@code postUploadFunction} or {@code exceptionHandlerFunction}. The uploaded elements are returned directly
+     * from this method.
      *
      * @return The uploaded objects.
      * @throws Exception in case of an error during the upload.
@@ -231,6 +288,7 @@ public abstract class UploadQueue<T> {
             ScheduledThreadPoolExecutor executor = getScheduledExecutor();
             executor.setKeepAliveTime(2000, TimeUnit.SECONDS);
             executor.allowCoreThreadTimeOut(true);
+            executor.setRemoveOnCancelPolicy(true);
             setScheduledExecutor(executor);
 
             return autoBuild();
