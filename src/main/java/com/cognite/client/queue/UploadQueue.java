@@ -92,7 +92,7 @@ public abstract class UploadQueue<T> {
      * @param function The function to call in case of an exception during upload.
      * @return The {@link UploadQueue} with the function configured.
      */
-    public UploadQueue<T> withExceptionHandlerFunction(Consumer<? extends Throwable> function) {
+    public UploadQueue<T> withExceptionHandlerFunction(Consumer<Exception> function) {
         return toBuilder().setExceptionHandlerFunction(function).build();
     }
 
