@@ -162,9 +162,15 @@ public abstract class UploadQueue<T> {
         String logPrefix = "put() - ";
         getQueue().put(element);
 
-        // Check the current no elements of the queue and trigger an upload if the fill rate is above threshold
-        // The upload will happen on a separate thread.
-        if (((float) getQueue().size() / ((float) getQueue().size() + (float) getQueue().remainingCapacity())) > QUEUE_FILL_RATE_THRESHOLD) {
+        /*
+        Check the current no elements of the queue and trigger an upload if the fill rate is above threshold, and
+        there are no upload requests in the background task queue. We have to check the background task queue so that
+        we prevent overprovisioning tasks.
+
+        The upload will happen on a separate thread.
+         */
+        if (((float) getQueue().size() / ((float) getQueue().size() + (float) getQueue().remainingCapacity())) > QUEUE_FILL_RATE_THRESHOLD
+                && getScheduledExecutor().getQueue().size() < 2) {
             LOG.debug(logPrefix + "Will trigger queue upload. Fill rate is above threshold. Queue capacity: {}, "
                     + "queue size: {}, remaining capacity: {}",
                     getQueue().size() + getQueue().remainingCapacity(),
