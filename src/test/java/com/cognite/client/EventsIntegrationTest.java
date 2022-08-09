@@ -449,11 +449,16 @@ class EventsIntegrationTest {
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
         LOG.info(loggingPrefix + "Start uploading events.");
-        List<Event> upsertEventsList = DataGenerator.generateEvents(31800);
+        List<Event> upsertEventsList = DataGenerator.generateEvents(1800);
         UploadQueue<Event> uploadQueue = client.events().uploadQueue()
+                .withQueueSize(100)
                 .withPostUploadFunction(events -> LOG.info("postUploadFunction triggered. Uploaded {} items", events.size()))
                 .withExceptionHandlerFunction(exception -> LOG.warn("exceptionHandlerFunction triggered: {}", exception.getMessage()));
 
+        for (Event event : upsertEventsList) {
+            uploadQueue.put(event);
+        }
+        uploadQueue.upload();
 
         LOG.info(loggingPrefix + "Finished upserting events. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
