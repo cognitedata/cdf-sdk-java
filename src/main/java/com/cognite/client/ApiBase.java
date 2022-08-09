@@ -1836,11 +1836,7 @@ abstract class ApiBase {
             if (createItems.isEmpty()) {
                 LOG.debug(loggingPrefix + "Create items list is empty. Skipping create.");
             } else {
-                Map<ResponseItems<String>, List<T>> createResponseMap = splitAndCreateItems(createItems);
-                LOG.debug(loggingPrefix + "Completed building create items requests for {} items across {} batches at duration {}",
-                        createItems.size(),
-                        createResponseMap.size(),
-                        Duration.between(startInstant, Instant.now()).toString());
+                Map<ResponseItems<String>, List<T>> createResponseMap = splitAndCreateItems(loggingPrefix, createItems);
                 createItems.clear(); // Must prepare the list for possible new entries.
 
                 for (ResponseItems<String> response : createResponseMap.keySet()) {
@@ -1933,11 +1929,7 @@ abstract class ApiBase {
             if (updateItems.isEmpty()) {
                 LOG.debug(loggingPrefix + "Update items list is empty. Skipping update.");
             } else {
-                Map<ResponseItems<String>, List<T>> updateResponseMap = splitAndUpdateItems(updateItems);
-                LOG.debug(loggingPrefix + "Completed building update items requests for {} items across {} batches at duration {}",
-                        updateItems.size(),
-                        updateResponseMap.size(),
-                        Duration.between(startInstant, Instant.now()).toString());
+                Map<ResponseItems<String>, List<T>> updateResponseMap = splitAndUpdateItems(loggingPrefix, updateItems);
                 updateItems.clear(); // Must prepare the list for possible new entries.
 
                 for (ResponseItems<String> response : updateResponseMap.keySet()) {
@@ -2031,11 +2023,7 @@ abstract class ApiBase {
             if (updateItems.isEmpty()) {
                 LOG.debug(loggingPrefix + "Update items list is empty. Skipping update.");
             } else {
-                Map<ResponseItems<String>, List<T>> updateResponseMap = splitAndUpdateItems(updateItems, existingItems);
-                LOG.debug(loggingPrefix + "Completed building update items requests for {} items across {} batches at duration {}",
-                        updateItems.size(),
-                        updateResponseMap.size(),
-                        Duration.between(startInstant, Instant.now()).toString());
+                Map<ResponseItems<String>, List<T>> updateResponseMap = splitAndUpdateItems(loggingPrefix, updateItems, existingItems);
                 updateItems.clear(); // Must prepare the list for possible new entries.
 
                 for (ResponseItems<String> response : updateResponseMap.keySet()) {
@@ -2167,8 +2155,8 @@ abstract class ApiBase {
          * @return a {@link Map} with the responses and request inputs.
          * @throws Exception
          */
-        private Map<ResponseItems<String>, List<T>> splitAndCreateItems(List<T> items) {
-            return splitAndProcessItems(items, this::createItems);
+        private Map<ResponseItems<String>, List<T>> splitAndCreateItems(String loggingPrefix, List<T> items) {
+            return splitAndProcessItems(loggingPrefix, items, this::createItems);
         }
 
         /**
@@ -2181,13 +2169,13 @@ abstract class ApiBase {
          * @return a {@link Map} with the responses and request inputs.
          * @throws Exception
          */
-        private Map<ResponseItems<String>, List<T>> splitAndUpdateItems(List<T> items) {
-            return splitAndProcessItems(items, this::updateItems);
+        private Map<ResponseItems<String>, List<T>> splitAndUpdateItems(String loggingPrefix, List<T> items) {
+            return splitAndProcessItems(loggingPrefix, items, this::updateItems);
         }
 
         /**
          * Update items, with diff logic. In order to build the update request (to CDF), both the current state of
-         * the items and the target state are used as input. This is in contrast to {@link #splitAndUpdateItems(List)}
+         * the items and the target state are used as input. This is in contrast to {@link #splitAndUpdateItems(String, List)}
          * which only uses the target state as input.
          *
          * Submits a (large) batch of items by splitting it up into multiple, parallel update requests.
@@ -2198,7 +2186,10 @@ abstract class ApiBase {
          * @return a {@link Map} with the responses and request inputs.
          * @throws Exception
          */
-        private Map<ResponseItems<String>, List<T>> splitAndUpdateItems(List<T> updateItems, List<T> existingItems) {
+        private Map<ResponseItems<String>, List<T>> splitAndUpdateItems(String loggingPrefix,
+                                                                        List<T> updateItems,
+                                                                        List<T> existingItems) {
+            Instant startInstant = Instant.now();
             Map<CompletableFuture<ResponseItems<String>>, List<T>> responseMap = new HashMap<>();
 
             // Split into batches
@@ -2208,6 +2199,10 @@ abstract class ApiBase {
             for (List<T> batch : updateItemBatches) {
                 responseMap.put(updateItems(batch, existingItems), batch);
             }
+            LOG.debug(loggingPrefix + "Completed building requests for {} items across {} batches at duration {}",
+                    updateItems.size(),
+                    responseMap.size(),
+                    Duration.between(startInstant, Instant.now()).toString());
 
             // Wait for all requests futures to complete
             List<CompletableFuture<ResponseItems<String>>> futureList = new ArrayList<>(responseMap.keySet());
@@ -2235,8 +2230,10 @@ abstract class ApiBase {
          * @return a {@link Map} with the responses and request inputs.
          */
         private Map<ResponseItems<String>, List<T>> splitAndProcessItems(
+                String loggingPrefix,
                 List<T> items,
                 Function<List<T>, CompletableFuture<ResponseItems<String>>> processFunc) {
+            Instant startInstant = Instant.now();
             Map<CompletableFuture<ResponseItems<String>>, List<T>> responseMap = new HashMap<>();
 
             // Split into batches
@@ -2246,6 +2243,10 @@ abstract class ApiBase {
             for (List<T> batch : itemBatches) {
                 responseMap.put(processFunc.apply(batch), batch);
             }
+            LOG.debug(loggingPrefix + "Completed building requests for {} items across {} batches at duration {}",
+                    items.size(),
+                    responseMap.size(),
+                    Duration.between(startInstant, Instant.now()).toString());
 
             // Wait for all requests futures to complete
             List<CompletableFuture<ResponseItems<String>>> futureList = new ArrayList<>(responseMap.keySet());
