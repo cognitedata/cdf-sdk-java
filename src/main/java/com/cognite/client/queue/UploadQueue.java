@@ -12,7 +12,7 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 /**
- * The UploadQueue batches together items and uploads them together to Cognite Data Fusion (CDF), both to minimize
+ * The UploadQueue batches together items and uploads them to Cognite Data Fusion (CDF), both to minimize
  * the load on the API, and also to improve throughput.
  *
  * The queue is uploaded to CDF on three conditions:

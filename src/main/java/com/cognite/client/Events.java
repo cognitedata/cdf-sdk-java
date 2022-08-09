@@ -332,8 +332,10 @@ public abstract class Events extends ApiBase implements ListSource<Event>, Upser
     }
 
     /**
+     * Returns an upload queue.
      *
-     * @return
+     * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
+     * @return The upload queue.
      */
     public UploadQueue<Event> uploadQueue() {
         return UploadQueue.of(this);

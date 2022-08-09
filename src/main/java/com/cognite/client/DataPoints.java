@@ -17,6 +17,8 @@
 package com.cognite.client;
 
 import com.cognite.client.dto.*;
+import com.cognite.client.queue.UploadQueue;
+import com.cognite.client.queue.UpsertTarget;
 import com.cognite.client.servicesV1.ConnectorConstants;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ItemReader;
@@ -50,7 +52,7 @@ import java.util.stream.Collectors;
  * It provides methods for reading {@link TimeseriesPoint} and writing {@link TimeseriesPointPost}.
  */
 @AutoValue
-public abstract class DataPoints extends ApiBase {
+public abstract class DataPoints extends ApiBase implements UpsertTarget<TimeseriesPointPost> {
     // Write request batch limits
     private static final int DATA_POINTS_WRITE_MAX_ITEMS_PER_REQUEST = 10_000;
     private static final int DATA_POINTS_WRITE_MAX_POINTS_PER_REQUEST = 100_000;
@@ -426,6 +428,16 @@ public abstract class DataPoints extends ApiBase {
                         .orElse(0.0d)));
 
         return dataPoints;
+    }
+
+    /**
+     * Returns an upload queue.
+     *
+     * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
+     * @return The upload queue.
+     */
+    public UploadQueue<TimeseriesPointPost> uploadQueue() {
+        return UploadQueue.of(this);
     }
 
     /**

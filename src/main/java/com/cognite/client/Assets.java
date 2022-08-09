@@ -21,6 +21,8 @@ import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.Asset;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.dto.Item;
+import com.cognite.client.queue.UploadQueue;
+import com.cognite.client.queue.UpsertTarget;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.AssetParser;
 import com.cognite.client.stream.ListSource;
@@ -51,7 +53,7 @@ import java.util.stream.Stream;
  * It provides methods for reading and writing {@link com.cognite.client.dto.Asset}.
  */
 @AutoValue
-public abstract class Assets extends ApiBase implements ListSource<Asset> {
+public abstract class Assets extends ApiBase implements ListSource<Asset>, UpsertTarget<Asset> {
     private final static int MAX_UPSERT_BATCH_SIZE = 200;
 
     private static Builder builder() {
@@ -582,6 +584,16 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
         return assetUpsertResults.stream()
                 .map(this::parseAsset)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns an upload queue.
+     *
+     * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
+     * @return The upload queue.
+     */
+    public UploadQueue<Asset> uploadQueue() {
+        return UploadQueue.of(this);
     }
 
     /**
