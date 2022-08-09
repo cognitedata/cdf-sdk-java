@@ -222,6 +222,7 @@ public abstract class UploadQueue<T> {
         }
 
         recurringTask.cancel(false);
+        boolean returnValue = recurringTask.isDone();
         if (recurringTask.isDone()) {
             // cancellation of task was successful
             recurringTask = null;
@@ -233,7 +234,7 @@ public abstract class UploadQueue<T> {
                     recurringTask.isDone(),
                     recurringTask.isCancelled());
         }
-        return recurringTask.isDone();
+        return returnValue;
     }
 
     /*
