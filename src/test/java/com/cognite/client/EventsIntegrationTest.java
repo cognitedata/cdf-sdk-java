@@ -449,7 +449,7 @@ class EventsIntegrationTest {
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
         LOG.info(loggingPrefix + "Start uploading events.");
-        List<Event> upsertEventsList = DataGenerator.generateEvents(1800);
+        List<Event> upsertEventsList = DataGenerator.generateEvents(1123);
         UploadQueue<Event> uploadQueue = client.events().uploadQueue()
                 .withQueueSize(100)
                 .withPostUploadFunction(events -> LOG.info("postUploadFunction triggered. Uploaded {} items", events.size()))
