@@ -18,6 +18,8 @@ package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.dto.*;
+import com.cognite.client.queue.UploadQueue;
+import com.cognite.client.queue.UpsertTarget;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ResponseItems;
 import com.cognite.client.servicesV1.parser.ItemParser;
@@ -49,7 +51,7 @@ import static com.cognite.client.servicesV1.ConnectorConstants.*;
  * It provides methods for reading and writing {@link SequenceBody}.
  */
 @AutoValue
-public abstract class SequenceRows extends ApiBase {
+public abstract class SequenceRows extends ApiBase implements UpsertTarget<SequenceBody> {
     private static final SequenceMetadata DEFAULT_SEQ_METADATA = SequenceMetadata.newBuilder()
             .setExternalId("SDK_default")
             .setName("SDK_default")
@@ -329,10 +331,6 @@ public abstract class SequenceRows extends ApiBase {
         3. Retry the failed sequences
         */
         Map<ResponseItems<String>, List<SequenceBody>> responseMap = splitAndUpsertSeqBody(sequenceBodies, createItemWriter);
-        LOG.debug(batchLogPrefix + "Completed create items requests for {} input items across {} batches at duration {}",
-                sequenceBodies.size(),
-                responseMap.size(),
-                Duration.between(startInstant, Instant.now()).toString());
 
         // Check for unsuccessful request
         List<Item> missingItems = new ArrayList<>();
@@ -458,6 +456,19 @@ public abstract class SequenceRows extends ApiBase {
                 Duration.between(startInstant, Instant.now()).toString());
 
         return ImmutableList.copyOf(sequenceBodies);
+    }
+
+    /**
+     * Returns an upload queue.
+     *
+     * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
+     *
+     * {@link SequenceBody} objects are quite large, so the queue is tuned with a default size of 10.
+     * @return The upload queue.
+     */
+    public UploadQueue<SequenceBody> uploadQueue() {
+        return UploadQueue.of(this)
+                .withQueueSize(10);
     }
 
     /**

@@ -16,10 +16,11 @@
 
 package com.cognite.client;
 
-import com.cognite.client.config.AuthConfig;
 import com.cognite.client.config.ClientConfig;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.dto.RawRow;
+import com.cognite.client.queue.UploadQueue;
+import com.cognite.client.queue.UpsertTarget;
 import com.cognite.client.servicesV1.ConnectorConstants;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ItemReader;
@@ -47,7 +48,7 @@ import java.util.stream.Collectors;
  * It provides methods for interacting with the Raw row endpoint.
  */
 @AutoValue
-public abstract class RawRows extends ApiBase {
+public abstract class RawRows extends ApiBase implements UpsertTarget<RawRow> {
     private static final int MAX_WRITE_BATCH_SIZE = 1000;
     private static final int MAX_DELETE_BATCH_SIZE = 1000;
 
@@ -632,15 +633,12 @@ public abstract class RawRows extends ApiBase {
                     completedBatches.size(),
                     Duration.between(startInstant, Instant.now()).toString());
         } else {
-            LOG.error(loggingPrefix + "Failed to upsert rows. {} batches remaining. {} batches completed upsert."
-                            + System.lineSeparator() + "{}",
+            String message = String.format(loggingPrefix + "Failed to upsert rows. %d batches remaining. "
+                    + " %d batches completed upsert. %n " + exceptionMessage,
                     upsertBatches.size(),
-                    completedBatches.size(),
-                    exceptionMessage);
-            throw new Exception(String.format(loggingPrefix + "Failed to upsert rows. %d batches remaining. "
-                            + " %d batches completed upsert. %n " + exceptionMessage,
-                    upsertBatches.size(),
-                    completedBatches.size()));
+                    completedBatches.size());
+            LOG.error(message);
+            throw new Exception(message);
         }
 
         return rows;
@@ -673,6 +671,16 @@ public abstract class RawRows extends ApiBase {
      */
     public List<RawRow> upsert(List<RawRow> rows) throws Exception {
         return upsert(rows, true);
+    }
+
+    /**
+     * Returns an upload queue.
+     *
+     * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
+     * @return The upload queue.
+     */
+    public UploadQueue<RawRow> uploadQueue() {
+        return UploadQueue.of(this);
     }
 
     /**

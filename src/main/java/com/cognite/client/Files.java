@@ -19,6 +19,9 @@ package com.cognite.client;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.*;
+import com.cognite.client.queue.UploadQueue;
+import com.cognite.client.queue.UploadTarget;
+import com.cognite.client.queue.UpsertTarget;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ResponseItems;
 import com.cognite.client.servicesV1.executor.FileBinaryRequestExecutor;
@@ -54,7 +57,7 @@ import java.util.stream.Collectors;
  * It provides methods for reading and writing {@link Event}.
  */
 @AutoValue
-public abstract class Files extends ApiBase {
+public abstract class Files extends ApiBase implements UpsertTarget<FileMetadata> {
     private static final int MAX_WRITE_REQUEST_BATCH_SIZE = 100;
     private static final int MAX_DOWNLOAD_BINARY_BATCH_SIZE = 10;
     private static final int MAX_UPLOAD_BINARY_BATCH_SIZE = 10;
@@ -582,6 +585,17 @@ public abstract class Files extends ApiBase {
         return elementListCompleted.stream()
                 .map(this::parseFileMetadata)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns an upload queue.
+     *
+     * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
+     * @return The upload queue.
+     */
+    public UploadQueue<FileMetadata> metadataUploadQueue() {
+        return UploadQueue.of(this)
+                .withQueueSize(100);
     }
 
     /**
