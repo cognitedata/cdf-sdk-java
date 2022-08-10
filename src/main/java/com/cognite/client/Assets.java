@@ -587,16 +587,6 @@ public abstract class Assets extends ApiBase implements ListSource<Asset>, Upser
     }
 
     /**
-     * Returns an upload queue.
-     *
-     * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
-     * @return The upload queue.
-     */
-    public UploadQueue<Asset> uploadQueue() {
-        return UploadQueue.of(this);
-    }
-
-    /**
      * Checks a collection of assets for integrity. The assets must represent a single, complete
      * hierarchy.
      *
