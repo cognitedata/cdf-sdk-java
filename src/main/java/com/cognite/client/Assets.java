@@ -53,7 +53,7 @@ import java.util.stream.Stream;
  * It provides methods for reading and writing {@link com.cognite.client.dto.Asset}.
  */
 @AutoValue
-public abstract class Assets extends ApiBase implements ListSource<Asset>, UpsertTarget<Asset> {
+public abstract class Assets extends ApiBase implements ListSource<Asset> {
     private final static int MAX_UPSERT_BATCH_SIZE = 200;
 
     private static Builder builder() {
