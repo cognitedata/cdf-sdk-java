@@ -452,6 +452,8 @@ public abstract class DataPoints extends ApiBase implements UpsertTarget<Timeser
      * Returns an upload queue.
      *
      * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
+     *
+     * This queue is tuned with a capacity of 500k elements for high-throughput data points.
      * @return The upload queue.
      */
     public UploadQueue<TimeseriesPointPost> uploadQueue() {
