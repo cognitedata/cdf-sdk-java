@@ -95,6 +95,8 @@ public abstract class Timeseries extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/listTimeSeries">API Reference - Filter time series</a>
+     *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#timeseries()
@@ -123,6 +125,8 @@ public abstract class Timeseries extends ApiBase {
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/listTimeSeries">API Reference - Filter time series</a>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -159,6 +163,8 @@ public abstract class Timeseries extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/listTimeSeries">API Reference - Filter time series</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#timeseries()
@@ -182,6 +188,8 @@ public abstract class Timeseries extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/getTimeSeriesByIds">API Reference - Retrieve time series</a>
+     *
      * @see #retrieve(List)
      * @see CogniteClient
      * @see CogniteClient#timeseries()
@@ -203,6 +211,8 @@ public abstract class Timeseries extends ApiBase {
      *      List<TimeseriesMetadata> retrievedTimeseries = client.timeseries().retrieve(1,2);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/getTimeSeriesByIds">API Reference - Retrieve time series</a>
      *
      * @see #retrieve(List)
      * @see CogniteClient
@@ -226,6 +236,8 @@ public abstract class Timeseries extends ApiBase {
      *      List<TimeseriesMetadata> retrievedTimeseries = client.timeseries().retrieve(items);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/getTimeSeriesByIds">API Reference - Retrieve time series</a>
      *
      * @see #retrieveJson(ResourceType, java.util.Collection)
      * @see CogniteClient
@@ -257,6 +269,8 @@ public abstract class Timeseries extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/aggregateTimeSeries">API Reference - Aggregate time series</a>
+     *
      * @see #aggregate(ResourceType,Request)
      * @see CogniteClient
      * @see CogniteClient#timeseries()
@@ -285,6 +299,9 @@ public abstract class Timeseries extends ApiBase {
      *      client.timeseries().upsert(timeseries);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/postTimeSeries">API Reference - Create time series</a><br/>
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/alterTimeSeries">API Reference - Update time series</a>
      *
      * @see UpsertItems#upsertViaCreateAndUpdate(List)
      * @see CogniteClient
@@ -327,6 +344,8 @@ public abstract class Timeseries extends ApiBase {
      *     List<Item> deletedItemsResults = client.timeseries().delete(timeseries);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Time-series/operation/deleteTimeSeries">API Reference - Delete time series</a>
      *
      * @see DeleteItems#deleteItems(List)
      * @see CogniteClient

@@ -37,6 +37,8 @@ public abstract class Login extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Login/operation/status">API Reference - Verify login status</a>
+     *
      * @see ConnectorServiceV1#readLoginStatusByApiKey(String)
      * @see CogniteClient
      * @see CogniteClient#login()

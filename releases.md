@@ -62,7 +62,7 @@ Changes are grouped as follows:
 - Improve javadoc `TransformationNotifications`
 - Improve javadoc `Transformation`
 - Improve javadoc `TransformationSchedules`
-
+- 
 
 ## [1.16.0] 2022-05-30
 

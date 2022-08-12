@@ -50,6 +50,8 @@ public abstract class TransformationNotifications extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Notifications/operation/getTransformationNotifications">API Reference - List notification subscriptions</a>
+     *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#transformation()
@@ -80,6 +82,8 @@ public abstract class TransformationNotifications extends ApiBase {
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Notifications/operation/getTransformationNotifications">API Reference - List notification subscriptions</a>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -118,6 +122,8 @@ public abstract class TransformationNotifications extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Notifications/operation/getTransformationNotifications">API Reference - List notification subscriptions</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#transformation()
@@ -146,6 +152,8 @@ public abstract class TransformationNotifications extends ApiBase {
      *                           .subscribe(subscribes);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Notifications/operation/createTransformationNotifications">API Reference - Subscribe for notifications</a>
      *
      * @see CogniteClient
      * @see CogniteClient#transformation()
@@ -193,6 +201,8 @@ public abstract class TransformationNotifications extends ApiBase {
      *                            .delete(items);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Notifications/operation/deleteTransformationNotifications">API Reference - Delete notification subscriptions by notification ID</a>
      *
      * @see DeleteItems#deleteItems(List)
      * @see CogniteClient

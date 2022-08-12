@@ -100,6 +100,8 @@ public abstract class SequenceRows extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/getSequenceData">API Reference - Retrieve rows</a>
+     *
      * @see #retrieve(List)
      * @see CogniteClient
      * @see CogniteClient#sequences()
@@ -139,6 +141,8 @@ public abstract class SequenceRows extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/getSequenceData">API Reference - Retrieve rows</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#sequences()
      * @see Sequences#rows()
@@ -177,6 +181,8 @@ public abstract class SequenceRows extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/getSequenceData">API Reference - Retrieve rows</a>
+     *
      * @see #retrieveComplete(List)
      * @see CogniteClient
      * @see CogniteClient#sequences()
@@ -206,6 +212,8 @@ public abstract class SequenceRows extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/getSequenceData">API Reference - Retrieve rows</a>
+     *
      * @see #retrieveComplete(List)
      * @see CogniteClient
      * @see CogniteClient#sequences()
@@ -234,6 +242,8 @@ public abstract class SequenceRows extends ApiBase {
      *      List<SequenceBody> retrievedSequenceBody = client.sequences().rows().retrieve(items);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/getSequenceData">API Reference - Retrieve rows</a>
      *
      * @see #retrieve(List)
      * @see CogniteClient
@@ -285,6 +295,8 @@ public abstract class SequenceRows extends ApiBase {
      *      client.sequences().rows().upsert(sequenceBodies);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/postSequenceData">API Reference - Insert rows</a><br/>
      *
      * @see CogniteClient
      * @see CogniteClient#sequences()
@@ -474,6 +486,8 @@ public abstract class SequenceRows extends ApiBase {
      *     List<SequenceBody> deletedItemsResults = client.sequences().rows().delete(sequenceRows);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/deleteSequenceData">API Reference - Delete rows</a>
      *
      * @see CogniteClient
      * @see CogniteClient#sequences()

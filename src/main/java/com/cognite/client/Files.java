@@ -101,6 +101,8 @@ public abstract class Files extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Files/operation/advancedListFiles">API Reference - Filter files</a>
+     *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#files()
@@ -131,6 +133,8 @@ public abstract class Files extends ApiBase {
      *              .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Files/operation/advancedListFiles">API Reference - Filter files</a>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -167,6 +171,8 @@ public abstract class Files extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Files/operation/advancedListFiles">API Reference - Filter files</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#files()
@@ -190,6 +196,8 @@ public abstract class Files extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Files/operation/getFileByInternalId">API Reference - Retrieve file by id</a>
+     *
      * @see #retrieve(List)
      * @see CogniteClient
      * @see CogniteClient#files()
@@ -211,6 +219,8 @@ public abstract class Files extends ApiBase {
      *      List<FileMetadata> retrievedFiles = client.files().retrieve(1,2);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Files/operation/getFileByInternalId">API Reference - Retrieve file by id</a>
      *
      * @see #retrieve(List)
      * @see CogniteClient
@@ -234,6 +244,8 @@ public abstract class Files extends ApiBase {
      *      List<Event> retrievedFiles = client.files().retrieve(items);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Files/operation/getFileByInternalId">API Reference - Retrieve file by id</a>
      *
      * @see #retrieveJson(ResourceType,Collection)
      * @see CogniteClient
@@ -265,6 +277,8 @@ public abstract class Files extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Files/operation/aggregateFiles">API Reference - Aggregate files</a>
+     *
      * @see #aggregate(ResourceType,Request)
      * @see CogniteClient
      * @see CogniteClient#files()
@@ -293,6 +307,9 @@ public abstract class Files extends ApiBase {
      *      client.files().upsert(fileMetadataList);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Files/operation/initFileUpload">API Reference - Upload file</a><br/>
+     * <a href="https://docs.cognite.com/api/v1/#tag/Files/operation/updateFiles">API Reference - Update files</a>
      *
      * @see CogniteClient
      * @see CogniteClient#files()
@@ -614,6 +631,8 @@ public abstract class Files extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Files/operation/initFileUpload">API Reference - Upload file</a>
+     *
      * @see #upload(List, boolean)
      * @see CogniteClient
      * @see CogniteClient#files()
@@ -660,6 +679,8 @@ public abstract class Files extends ApiBase {
      *                  client.files().upload(files, true);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Files/operation/initFileUpload">API Reference - Upload file</a>
      *
      * @see CogniteClient
      * @see CogniteClient#files()
@@ -766,6 +787,8 @@ public abstract class Files extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Files/operation/downloadLinks">API Reference - Download files</a>
+     *
      * @see #downloadFileBinaries(List,URI,boolean)
      * @see CogniteClient
      * @see CogniteClient#files()
@@ -868,6 +891,8 @@ public abstract class Files extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Files/operation/downloadLinks">API Reference - Download files</a>
+     *
      * @see #download(List,URI,boolean)
      * @see CogniteClient
      * @see CogniteClient#files()
@@ -926,6 +951,8 @@ public abstract class Files extends ApiBase {
      *                           .downloadFileBinaries(fileItems, URI.create("s3://testbucket"), true);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Files/operation/downloadLinks">API Reference - Download files</a>
      *
      * @see CogniteClient
      * @see CogniteClient#files()
@@ -1103,6 +1130,8 @@ public abstract class Files extends ApiBase {
      *     List<Item> deletedItemsResults = client.files().delete(files);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Files/operation/deleteFiles">API Reference - Delete files</a>
      *
      * @see DeleteItems#deleteItems(List)
      * @see CogniteClient

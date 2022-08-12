@@ -73,6 +73,8 @@ public abstract class RawDatabases extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Raw/operation/getDBs">API Reference - List databases</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#raw()
      * @see Raw#databases()
@@ -99,6 +101,8 @@ public abstract class RawDatabases extends ApiBase {
      *           .create(List.of("databaseName"));
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Raw/operation/createDBs">API Reference - Create databases</a>
      *
      * @see CogniteClient
      * @see CogniteClient#raw()
@@ -154,6 +158,8 @@ public abstract class RawDatabases extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Raw/operation/deleteDBs">API Reference - Delete databases</a>
+     *
      * @see #delete(List, boolean)
      * @see CogniteClient
      * @see CogniteClient#raw()
@@ -179,6 +185,8 @@ public abstract class RawDatabases extends ApiBase {
      *               .delete(List.of("databaseName"), true);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Raw/operation/deleteDBs">API Reference - Delete databases</a>
      *
      * @see CogniteClient
      * @see CogniteClient#raw()

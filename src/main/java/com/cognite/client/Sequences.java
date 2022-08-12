@@ -93,6 +93,8 @@ public abstract class Sequences extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/advancedListSequences">API Reference - Filter sequences</a><br/>
+     *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#sequences()
@@ -122,6 +124,8 @@ public abstract class Sequences extends ApiBase {
      *              .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/advancedListSequences">API Reference - Filter sequences</a><br/>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -158,6 +162,8 @@ public abstract class Sequences extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/advancedListSequences">API Reference - Filter sequences</a><br/>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#sequences()
@@ -181,6 +187,8 @@ public abstract class Sequences extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/getSequenceById">API Reference - Retrieve sequences</a><br/>
+     *
      * @see #retrieve(List)
      * @see CogniteClient
      * @see CogniteClient#sequences()
@@ -202,6 +210,8 @@ public abstract class Sequences extends ApiBase {
      *      List<SequenceMetadata> retrievedSequences = client.sequences().retrieve(1,2);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/getSequenceById">API Reference - Retrieve sequences</a><br/>
      *
      * @see #retrieve(List)
      * @see CogniteClient
@@ -225,6 +235,8 @@ public abstract class Sequences extends ApiBase {
      *      List<SequenceMetadata> retrievedSequences = client.sequences().retrieve(items);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/getSequenceById">API Reference - Retrieve sequences</a><br/>
      *
      * @see #retrieveJson(ResourceType,Collection)
      * @see CogniteClient
@@ -256,6 +268,8 @@ public abstract class Sequences extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/aggregateSequences">API Reference - Aggregate sequences</a><br/>
+     *
      * @see #aggregate(ResourceType,Request)
      * @see CogniteClient
      * @see CogniteClient#sequences()
@@ -282,6 +296,9 @@ public abstract class Sequences extends ApiBase {
      *      client.sequences().upsert(sequences);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/createSequence">API Reference - Create sequences</a><br/>
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/updateSequences">API Reference - Update sequences</a>
      *
      * @see UpsertItems#upsertViaGetCreateAndUpdateDiff(List)
      * @see CogniteClient
@@ -327,6 +344,8 @@ public abstract class Sequences extends ApiBase {
      *     List<Item> deletedItemsResults = client.sequences().delete(sequences);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Sequences/operation/deleteSequences">API Reference - Delete sequences</a>
      *
      * @see DeleteItems#deleteItems(List)
      * @see CogniteClient

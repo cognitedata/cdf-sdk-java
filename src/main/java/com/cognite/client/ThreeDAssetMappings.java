@@ -67,6 +67,8 @@ public abstract class ThreeDAssetMappings extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Asset-Mapping/operation/get3DMappings">API Reference - List 3D asset mappings</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#threeD()
      * @see ThreeD#models()
@@ -103,6 +105,8 @@ public abstract class ThreeDAssetMappings extends ApiBase {
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Asset-Mapping/operation/get3DMappings">API Reference - List 3D asset mappings</a>
      *
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -145,6 +149,8 @@ public abstract class ThreeDAssetMappings extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Asset-Mapping/operation/get3DMappings">API Reference - List 3D asset mappings</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#threeD()
      * @see ThreeD#models()
@@ -180,6 +186,8 @@ public abstract class ThreeDAssetMappings extends ApiBase {
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Asset-Mapping/operation/filter3DAssetMappings">API Reference - Filter 3D asset mappings</a>
      *
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -218,6 +226,8 @@ public abstract class ThreeDAssetMappings extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Asset-Mapping/operation/filter3DAssetMappings">API Reference - Filter 3D asset mappings</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#threeD()
      * @see ThreeD#models()
@@ -253,6 +263,8 @@ public abstract class ThreeDAssetMappings extends ApiBase {
      *             .create(modelId,revisionId, items);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Asset-Mapping/operation/create3DMappings">API Reference - Create 3D asset mappings</a>
      *
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -305,6 +317,8 @@ public abstract class ThreeDAssetMappings extends ApiBase {
      *             .delete(modelId,revisionId, deleteItemsInput);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Asset-Mapping/operation/delete3DMappings">API Reference - Delete 3D asset mappings</a>
      *
      * @see CogniteClient
      * @see CogniteClient#threeD()

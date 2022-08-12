@@ -85,6 +85,8 @@ public abstract class ThreeDModels extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Models/operation/get3DModels">API Reference - List 3D models</a>
+     *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -115,6 +117,8 @@ public abstract class ThreeDModels extends ApiBase {
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Models/operation/get3DModels">API Reference - List 3D models</a>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -153,6 +157,8 @@ public abstract class ThreeDModels extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Models/operation/get3DModels">API Reference - List 3D models</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -177,6 +183,8 @@ public abstract class ThreeDModels extends ApiBase {
      *      List<ThreeDModel> retrievedThreeDModel = client.threeD().models().retrieve(items);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Models/operation/get3DModel">API Reference - Retrieve a 3D model</a>
      *
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -235,6 +243,9 @@ public abstract class ThreeDModels extends ApiBase {
      *      client.threeD().models().upsert(threeDModels);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Models/operation/create3DModels">API Reference - Create 3D models</a><br/>
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Models/operation/update3DModels">API Reference - Update 3D models</a>
      *
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -315,6 +326,8 @@ public abstract class ThreeDModels extends ApiBase {
      *     List<Item> deletedItemsResults = client.threeD().models().delete(threeDModels);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Models/operation/delete3DModels">API Reference - Delete 3D models</a>
      *
      * @see DeleteItems#deleteItems(List)
      * @see CogniteClient

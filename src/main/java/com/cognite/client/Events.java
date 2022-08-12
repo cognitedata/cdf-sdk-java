@@ -75,6 +75,8 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Events/operation/advancedListEvents">API Reference - Filter all events</a>
+     *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#events()
@@ -104,6 +106,8 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      *              .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Events/operation/advancedListEvents">API Reference - Filter all events</a>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -139,6 +143,8 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      *              .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Events/operation/advancedListEvents">API Reference - Filter all events</a>
      *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
@@ -198,6 +204,8 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Events/operation/byIdsEvents">API Reference - Retrieve events</a>
+     *
      * @see #retrieve(List)
      * @see CogniteClient
      * @see CogniteClient#events()
@@ -219,6 +227,8 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      *      List<Event> retrievedEvent = client.events().retrieve(1,2);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Events/operation/byIdsEvents">API Reference - Retrieve events</a>
      *
      * @see #retrieve(List)
      * @see CogniteClient
@@ -242,6 +252,8 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      *      List<Event> retrievedEvents = client.events().retrieve(items);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Events/operation/byIdsEvents">API Reference - Retrieve events</a>
      *
      * @see #retrieveJson(ResourceType,Collection)
      * @see CogniteClient
@@ -273,6 +285,8 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Events/operation/aggregateEvents">API Reference - Aggregate events</a>
+     *
      * @see #aggregate(ResourceType,Request)
      * @see CogniteClient
      * @see CogniteClient#events()
@@ -301,6 +315,9 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      *      client.events().upsert(events);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Events/operation/createEvents">API Reference - Create events</a><br/>
+     * <a href="https://docs.cognite.com/api/v1/#tag/Events/operation/updateEvents">API Reference - Update events</a>
      *
      * @see UpsertItems#upsertViaCreateAndUpdate(List)
      * @see CogniteClient
@@ -342,6 +359,8 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
      *     List<Item> deletedItemsResults = client.events().delete(events);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Events/operation/deleteEvents">API Reference - Delete multiple events</a>
      *
      * @see DeleteItems#deleteItems(List)
      * @see CogniteClient

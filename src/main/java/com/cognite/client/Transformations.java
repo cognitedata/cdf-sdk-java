@@ -111,6 +111,8 @@ public abstract class Transformations extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformations/operation/filterTransformations">API Reference - Filter transformations</a>
+     *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#transformation()
@@ -139,6 +141,8 @@ public abstract class Transformations extends ApiBase {
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformations/operation/filterTransformations">API Reference - Filter transformations</a>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -175,6 +179,8 @@ public abstract class Transformations extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformations/operation/filterTransformations">API Reference - Filter transformations</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#transformation()
@@ -204,6 +210,9 @@ public abstract class Transformations extends ApiBase {
      *      client.transformation().upsert(transformations);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformations/operation/createTransformations">API Reference - Create transformations</a><br/>
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformations/operation/updateTransformations">API Reference - Update transformations</a>
      *
      * @see UpsertItems#upsertViaCreateAndUpdate(List)
      * @see CogniteClient
@@ -244,6 +253,8 @@ public abstract class Transformations extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformations/operation/getTransformationsByIds">API Reference - Retrieve transformations</a>
+     *
      * @see #retrieveJson(ResourceType,Collection)
      * @see CogniteClient
      * @see CogniteClient#transformation()
@@ -272,6 +283,8 @@ public abstract class Transformations extends ApiBase {
      *     List<Item> deletedItemsResults = client.transformation().delete(deleteItemsInput);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformations/operation/deleteTransformations">API Reference - Delete transformations</a>
      *
      * @see DeleteItems#deleteItems(List)
      * @see CogniteClient

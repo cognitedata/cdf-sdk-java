@@ -70,6 +70,8 @@ public abstract class TransformationJobs extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformations/operation/runTransformation">API Reference - Run a transformation</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#transformation()
      * @see #run(Request)
@@ -94,6 +96,8 @@ public abstract class TransformationJobs extends ApiBase {
      *              client.transformation().jobs().run(externalID);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformations/operation/runTransformation">API Reference - Run a transformation</a>
      *
      * @see CogniteClient
      * @see CogniteClient#transformation()
@@ -120,6 +124,8 @@ public abstract class TransformationJobs extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformations/operation/postApiV1ProjectsProjectTransformationsCancel">API Reference - Cancel a transformation</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#transformation()
      * @see #cancel(Request)
@@ -144,6 +150,8 @@ public abstract class TransformationJobs extends ApiBase {
      *              client.transformation().jobs().cancel(externalID);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformations/operation/postApiV1ProjectsProjectTransformationsCancel">API Reference - Cancel a transformation</a>
      *
      * @see CogniteClient
      * @see CogniteClient#transformation()
@@ -171,6 +179,8 @@ public abstract class TransformationJobs extends ApiBase {
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Jobs/operation/getTransformationJobs">API Reference - List jobs</a>
      *
      * @see #list(Request)
      * @see CogniteClient
@@ -202,6 +212,8 @@ public abstract class TransformationJobs extends ApiBase {
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Jobs/operation/getTransformationJobs">API Reference - List jobs</a>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -240,6 +252,8 @@ public abstract class TransformationJobs extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Jobs/operation/getTransformationJobs">API Reference - List jobs</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#transformation()
@@ -265,6 +279,8 @@ public abstract class TransformationJobs extends ApiBase {
      *      List<Transformation.Job> retrievedTransformationJobs = client.transformation().jobs().retrieve(items);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Jobs/operation/getTransformationJobsByIds">API Reference - Retrieve jobs by ids</a>
      *
      * @see #retrieveJson(ResourceType, Collection)
      * @see CogniteClient

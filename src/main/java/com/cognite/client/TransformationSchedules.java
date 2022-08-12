@@ -54,6 +54,8 @@ public abstract class TransformationSchedules extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Schedules/operation/getTransformationSchedules">API Reference - List all schedules</a>
+     *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#transformation()
@@ -84,6 +86,8 @@ public abstract class TransformationSchedules extends ApiBase {
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Schedules/operation/getTransformationSchedules">API Reference - List all schedules</a>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -122,6 +126,8 @@ public abstract class TransformationSchedules extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Schedules/operation/getTransformationSchedules">API Reference - List all schedules</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#transformation()
@@ -155,6 +161,8 @@ public abstract class TransformationSchedules extends ApiBase {
      *                                 .schedule(schedules);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Schedules/operation/createTransformationSchedules">API Reference - Schedule transformations</a>
      *
      * @see UpsertItems#upsertViaCreateAndUpdate(List)
      * @see CogniteClient
@@ -197,6 +205,8 @@ public abstract class TransformationSchedules extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Schedules/operation/deleteTransformationSchedules">API Reference - Unschedule transformations</a>
+     *
      * @see DeleteItems#deleteItems(List)
      * @see CogniteClient
      * @see CogniteClient#transformation()
@@ -229,6 +239,8 @@ public abstract class TransformationSchedules extends ApiBase {
      *                                        .retrieve(items);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Schedules/operation/getTransformationSchedulesByIds">API Reference - Retrieve schedules</a>
      *
      * @see #retrieveJson(ResourceType, Collection)
      * @see CogniteClient

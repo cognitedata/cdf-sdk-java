@@ -92,6 +92,8 @@ public abstract class ExtractionPipelines extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Extraction-Pipelines/operation/filterExtPipes">API Reference - Filter extraction pipelines</a>
+     *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#extractionPipelines()
@@ -117,6 +119,8 @@ public abstract class ExtractionPipelines extends ApiBase {
      *              .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Extraction-Pipelines/operation/filterExtPipes">API Reference - Filter extraction pipelines</a>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -160,6 +164,8 @@ public abstract class ExtractionPipelines extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Extraction-Pipelines/operation/filterExtPipes">API Reference - Filter extraction pipelines</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#extractionPipelines()
@@ -184,6 +190,8 @@ public abstract class ExtractionPipelines extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Extraction-Pipelines/operation/showExtPipe">API Reference - Retrieve an extraction pipeline by its ID.</a>
+     *
      * @see #retrieve(List)
      * @see CogniteClient
      * @see CogniteClient#extractionPipelines()
@@ -206,6 +214,8 @@ public abstract class ExtractionPipelines extends ApiBase {
      *                          client.extractionPipelines().retrieve(1,2);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Extraction-Pipelines/operation/showExtPipe">API Reference - Retrieve an extraction pipeline by its ID.</a>
      *
      * @see #retrieve(List)
      * @see CogniteClient
@@ -230,6 +240,8 @@ public abstract class ExtractionPipelines extends ApiBase {
      *                          client.extractionPipelines().retrieve(items);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Extraction-Pipelines/operation/showExtPipe">API Reference - Retrieve an extraction pipeline by its ID.</a>
      *
      * @see #retrieveJson(ResourceType, Collection)
      * @see CogniteClient
@@ -260,6 +272,9 @@ public abstract class ExtractionPipelines extends ApiBase {
      *      client.extractionPipelines().upsert(pipelines);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Extraction-Pipelines/operation/createExtPipes">API Reference - Create extraction pipelines</a><br/>
+     * <a href="https://docs.cognite.com/api/v1/#tag/Extraction-Pipelines/operation/updateExtPipes">API Reference - Update extraction pipelines</a>
      *
      * @see UpsertItems#upsertViaCreateAndUpdate(List)
      * @see CogniteClient
@@ -301,6 +316,8 @@ public abstract class ExtractionPipelines extends ApiBase {
      *     List<Item> deletedItemsResults = client.extractionPipelines().delete(pipelines);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Extraction-Pipelines/operation/deleteExtPipes">API Reference - Delete extraction pipelines</a>
      *
      * @see DeleteItems#deleteItems(List)
      * @see CogniteClient

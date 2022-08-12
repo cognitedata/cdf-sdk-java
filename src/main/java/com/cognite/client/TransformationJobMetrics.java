@@ -46,6 +46,8 @@ public abstract class TransformationJobMetrics extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Transformation-Jobs/operation/getTransformationJobsMetrics">API Reference - List job metrics by job id</a>
+     *
      * @see #buildPartitionsList(int)
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient

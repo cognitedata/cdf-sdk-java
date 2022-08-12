@@ -71,6 +71,8 @@ public abstract class SecurityCategories extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Security-categories/operation/getSecurityCategories">API Reference - List security categories</a>
+     *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#securityCategories()
@@ -99,6 +101,8 @@ public abstract class SecurityCategories extends ApiBase {
      *              .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Security-categories/operation/getSecurityCategories">API Reference - List security categories</a>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -135,6 +139,8 @@ public abstract class SecurityCategories extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Security-categories/operation/getSecurityCategories">API Reference - List security categories</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#securityCategories()
@@ -158,6 +164,8 @@ public abstract class SecurityCategories extends ApiBase {
      *      client.securityCategories().create(securityCategories);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Security-categories/operation/createSecurityCategories">API Reference - Create security categories</a>
      *
      * @see UpsertItems#create(List)
      * @see CogniteClient
@@ -192,6 +200,8 @@ public abstract class SecurityCategories extends ApiBase {
      *     List<SecurityCategory> deletedItemsResults = client.securityCategories().delete(securityCategories);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Security-categories/operation/deleteSecurityCategories">API Reference - Delete security categories</a>
      *
      * @see CogniteClient
      * @see CogniteClient#securityCategories()

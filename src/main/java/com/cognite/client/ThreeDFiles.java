@@ -59,6 +59,8 @@ public abstract class ThreeDFiles extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Files/operation/get3DFile">API Reference - Retrieve a 3D file</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#threeD()
      * @see ThreeD#files()
@@ -94,6 +96,8 @@ public abstract class ThreeDFiles extends ApiBase {
      *          .download("threeDFileId", downloadPath, true);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Files/operation/get3DFile">API Reference - Retrieve a 3D file</a>
      *
      * @see CogniteClient
      * @see CogniteClient#threeD()
@@ -157,6 +161,8 @@ public abstract class ThreeDFiles extends ApiBase {
      *          .downloadFileBinary("threeDFileId", downloadPath, true);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/3D-Files/operation/get3DFile">API Reference - Retrieve a 3D file</a>
      *
      * @see CogniteClient
      * @see CogniteClient#threeD()

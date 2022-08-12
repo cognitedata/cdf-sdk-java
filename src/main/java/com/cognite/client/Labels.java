@@ -74,6 +74,8 @@ public abstract class Labels extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Labels/operation/listLabels">API Reference - Filter labels</a>
+     *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#labels()
@@ -102,6 +104,8 @@ public abstract class Labels extends ApiBase {
      *              .forEachRemaining(listResults::addAll);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Labels/operation/listLabels">API Reference - Filter labels</a>
      *
      * @see #list(Request,String...)
      * @see CogniteClient
@@ -138,6 +142,8 @@ public abstract class Labels extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Labels/operation/listLabels">API Reference - Filter labels</a>
+     *
      * @see #listJson(ResourceType,Request,String...)
      * @see CogniteClient
      * @see CogniteClient#labels()
@@ -164,6 +170,9 @@ public abstract class Labels extends ApiBase {
      *      client.labels().upsert(labels);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Labels/operation/createLabelDefinitions">API Reference - Create label definitions.</a><br/>
+     * <a href="https://docs.cognite.com/api/v1/#tag/Labels/operation/deleteLabels">API Reference - Delete label definitions.</a>
      *
      * @see UpsertItems#upsertViaCreateAndDelete(List)
      * @see CogniteClient
@@ -200,6 +209,8 @@ public abstract class Labels extends ApiBase {
      *     List<Item> deletedItemsResults = client.labels().delete(labels);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Labels/operation/deleteLabels">API Reference - Delete label definitions.</a>
      *
      * @see DeleteItems#deleteItems(List)
      * @see CogniteClient

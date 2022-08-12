@@ -91,6 +91,8 @@ public abstract class EntityMatching extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Entity-matching/operation/entityMatchingPredict">API Reference - Predict matches</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#contextualization()
      * @see Contextualization#entityMatching()
@@ -128,6 +130,8 @@ public abstract class EntityMatching extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Entity-matching/operation/entityMatchingPredict">API Reference - Predict matches</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#contextualization()
      * @see Contextualization#entityMatching()
@@ -164,6 +168,8 @@ public abstract class EntityMatching extends ApiBase {
      *                     .predict(modelExternalId, sources, targets, 1, 0d);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Entity-matching/operation/entityMatchingPredict">API Reference - Predict matches</a>
      *
      * @see CogniteClient
      * @see CogniteClient#contextualization()
@@ -237,6 +243,8 @@ public abstract class EntityMatching extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Entity-matching/operation/entityMatchingPredict">API Reference - Predict matches</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#contextualization()
      * @see Contextualization#entityMatching()
@@ -274,6 +282,8 @@ public abstract class EntityMatching extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Entity-matching/operation/entityMatchingPredict">API Reference - Predict matches</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#contextualization()
      * @see Contextualization#entityMatching()
@@ -310,6 +320,8 @@ public abstract class EntityMatching extends ApiBase {
      *                     .predict(modelId, sources, targets, 1, 0d);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Entity-matching/operation/entityMatchingPredict">API Reference - Predict matches</a>
      *
      * @see CogniteClient
      * @see CogniteClient#contextualization()
@@ -379,6 +391,8 @@ public abstract class EntityMatching extends ApiBase {
      *                     .predict(requestBatches);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Entity-matching/operation/entityMatchingPredict">API Reference - Predict matches</a>
      *
      * @see CogniteClient
      * @see CogniteClient#contextualization()
@@ -464,6 +478,8 @@ public abstract class EntityMatching extends ApiBase {
      * }
      * </pre>
      *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Entity-matching/operation/entityMatchingCreate">API Reference - Create entity matcher model</a>
+     *
      * @see CogniteClient
      * @see CogniteClient#contextualization()
      * @see Contextualization#entityMatching()
@@ -537,6 +553,8 @@ public abstract class EntityMatching extends ApiBase {
      *                                              .delete(entityMatchingModels);
      * }
      * </pre>
+     *
+     * <a href="https://docs.cognite.com/api/v1/#tag/Entity-matching/operation/entityMatchingDelete">API Reference - Delete entity matcher model</a>
      *
      * @see CogniteClient
      * @see CogniteClient#contextualization()
