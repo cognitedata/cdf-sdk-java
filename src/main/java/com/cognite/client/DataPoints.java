@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
  * It provides methods for reading {@link TimeseriesPoint} and writing {@link TimeseriesPointPost}.
  */
 @AutoValue
-public abstract class DataPoints extends ApiBase implements UpsertTarget<TimeseriesPointPost> {
+public abstract class DataPoints extends ApiBase implements UpsertTarget<TimeseriesPointPost, TimeseriesPointPost> {
     // Write request batch limits
     private static final int DATA_POINTS_WRITE_MAX_ITEMS_PER_REQUEST = 10_000;
     private static final int DATA_POINTS_WRITE_MAX_POINTS_PER_REQUEST = 100_000;
@@ -456,7 +456,7 @@ public abstract class DataPoints extends ApiBase implements UpsertTarget<Timeser
      * This queue is tuned with a capacity of 500k elements for high-throughput data points.
      * @return The upload queue.
      */
-    public UploadQueue<TimeseriesPointPost> uploadQueue() {
+    public UploadQueue<TimeseriesPointPost, TimeseriesPointPost> uploadQueue() {
         return UploadQueue.of(this)
                 .withQueueSize(500_000);
     }

@@ -51,7 +51,7 @@ import static com.cognite.client.servicesV1.ConnectorConstants.*;
  * It provides methods for reading and writing {@link SequenceBody}.
  */
 @AutoValue
-public abstract class SequenceRows extends ApiBase implements UpsertTarget<SequenceBody> {
+public abstract class SequenceRows extends ApiBase implements UpsertTarget<SequenceBody, SequenceBody> {
     private static final SequenceMetadata DEFAULT_SEQ_METADATA = SequenceMetadata.newBuilder()
             .setExternalId("SDK_default")
             .setName("SDK_default")
@@ -466,7 +466,7 @@ public abstract class SequenceRows extends ApiBase implements UpsertTarget<Seque
      * {@link SequenceBody} objects are quite large, so the queue is tuned with a default size of 10.
      * @return The upload queue.
      */
-    public UploadQueue<SequenceBody> uploadQueue() {
+    public UploadQueue<SequenceBody, SequenceBody> uploadQueue() {
         return UploadQueue.of(this)
                 .withQueueSize(10);
     }

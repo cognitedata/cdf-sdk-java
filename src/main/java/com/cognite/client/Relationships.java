@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  * It provides methods for reading and writing {@link Relationship}.
  */
 @AutoValue
-public abstract class Relationships extends ApiBase implements UpsertTarget<Relationship> {
+public abstract class Relationships extends ApiBase implements UpsertTarget<Relationship, Relationship> {
 
     private static Builder builder() {
         return new AutoValue_Relationships.Builder();
@@ -311,7 +311,7 @@ public abstract class Relationships extends ApiBase implements UpsertTarget<Rela
      * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
      * @return The upload queue.
      */
-    public UploadQueue<Relationship> uploadQueue() {
+    public UploadQueue<Relationship, Relationship> uploadQueue() {
         return UploadQueue.of(this);
     }
 

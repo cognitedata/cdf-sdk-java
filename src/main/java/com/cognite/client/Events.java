@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  * It provides methods for reading and writing {@link Event}.
  */
 @AutoValue
-public abstract class Events extends ApiBase implements ListSource<Event>, UpsertTarget<Event> {
+public abstract class Events extends ApiBase implements ListSource<Event>, UpsertTarget<Event, Event> {
 
     private static Builder builder() {
         return new AutoValue_Events.Builder();
@@ -337,7 +337,7 @@ public abstract class Events extends ApiBase implements ListSource<Event>, Upser
      * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
      * @return The upload queue.
      */
-    public UploadQueue<Event> uploadQueue() {
+    public UploadQueue<Event, Event> uploadQueue() {
         return UploadQueue.of(this);
     }
 

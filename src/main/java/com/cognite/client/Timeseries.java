@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
  * It provides methods for reading and writing {@link TimeseriesMetadata}.
  */
 @AutoValue
-public abstract class Timeseries extends ApiBase implements UpsertTarget<TimeseriesMetadata> {
+public abstract class Timeseries extends ApiBase implements UpsertTarget<TimeseriesMetadata, TimeseriesMetadata> {
 
     private static Builder builder() {
         return new AutoValue_Timeseries.Builder();
@@ -321,7 +321,7 @@ public abstract class Timeseries extends ApiBase implements UpsertTarget<Timeser
      * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
      * @return The upload queue.
      */
-    public UploadQueue<TimeseriesMetadata> uploadQueue() {
+    public UploadQueue<TimeseriesMetadata, TimeseriesMetadata> uploadQueue() {
         return UploadQueue.of(this);
     }
 

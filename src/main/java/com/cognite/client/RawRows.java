@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
  * It provides methods for interacting with the Raw row endpoint.
  */
 @AutoValue
-public abstract class RawRows extends ApiBase implements UpsertTarget<RawRow> {
+public abstract class RawRows extends ApiBase implements UpsertTarget<RawRow, RawRow> {
     private static final int MAX_WRITE_BATCH_SIZE = 1000;
     private static final int MAX_DELETE_BATCH_SIZE = 1000;
 
@@ -679,7 +679,7 @@ public abstract class RawRows extends ApiBase implements UpsertTarget<RawRow> {
      * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
      * @return The upload queue.
      */
-    public UploadQueue<RawRow> uploadQueue() {
+    public UploadQueue<RawRow, RawRow> uploadQueue() {
         return UploadQueue.of(this);
     }
 

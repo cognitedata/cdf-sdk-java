@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
  * It provides for reading an writing {@link SequenceMetadata}
  */
 @AutoValue
-public abstract class Sequences extends ApiBase implements UpsertTarget<SequenceMetadata> {
+public abstract class Sequences extends ApiBase implements UpsertTarget<SequenceMetadata, SequenceMetadata> {
 
     private static Builder builder() {
         return new AutoValue_Sequences.Builder();
@@ -323,7 +323,7 @@ public abstract class Sequences extends ApiBase implements UpsertTarget<Sequence
      * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
      * @return The upload queue.
      */
-    public UploadQueue<SequenceMetadata> uploadQueue() {
+    public UploadQueue<SequenceMetadata, SequenceMetadata> uploadQueue() {
         return UploadQueue.of(this);
     }
 

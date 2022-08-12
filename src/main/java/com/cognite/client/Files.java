@@ -57,7 +57,8 @@ import java.util.stream.Collectors;
  * It provides methods for reading and writing {@link Event}.
  */
 @AutoValue
-public abstract class Files extends ApiBase implements UpsertTarget<FileMetadata> {
+public abstract class Files extends ApiBase
+        implements UpsertTarget<FileMetadata, FileMetadata>, UploadTarget<FileContainer, FileMetadata> {
     private static final int MAX_WRITE_REQUEST_BATCH_SIZE = 100;
     private static final int MAX_DOWNLOAD_BINARY_BATCH_SIZE = 10;
     private static final int MAX_UPLOAD_BINARY_BATCH_SIZE = 10;
@@ -588,14 +589,30 @@ public abstract class Files extends ApiBase implements UpsertTarget<FileMetadata
     }
 
     /**
-     * Returns an upload queue.
+     * Returns an upload queue for {@link FileMetadata}.
+     *
+     * You can use this queue to push file header/metadata updates to files that have already been uploaded to CDF.
      *
      * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
      * @return The upload queue.
      */
-    public UploadQueue<FileMetadata> metadataUploadQueue() {
-        return UploadQueue.of(this)
+    public UploadQueue<FileMetadata, FileMetadata> metadataUploadQueue() {
+        return UploadQueue.of((UpsertTarget) this)
                 .withQueueSize(100);
+    }
+
+    /**
+     * Returns an upload queue for {@link FileContainer}.
+     *
+     * You can use this queue to push file binaries and headers ({@link FileContainer}) to CDF.
+     *
+     * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
+     * @return The upload queue.
+     */
+    public UploadQueue<FileContainer, FileMetadata> fileContainerUploadQueue() {
+        return UploadQueue.of((UploadTarget) this)
+                .withQueueSize(10)
+                .withMaxUploadInterval(Duration.ofSeconds(30));
     }
 
     /**

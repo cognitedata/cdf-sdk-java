@@ -35,7 +35,7 @@ import java.util.function.Consumer;
  * @param <T> The CDF resource type to upload.
  */
 @AutoValue
-public abstract class UploadQueue<T> {
+public abstract class UploadQueue<T, R> {
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     protected static final Duration MIN_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(1L);
@@ -48,34 +48,51 @@ public abstract class UploadQueue<T> {
     // Internal state
     protected ScheduledFuture<?> recurringTask;
 
-    private static <T> Builder<T> builder() {
-        return new AutoValue_UploadQueue.Builder<T>()
+    private static <T, R> Builder<T, R> builder() {
+        return new AutoValue_UploadQueue.Builder<T, R>()
                 .setScheduledExecutor(new ScheduledThreadPoolExecutor(1))
                 .setQueue(new ArrayBlockingQueue<T>(DEFAULT_QUEUE_SIZE))
                 .setMaxUploadInterval(DEFAULT_MAX_UPLOAD_INTERVAL)
                 ;
     }
 
-    public static <T> UploadQueue<T> of(UpsertTarget<T> target) {
-        return UploadQueue.<T>builder()
+    /**
+     * Builds an upload queue for batching and pushing items to the provided {@link UpsertTarget}.
+     *
+     * @param target The sink to push data items to.
+     * @return The {@code UploadQueue}
+     * @param <T> The input type of elements put on the queue.
+     * @param <R> The output type of elements posted to Cognite Data Fusion. I.e. the objects sent to the
+     * {@code postUploadFunction}.
+     */
+    public static <T, R> UploadQueue<T, R> of(UpsertTarget<T, R> target) {
+        return UploadQueue.<T, R>builder()
                 .setUpsertTarget(target)
                 .build();
     }
 
-    abstract Builder<T> toBuilder();
+    public static <T, R> UploadQueue<T, R> of(UploadTarget<T, R> target) {
+        return UploadQueue.<T, R>builder()
+                .setUploadTarget(target)
+                .build();
+    }
+
+    abstract Builder<T, R> toBuilder();
 
     abstract ScheduledThreadPoolExecutor getScheduledExecutor();
     abstract Duration getMaxUploadInterval();
     abstract BlockingQueue<T> getQueue();
     @Nullable
-    abstract Consumer<List<T>> getPostUploadFunction();
+    abstract Consumer<List<R>> getPostUploadFunction();
 
     @Nullable
     abstract Consumer<Exception> getExceptionHandlerFunction();
 
 
     @Nullable
-    abstract UpsertTarget<T> getUpsertTarget();
+    abstract UpsertTarget<T, R> getUpsertTarget();
+    @Nullable
+    abstract UploadTarget<T, R> getUploadTarget();
 
     /**
      * Add a post upload function.
@@ -90,7 +107,7 @@ public abstract class UploadQueue<T> {
      * @param function The function to call for each batch of {@code T}.
      * @return The {@link UploadQueue} with the function configured.
      */
-    public UploadQueue<T> withPostUploadFunction(Consumer<List<T>> function) {
+    public UploadQueue<T, R> withPostUploadFunction(Consumer<List<R>> function) {
         return toBuilder().setPostUploadFunction(function).build();
     }
 
@@ -105,7 +122,7 @@ public abstract class UploadQueue<T> {
      * @param function The function to call in case of an exception during upload.
      * @return The {@link UploadQueue} with the function configured.
      */
-    public UploadQueue<T> withExceptionHandlerFunction(Consumer<Exception> function) {
+    public UploadQueue<T, R> withExceptionHandlerFunction(Consumer<Exception> function) {
         return toBuilder().setExceptionHandlerFunction(function).build();
     }
 
@@ -122,7 +139,7 @@ public abstract class UploadQueue<T> {
      * @param queueSize The target queue size.
      * @return The {@link UploadQueue} with the consumer configured.
      */
-    public UploadQueue<T> withQueueSize(int queueSize) {
+    public UploadQueue<T, R> withQueueSize(int queueSize) {
         Preconditions.checkArgument(queueSize > 0, "The queue size must be a positive integer.");
         return toBuilder().setQueue(new ArrayBlockingQueue<>(queueSize)).build();
     }
@@ -137,7 +154,7 @@ public abstract class UploadQueue<T> {
      * @param interval The target max upload interval.
      * @return The {@link UploadQueue} with the upload interval configured.
      */
-    public UploadQueue<T> withMaxUploadInterval(Duration interval) {
+    public UploadQueue<T, R> withMaxUploadInterval(Duration interval) {
         Preconditions.checkArgument(interval.compareTo(MAX_MAX_UPLOAD_INTERVAL) <= 0
                 && interval.compareTo(MIN_MAX_UPLOAD_INTERVAL) >= 0,
                 String.format("The max upload interval can be minimum %s and maxmimum %s",
@@ -243,7 +260,7 @@ public abstract class UploadQueue<T> {
     private void asyncUploadWrapper() {
         String logPrefix = "asyncUploadWrapper() - ";
         try {
-            List<T> uploadResults = this.upload();
+            List<R> uploadResults = this.upload();
             if (null != getPostUploadFunction()) {
                 getPostUploadFunction().accept(uploadResults);
             }
@@ -267,7 +284,7 @@ public abstract class UploadQueue<T> {
      * @return The uploaded objects.
      * @throws Exception in case of an error during the upload.
      */
-    public List<T> upload() throws Exception {
+    public List<R> upload() throws Exception {
         String logPrefix = "upload() - ";
         if (getQueue().isEmpty()) {
             LOG.info(logPrefix + "The queue is empty--will skip upload.");
@@ -275,7 +292,7 @@ public abstract class UploadQueue<T> {
         }
 
         List<T> uploadBatch = new ArrayList<>(getQueue().size());
-        List<T> uploadResults = new ArrayList<>(getQueue().size());
+        List<R> uploadResults = new ArrayList<>(getQueue().size());
 
         // drain the queue
         getQueue().drainTo(uploadBatch);
@@ -283,6 +300,8 @@ public abstract class UploadQueue<T> {
         // upload to the configured target
         if (null != getUpsertTarget()) {
             uploadResults = getUpsertTarget().upsert(uploadBatch);
+        } else if (null != getUploadTarget()) {
+            uploadResults = getUploadTarget().upload(uploadBatch);
         } else {
             LOG.warn(logPrefix + "No valid upload target configured for this queue.");
         }
@@ -292,18 +311,19 @@ public abstract class UploadQueue<T> {
     }
 
     @AutoValue.Builder
-    abstract static class Builder<T> {
-        abstract Builder<T> setScheduledExecutor(ScheduledThreadPoolExecutor value);
-        abstract Builder<T> setQueue(BlockingQueue<T> value);
-        abstract Builder<T> setMaxUploadInterval(Duration value);
-        abstract Builder<T> setPostUploadFunction(Consumer<List<T>> value);
-        abstract Builder<T> setExceptionHandlerFunction(Consumer<Exception> value);
-        abstract Builder<T> setUpsertTarget(UpsertTarget<T> value);
+    abstract static class Builder<T, R> {
+        abstract Builder<T, R> setScheduledExecutor(ScheduledThreadPoolExecutor value);
+        abstract Builder<T, R> setQueue(BlockingQueue<T> value);
+        abstract Builder<T, R> setMaxUploadInterval(Duration value);
+        abstract Builder<T, R> setPostUploadFunction(Consumer<List<R>> value);
+        abstract Builder<T, R> setExceptionHandlerFunction(Consumer<Exception> value);
+        abstract Builder<T, R> setUpsertTarget(UpsertTarget<T, R> value);
+        abstract Builder<T, R> setUploadTarget(UploadTarget<T, R> value);
 
         abstract ScheduledThreadPoolExecutor getScheduledExecutor();
 
-        abstract UploadQueue<T> autoBuild();
-        final UploadQueue<T> build() {
+        abstract UploadQueue<T, R> autoBuild();
+        final UploadQueue<T, R> build() {
             // Make sure the thread pool puts its threads to sleep to allow the JVM to exit without manual
             // clean-up from the client.
             ScheduledThreadPoolExecutor executor = getScheduledExecutor();

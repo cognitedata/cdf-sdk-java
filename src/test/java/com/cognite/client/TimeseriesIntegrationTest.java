@@ -430,7 +430,7 @@ class TimeseriesIntegrationTest {
                 upsertTimeseriesList.stream()
                         .map(header -> header.getExternalId())
                         .collect(Collectors.toList()));
-        UploadQueue<TimeseriesPointPost> uploadQueue = client.timeseries().dataPoints().uploadQueue()
+        UploadQueue<TimeseriesPointPost, TimeseriesPointPost> uploadQueue = client.timeseries().dataPoints().uploadQueue()
                 .withMaxUploadInterval(Duration.ofSeconds(1))
                 .withPostUploadFunction(events -> LOG.info("postUploadFunction triggered. Uploaded {} items", events.size()))
                 .withExceptionHandlerFunction(exception -> LOG.warn("exceptionHandlerFunction triggered: {}", exception.getMessage()));

@@ -7,7 +7,7 @@ import java.util.List;
  *
  * @param <T> The type of the resource to upsert to CDF.
  */
-public interface UpsertTarget<T> {
+public interface UpsertTarget<T, R> {
 
     /**
      * Upserts a collection of objects to Cognite Data Fusion.
@@ -21,5 +21,5 @@ public interface UpsertTarget<T> {
      * @param objects the objects to upsert to CDF
      * @return a list of the confirmed upserted objects.
      */
-    public List<T> upsert(List<T> objects) throws Exception;
+    public List<R> upsert(List<T> objects) throws Exception;
 }
