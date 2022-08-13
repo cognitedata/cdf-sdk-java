@@ -35,7 +35,7 @@ import java.util.function.Consumer;
  * @param <T> The CDF resource type to upload.
  */
 @AutoValue
-public abstract class UploadQueue<T, R> {
+public abstract class UploadQueue<T, R> implements AutoCloseable {
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     protected static final Duration MIN_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(1L);
@@ -71,6 +71,15 @@ public abstract class UploadQueue<T, R> {
                 .build();
     }
 
+    /**
+     * Builds an upload queue for batching and pushing items to the provided {@link UploadTarget}.
+     *
+     * @param target The sink to push data items to.
+     * @return The {@code UploadQueue}
+     * @param <T> The input type of elements put on the queue.
+     * @param <R> The output type of elements posted to Cognite Data Fusion. I.e. the objects sent to the
+     * {@code postUploadFunction}.
+     */
     public static <T, R> UploadQueue<T, R> of(UploadTarget<T, R> target) {
         return UploadQueue.<T, R>builder()
                 .setUploadTarget(target)
@@ -220,6 +229,16 @@ public abstract class UploadQueue<T, R> {
                 1, getMaxUploadInterval().getSeconds(), TimeUnit.SECONDS);
         LOG.info(logPrefix + "Starting background upload thread to upload at interval {}", getMaxUploadInterval());
         return true;
+    }
+
+    /**
+     * A mirror of the {@link #stop()} method to support auto close in a {@code try-with-resources} statement.
+     *
+     * @see #stop()
+     */
+    @Override
+    public void close() {
+        this.stop();
     }
 
     /**
