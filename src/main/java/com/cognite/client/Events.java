@@ -20,6 +20,8 @@ import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.Event;
 import com.cognite.client.dto.Item;
 import com.cognite.client.config.ResourceType;
+import com.cognite.client.queue.UploadQueue;
+import com.cognite.client.queue.UpsertTarget;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.EventParser;
 import com.cognite.client.config.UpsertMode;
@@ -39,7 +41,7 @@ import java.util.stream.Collectors;
  * It provides methods for reading and writing {@link Event}.
  */
 @AutoValue
-public abstract class Events extends ApiBase implements ListSource<Event> {
+public abstract class Events extends ApiBase implements ListSource<Event>, UpsertTarget<Event, Event> {
 
     private static Builder builder() {
         return new AutoValue_Events.Builder();
@@ -344,6 +346,16 @@ public abstract class Events extends ApiBase implements ListSource<Event> {
         return upsertItems.upsertViaCreateAndUpdate(events).stream()
                 .map(this::parseEvent)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns an upload queue.
+     *
+     * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
+     * @return The upload queue.
+     */
+    public UploadQueue<Event, Event> uploadQueue() {
+        return UploadQueue.of(this);
     }
 
     /**

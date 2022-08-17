@@ -21,6 +21,8 @@ import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.TimeseriesMetadata;
 import com.cognite.client.dto.Item;
+import com.cognite.client.queue.UploadQueue;
+import com.cognite.client.queue.UpsertTarget;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.TimeseriesParser;
 import com.cognite.client.util.Items;
@@ -40,7 +42,7 @@ import java.util.stream.Collectors;
  * It provides methods for reading and writing {@link TimeseriesMetadata}.
  */
 @AutoValue
-public abstract class Timeseries extends ApiBase {
+public abstract class Timeseries extends ApiBase implements UpsertTarget<TimeseriesMetadata, TimeseriesMetadata> {
 
     private static Builder builder() {
         return new AutoValue_Timeseries.Builder();
@@ -328,6 +330,16 @@ public abstract class Timeseries extends ApiBase {
         return upsertItems.upsertViaCreateAndUpdate(timeseries).stream()
                 .map(this::parseTimeseries)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns an upload queue.
+     *
+     * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
+     * @return The upload queue.
+     */
+    public UploadQueue<TimeseriesMetadata, TimeseriesMetadata> uploadQueue() {
+        return UploadQueue.of(this);
     }
 
     /**

@@ -3,6 +3,7 @@ package com.cognite.client;
 import com.cognite.client.config.ClientConfig;
 import com.cognite.client.config.TokenUrl;
 import com.cognite.client.dto.*;
+import com.cognite.client.queue.UploadQueue;
 import com.cognite.client.util.DataGenerator;
 import com.google.common.collect.ImmutableMap;
 import com.cognite.client.util.Items;
@@ -285,5 +286,122 @@ class FilesIntegrationTest {
             LOG.error(e.toString());
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void writeUploadQueueReadAndDeleteFiles() throws Exception {
+        Instant startInstant = Instant.now();
+        Path fileAOriginal = Paths.get("./src/test/resources/csv-data.txt");
+        Path fileATemp = Paths.get("./tempA.tmp");
+        Path fileB = Paths.get("./src/test/resources/csv-data-bom.txt");
+        byte[] fileByteA = new byte[0];
+        byte[] fileByteB = new byte[0];
+        try {
+            // copy into temp path
+            java.nio.file.Files.copy(fileAOriginal, fileATemp, StandardCopyOption.REPLACE_EXISTING);
+            //
+            fileByteA = java.nio.file.Files.readAllBytes(fileAOriginal);
+            fileByteB = java.nio.file.Files.readAllBytes(fileB);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        List<FileMetadata> fileMetadataList = DataGenerator.generateFileHeaderObjects(2);
+        List<FileContainer> fileContainerInput = new ArrayList<>();
+        for (FileMetadata fileMetadata : fileMetadataList) {
+            FileContainer fileContainer = FileContainer.newBuilder()
+                    .setFileMetadata(fileMetadata)
+                    .setFileBinary(FileBinary.newBuilder()
+                            .setBinary(ByteString.copyFrom(ThreadLocalRandom.current().nextBoolean() ? fileByteA : fileByteB)))
+                    .build();
+            fileContainerInput.add(fileContainer);
+        }
+
+        // add a file binary based on a URI
+        FileContainer fileContainer = FileContainer.newBuilder()
+                .setFileMetadata(DataGenerator.generateFileHeaderObjects(1).get(0))
+                .setFileBinary(FileBinary.newBuilder()
+//                        .setBinaryUri("s3://testbucket/README.md")
+                                .setBinaryUri(fileATemp.toUri().toString())
+                )
+                .build();
+        fileContainerInput.add(fileContainer);
+
+        String loggingPrefix = "UnitTest - writeReadAndDeleteFiles() -";
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                        TestConfigProvider.getClientId(),
+                        TestConfigProvider.getClientSecret(),
+                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                .withProject(TestConfigProvider.getProject())
+                .withBaseUrl(TestConfigProvider.getHost())
+                ;
+        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+
+        LOG.info(loggingPrefix + "Start uploading file binaries.");
+        UploadQueue<FileContainer, FileMetadata> fileBinaryUploadQueue = client.files().fileContainerUploadQueue()
+                .withMaxUploadInterval(Duration.ofSeconds(5))
+                .withPostUploadFunction(fileMetadata -> LOG.info("postUploadFunction triggered. Uploaded {} items", fileMetadata.size()))
+                .withExceptionHandlerFunction(exception -> LOG.warn("exceptionHandlerFunction triggered: {}", exception.getMessage()));
+
+        fileBinaryUploadQueue.start();
+        for (FileContainer container : fileContainerInput) {
+            fileBinaryUploadQueue.put(container);
+        }
+        fileBinaryUploadQueue.stop();
+        LOG.info(loggingPrefix + "Finished uploading file binaries. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        Thread.sleep(5000); // wait for eventual consistency
+
+        LOG.info(loggingPrefix + "Start reading file metadata.");
+        List<FileMetadata> listFilesResults = new ArrayList<>();
+        client.files()
+                .list(Request.create()
+                        .withFilterParameter("source", DataGenerator.sourceValue))
+                .forEachRemaining(files -> listFilesResults.addAll(files));
+        LOG.info(loggingPrefix + "Finished reading files. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        LOG.info(loggingPrefix + "Start editing file metadata.");
+        final List<FileMetadata> editFilesResult = new ArrayList<>();
+        List<FileMetadata> editFilesInput = listFilesResults.stream()
+                .map(fileMetadata -> fileMetadata.toBuilder()
+                        .putMetadata("addedField", "new field value")
+                        .build())
+                .collect(Collectors.toList());
+
+        UploadQueue<FileMetadata, FileMetadata> fileMetadataUploadQueue = client.files().metadataUploadQueue()
+                .withMaxUploadInterval(Duration.ofSeconds(1))
+                .withPostUploadFunction(files -> {
+                    LOG.info("postUploadFunction triggered. Uploaded {} items", files.size());
+                    editFilesResult.addAll(files);
+                })
+                .withExceptionHandlerFunction(exception -> LOG.warn("exceptionHandlerFunction triggered: {}", exception.getMessage()));
+        fileMetadataUploadQueue.start();
+        for (FileMetadata fileHeader : editFilesInput) {
+            fileMetadataUploadQueue.put(fileHeader);
+        }
+        fileMetadataUploadQueue.stop();
+        LOG.info(loggingPrefix + "Finished editing file metadata. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        LOG.info(loggingPrefix + "Start deleting files.");
+        List<Item> deleteItemsInput = editFilesResult.stream()
+                .map(fileMetadata -> Item.newBuilder().setId(fileMetadata.getId()).build())
+                .collect(Collectors.toList());
+        List<Item> deleteItemsResults = client.files().delete(deleteItemsInput);
+        LOG.info(loggingPrefix + "Finished deleting files. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+
+        assertEquals(fileContainerInput.size(), listFilesResults.size());
+        assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
     }
 }

@@ -33,10 +33,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 
 /**
  * This class will execute an okhttp3 request on a separate thread and publish the result via a
@@ -64,9 +61,15 @@ public abstract class RequestExecutor {
             IOException.class
     );
 
-    private static final int DEFAULT_CPU_MULTIPLIER = 8;
-    private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool(Runtime.getRuntime().availableProcessors()
-            * DEFAULT_CPU_MULTIPLIER);
+    private static final int NO_WORKERS = 8;
+    private static final ThreadPoolExecutor DEFAULT_POOL = new ThreadPoolExecutor(NO_WORKERS, NO_WORKERS,
+            1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+
+    //private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool();
+
+    static {
+        DEFAULT_POOL.allowCoreThreadTimeOut(true);
+    }
 
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
 

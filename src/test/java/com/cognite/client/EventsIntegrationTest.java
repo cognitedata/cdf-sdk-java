@@ -6,6 +6,7 @@ import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.Event;
 import com.cognite.client.dto.Item;
 import com.cognite.client.config.ClientConfig;
+import com.cognite.client.queue.UploadQueue;
 import com.cognite.client.stream.Publisher;
 import com.cognite.client.util.DataGenerator;
 import org.junit.jupiter.api.Tag;
@@ -361,7 +362,6 @@ class EventsIntegrationTest {
 
         try {
             LOG.info(loggingPrefix + "Setup the stream subscriber to the event resource type.");
-            //AtomicInteger receiveEventCount = new AtomicInteger(0);
             List<Event> eventList = new CopyOnWriteArrayList<>();
 
             Publisher<Event> publisher = client.events().stream()
@@ -374,7 +374,6 @@ class EventsIntegrationTest {
                     .withConsumer(batch -> {
                         LOG.info(loggingPrefix + "Received a batch of {} events.",
                                 batch.size());
-                        //receiveEventCount.addAndGet(batch.size());
                         eventList.addAll(batch);
                     });
 
@@ -427,5 +426,79 @@ class EventsIntegrationTest {
             LOG.error(e.toString());
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void writeUploadQueueAndDeleteEvents() throws Exception {
+        Instant startInstant = Instant.now();
+        String loggingPrefix = "UnitTest - writeUploadQueueAndDeleteEvents() -";
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+
+        CogniteClient client = CogniteClient.ofClientCredentials(
+                        TestConfigProvider.getClientId(),
+                        TestConfigProvider.getClientSecret(),
+                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
+                .withProject(TestConfigProvider.getProject())
+                .withBaseUrl(TestConfigProvider.getHost());
+        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        LOG.info(loggingPrefix + "Start uploading events.");
+        List<Event> upsertEventsList = DataGenerator.generateEvents(1123);
+        UploadQueue<Event, Event> uploadQueue = client.events().uploadQueue()
+                .withQueueSize(100)
+                .withMaxUploadInterval(Duration.ofSeconds(1))
+                .withPostUploadFunction(events -> LOG.info("postUploadFunction triggered. Uploaded {} items", events.size()))
+                .withExceptionHandlerFunction(exception -> LOG.warn("exceptionHandlerFunction triggered: {}", exception.getMessage()));
+        uploadQueue.start();
+        for (Event event : upsertEventsList) {
+            uploadQueue.put(event);
+        }
+        Thread.sleep(2456);
+        for (Event event : upsertEventsList.subList(1, 45)) {
+            uploadQueue.put(event);
+        }
+        Thread.sleep(345);
+        for (Event event : upsertEventsList.subList(56, 76)) {
+            uploadQueue.put(event);
+        }
+        Thread.sleep(1234);
+        for (Event event : upsertEventsList.subList(34, 58)) {
+            uploadQueue.put(event);
+        }
+        uploadQueue.stop();
+
+        LOG.info(loggingPrefix + "Finished upserting events. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        Thread.sleep(10000); // wait for eventual consistency
+
+        LOG.info(loggingPrefix + "Start reading events.");
+        List<Event> listEventsResults = new ArrayList<>();
+        client.events()
+                .list(Request.create()
+                        .withFilterParameter("source", DataGenerator.sourceValue))
+                .forEachRemaining(events -> listEventsResults.addAll(events));
+        LOG.info(loggingPrefix + "Finished reading events. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        LOG.info(loggingPrefix + "Start deleting events.");
+        List<Item> deleteItemsInput = listEventsResults.stream()
+                .map(event -> Item.newBuilder()
+                        .setExternalId(event.getExternalId())
+                        .build())
+                .collect(Collectors.toList());
+
+        List<Item> deleteItemsResults = client.events().delete(deleteItemsInput);
+        LOG.info(loggingPrefix + "Finished deleting events. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        assertEquals(upsertEventsList.size(), listEventsResults.size());
+        assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
     }
 }

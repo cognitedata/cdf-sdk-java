@@ -22,6 +22,8 @@ import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.DataSet;
 import com.cognite.client.dto.SequenceMetadata;
 import com.cognite.client.dto.Item;
+import com.cognite.client.queue.UploadQueue;
+import com.cognite.client.queue.UpsertTarget;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.SequenceParser;
 import com.cognite.client.util.Items;
@@ -38,7 +40,7 @@ import java.util.stream.Collectors;
  * It provides for reading an writing {@link SequenceMetadata}
  */
 @AutoValue
-public abstract class Sequences extends ApiBase {
+public abstract class Sequences extends ApiBase implements UpsertTarget<SequenceMetadata, SequenceMetadata> {
 
     private static Builder builder() {
         return new AutoValue_Sequences.Builder();
@@ -330,6 +332,16 @@ public abstract class Sequences extends ApiBase {
         return upsertItems.upsertViaGetCreateAndUpdateDiff(sequences).stream()
                 .map(this::parseSequences)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns an upload queue.
+     *
+     * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
+     * @return The upload queue.
+     */
+    public UploadQueue<SequenceMetadata, SequenceMetadata> uploadQueue() {
+        return UploadQueue.of(this);
     }
 
     /**

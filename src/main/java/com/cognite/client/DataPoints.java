@@ -17,6 +17,8 @@
 package com.cognite.client;
 
 import com.cognite.client.dto.*;
+import com.cognite.client.queue.UploadQueue;
+import com.cognite.client.queue.UpsertTarget;
 import com.cognite.client.servicesV1.ConnectorConstants;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ItemReader;
@@ -50,7 +52,7 @@ import java.util.stream.Collectors;
  * It provides methods for reading {@link TimeseriesPoint} and writing {@link TimeseriesPointPost}.
  */
 @AutoValue
-public abstract class DataPoints extends ApiBase {
+public abstract class DataPoints extends ApiBase implements UpsertTarget<TimeseriesPointPost, TimeseriesPointPost> {
     // Write request batch limits
     private static final int DATA_POINTS_WRITE_MAX_ITEMS_PER_REQUEST = 10_000;
     private static final int DATA_POINTS_WRITE_MAX_POINTS_PER_REQUEST = 100_000;
@@ -269,12 +271,14 @@ public abstract class DataPoints extends ApiBase {
     }
 
     /**
-     * Creates or update a set of {@link TimeseriesPoint} objects.
+     * Creates or update a set of {@link TimeseriesPointPost} objects.
      *
-     * If it is a new {@link TimeseriesPoint} object (based on the {@code id / externalId}, then it will be created.
+     * {@link TimeseriesPointPost} is the write-optimized version of a time series data point while {@link TimeseriesPoint}
+     * is the read-optimized version.
      *
-     * If an {@link TimeseriesPoint} object already exists in Cognite Data Fusion, it will be updated. The update
-     * behaviour is specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
+     * If it is a new {@link TimeseriesPointPost} object (based on the {@code id / externalId + timestamp}, then it will be created.
+     *
+     * If an {@link TimeseriesPoint} object already exists in Cognite Data Fusion, it will be updated.
      *
      * The algorithm runs as follows:
      * 1. Write all {@link TimeseriesPointPost} objects to the Cognite API.
@@ -284,8 +288,9 @@ public abstract class DataPoints extends ApiBase {
      * <h2>Example:</h2>
      * <pre>
      * {@code
-     *      List<TimeseriesMetadata> upsertTimeseriesList = List.of(TimeseriesMetadata.newBuilder()
-     *          .setExternalId("10")
+     * // Create the time series header.
+     * List<TimeseriesMetadata> upsertTimeseriesList = List.of(TimeseriesMetadata.newBuilder()
+     *          .setExternalId("my-external-id")
      *          .setName("test_ts")
      *          .setIsString(false)
      *          .setIsStep(false)
@@ -293,8 +298,23 @@ public abstract class DataPoints extends ApiBase {
      *          .setUnit("TestUnits")
      *          .putMetadata("type", "sdk-data-generator")
      *          .putMetadata("sdk-data-generator", "sdk-data-generator")
-     *      .build());
-     *      client.timeseries().upsert(upsertTimeseriesList);
+     *          .build());
+     *  client.timeseries().upsert(upsertTimeseriesList);
+     *
+     *  // Add time series data points.
+     *  List<TimeseriesPointPost> dataPoints = List.of(
+     *          TimeseriesPointPost.newBuilder()
+     *                         .setExternalId("my-external-id")
+     *                         .setTimestamp(Instant.parse("2020-12-03T10:15:30.00Z").toEpochMilli())
+     *                         .setValueNum(ThreadLocalRandom.current().nextLong(-10, 20))
+     *                         .build(),
+     *         TimeseriesPointPost.newBuilder()
+     *                         .setExternalId("my-external-id")
+     *                         .setTimestamp(Instant.parse("2020-12-03T10:16:30.00Z").toEpochMilli())
+     *                         .setValueNum(ThreadLocalRandom.current().nextLong(-10, 20))
+     *                         .build()
+     *  );
+     *  client.timeseries().dataPoints().upsert.upsert(dataPoints);
      * }
      * </pre>
      *
@@ -436,6 +456,19 @@ public abstract class DataPoints extends ApiBase {
                         .orElse(0.0d)));
 
         return dataPoints;
+    }
+
+    /**
+     * Returns an upload queue.
+     *
+     * The upload queue helps improve performance by batching items together before uploading them to Cognite Data Fusion.
+     *
+     * This queue is tuned with a capacity of 500k elements for high-throughput data points.
+     * @return The upload queue.
+     */
+    public UploadQueue<TimeseriesPointPost, TimeseriesPointPost> uploadQueue() {
+        return UploadQueue.of(this)
+                .withQueueSize(500_000);
     }
 
     /**
