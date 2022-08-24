@@ -1,6 +1,7 @@
 package com.cognite.client.statestore;
 
-import java.util.Map;
+import com.google.protobuf.Struct;
+
 import java.util.Optional;
 import java.util.OptionalLong;
 
@@ -56,12 +57,13 @@ public interface StateStore {
     public OptionalLong getLow(String key);
 
     /**
-     * Get the set of states for a single id.
+     * Get the set of states for a single id. This will give you both the low and high watermark (if set) as a
+     * {@link Struct}. The returned {@link Struct} is a read-only view of the state values.
      *
      * @param key The id to get the state of.
-     * @return All the states in a Map.
+     * @return All the states in a Struct.
      */
-    public Optional<Map<String, Object>> getState(String key);
+    public Optional<Struct> getState(String key);
 
     /**
      * Delete the state(s) for a given id.

@@ -40,7 +40,7 @@ public final class CharSplitter {
   @SuppressWarnings("unchecked")
   public Collection<String> split(Character delimiter, String string) {
     if (Strings.isNullOrEmpty(string)) {
-      return Collections.EMPTY_LIST;
+      return Collections.emptyList();
     }
 
     return Arrays.stream(string.split(wrap(delimiter) + regex, -1))
