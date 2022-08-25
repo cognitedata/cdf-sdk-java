@@ -80,6 +80,14 @@ public abstract class AbstractStateStore implements StateStore {
      * {@inheritDoc}
      */
     @Override
+    public void deleteState(String key) {
+        stateMap.remove(key);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public abstract void load() throws Exception;
 
     /**
@@ -87,4 +95,16 @@ public abstract class AbstractStateStore implements StateStore {
      */
     @Override
     public abstract void commit() throws Exception;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public abstract boolean start();
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public abstract boolean stop();
 }

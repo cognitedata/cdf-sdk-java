@@ -41,7 +41,7 @@ public abstract class LocalStateStore extends AbstractStateStore {
                 .build();
     }
 
-    abstract Builder toBuilder();
+    //abstract Builder toBuilder();
 
     abstract Path getPath();
 
