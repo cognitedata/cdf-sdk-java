@@ -17,7 +17,7 @@ import java.util.concurrent.*;
 public abstract class AbstractStateStore implements StateStore {
     protected static final String COLUMN_KEY_LOW = "low";
     protected static final String COLUMN_KEY_HIGH = "high";
-    protected static final Duration DEFAULT_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(10L);
+    protected static final Duration DEFAULT_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(30L);
 
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
     protected ConcurrentMap<String, Struct> stateMap = new ConcurrentHashMap<>();
@@ -32,7 +32,6 @@ public abstract class AbstractStateStore implements StateStore {
         executor.setKeepAliveTime(2000, TimeUnit.SECONDS);
         executor.allowCoreThreadTimeOut(true);
         executor.setRemoveOnCancelPolicy(true);
-        System.out.println("Initializer block.");
     }
 
     /**

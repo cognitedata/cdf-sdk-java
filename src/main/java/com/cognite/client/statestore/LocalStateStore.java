@@ -52,6 +52,7 @@ public abstract class LocalStateStore extends AbstractStateStore {
     public void load() throws Exception {
         if (Files.exists(getPath())) {
             stateMap = objectReader.readValue(getPath().toFile(), stateMap.getClass());
+            LOG.info("load() - Loaded {} state entries from {}.", stateMap.size(), getPath().toString());
         }
     }
 
@@ -61,6 +62,7 @@ public abstract class LocalStateStore extends AbstractStateStore {
     @Override
     public void commit() throws Exception {
         objectWriter.writeValue(getPath().toFile(), stateMap);
+        LOG.info("commit() - Committed {} state entries to {}.", stateMap.size(), getPath().toString());
     }
 
     @AutoValue.Builder
