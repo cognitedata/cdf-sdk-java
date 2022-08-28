@@ -69,7 +69,7 @@ public class ParseValue {
      * @return the long representation
      * @throws NumberFormatException
      */
-    public static double parseLong(Value rawValue) throws NumberFormatException {
+    public static long parseLong(Value rawValue) throws NumberFormatException {
         Preconditions.checkNotNull(rawValue, "rawValue cannot be null");
         long returnLong;
         if (rawValue.hasNumberValue()) {

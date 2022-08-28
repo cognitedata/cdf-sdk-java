@@ -1,5 +1,6 @@
 package com.cognite.client.statestore;
 
+import com.cognite.client.util.ParseValue;
 import com.google.protobuf.Struct;
 import com.google.protobuf.util.Values;
 import org.slf4j.Logger;
@@ -40,8 +41,10 @@ public abstract class AbstractStateStore implements StateStore {
     @Override
     public void setLow(String key, long value) {
         Struct existingEntry = stateMap.getOrDefault(key, Struct.getDefaultInstance());
+        // We add the long as a string to ensure full precision of the long. If we store it as a number
+        // we'll be limited to 53 bit precision due to json's double numeric type.
         Struct newEntry = existingEntry.toBuilder()
-                .putFields(COLUMN_KEY_LOW, Values.of(value))
+                .putFields(COLUMN_KEY_LOW, Values.of(String.valueOf(value)))
                 .build();
         stateMap.put(key, newEntry);
     }
@@ -54,7 +57,7 @@ public abstract class AbstractStateStore implements StateStore {
         if (null == stateMap.get(key) || null == stateMap.get(key).getFieldsMap().get(COLUMN_KEY_LOW)) {
             return OptionalLong.empty();
         } else {
-            return OptionalLong.of(Math.round(stateMap.get(key).getFieldsMap().get(COLUMN_KEY_LOW).getNumberValue()));
+            return OptionalLong.of(ParseValue.parseLong(stateMap.get(key).getFieldsMap().get(COLUMN_KEY_LOW)));
         }
     }
 
@@ -64,8 +67,10 @@ public abstract class AbstractStateStore implements StateStore {
     @Override
     public void setHigh(String key, long value){
         Struct existingEntry = stateMap.getOrDefault(key, Struct.getDefaultInstance());
+        // We add the long as a string to ensure full precision of the long. If we store it as a number
+        // we'll be limited to 53 bit precision due to json's double numeric type.
         Struct newEntry = existingEntry.toBuilder()
-                .putFields(COLUMN_KEY_HIGH, Values.of(value))
+                .putFields(COLUMN_KEY_HIGH, Values.of(String.valueOf(value)))
                 .build();
         stateMap.put(key, newEntry);
     }
@@ -78,7 +83,7 @@ public abstract class AbstractStateStore implements StateStore {
         if (null == stateMap.get(key) || null == stateMap.get(key).getFieldsMap().get(COLUMN_KEY_HIGH)) {
             return OptionalLong.empty();
         } else {
-            return OptionalLong.of(Math.round(stateMap.get(key).getFieldsMap().get(COLUMN_KEY_HIGH).getNumberValue()));
+            return OptionalLong.of(ParseValue.parseLong(stateMap.get(key).getFieldsMap().get(COLUMN_KEY_HIGH)));
         }
     }
 
