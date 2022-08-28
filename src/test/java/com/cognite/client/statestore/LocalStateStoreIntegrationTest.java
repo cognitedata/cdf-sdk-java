@@ -48,8 +48,8 @@ class LocalStateStoreIntegrationTest {
         Map<String, Map<String, Long>> statesMap = new HashMap<>();
         for (int i = 0; i < 100; i++) {
             String key = RandomStringUtils.randomAlphanumeric(10);
-            long lowWatermark = ThreadLocalRandom.current().nextLong(1, 1_661_608_010_960L); // current ms epoch
-            long highWatermark = ThreadLocalRandom.current().nextLong(1, 1_000_000_000_000_000L);
+            long lowWatermark = ThreadLocalRandom.current().nextLong(Long.MIN_VALUE, 1_661_608_010_960L); // current ms epoch
+            long highWatermark = ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
 
             statesMap.put(key, Map.of(lowWatermarkKey, lowWatermark, highWatermarkKey, highWatermark));
             stateStore.setLow(key, lowWatermark);
@@ -77,7 +77,18 @@ class LocalStateStoreIntegrationTest {
         LOG.info(loggingPrefix + "Finished creating local state store and states. Duration : {}",
                 Duration.between(startInstant, Instant.now()));
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+        LOG.info(loggingPrefix + "Load existing local states.");
+        stateStore.load();
+
+        List<Long> lowWatermarksLoadStateStore = statesMap.keySet().stream()
+                .map(key -> stateStore.getLow(key).getAsLong())
+                .collect(Collectors.toList());
+        List<Long> highWatermarksLoadStateStore = statesMap.keySet().stream()
+                .map(key -> stateStore.getHigh(key).getAsLong())
+                .collect(Collectors.toList());
+        assertAll("State store correctness",
+                () -> assertIterableEquals(lowWatermarks, lowWatermarksLoadStateStore, "low watermark not equal"),
+                () -> assertIterableEquals(highWatermarks, highWatermarksLoadStateStore, "high watermark not equal"));
 
     }
-
 }
