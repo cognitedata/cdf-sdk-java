@@ -103,7 +103,7 @@ public interface StateStore {
 
     /**
      * Start a background thread to perform a commit every {@code maxUploadInterval}. The default upload interval
-     * is every 30 seconds.
+     * is every 20 seconds.
      *
      * If the background thread has already been started (for example by an earlier call to {@code start()} then this
      * method does nothing and returns {@code false}.

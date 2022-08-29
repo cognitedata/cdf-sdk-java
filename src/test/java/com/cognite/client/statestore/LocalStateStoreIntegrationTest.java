@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -44,7 +45,8 @@ class LocalStateStoreIntegrationTest {
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
         LOG.info(loggingPrefix + "Creating local state store and states.");
         Path stateStorePath = Paths.get("./stateStore.json");
-        StateStore stateStore = LocalStateStore.of(stateStorePath);
+        StateStore stateStore = LocalStateStore.of(stateStorePath)
+                .withMaxCommitInterval(Duration.ofSeconds(2));
         Map<String, Map<String, Long>> statesMap = new HashMap<>();
         for (int i = 0; i < 100; i++) {
             String key = RandomStringUtils.randomAlphanumeric(10);
@@ -89,6 +91,53 @@ class LocalStateStoreIntegrationTest {
         assertAll("State store correctness",
                 () -> assertIterableEquals(lowWatermarks, lowWatermarksLoadStateStore, "low watermark not equal"),
                 () -> assertIterableEquals(highWatermarks, highWatermarksLoadStateStore, "high watermark not equal"));
+
+        LOG.info(loggingPrefix + "Finished loading existing local states. Duration : {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+        LOG.info(loggingPrefix + "Start simulating state processing.");
+        stateStore.start();
+        Instant start = Instant.now();
+        while (Duration.between(start, Instant.now()).compareTo(Duration.ofSeconds(5)) < 0) {
+            List<String> keyList = statesMap.keySet().stream()
+                    .filter(key -> ThreadLocalRandom.current().nextBoolean())
+                    .collect(Collectors.toList());
+            for (String key : keyList) {
+                long lowWatermark = ThreadLocalRandom.current().nextLong(Long.MIN_VALUE, 1_661_608_010_960L); // current ms epoch
+                long highWatermark = ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
+                stateStore.expandHigh(key, highWatermark);
+                stateStore.expandLow(key, lowWatermark);
+
+                long storedHigh = statesMap.get(key).get(highWatermarkKey);
+                long storedLow = statesMap.get(key).get(lowWatermarkKey);
+
+                long newHigh = highWatermark > storedHigh ? highWatermark : storedHigh;
+                long newLow = lowWatermark < storedLow ? lowWatermark : storedLow;
+                statesMap.put(key, Map.of(lowWatermarkKey, newLow, highWatermarkKey, newHigh));
+            }
+            Thread.sleep(876);
+        }
+        stateStore.stop();
+
+        List<Long> lowWatermarksUpdated = statesMap.keySet().stream()
+                .map(key -> statesMap.get(key).get(lowWatermarkKey))
+                .collect(Collectors.toList());
+        List<Long> highWatermarksUpdated = statesMap.keySet().stream()
+                .map(key -> statesMap.get(key).get(highWatermarkKey))
+                .collect(Collectors.toList());
+        List<Long> lowWatermarksProcessedStateStore = statesMap.keySet().stream()
+                .map(key -> stateStore.getLow(key).getAsLong())
+                .collect(Collectors.toList());
+        List<Long> highWatermarksProcessedStateStore = statesMap.keySet().stream()
+                .map(key -> stateStore.getHigh(key).getAsLong())
+                .collect(Collectors.toList());
+        assertAll("State store correctness",
+                () -> assertIterableEquals(lowWatermarksUpdated, lowWatermarksProcessedStateStore, "low watermark not equal"),
+                () -> assertIterableEquals(highWatermarksUpdated, highWatermarksProcessedStateStore, "high watermark not equal"));
+
+        Files.deleteIfExists(stateStorePath);
+        LOG.info(loggingPrefix + "Finished simulating state processing. Duration : {}",
+                Duration.between(startInstant, Instant.now()));
 
     }
 }
