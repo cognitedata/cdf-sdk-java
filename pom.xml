@@ -314,7 +314,7 @@
                             <artifactSet>
                                 <includes>
                                     <include>com.squareup.okhttp3:okhttp</include>
-                                    <include>com.squareup.okio:okio</include>
+                                    <include>com.squareup.okio:okio-jvm</include>
                                 </includes>
                             </artifactSet>
                             <relocations>

@@ -87,6 +87,13 @@ public class RelationshipParser {
         }
 
         // The rest of the attributes are optional.
+        if (root.path("labels").isArray()) {
+            for (JsonNode node : root.path("labels")) {
+                if (node.path("externalId").isTextual()) {
+                    relationshipBuilder.addLabels(node.path("externalId").textValue());
+                }
+            }
+        }
         if (root.path("startTime").isIntegralNumber()) {
             relationshipBuilder.setStartTime(root.get("startTime").longValue());
         }
