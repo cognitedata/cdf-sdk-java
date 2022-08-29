@@ -1,5 +1,6 @@
 package com.cognite.client.statestore;
 
+import com.cognite.client.CogniteClient;
 import com.cognite.client.servicesV1.util.JsonUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -10,10 +11,10 @@ import com.google.protobuf.Struct;
 import com.google.protobuf.util.JsonFormat;
 
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,49 +23,39 @@ import java.util.Map;
  * {@inheritDoc}
  */
 @AutoValue
-public abstract class LocalStateStore extends AbstractStateStore {
+public abstract class RawStateStore extends AbstractStateStore {
 
     private final ObjectReader objectReader = JsonUtil.getObjectMapperInstance().reader();
     private final ObjectWriter objectWriter = JsonUtil.getObjectMapperInstance().writer();
 
     private static Builder builder() {
-        return new AutoValue_LocalStateStore.Builder()
+        return new AutoValue_RawStateStore.Builder()
                 .setMaxCommitInterval(DEFAULT_MAX_COMMIT_INTERVAL);
     }
 
     /**
-     * Initialize a local state store based on the provided file name.
+     * Initialize a state store backed by a CDF Raw table.
      *
-     * @param fileName the name of the state file.
+     * @param client Cognite client to use for the accessing the Raw table
+     * @param dbName The name of the Raw data base hosting the backing table
+     * @param tableName The name of the Raw table
      * @return the state store.
-     * @throws InvalidPathException if the provided file name cannot be resolved to a valid file
      */
-    public static LocalStateStore of(String fileName) throws InvalidPathException {
-        Preconditions.checkArgument(!Files.isDirectory(Path.of(fileName)),
-                "You must specify a valid file name.");
-        return LocalStateStore.builder()
-                .setPath(Path.of(fileName))
-                .build();
-    }
-
-    /**
-     * Initialize a local state store based on the provided {@link Path}.
-     *
-     * @param fileName the {@code Path} of the state file.
-     * @return the state store.
-     * @throws InvalidPathException if the provided {@code Path} name cannot be resolved to a valid file.
-     */
-    public static LocalStateStore of(Path fileName) throws InvalidPathException {
-        Preconditions.checkArgument(!Files.isDirectory(fileName),
-                "You must specify a valid file name.");
-        return LocalStateStore.builder()
-                .setPath(fileName)
+    public static RawStateStore of(CogniteClient client,
+                                   String dbName,
+                                   String tableName) {
+        return RawStateStore.builder()
+                .setClient(client)
+                .setDbName(dbName)
+                .setTableName(tableName)
                 .build();
     }
 
     abstract Builder toBuilder();
 
-    abstract Path getPath();
+    abstract CogniteClient getClient();
+    abstract String getDbName();
+    abstract String getTableName();
 
     /**
      * Sets the max commit interval.
@@ -74,9 +65,9 @@ public abstract class LocalStateStore extends AbstractStateStore {
      *
      * The default max commit interval is 20 seconds.
      * @param interval The target max upload interval.
-     * @return The {@link LocalStateStore} with the upload interval configured.
+     * @return The {@link RawStateStore} with the upload interval configured.
      */
-    public LocalStateStore withMaxCommitInterval(Duration interval) {
+    public RawStateStore withMaxCommitInterval(Duration interval) {
         Preconditions.checkArgument(interval.compareTo(MAX_MAX_COMMIT_INTERVAL) <= 0
                         && interval.compareTo(MIN_MAX_COMMIT_INTERVAL) >= 0,
                 String.format("The max upload interval can be minimum %s and maxmimum %s",
@@ -90,6 +81,18 @@ public abstract class LocalStateStore extends AbstractStateStore {
     @Override
     public void load() throws Exception {
         String loggingPrefix = "load() - ";
+
+        // Check that the raw db and table exists
+        List<String> rawDbNames = new ArrayList<>();
+        getClient().raw().databases().list()
+                        .forEachRemaining(rawDbNames::addAll);
+        if (!rawDbNames.contains(getDbName())) {
+            LOG.warn(loggingPrefix + "Raw db {} does not exist. State is not loaded into memory.",
+                    getDbName());
+            return;
+        }
+
+        getClient().raw().rows().list(getDbName(), getTableName());
         if (Files.exists(getPath())) {
             stateMap.clear();
             JsonNode root = objectReader.readTree(Files.readAllBytes(getPath()));
@@ -120,9 +123,11 @@ public abstract class LocalStateStore extends AbstractStateStore {
 
     @AutoValue.Builder
     abstract static class Builder {
-        abstract Builder setPath(Path value);
+        abstract Builder setClient(CogniteClient value);
+        abstract Builder setDbName(String value);
+        abstract Builder setTableName(String value);
         abstract Builder setMaxCommitInterval(Duration value);
 
-        abstract LocalStateStore build();
+        abstract RawStateStore build();
     }
 }
