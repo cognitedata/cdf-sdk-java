@@ -18,7 +18,9 @@ import java.util.concurrent.*;
 public abstract class AbstractStateStore implements StateStore {
     protected static final String COLUMN_KEY_LOW = "low";
     protected static final String COLUMN_KEY_HIGH = "high";
-    protected static final Duration DEFAULT_MAX_UPLOAD_INTERVAL = Duration.ofSeconds(30L);
+    protected static final Duration MIN_MAX_COMMIT_INTERVAL = Duration.ofSeconds(1L);
+    protected static final Duration DEFAULT_MAX_COMMIT_INTERVAL = Duration.ofSeconds(20L);
+    protected static final Duration MAX_MAX_COMMIT_INTERVAL = Duration.ofMinutes(60L);
 
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
     protected ConcurrentMap<String, Struct> stateMap = new ConcurrentHashMap<>();
@@ -33,6 +35,49 @@ public abstract class AbstractStateStore implements StateStore {
         executor.setKeepAliveTime(2000, TimeUnit.SECONDS);
         executor.allowCoreThreadTimeOut(true);
         executor.setRemoveOnCancelPolicy(true);
+    }
+
+    abstract Duration getMaxCommitInterval();
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setHigh(String key, long value){
+        Struct existingEntry = stateMap.getOrDefault(key, Struct.getDefaultInstance());
+        // We add the long as a string to ensure full precision of the long. If we store it as a number
+        // we'll be limited to 53 bit precision due to json's double numeric type.
+        Struct newEntry = existingEntry.toBuilder()
+                .putFields(COLUMN_KEY_HIGH, Values.of(String.valueOf(value)))
+                .build();
+        stateMap.put(key, newEntry);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void expandHigh(String key, long value) {
+        getHigh(key).ifPresentOrElse(
+                currentValue -> {
+                    if (value > currentValue) {
+                        setHigh(key, value);
+                    }
+                },
+                () -> setHigh(key, value)
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public OptionalLong getHigh(String key) {
+        if (null == stateMap.get(key) || null == stateMap.get(key).getFieldsMap().get(COLUMN_KEY_HIGH)) {
+            return OptionalLong.empty();
+        } else {
+            return OptionalLong.of(ParseValue.parseLong(stateMap.get(key).getFieldsMap().get(COLUMN_KEY_HIGH)));
+        }
     }
 
     /**
@@ -53,6 +98,21 @@ public abstract class AbstractStateStore implements StateStore {
      * {@inheritDoc}
      */
     @Override
+    public void expandLow(String key, long value) {
+        getLow(key).ifPresentOrElse(
+                currentValue -> {
+                    if (value < currentValue) {
+                        setLow(key, value);
+                    }
+                },
+                () -> setLow(key, value)
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public OptionalLong getLow(String key) {
         if (null == stateMap.get(key) || null == stateMap.get(key).getFieldsMap().get(COLUMN_KEY_LOW)) {
             return OptionalLong.empty();
@@ -65,26 +125,19 @@ public abstract class AbstractStateStore implements StateStore {
      * {@inheritDoc}
      */
     @Override
-    public void setHigh(String key, long value){
-        Struct existingEntry = stateMap.getOrDefault(key, Struct.getDefaultInstance());
-        // We add the long as a string to ensure full precision of the long. If we store it as a number
-        // we'll be limited to 53 bit precision due to json's double numeric type.
-        Struct newEntry = existingEntry.toBuilder()
-                .putFields(COLUMN_KEY_HIGH, Values.of(String.valueOf(value)))
-                .build();
-        stateMap.put(key, newEntry);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public OptionalLong getHigh(String key) {
-        if (null == stateMap.get(key) || null == stateMap.get(key).getFieldsMap().get(COLUMN_KEY_HIGH)) {
-            return OptionalLong.empty();
-        } else {
-            return OptionalLong.of(ParseValue.parseLong(stateMap.get(key).getFieldsMap().get(COLUMN_KEY_HIGH)));
+    public boolean isOutsideState(String key, long value) {
+        if (!stateMap.containsKey(key)) {
+            // the key has not been seen before
+            return true;
         }
+        if (getHigh(key).isPresent() && getHigh(key).getAsLong() < value) {
+            return true;
+        }
+        if (getLow(key).isPresent() && getLow(key).getAsLong() > value) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -102,6 +155,8 @@ public abstract class AbstractStateStore implements StateStore {
     public void deleteState(String key) {
         stateMap.remove(key);
     }
+
+
 
     /**
      * {@inheritDoc}
@@ -141,8 +196,8 @@ public abstract class AbstractStateStore implements StateStore {
         }
 
         recurringTask = executor.scheduleAtFixedRate(this::asyncCommitWrapper,
-                1, DEFAULT_MAX_UPLOAD_INTERVAL.getSeconds(), TimeUnit.SECONDS);
-        LOG.info(logPrefix + "Starting background thread to commit state at interval {}", DEFAULT_MAX_UPLOAD_INTERVAL);
+                1, getMaxCommitInterval().getSeconds(), TimeUnit.SECONDS);
+        LOG.info(logPrefix + "Starting background thread to commit state at interval {}", getMaxCommitInterval());
         return true;
     }
 

@@ -12,6 +12,7 @@ import com.google.protobuf.util.JsonFormat;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -27,7 +28,8 @@ public abstract class LocalStateStore extends AbstractStateStore {
     private final ObjectWriter objectWriter = JsonUtil.getObjectMapperInstance().writer();
 
     private static Builder builder() {
-        return new AutoValue_LocalStateStore.Builder();
+        return new AutoValue_LocalStateStore.Builder()
+                .setMaxCommitInterval(DEFAULT_MAX_COMMIT_INTERVAL);
     }
 
     public static LocalStateStore of(String fileName) throws InvalidPathException {
@@ -46,9 +48,27 @@ public abstract class LocalStateStore extends AbstractStateStore {
                 .build();
     }
 
-    //abstract Builder toBuilder();
+    abstract Builder toBuilder();
 
     abstract Path getPath();
+
+    /**
+     * Sets the max commit interval.
+     *
+     * When you activate the commit background thread via {@link #start()}, the state will be committed to
+     * persistent storage at least every commit interval.
+     *
+     * The default max commit interval is 20 seconds.
+     * @param interval The target max upload interval.
+     * @return The {@link LocalStateStore} with the upload interval configured.
+     */
+    public LocalStateStore withMaxCommitInterval(Duration interval) {
+        Preconditions.checkArgument(interval.compareTo(MAX_MAX_COMMIT_INTERVAL) <= 0
+                        && interval.compareTo(MIN_MAX_COMMIT_INTERVAL) >= 0,
+                String.format("The max upload interval can be minimum %s and maxmimum %s",
+                        MIN_MAX_COMMIT_INTERVAL, MAX_MAX_COMMIT_INTERVAL));
+        return toBuilder().setMaxCommitInterval(interval).build();
+    }
 
     /**
      * {@inheritDoc}
@@ -87,6 +107,7 @@ public abstract class LocalStateStore extends AbstractStateStore {
     @AutoValue.Builder
     abstract static class Builder {
         abstract Builder setPath(Path value);
+        abstract Builder setMaxCommitInterval(Duration value);
 
         abstract LocalStateStore build();
     }

@@ -36,6 +36,15 @@ public interface StateStore {
     public void setHigh(String key, long value);
 
     /**
+     * Like {@link #setHigh(String, long)}, but only sets the state if the proposed state is higher than the current
+     * state.
+     *
+     * @param key key The id to store the state of.
+     * @param value The value of the high watermark.
+     */
+    public void expandHigh(String key, long value);
+
+    /**
      * Get the high watermark state for a single id.
      * @param key The id to get the state of.
      * @return The value of the high watermark. An empty optional in case the state does not exist.
@@ -50,11 +59,32 @@ public interface StateStore {
     public void setLow(String key, long value);
 
     /**
+     * Like {@link #setLow(String, long)}, but only sets the state if the proposed state is lower than the current
+     * state.
+     *
+     * @param key key The id to store the state of.
+     * @param value The value of the low watermark.
+     */
+    public void expandLow(String key, long value);
+
+    /**
      * Get the low watermark state for a single id.
      * @param key The id to get the state of.
      * @return The value of the low watermark. An empty optional in case the state does not exist.
      */
     public OptionalLong getLow(String key);
+
+    /**
+     * Check if a state is outside the stored state interval. I.e. if a state is higher than the current high watermark
+     * or lower than the current low watermark.
+     *
+     * The method can be used for determining if a data object should be processed or not.
+     *
+     * @param key the id to test.
+     * @param value the state to test.
+     * @return {@code True} if the state is outside of stored state or if the key is previously unseen.
+     */
+    public boolean isOutsideState(String key, long value);
 
     /**
      * Get the set of states for a single id. This will give you both the low and high watermark (if set) as a
