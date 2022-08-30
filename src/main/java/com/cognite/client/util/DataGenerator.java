@@ -154,7 +154,7 @@ public class DataGenerator {
                     .build());
         }
         for (int i = 0; i < noRows; i++) {
-            List<Value> values = new ArrayList<>(header.getColumnsCount());
+            List<com.google.protobuf.Value> values = new ArrayList<>(header.getColumnsCount());
             for (int j = 0; j < header.getColumnsCount(); j++) {
                 if (ThreadLocalRandom.current().nextInt(1000) <= 2) {
                     // Add a random null value for for 0.1% of the values.
@@ -369,7 +369,7 @@ public class DataGenerator {
                             .putFields("numeric", Values.of(ThreadLocalRandom.current().nextDouble(10000d)))
                             .putFields("bool", Values.of(ThreadLocalRandom.current().nextBoolean()))
                             .putFields("null_value", Values.ofNull())
-                            .putFields("array", Values.of(ListValue.newBuilder()
+                            .putFields("array", Values.of(com.google.protobuf.ListValue.newBuilder()
                                     .addValues(Values.of(ThreadLocalRandom.current().nextDouble(10000d)))
                                     .addValues(Values.of(ThreadLocalRandom.current().nextDouble(10000d)))
                                     .addValues(Values.of(ThreadLocalRandom.current().nextDouble(10000d)))

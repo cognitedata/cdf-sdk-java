@@ -13,8 +13,8 @@ public class ParseValue {
     /**
      * Tries to parse a {@code Value} to a {@code String} representation.
      *
-     * @param rawValue
-     * @return
+     * @param rawValue the value to parse
+     * @return the string representation
      */
     public static String parseString(Value rawValue) {
         Preconditions.checkNotNull(rawValue, "rawValue cannot be null");
@@ -37,12 +37,12 @@ public class ParseValue {
     }
 
     /**
-     * Tries to parse a {@code Value} to a {@code Double}. If the Value has a numeric or string representation the parsing
+     * Tries to parse a {@code Value} to a {@code double}. If the Value has a numeric or string representation the parsing
      * will succeed as long as the {@code Value} is within the Double range.
      *
      * Will throw a {@code NumberFormatException} if parsing is unsuccessful.
-     * @param rawValue
-     * @return
+     * @param rawValue the value to parse
+     * @return the double representation
      * @throws NumberFormatException
      */
     public static double parseDouble(Value rawValue) throws NumberFormatException {
@@ -61,6 +61,30 @@ public class ParseValue {
     }
 
     /**
+     * Tries to parse a {@code Value} to a {@code long}. If the Value has a numeric or string representation the parsing
+     * will succeed as long as the {@code Value} is within the long range.
+     *
+     * Will throw a {@code NumberFormatException} if parsing is unsuccessful.
+     * @param rawValue the value to parse
+     * @return the long representation
+     * @throws NumberFormatException
+     */
+    public static long parseLong(Value rawValue) throws NumberFormatException {
+        Preconditions.checkNotNull(rawValue, "rawValue cannot be null");
+        long returnLong;
+        if (rawValue.hasNumberValue()) {
+            returnLong = Math.round(rawValue.getNumberValue());
+        } else if (rawValue.hasStringValue()) {
+            returnLong = Long.parseLong(rawValue.getStringValue());
+        } else {
+            throw new NumberFormatException("Unable to parse to long. "
+                    + "Identified value type: " + rawValue.getKindCase()
+                    + " Property value: " + rawValue.toString());
+        }
+        return returnLong;
+    }
+
+    /**
      * Tries to parse a {@code Value} to a {@code Boolean}. If the Value has a boolean, numeric or string representation
      * the parsing will succeed.
      *
@@ -70,8 +94,8 @@ public class ParseValue {
      * A numeric {@code Value} representation returns true if the number equals "1".
      *
      * Will throw an {@code Exception} if parsing is unsuccessful.
-     * @param rawValue
-     * @return
+     * @param rawValue the value to parse
+     * @return the boolean representation
      * @throws Exception
      */
     public static boolean parseBoolean(Value rawValue) throws Exception {

@@ -23,7 +23,8 @@ Changes are grouped as follows:
 
 - Configurable timeout for async api jobs (i.e. `entity matching` and `engineering diagram parsing`). Use `ClientConfig.withAsyncApiJobTimeout(Duration timeout)` to specify a custom timeout. The default timeout is 20 mins.
 - Support for configuring a proxy server: [Documentation](../docs/clientSetup.md#proxy-server).
-- Added `UploadQueue` for various resource types to optimize data upload to Cognite Data Fusion.
+- `UploadQueue` for various resource types to optimize data upload to Cognite Data Fusion: [Documentation](../docs/utils.md).
+- `State store` for storing watermark progress states for data applications (extractors, data pipelines, etc.): [Documentation](../docs/utils.md).
 
 ### Changed
 

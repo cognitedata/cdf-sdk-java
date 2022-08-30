@@ -4,6 +4,7 @@ The SDK hosts a set of utilities designed to make it easier for you to author ex
 
 Utilities:
 - Upload Queue
+- State store
 
 ### Upload Queue
 
@@ -71,4 +72,80 @@ try (eventUploadQueue) {
 } catch (Exception e) {
     
 }
+```
+
+### State store
+
+The `StateStore` helps keep track of the extraction/processing state of a data application (extractor, data pipeline, contextualization pipeline, etc.). It is designed to keep track of watermarks to enable incremental load patterns.
+
+At the beginning of a run the data application typically calls the `load()` method, which loads the states from the remote store (which can either be a local JSON file or a table in CDF RAW), and during and/or at the end of a run, the `commit()` method is called, which saves the current states to the persistent store.
+
+You can choose the preferred backing storage for your `StateStore`:
+- `LocalStateStore` persists the state in a local .json file.
+- `RawStateStore` persists the state in a Cognite Data Fusion Raw table.
+- `MemoryStateStore` does not persist state but only holds the current state in-memory.
+
+```java
+// A state store backed by a local .json file
+StateStore stateStore = LocalStateStore.of("./stateStore.json");
+stateStore.load();      // load any previously persisted state
+
+// A state store backed by CDF Raw
+StateStore stateStore = RawStateStore.of(CogniteClient, "raw-db-name", "raw-table-name";
+stateStore.load();      // load any previously persisted state
+
+// An in-memory state store. load() and commit() does not have any effect for this store.
+StateStore stateStore = MemoryStateStore.create();
+```
+
+You can now use the state store to get states:
+```java
+// Get the high watermark for a given key/id
+OptionalLong highWatermark = stateStore.getHigh("my-key");
+
+// Get the low watermark for a given key/id
+OptionalLong lowWatermark = stateStore.getLow("my-key");
+
+// The optionals will be empty if there is no state for the given key/id
+if (highWatermark.isPresent()) {
+    // your logic
+}
+
+// The optionals can also be used in a more functional programming style
+getLow("my-key").ifPresent(watermark -> my-watermark-logic);
+
+getLow(key).ifPresentOrElse(
+        currentValue -> my-watermark-logic,
+        () -> no-watermark-logic
+        );
+```
+
+You can set states:
+```java
+stateStore.setHigh("my-key", 123456789);
+```
+The `setHigh()` / `setLow()` methods will always overwrite the current state. Some times you might want to only set state if larger than the previous state (for high watermarks), in that case consider `expandHigh()` / `expandLow()`:
+```java
+stateStore.expandHigh(key, highWatermark);
+stateStore.expandLow(key, lowWatermark);
+```
+
+To store the state to the remote store, use the `commit()` method:
+```java
+stateStore.commit();
+```
+
+You can set the state store to automatically commit state at regular intervals. In this case, use the `stert()` and `stop()` methods:
+```java
+/ A state store backed by a local .json file
+StateStore stateStore = LocalStateStore.of("./stateStore.json");
+stateStore.load();      // load any previously persisted state
+
+// Start the commit background thread. The default commit interval is every 20 seconds
+stateStore.start();
+
+
+// Stop the background thread. You should always call this before exit for proper cleanup.
+// This will also call commit() one last time.
+stateStore.stop();
 ```
