@@ -26,10 +26,6 @@ import java.util.stream.Collectors;
  */
 @AutoValue
 public abstract class RawStateStore extends AbstractStateStore {
-
-    private final ObjectReader objectReader = JsonUtil.getObjectMapperInstance().reader();
-    private final ObjectWriter objectWriter = JsonUtil.getObjectMapperInstance().writer();
-
     private static Builder builder() {
         return new AutoValue_RawStateStore.Builder()
                 .setMaxCommitInterval(DEFAULT_MAX_COMMIT_INTERVAL);

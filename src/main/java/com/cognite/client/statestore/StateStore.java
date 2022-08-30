@@ -4,6 +4,7 @@ import com.google.protobuf.Struct;
 
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.Set;
 
 /**
  * The {@code StateStore} helps keep track of the extraction/processing state of a data application (extractor,
@@ -100,6 +101,12 @@ public interface StateStore {
      * @param key The id to delete the state(s) of.
      */
     public void deleteState(String key);
+
+    /**
+     * Returns a read-only set of all state keys.
+     * @return An immutable Set of all state keys.
+     */
+    public Set<String> keySet();
 
     /**
      * Start a background thread to perform a commit every {@code maxUploadInterval}. The default upload interval

@@ -161,7 +161,12 @@ public abstract class AbstractStateStore implements StateStore {
         deletedEntries.add(key);
     }
 
-
+    /**
+     * {@inheritDoc}
+     */
+    public Set<String> keySet() {
+        return Set.copyOf(stateMap.keySet());
+    }
 
     /**
      * {@inheritDoc}
