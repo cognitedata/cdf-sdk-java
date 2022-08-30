@@ -40,7 +40,7 @@ public abstract class MemoryStateStore extends AbstractStateStore {
      */
     @Override
     public void commit() throws Exception {
-        LOG.info("commit() - calling load() has no effect for the in-memory state store.");
+        LOG.info("commit() - calling commit() has no effect for the in-memory state store.");
     }
 
     /**
