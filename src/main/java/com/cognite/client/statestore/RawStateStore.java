@@ -1,6 +1,7 @@
 package com.cognite.client.statestore;
 
 import com.cognite.client.CogniteClient;
+import com.cognite.client.dto.RawRow;
 import com.cognite.client.servicesV1.util.JsonUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectReader;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * A state store using a local file to persist state entries.
@@ -91,25 +93,29 @@ public abstract class RawStateStore extends AbstractStateStore {
                     getDbName());
             return;
         }
-
-        getClient().raw().rows().list(getDbName(), getTableName());
-        if (Files.exists(getPath())) {
-            stateMap.clear();
-            JsonNode root = objectReader.readTree(Files.readAllBytes(getPath()));
-            Iterator<Map.Entry<String, JsonNode>> fields = root.fields();
-            while (fields.hasNext()) {
-                Map.Entry<String, JsonNode> entry = fields.next();
-                Struct.Builder structBuilder = Struct.newBuilder();
-                JsonFormat.parser().merge(entry.getValue().toString(), structBuilder);
-                stateMap.put(entry.getKey(), structBuilder.build());
-            }
-
-            //stateMap = objectReader.readValue(getPath().toFile(), stateMap.getClass());
-            LOG.info(loggingPrefix + "Loaded {} state entries from {}.", stateMap.size(), getPath().toString());
-        } else {
-            LOG.info(loggingPrefix + "File {} not found. No persisted state loaded into memory.",
-                    getPath().toString());
+        List<String> rawTableNames = new ArrayList<>();
+        getClient().raw().tables().list(getDbName())
+                .forEachRemaining(rawTableNames::addAll);
+        if (!rawTableNames.contains(getTableName())) {
+            LOG.warn(loggingPrefix + "Raw db {} does not contain a table named {}. State is not loaded into memory.",
+                    getDbName(),
+                    getTableName());
+            return;
         }
+
+        // The table exists, let's load it.
+        stateMap.clear();
+        getClient().raw().rows().list(getDbName(), getTableName())
+                .forEachRemaining(rows -> {
+                    for (RawRow row : rows) {
+                        stateMap.put(row.getKey(), row.getColumns());
+                    }
+                });
+        verifyStateMap();
+        LOG.info(loggingPrefix + "Loaded {} state entries from Raw db: {}, table: {}.",
+                stateMap.size(),
+                getDbName(),
+                getTableName());
     }
 
     /**
@@ -117,8 +123,44 @@ public abstract class RawStateStore extends AbstractStateStore {
      */
     @Override
     public void commit() throws Exception {
-        objectWriter.writeValue(getPath().toFile(), stateMap);
-        LOG.info("commit() - Committed {} state entries to {}.", stateMap.size(), getPath().toString());
+        String loggingPrefix = "commit() - ";
+        // Since trunc and load can be resource intensive with CDF.Raw, we'll do it incrementally
+        // We'll start with processing the deletes
+        List<RawRow> deleteRowsList = deletedEntries.stream()
+                .map(key -> RawRow.newBuilder()
+                        .setDbName(getDbName())
+                        .setTableName(getTableName())
+                        .setKey(key)
+                        .build())
+                .collect(Collectors.toList());
+
+        getClient().raw().rows().delete(deleteRowsList);
+        deleteRowsList.forEach(row -> deletedEntries.remove(row.getKey()));
+
+        // Then the modified entries
+        List<RawRow> modifiedRowsList = modifiedEntries.stream()
+                .map(key -> RawRow.newBuilder()
+                        .setDbName(getDbName())
+                        .setTableName(getTableName())
+                        .setKey(key)
+                        .setColumns(stateMap.get(key))
+                        .build())
+                .collect(Collectors.toList());
+
+        getClient().raw().rows().upsert(modifiedRowsList);
+        modifiedRowsList.forEach(row -> modifiedEntries.remove(row.getKey()));
+
+        LOG.info(loggingPrefix + "Committed {} deletes and {} modified entries to Raw db: {}, table: {}.",
+                deleteRowsList.size(),
+                modifiedRowsList.size(),
+                getDbName(),
+                getTableName());
+        if (deletedEntries.size() > 0 || modifiedEntries.size() > 0) {
+            LOG.warn(loggingPrefix + "There are some state entries that have not been committed to CDF.Raw. "
+                    + "Uncommitted deletes: {}, uncommitted upserts: {}",
+                    deletedEntries.size(),
+                    modifiedEntries.size());
+        }
     }
 
     @AutoValue.Builder

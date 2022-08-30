@@ -101,7 +101,7 @@ public abstract class LocalStateStore extends AbstractStateStore {
                 stateMap.put(entry.getKey(), structBuilder.build());
             }
 
-            //stateMap = objectReader.readValue(getPath().toFile(), stateMap.getClass());
+            verifyStateMap();
             LOG.info(loggingPrefix + "Loaded {} state entries from {}.", stateMap.size(), getPath().toString());
         } else {
             LOG.info(loggingPrefix + "File {} not found. No persisted state loaded into memory.",

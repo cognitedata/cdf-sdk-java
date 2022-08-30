@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * Abstract parent class for all state store implementations.
@@ -25,6 +26,7 @@ public abstract class AbstractStateStore implements StateStore {
     protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
     protected ConcurrentMap<String, Struct> stateMap = new ConcurrentHashMap<>();
     protected Set<String> modifiedEntries = new ConcurrentSkipListSet<>();
+    protected Set<String> deletedEntries = new ConcurrentSkipListSet<>();
 
     protected final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
     protected ScheduledFuture<?> recurringTask;
@@ -51,6 +53,7 @@ public abstract class AbstractStateStore implements StateStore {
                 .putFields(COLUMN_KEY_HIGH, Values.of(String.valueOf(value)))
                 .build();
         stateMap.put(key, newEntry);
+        modifiedEntries.add(key);
     }
 
     /**
@@ -92,6 +95,7 @@ public abstract class AbstractStateStore implements StateStore {
                 .putFields(COLUMN_KEY_LOW, Values.of(String.valueOf(value)))
                 .build();
         stateMap.put(key, newEntry);
+        modifiedEntries.add(key);
     }
 
     /**
@@ -154,6 +158,7 @@ public abstract class AbstractStateStore implements StateStore {
     @Override
     public void deleteState(String key) {
         stateMap.remove(key);
+        deletedEntries.add(key);
     }
 
 
@@ -180,6 +185,25 @@ public abstract class AbstractStateStore implements StateStore {
         } catch (Exception e) {
             LOG.error(logPrefix + "Exception during commit of the state store {}", e);
             throw new RuntimeException(e);
+        }
+    }
+
+    /*
+    Check that the state map is valid
+     */
+    protected boolean verifyStateMap() {
+        List<Map.Entry<String, Struct>> invalidEntries = stateMap.entrySet().stream()
+                .filter(entry -> !entry.getValue().containsFields(COLUMN_KEY_HIGH) && !entry.getValue().containsFields(COLUMN_KEY_LOW))
+                .collect(Collectors.toList());
+
+        if (invalidEntries.isEmpty()) {
+            return true;
+        } else {
+            LOG.warn("verifyStateMap() - Found {} invalid entries in the state store. Some of the invalid entries "
+            + "include {}",
+                    invalidEntries.size(),
+                    invalidEntries.stream().map(entry -> entry.getKey()).limit(10).collect(Collectors.toList()));
+            return false;
         }
     }
 
