@@ -8,9 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
@@ -21,11 +18,13 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class LocalStateStoreIntegrationTest {
+class RawStateStoreIntegrationTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Test
     void createCommitAndLoadStates() throws Exception {
+        final String dbName = "states";
+        final String tableName = "stateTable";
         final String lowWatermarkKey = "low";
         final String highWatermarkKey = "high";
         Instant startInstant = Instant.now();
@@ -43,9 +42,9 @@ class LocalStateStoreIntegrationTest {
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
                 Duration.between(startInstant, Instant.now()));
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
-        LOG.info(loggingPrefix + "Creating local state store and states.");
-        Path stateStorePath = Paths.get("./stateStore.json");
-        StateStore stateStore = LocalStateStore.of(stateStorePath)
+        LOG.info(loggingPrefix + "Creating raw state store and states.");
+
+        StateStore stateStore = RawStateStore.of(client, dbName, tableName)
                 .withMaxCommitInterval(Duration.ofSeconds(2));
         stateStore.load(); // should not do anything
         Map<String, Map<String, Long>> statesMap = new HashMap<>();
@@ -77,7 +76,7 @@ class LocalStateStoreIntegrationTest {
                 () -> assertIterableEquals(lowWatermarks, lowWatermarksStateStore, "low watermark not equal"),
                 () -> assertIterableEquals(highWatermarks, highWatermarksStateStore, "high watermark not equal"));
 
-        LOG.info(loggingPrefix + "Finished creating local state store and states. Duration : {}",
+        LOG.info(loggingPrefix + "Finished creating raw state store and states. Duration : {}",
                 Duration.between(startInstant, Instant.now()));
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
         LOG.info(loggingPrefix + "Load existing local states.");
@@ -127,6 +126,7 @@ class LocalStateStoreIntegrationTest {
             Thread.sleep(876);
         }
         stateStore.stop();
+        client.raw().databases().delete(List.of(dbName), true);
 
         List<Long> lowWatermarksUpdated = statesMap.keySet().stream()
                 .map(key -> statesMap.get(key).get(lowWatermarkKey))
@@ -152,7 +152,7 @@ class LocalStateStoreIntegrationTest {
                 () -> assertTrue(stateStore.getLow("not-valid-key").isEmpty(), "getLow not returning empty")
         );
 
-        Files.deleteIfExists(stateStorePath);
+
         LOG.info(loggingPrefix + "Finished simulating state processing. Duration : {}",
                 Duration.between(startInstant, Instant.now()));
 

@@ -158,6 +158,7 @@ public abstract class AbstractStateStore implements StateStore {
     @Override
     public void deleteState(String key) {
         stateMap.remove(key);
+        modifiedEntries.remove(key);
         deletedEntries.add(key);
     }
 
