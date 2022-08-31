@@ -25,10 +25,14 @@ import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -239,6 +243,95 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
             return Optional.of(String.valueOf(item.getId()));
         } else {
             return Optional.<String>empty();
+        }
+    }
+
+    /**
+     * An object that can issue a regular "heartbeat" by posting regular {@link ExtractionPipelineRun} with
+     * {@code seen} status to Cognite Data Fusion.
+     */
+    @AutoValue
+    public abstract static class Heartbeat {
+        protected static final Duration MIN_INTERVAL = Duration.ofSeconds(2L);
+        protected static final Duration DEFAULT_INTERVAL = Duration.ofSeconds(10L);
+        protected static final Duration MAX_INTERVAL = Duration.ofMinutes(60L);
+
+        protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
+
+        protected final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
+        protected ScheduledFuture<?> recurringTask;
+
+        {
+            // Make sure the thread pool puts its threads to sleep to allow the JVM to exit without manual
+            // clean-up from the client.
+            executor.setKeepAliveTime(2000, TimeUnit.SECONDS);
+            executor.allowCoreThreadTimeOut(true);
+            executor.setRemoveOnCancelPolicy(true);
+        }
+
+        private static Builder builder() {
+            return new AutoValue_Heartbeat.Builder();
+        }
+
+        public static Heartbeat create() {
+            return builder().build();
+        }
+
+        abstract Builder toBuilder();
+        abstract Duration getInterval();
+
+        public Heartbeat withInterval(Duration interval) {
+
+            return toBuilder().setInterval(interval).build();
+        }
+
+
+
+        public boolean start() {
+            String logPrefix = "start() - ";
+            if (null != recurringTask) {
+                // The upload task has already been started.
+                LOG.warn(logPrefix + "The commit thread has already been started. Start() has no effect.");
+                return false;
+            }
+
+            recurringTask = executor.scheduleAtFixedRate(this::asyncCommitWrapper,
+                    1, getInterval().getSeconds(), TimeUnit.SECONDS);
+            LOG.info(logPrefix + "Starting background thread to commit state at interval {}", getInterval());
+            return true;
+        }
+
+
+        public boolean stop() {
+            String logPrefix = "stop() -";
+            if (null == recurringTask) {
+                // The upload task has not been started.
+                LOG.warn(logPrefix + "The heartbeat thread has not been started. Stop() has no effect.");
+                asyncCommitWrapper();
+                return false;
+            }
+
+            recurringTask.cancel(false);
+            boolean returnValue = recurringTask.isDone();
+            if (recurringTask.isDone()) {
+                // cancellation of task was successful
+                recurringTask = null;
+                asyncCommitWrapper();
+                LOG.info(logPrefix + "Successfully stopped the background heartbeat thread.");
+            } else {
+                LOG.warn(logPrefix + "Something went wrong when trying to stop the heartbeat thread. Status isDone: {}, "
+                                + "isCanceled: {}",
+                        recurringTask.isDone(),
+                        recurringTask.isCancelled());
+            }
+            return returnValue;
+        }
+
+        @AutoValue.Builder
+        abstract static class Builder {
+            abstract Builder setInterval(Duration value);
+
+            abstract Heartbeat build();
         }
     }
 
