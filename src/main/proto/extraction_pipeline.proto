@@ -18,10 +18,10 @@ message ExtractionPipeline {
     }
 
     optional int64 id = 1;
-    optional string external_id = 2;
-    optional string name = 3;
+    string external_id = 2;
+    string name = 3;
     optional string description = 4;
-    optional int64 data_set_id = 5;
+    int64 data_set_id = 5;
     repeated RawTable raw_tables = 6;
     optional string schedule = 7;
     repeated Contact contacts = 8;
