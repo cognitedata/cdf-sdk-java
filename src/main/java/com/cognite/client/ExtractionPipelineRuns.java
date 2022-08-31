@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -208,6 +209,22 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Create an extraction pipeline heartbeat object.
+     *
+     * The heartbeat object will post a regular heartbeat to a specified extraction pipeline. You start the
+     * heartbeat by calling {@link Heartbeat#start()}. This will start a background thread posting a heartbeat to
+     * Cognite Data Fusion until you call {@link Heartbeat#stop()}.
+     *
+     * You can also push a single heartbeat by calling {@link Heartbeat#sendHeartbeat()}.
+     *
+     * @param extractionPipelineExtId The external id of the {@code extraction pipeline} to post the heartbeat to.
+     * @return the heartbeat object.
+     */
+    public Heartbeat heartbeat(String extractionPipelineExtId) {
+        return Heartbeat.of(getClient(), extractionPipelineExtId);
+    }
+
     /*
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
     deal very well with exceptions.
@@ -271,19 +288,35 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
         }
 
         private static Builder builder() {
-            return new AutoValue_Heartbeat.Builder();
+            return new AutoValue_ExtractionPipelineRuns_Heartbeat.Builder()
+                    .setInterval(DEFAULT_INTERVAL);
         }
 
         /**
          * Create the heartbeat object.
+         *
+         * The heartbeat object will post a regular heartbeat to a specified extraction pipeline. You start the
+         * heartbeat by calling {@link #start()}. This will start a background thread posting a heartbeat to
+         * Cognite Data Fusion until you call {@link #stop()}.
+         *
+         * You can also push a single heartbeat by calling {@link #sendHeartbeat()}.
+         *
+         * @param client The cognite client for connecting to CDF.
+         * @param extractionPipelineExtId The external id of the {@code extraction pipeline} to post the heartbeat to.
          * @return the heartbeat object.
          */
-        public static Heartbeat create() {
-            return builder().build();
+        public static Heartbeat of(CogniteClient client,
+                                   String extractionPipelineExtId) {
+            return builder()
+                    .setCogniteClient(client)
+                    .setExtractionPipelineExtId(extractionPipelineExtId)
+                    .build();
         }
 
         abstract Builder toBuilder();
         abstract Duration getInterval();
+        abstract CogniteClient getCogniteClient();
+        abstract String getExtractionPipelineExtId();
 
         /**
          * Sets the heartbeat interval.
@@ -303,6 +336,33 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
             return toBuilder().setInterval(interval).build();
         }
 
+        /**
+         * Push a heartbeat {@code ExtractionPipelineRun.Status.SEEN} to Cognite Data Fusion.
+         *
+         * @throws Exception
+         */
+        public void sendHeartbeat() throws Exception {
+            ExtractionPipelineRun pipelineRun = ExtractionPipelineRun.newBuilder()
+                    .setExternalId(getExtractionPipelineExtId())
+                    .setCreatedTime(Instant.now().toEpochMilli())
+                    .setStatus(ExtractionPipelineRun.Status.SEEN)
+                    .build();
+
+            getCogniteClient().extractionPipelines().runs().create(List.of(pipelineRun));
+        }
+
+        /*
+            Private convenience method to decorate async heartbeat with exception handling.
+        */
+        private void asyncHeartbeatWrapper() {
+            String logPrefix = "asyncHeartbeatWrapper() - ";
+            try {
+                sendHeartbeat();
+            } catch (Exception e) {
+                LOG.error(logPrefix + "Exception during heartbeat {}", e);
+                throw new RuntimeException(e);
+            }
+        }
 
         /**
          * Start the heartbeat thread to perform an upload every {@code interval}. The default heartbeat interval
@@ -322,7 +382,7 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
                 return false;
             }
 
-            recurringTask = executor.scheduleAtFixedRate(this::asyncCommitWrapper,
+            recurringTask = executor.scheduleAtFixedRate(this::asyncHeartbeatWrapper,
                     1, getInterval().getSeconds(), TimeUnit.SECONDS);
             LOG.info(logPrefix + "Starting background thread to commit state at interval {}", getInterval());
             return true;
@@ -349,7 +409,6 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
             if (null == recurringTask) {
                 // The upload task has not been started.
                 LOG.warn(logPrefix + "The heartbeat thread has not been started. Stop() has no effect.");
-                asyncCommitWrapper();
                 return false;
             }
 
@@ -358,7 +417,6 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
             if (recurringTask.isDone()) {
                 // cancellation of task was successful
                 recurringTask = null;
-                asyncCommitWrapper();
                 LOG.info(logPrefix + "Successfully stopped the background heartbeat thread.");
             } else {
                 LOG.warn(logPrefix + "Something went wrong when trying to stop the heartbeat thread. Status isDone: {}, "
@@ -372,6 +430,8 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
         @AutoValue.Builder
         abstract static class Builder {
             abstract Builder setInterval(Duration value);
+            abstract Builder setExtractionPipelineExtId(String value);
+            abstract Builder setCogniteClient(CogniteClient value);
 
             abstract Heartbeat build();
         }
