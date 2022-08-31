@@ -6,6 +6,7 @@ import com.google.protobuf.util.Values;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.*;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
  *
  * {@inheritDoc}
  */
-public abstract class AbstractStateStore implements StateStore {
+public abstract class AbstractStateStore implements StateStore, Closeable {
     protected static final String COLUMN_KEY_LOW = "low";
     protected static final String COLUMN_KEY_HIGH = "high";
     protected static final Duration MIN_MAX_COMMIT_INTERVAL = Duration.ofSeconds(1L);
@@ -229,6 +230,16 @@ public abstract class AbstractStateStore implements StateStore {
                 1, getMaxCommitInterval().getSeconds(), TimeUnit.SECONDS);
         LOG.info(logPrefix + "Starting background thread to commit state at interval {}", getMaxCommitInterval());
         return true;
+    }
+
+    /**
+     * A mirror of the {@link #stop()} method to support auto close in a {@code try-with-resources} statement.
+     *
+     * @see #stop()
+     */
+    @Override
+    public void close() {
+        this.stop();
     }
 
     /**

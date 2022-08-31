@@ -17,14 +17,15 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
-import com.cognite.client.dto.Event;
 import com.cognite.client.dto.ExtractionPipelineRun;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.ExtractionPipelineParser;
 import com.google.auto.value.AutoValue;
+import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
@@ -251,7 +252,7 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
      * {@code seen} status to Cognite Data Fusion.
      */
     @AutoValue
-    public abstract static class Heartbeat {
+    public abstract static class Heartbeat implements Closeable {
         protected static final Duration MIN_INTERVAL = Duration.ofSeconds(2L);
         protected static final Duration DEFAULT_INTERVAL = Duration.ofSeconds(10L);
         protected static final Duration MAX_INTERVAL = Duration.ofMinutes(60L);
@@ -273,6 +274,10 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
             return new AutoValue_Heartbeat.Builder();
         }
 
+        /**
+         * Create the heartbeat object.
+         * @return the heartbeat object.
+         */
         public static Heartbeat create() {
             return builder().build();
         }
@@ -280,13 +285,35 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
         abstract Builder toBuilder();
         abstract Duration getInterval();
 
+        /**
+         * Sets the heartbeat interval.
+         *
+         * When you activate the heartbeat thread via {@link #start()}, a {@link ExtractionPipelineRun} with state
+         * {@code seen} will be uploaded to Cognite Data Fusion at every heartbeat interval.
+         *
+         * The default heartbeat interval is 10 seconds.
+         * @param interval The target heartbeat interval.
+         * @return The {@link Heartbeat} with the upload interval configured.
+         */
         public Heartbeat withInterval(Duration interval) {
-
+            Preconditions.checkArgument(interval.compareTo(MAX_INTERVAL) <= 0
+                            && interval.compareTo(MIN_INTERVAL) >= 0,
+                    String.format("The max upload interval can be minimum %s and maxmimum %s",
+                            MIN_INTERVAL, MAX_INTERVAL));
             return toBuilder().setInterval(interval).build();
         }
 
 
-
+        /**
+         * Start the heartbeat thread to perform an upload every {@code interval}. The default heartbeat interval
+         * is every 10 seconds.
+         *
+         * If the heartbeat thread has already been started (for example by an earlier call to {@code start()} then this
+         * method does nothing and returns {@code false}.
+         *
+         * @return {@code true} if the heartbeat thread started successfully, {@code false} if the heartbeat thread has already
+         *  been started.
+         */
         public boolean start() {
             String logPrefix = "start() - ";
             if (null != recurringTask) {
@@ -301,7 +328,22 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
             return true;
         }
 
+        /**
+         * A mirror of the {@link #stop()} method to support auto close in a {@code try-with-resources} statement.
+         *
+         * @see #stop()
+         */
+        @Override
+        public void close() {
+            this.stop();
+        }
 
+        /**
+         * Stops the heartbeat thread if it is running.
+         *
+         * @return {@code true} if the heartbeat thread stopped successfully, {@code false} if the heartbeat thread
+         * was not started in the first place.
+         */
         public boolean stop() {
             String logPrefix = "stop() -";
             if (null == recurringTask) {
