@@ -239,7 +239,7 @@ public abstract class AbstractStateStore implements StateStore {
         String logPrefix = "stop() -";
         if (null == recurringTask) {
             // The upload task has not been started.
-            LOG.warn(logPrefix + "The upload thread has not been started. Stop() has no effect.");
+            LOG.warn(logPrefix + "The commit thread has not been started. Stop() has no effect.");
             asyncCommitWrapper();
             return false;
         }
