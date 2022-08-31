@@ -392,13 +392,7 @@ public abstract class ExtractionPipelines extends ApiBase {
     If no id is found, it returns an empty Optional.
      */
     private Optional<String> getExtractionPipelineId(ExtractionPipeline item) {
-        if (item.hasExternalId()) {
-            return Optional.of(item.getExternalId());
-        } else if (item.hasId()) {
-            return Optional.of(String.valueOf(item.getId()));
-        } else {
-            return Optional.<String>empty();
-        }
+        return Optional.of(item.getExternalId());
     }
 
     @AutoValue.Builder
