@@ -67,7 +67,8 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
     }
 
     /**
-     * Returns all {@link ExtractionPipelineRun} objects.
+     * Returns all {@link ExtractionPipelineRun} objects for a given
+     * {@link com.cognite.client.dto.ExtractionPipeline} external id.
      *
      * <h2>Example:</h2>
      * <pre>
@@ -75,20 +76,22 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
      *     List<ExtractionPipelineRun> listResults = new ArrayList<>();
      *     client.extractionPipelines()
      *             .runs()
-     *             .list()
+     *             .list("my-extraction-pipeline-external-id)
      *             .forEachRemaining(listResults::addAll);
      * }
      * </pre>
      *
-     * <a href="https://docs.cognite.com/api/v1/#tag/Assets/operation/deleteAssets">API Reference - Filter extraction pipeline runs</a>
+     * <a href="https://docs.cognite.com/api/v1/#tag/Extraction-Pipelines-Runs/operation/filterRuns">API Reference - Filter extraction pipeline runs</a>
      *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#extractionPipelines()
      * @see ExtractionPipelines#runs()
+     * @param extractionPipelineExtId the external id of the extraction pipeline to list runs for.
+     * @return an {@link Iterator} to page through the results set.
      */
-    public Iterator<List<ExtractionPipelineRun>> list() throws Exception {
-        return this.list(Request.create());
+    public Iterator<List<ExtractionPipelineRun>> list(String extractionPipelineExtId) throws Exception {
+        return this.list(Request.create().withFilterParameter("externalId", extractionPipelineExtId));
     }
 
     /**
@@ -117,7 +120,7 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
      * @see CogniteClient#extractionPipelines()
      * @see ExtractionPipelines#runs()
      *
-     * @param requestParameters the filters to use for retrieving the assets.
+     * @param requestParameters the filters to use for retrieving the extraction pipeline runs.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
      */
@@ -163,7 +166,7 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
      * @see CogniteClient#extractionPipelines()
      * @see ExtractionPipelines#runs()
      *
-     * @param requestParameters the filters to use for retrieving the assets.
+     * @param requestParameters the filters to use for retrieving the extraction pipeline runs.
      * @param partitions the partitions to include.
      * @return an {@link Iterator} to page through the results set.
      * @throws Exception
