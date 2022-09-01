@@ -64,7 +64,10 @@ Changes are grouped as follows:
 - Improve javadoc `TransformationNotifications`
 - Improve javadoc `Transformation`
 - Improve javadoc `TransformationSchedules`
-- 
+
+### Fixed
+
+- `list() extractionPipelineRuns` takes `external id` as a required filter parameter. Also fixed CDF api URL used.
 
 ## [1.16.0] 2022-05-30
 
