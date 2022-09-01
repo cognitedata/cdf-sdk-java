@@ -5,6 +5,7 @@ The SDK hosts a set of utilities designed to make it easier for you to author ex
 Utilities:
 - Upload Queue
 - State store
+- Send heartbeats to `extraction pipelines`: [Extraction pipelines heartbeats](extraction_pipeline.md#create-extraction-pipeline-runs)
 
 ### Upload Queue
 
@@ -62,10 +63,10 @@ eventUploadQueue.stop();
 
 // You can also use the queue in a try-with-resources statement to ensure automatic resource clean-up.
 // No need to call stop() explicitly as this automatically happens when the try statement finishes.
-final UploadQueue<Event, Event> eventUploadQueue = client.events().uploadQueue(); // the queue variable must be final 
-eventUploadQueue.start()
+final UploadQueue<Event, Event> eventUploadQueue = client.events().uploadQueue(); // the queue variable must be final
         
 try (eventUploadQueue) {
+    eventUploadQueue.start();
     while (my-client-has-work-to-do) {
         eventUploadQueue.put(my-event);
     }

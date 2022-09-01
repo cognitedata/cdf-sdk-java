@@ -1,6 +1,6 @@
 ## Extraction Pipelines
 
-Extraction Pipeline objects represent the applications and software that are deployed to ingest operational data into CDF. An extraction pipeline can consist of a number of different software components between the source system and CDF. The extraction pipeline object represents the software component that actually sends the data to CDF. Two examples are Cognite extractors and third party ETL tools such as Microsoft Azure or Informatica PowerCenter
+Extraction Pipeline objects represent the applications and software that are deployed to ingest operational data into CDF. An extraction pipeline can consist of a number of different software components between the source system and CDF. The extraction pipeline object represents the software component that actually sends the data to CDF. Two examples are Cognite extractors and third party ETL tools such as Microsoft Azure, Google Cloud or Informatica PowerCenter
 
 > Note: To create client see the file [clientSetup.md](clientSetup.md)
 
@@ -229,7 +229,7 @@ List<Item> deleteItemsResults =
 
 ## Extraction Pipelines Runs
 
-Extraction Pipelines Runs are CDF objects to store statuses related to an extraction pipeline. The supported statuses are: success, failure and seen. The statuses are related to two different types of operation of the extraction pipeline. Success and failure indicate the status for a particular EP run where the EP attempts to send data to CDF. If the data is successfully posted to CDF the status of the run is ‘success’; if the run has been unsuccessful and the data is not posted to CDF, the status of the run is ‘failure’. Message can be stored to explain run status. Seen is a heartbeat status that indicates that the extraction pipeline is alive. This message is sent periodically on a schedule and indicates that the extraction pipeline is working even though data may not have been sent to CDF by the extraction pipeline.
+Extraction Pipelines Runs are CDF objects to store statuses related to an extraction pipeline. The supported statuses are: success, failure and seen. The statuses are related to two different types of operation of the extraction pipeline. Success and failure indicate the status for a particular EP run where the EP attempts to send data to CDF. If the data is successfully posted to CDF the status of the run is `success`; if the run has been unsuccessful and the data is not posted to CDF, the status of the run is `failure`. Message can be stored to explain run status. `Seen` is a heartbeat status that indicates that the extraction pipeline is alive. This message is sent periodically on a schedule and indicates that the extraction pipeline is working even though data may not have been sent to CDF by the extraction pipeline.
 
 ### List extraction pipeline runs
 
@@ -321,4 +321,38 @@ public static List<ExtractionPipelineRun> generateExtractionPipelineRuns(int noO
       }
       return objects;
   }
+```
+
+You can also have the SDK produce a regular `seen` heartbeat. This is useful for long running or continuously running jobs.
+```java
+// Create a Heartbeat object that can send regular SEEN status to CDF.
+// The heartbeat is published to a single extraction pipeline--you need a separate heartbeat object for 
+// each pipeline you want to sent a heartbeat to.
+ExtractionPipelineRuns.Heartbeat heartbeat = client.extractionPipelines()
+                .runs()
+                .heartbeat("my-extraction-pipeline-external-id");
+
+// You can explicitly trigger a heartbeat to be sent 
+heartbeat.sendHeartbeat();
+
+// Start the regular heartbeat. The default heartbeat interval is every 60 seconds 
+heartbeat.start();
+
+// Stop the heartbeat. You should always call stop() to clean up resources.
+heartbeat.stop();
+
+// You can also use the heartbeat in a try-with-resources statement to ensure automatic resource clean-up.
+// No need to call stop() explicitly as this automatically happens when the try statement finishes.
+final ExtractionPipelineRuns.Heartbeat heartbeat = client.extractionPipelines()
+        .runs()
+        .heartbeat("my-extraction-pipeline-external-id");
+
+try (heartbeat) {
+    heartbeat.start();
+    while (my-client-has-work-to-do) {
+        // do your work
+    }
+} catch (Exception e) {
+
+}
 ```
