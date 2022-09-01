@@ -82,10 +82,10 @@ class ExtractionPipelinesIntegrationTest {
         ExtractionPipelineRuns.Heartbeat heartbeat = client.extractionPipelines()
                 .runs()
                 .heartbeat(listPipelinesResults.get(0).getExternalId())
-                .withInterval(Duration.ofSeconds(2));
+                .withInterval(Duration.ofSeconds(10));
         heartbeat.sendHeartbeat();
         heartbeat.start();
-        Thread.sleep(5000);
+        Thread.sleep(15000);
         heartbeat.stop();
         client.extractionPipelines()
                 .runs()
