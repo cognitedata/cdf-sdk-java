@@ -1425,7 +1425,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
      */
     public ResultFutureIterator<String> readExtractionPipelineRuns(Request queryParameters) {
         PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
-                .setEndpoint("extpipes/run/list")
+                .setEndpoint("extpipes/runs/list")
                 .setRequest(queryParameters)
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
