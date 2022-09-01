@@ -273,8 +273,8 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
      */
     @AutoValue
     public abstract static class Heartbeat implements Closeable {
-        protected static final Duration MIN_INTERVAL = Duration.ofSeconds(2L);
-        protected static final Duration DEFAULT_INTERVAL = Duration.ofSeconds(10L);
+        protected static final Duration MIN_INTERVAL = Duration.ofSeconds(10L);
+        protected static final Duration DEFAULT_INTERVAL = Duration.ofSeconds(60L);
         protected static final Duration MAX_INTERVAL = Duration.ofMinutes(60L);
 
         protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
@@ -327,7 +327,7 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
          * When you activate the heartbeat thread via {@link #start()}, a {@link ExtractionPipelineRun} with state
          * {@code seen} will be uploaded to Cognite Data Fusion at every heartbeat interval.
          *
-         * The default heartbeat interval is 10 seconds.
+         * The default heartbeat interval is 60 seconds.
          * @param interval The target heartbeat interval.
          * @return The {@link Heartbeat} with the upload interval configured.
          */
@@ -369,7 +369,7 @@ public abstract class ExtractionPipelineRuns extends ApiBase {
 
         /**
          * Start the heartbeat thread to perform an upload every {@code interval}. The default heartbeat interval
-         * is every 10 seconds.
+         * is every 60 seconds.
          *
          * If the heartbeat thread has already been started (for example by an earlier call to {@code start()} then this
          * method does nothing and returns {@code false}.
