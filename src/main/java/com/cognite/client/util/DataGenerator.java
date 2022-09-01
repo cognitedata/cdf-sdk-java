@@ -277,7 +277,8 @@ public class DataGenerator {
                             .setExternalId(pipelineExtId)
                             .setCreatedTime(Instant.now().toEpochMilli())
                             .setMessage("generated-" + RandomStringUtils.randomAlphanumeric(5))
-                            .setStatus(ExtractionPipelineRun.Status.SUCCESS)
+                            .setStatus(ThreadLocalRandom.current().nextBoolean() ?
+                                    ExtractionPipelineRun.Status.SUCCESS : ExtractionPipelineRun.Status.FAILURE)
                             .build());
             try {
                 Thread.sleep(500L);
