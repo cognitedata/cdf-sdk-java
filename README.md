@@ -28,7 +28,7 @@ information ([./docs/index.md](./docs/index.md)).
 <dependency>    
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>1.16.0</version>
+    <version>1.17.0</version>
 </dependency>
 ```
     
