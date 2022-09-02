@@ -202,9 +202,9 @@ public class ExtractionPipelineParser {
      */
     public static Map<String, Object> toRequestInsertItem(ExtractionPipeline element) {
         Preconditions.checkNotNull(element, "Input cannot be null.");
-        Preconditions.checkState(element.hasExternalId(), "Input must contain externalId.");
-        Preconditions.checkState(element.hasName(), "Input must contain name.");
-        Preconditions.checkState(element.hasDataSetId(), "Input must contain dataSetId.");
+        //Preconditions.checkState(element.hasExternalId(), "Input must contain externalId.");
+        //Preconditions.checkState(element.hasName(), "Input must contain name.");
+        //Preconditions.checkState(element.hasDataSetId(), "Input must contain dataSetId.");
 
         // Add all the mandatory attributes
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.<String, Object>builder()
@@ -298,28 +298,22 @@ public class ExtractionPipelineParser {
      */
     public static Map<String, Object> toRequestUpdateItem(ExtractionPipeline element) {
         Preconditions.checkNotNull(element, "Input cannot be null.");
-        Preconditions.checkArgument(element.hasExternalId() || element.hasId(),
-                "Element must have externalId or Id in order to be written as an update");
+        //Preconditions.checkArgument(element.hasExternalId() || element.hasId(),
+        //        "Element must have externalId or Id in order to be written as an update");
 
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
 
         // Add id reference
-        if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId());
-        } else {
-            mapBuilder.put("id", element.getId());
-        }
+        mapBuilder.put("externalId", element.getExternalId());
 
         // Add the update fields
-        if (element.hasName()) {
-            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
-        }
+        updateNodeBuilder
+                .put("name", ImmutableMap.of("set", element.getName()))
+                .put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
+
         if (element.hasDescription()) {
             updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
-        }
-        if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
         if (element.hasSchedule()) {
             updateNodeBuilder.put("schedule", ImmutableMap.of("set", element.getSchedule()));
@@ -376,26 +370,19 @@ public class ExtractionPipelineParser {
      */
     public static Map<String, Object> toRequestReplaceItem(ExtractionPipeline element) {
         Preconditions.checkNotNull(element, "Input cannot be null.");
-        Preconditions.checkArgument(element.hasExternalId() || element.hasId(),
-                "Element must have externalId or Id in order to be written as an update");
+        //Preconditions.checkArgument(element.hasExternalId() || element.hasId(),
+        //        "Element must have externalId or Id in order to be written as an update");
 
         ImmutableMap.Builder<String, Object> mapBuilder = ImmutableMap.builder();
         ImmutableMap.Builder<String, Object> updateNodeBuilder = ImmutableMap.builder();
 
         // Add id reference
-        if (element.hasExternalId()) {
-            mapBuilder.put("externalId", element.getExternalId());
-        } else {
-            mapBuilder.put("id", element.getId());
-        }
+        mapBuilder.put("externalId", element.getExternalId());
 
-        // Add the fields that cannot be set to null. Here we only add a value if it is set.
-        if (element.hasName()) {
-            updateNodeBuilder.put("name", ImmutableMap.of("set", element.getName()));
-        }
-        if (element.hasDataSetId()) {
-            updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
-        }
+        // Add the update fields
+        updateNodeBuilder
+                .put("name", ImmutableMap.of("set", element.getName()))
+                .put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
 
         // Add fields that can be set to null. Please note that extraction pipelines do not use an explicit
         // "setNull", but rather an implicit empty string.

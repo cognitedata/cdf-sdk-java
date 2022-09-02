@@ -17,7 +17,6 @@
 package com.cognite.client;
 
 import com.cognite.client.config.AuthConfig;
-import com.cognite.client.config.ClientConfig;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.Item;

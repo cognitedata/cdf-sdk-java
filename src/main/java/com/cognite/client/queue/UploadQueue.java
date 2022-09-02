@@ -46,11 +46,19 @@ public abstract class UploadQueue<T, R> implements AutoCloseable {
     protected static final float QUEUE_FILL_RATE_THRESHOLD = 0.8f;
 
     // Internal state
+    protected final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
     protected ScheduledFuture<?> recurringTask;
+
+    {
+        // Make sure the thread pool puts its threads to sleep to allow the JVM to exit without manual
+        // clean-up from the client.
+        executor.setKeepAliveTime(2000, TimeUnit.SECONDS);
+        executor.allowCoreThreadTimeOut(true);
+        executor.setRemoveOnCancelPolicy(true);
+    }
 
     private static <T, R> Builder<T, R> builder() {
         return new AutoValue_UploadQueue.Builder<T, R>()
-                .setScheduledExecutor(new ScheduledThreadPoolExecutor(1))
                 .setQueue(new ArrayBlockingQueue<T>(DEFAULT_QUEUE_SIZE))
                 .setMaxUploadInterval(DEFAULT_MAX_UPLOAD_INTERVAL)
                 ;
@@ -88,7 +96,6 @@ public abstract class UploadQueue<T, R> implements AutoCloseable {
 
     abstract Builder<T, R> toBuilder();
 
-    abstract ScheduledThreadPoolExecutor getScheduledExecutor();
     abstract Duration getMaxUploadInterval();
     abstract BlockingQueue<T> getQueue();
     @Nullable
@@ -196,14 +203,14 @@ public abstract class UploadQueue<T, R> implements AutoCloseable {
         The upload will happen on a separate thread.
          */
         if (((float) getQueue().size() / ((float) getQueue().size() + (float) getQueue().remainingCapacity())) > QUEUE_FILL_RATE_THRESHOLD
-                && getScheduledExecutor().getQueue().size() < 2) {
+                && executor.getQueue().size() < 2) {
             LOG.debug(logPrefix + "Will trigger queue upload. Fill rate is above threshold. Queue capacity: {}, "
                     + "queue size: {}, remaining capacity: {}",
                     getQueue().size() + getQueue().remainingCapacity(),
                     getQueue().size(),
                     getQueue().remainingCapacity());
 
-            getScheduledExecutor().execute(this::asyncUploadWrapper);
+            executor.execute(this::asyncUploadWrapper);
         }
     }
 
@@ -225,7 +232,7 @@ public abstract class UploadQueue<T, R> implements AutoCloseable {
             return false;
         }
 
-        recurringTask = getScheduledExecutor().scheduleAtFixedRate(this::asyncUploadWrapper,
+        recurringTask = executor.scheduleAtFixedRate(this::asyncUploadWrapper,
                 1, getMaxUploadInterval().getSeconds(), TimeUnit.SECONDS);
         LOG.info(logPrefix + "Starting background upload thread to upload at interval {}", getMaxUploadInterval());
         return true;
@@ -331,7 +338,6 @@ public abstract class UploadQueue<T, R> implements AutoCloseable {
 
     @AutoValue.Builder
     abstract static class Builder<T, R> {
-        abstract Builder<T, R> setScheduledExecutor(ScheduledThreadPoolExecutor value);
         abstract Builder<T, R> setQueue(BlockingQueue<T> value);
         abstract Builder<T, R> setMaxUploadInterval(Duration value);
         abstract Builder<T, R> setPostUploadFunction(Consumer<List<R>> value);
@@ -339,19 +345,6 @@ public abstract class UploadQueue<T, R> implements AutoCloseable {
         abstract Builder<T, R> setUpsertTarget(UpsertTarget<T, R> value);
         abstract Builder<T, R> setUploadTarget(UploadTarget<T, R> value);
 
-        abstract ScheduledThreadPoolExecutor getScheduledExecutor();
-
-        abstract UploadQueue<T, R> autoBuild();
-        final UploadQueue<T, R> build() {
-            // Make sure the thread pool puts its threads to sleep to allow the JVM to exit without manual
-            // clean-up from the client.
-            ScheduledThreadPoolExecutor executor = getScheduledExecutor();
-            executor.setKeepAliveTime(2000, TimeUnit.SECONDS);
-            executor.allowCoreThreadTimeOut(true);
-            executor.setRemoveOnCancelPolicy(true);
-            setScheduledExecutor(executor);
-
-            return autoBuild();
-        }
+        abstract UploadQueue<T, R> build();
     }
 }

@@ -25,6 +25,7 @@ Changes are grouped as follows:
 - Support for configuring a proxy server: [Documentation](../docs/clientSetup.md#proxy-server).
 - `UploadQueue` for various resource types to optimize data upload to Cognite Data Fusion: [Documentation](../docs/utils.md).
 - `State store` for storing watermark progress states for data applications (extractors, data pipelines, etc.): [Documentation](../docs/utils.md).
+- `Extraction pipeline heartbeat` for sending regular `SEEN` status runs to Cognite Data Fusion: [Documentation](../docs/extraction_pipeline.md#create-extraction-pipeline-runs).
 
 ### Changed
 
@@ -64,7 +65,10 @@ Changes are grouped as follows:
 - Improve javadoc `TransformationNotifications`
 - Improve javadoc `Transformation`
 - Improve javadoc `TransformationSchedules`
-- 
+
+### Fixed
+
+- `list() extractionPipelineRuns` takes `external id` as a required filter parameter. Also fixed CDF api URL used.
 
 ## [1.16.0] 2022-05-30
 

@@ -19,8 +19,8 @@ Some of the SDK's capabilities:
 Requirements:
 - Java 11
 
-Please refer to [the documentation](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.md) for more
-information ([https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.md](https://github.com/cognitedata/cdf-sdk-java/blob/main/docs/index.md)).
+Please refer to [the documentation](./docs/index.md) for more
+information ([./docs/index.md](./docs/index.md)).
 
 ### Installing the sdk
 
