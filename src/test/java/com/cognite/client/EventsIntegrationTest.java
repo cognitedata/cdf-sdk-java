@@ -48,6 +48,8 @@ class EventsIntegrationTest {
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
                     .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost());
+            //client = client.withScopes(List.of("https://greenfield.cognitedata.com/.default"));
+            //client = client.withBaseUrl("https://greenfield.cognitedata.com");
             LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
                     Duration.between(startInstant, Instant.now()));
             LOG.info(loggingPrefix + "----------------------------------------------------------------------");

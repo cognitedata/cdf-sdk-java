@@ -17,6 +17,14 @@ Changes are grouped as follows:
 
 ### Short term
 
+## [1.18.0-SNAPSHOT]
+
+### Added
+
+### Fixed
+
+- The default auth scope breaking when using certain combinations of `CogniteClient.withBaseUrl()` and `CogniteClient.withScopes()`.
+
 ## [1.17.0] 2022-09-02
 
 ### Added

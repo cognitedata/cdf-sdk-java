@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * This class represents the main entry point for interacting with this SDK (and Cognite Data Fusion).
@@ -41,13 +42,6 @@ import java.util.function.Supplier;
 public abstract class CogniteClient implements Serializable {
     private final static String DEFAULT_BASE_URL = "https://api.cognitedata.com";
     private final static String API_ENV_VAR = "COGNITE_API_KEY";
-
-    /*
-    private static ForkJoinPool executorService = new ForkJoinPool(Math.min(
-            Runtime.getRuntime().availableProcessors() * DEFAULT_CPU_MULTIPLIER,
-            DEFAULT_MAX_WORKER_THREADS));
-
-     */
 
     private static int NO_WORKERS = 8;
     private static ThreadPoolExecutor executorService = new ThreadPoolExecutor(NO_WORKERS, NO_WORKERS,
@@ -197,6 +191,7 @@ public abstract class CogniteClient implements Serializable {
                 .setClientSecret(clientSecret)
                 .setTokenUrl(tokenUrl)
                 .setAuthType(AuthType.CLIENT_CREDENTIALS)
+                .setAuthScopes(scopes)
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
                         .addInterceptor(new ClientCredentialsInterceptor(host, clientId,
                                 clientSecret, tokenUrl, scopes))
@@ -295,10 +290,23 @@ public abstract class CogniteClient implements Serializable {
                 interceptors.add(new TokenInterceptor(host, getTokenSupplier()));
                 break;
             case CLIENT_CREDENTIALS:
-                Collection<String> scopes = List.of(baseUrl + "/.default");
+                String currentDefaultScope = getBaseUrl() + "/.default";
+                String newDefaultScope = baseUrl + "/.default";
+                Collection<String> scopes = List.of(newDefaultScope); // Fallback scopes
                 if (null != getAuthScopes()) {
-                    scopes = getAuthScopes();
+                    // Iterate the current scopes. If any of them match the "default scope", replace with
+                    // an updated default carrying the new host.
+                    scopes = getAuthScopes().stream()
+                            .map(scope -> {
+                                if (scope.equalsIgnoreCase(currentDefaultScope)) {
+                                    return newDefaultScope;
+                                } else {
+                                    return scope;
+                                }
+                            })
+                            .collect(Collectors.toList());
                 }
+                returnValueBuilder.setAuthScopes(scopes);
                 removed = interceptors.removeIf(interceptor -> interceptor instanceof ClientCredentialsInterceptor);
                 interceptors.add(new ClientCredentialsInterceptor(host, getClientId(),
                         getClientSecret(), getTokenUrl(), scopes));
