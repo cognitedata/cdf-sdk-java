@@ -337,7 +337,7 @@ abstract class ApiBase {
             responseItems.addAll(responseItemsFuture.join().getResultsItems());
         }
 
-        LOG.info(batchLogPrefix + "Successfully retrieved {} items across {} requests within a duration of {}.",
+        LOG.debug(batchLogPrefix + "Successfully retrieved {} items across {} requests within a duration of {}.",
                 responseItems.size(),
                 futureList.size(),
                 Duration.between(startInstant, Instant.now()).toString());
@@ -405,7 +405,7 @@ abstract class ApiBase {
             LOG.error(message);
             throw new Exception(message);
         }
-        LOG.info(batchLogPrefix + "Successfully retrieved aggregate within a duration of {}.",
+        LOG.debug(batchLogPrefix + "Successfully retrieved aggregate within a duration of {}.",
                 Duration.between(startInstant, Instant.now()).toString());
         return AggregateParser.parseAggregate(responseItems.getResultsItems().get(0));
     }
@@ -2122,7 +2122,7 @@ abstract class ApiBase {
                                                        String errorMessage) throws Exception {
             // Check if all elements completed the upsert requests
             if (inputListA.isEmpty() && inputListB.isEmpty()) {
-                LOG.info(loggingPrefix + "Successfully upserted {} items within a duration of {}.",
+                LOG.debug(loggingPrefix + "Successfully upserted {} items within a duration of {}.",
                         outputList.size(),
                         Duration.between(startInstant, Instant.now()).toString());
             } else {
