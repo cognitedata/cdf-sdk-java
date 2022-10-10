@@ -21,6 +21,10 @@ Changes are grouped as follows:
 
 ### Added
 
+### Changed
+
+- `Data points` now uses the new cursor-based iteration offered by the API.
+
 ### Fixed
 
 - The default auth scope breaking when using certain combinations of `CogniteClient.withBaseUrl()` and `CogniteClient.withScopes()`.

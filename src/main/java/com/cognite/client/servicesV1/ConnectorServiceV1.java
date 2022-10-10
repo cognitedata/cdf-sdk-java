@@ -591,8 +591,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ResultFutureIterator<String> readTsDatapoints(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read TS datapoints service.");
-
         TSPointsRequestProvider requestProvider = TSPointsRequestProvider.builder()
                 .setEndpoint("timeseries/data/list")
                 .setRequest(queryParameters)
@@ -613,11 +611,8 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @param queryParameters The parameters for the events query.
      * @return
      */
-    public ResultFutureIterator<DataPointListItem>
-            readTsDatapointsProto(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read TS datapoints service.");
-
-        TSPointsReadProtoRequestProvider requestProvider = TSPointsReadProtoRequestProvider.builder()
+    public ResultFutureIterator<DataPointListItem> readTsDatapointsProto(Request queryParameters) {
+        TSPointsReadProtoCursorsRequestProvider requestProvider = TSPointsReadProtoCursorsRequestProvider.builder()
                 .setEndpoint("timeseries/data/list")
                 .setRequest(queryParameters)
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -625,7 +620,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                 .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
                 .build();
 
-        TSPointsProtoResponseParser responseParser = TSPointsProtoResponseParser.builder().build()
+        TSPointsProtoCursorsResponseParser responseParser = TSPointsProtoCursorsResponseParser.builder().build()
                 .withRequest(queryParameters);
 
         return ResultFutureIterator.<DataPointListItem>of(getClient(), requestProvider, responseParser);

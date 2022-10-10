@@ -30,6 +30,7 @@ import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import org.apache.commons.lang3.RandomStringUtils;
 
+import java.net.URISyntaxException;
 import java.util.*;
 
 @AutoValue
@@ -91,7 +92,7 @@ public abstract class TSPointsReadProtoCursorsRequestProvider extends GenericReq
             ImmutableList<ImmutableMap<String, Object>> originalItems = requestParameters.getItems();
             List<Map<String, Object>> requestItems = new ArrayList<>();
             for (ImmutableMap<String, Object> item : originalItems) {
-                Optional<Map<String, Object>> cursorItem = Optional.empty();
+                Optional<Map<String, Object>> cursorItem;
                 // get the id of the item. Can be either externalId or id
                 String externalId = (String) item.getOrDefault("externalId", "");
                 if (!externalId.isBlank()) {
@@ -128,6 +129,19 @@ public abstract class TSPointsReadProtoCursorsRequestProvider extends GenericReq
         LOG.debug("TSPointsReadRequestProvider: Json request body: {}", outputJson);
         requestBuilder.header("Accept", "application/protobuf");
         return requestBuilder.post(RequestBody.Companion.create(outputJson, MediaType.get("application/json"))).build();
+    }
+
+    /**
+     * Add the alpha flag to the request.
+     * @return
+     * @throws URISyntaxException
+     */
+    @Override
+    protected okhttp3.Request.Builder buildGenericRequest() throws URISyntaxException {
+        okhttp3.Request.Builder reqBuilder = super.buildGenericRequest();
+        reqBuilder.addHeader("version", "alpha");
+
+        return reqBuilder;
     }
 
     private Optional<Map<String, Object>> getCursorObjectFromId(List<Map<String, Object>> cursorList, long id) {
