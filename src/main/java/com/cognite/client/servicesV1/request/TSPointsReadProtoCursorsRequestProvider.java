@@ -94,7 +94,7 @@ public abstract class TSPointsReadProtoCursorsRequestProvider extends GenericReq
                 Optional<Map<String, Object>> cursorItem = Optional.empty();
                 // get the id of the item. Can be either externalId or id
                 String externalId = (String) item.getOrDefault("externalId", "");
-                if (!externalId.isEmpty()) {
+                if (!externalId.isBlank()) {
                     cursorItem = getCursorObjectFromExternalId(cursorList, externalId);
                 } else {
                     cursorItem = getCursorObjectFromId(cursorList, (Long) item.getOrDefault("id", 0l));
@@ -104,7 +104,7 @@ public abstract class TSPointsReadProtoCursorsRequestProvider extends GenericReq
                 if (cursorItem.isPresent()) {
                     Map<String, Object> newItem = new HashMap<>();
                     newItem.putAll(item);
-                    newItem.put("start", cursorItem.get().get("timestamp"));
+                    newItem.put("cursor", cursorItem.get().get("nextCursor"));
                     requestItems.add(newItem);
                 }
             }
