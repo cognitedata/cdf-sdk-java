@@ -123,10 +123,13 @@ public abstract class TSPointsReadProtoCursorsRequestProvider extends GenericReq
                 requestParameters.getItems().size());
 
         requestParameters = requestParameters.withRootParameter("limit", newLimit);
-        LOG.debug(logPrefix + "Adjusted the limit based on the number of TS items. New limit: " + newLimit);
+        LOG.debug(logPrefix + "Adjusted the *limit* based on the number of TS items in the request ({}). New limit: {}",
+                requestParameters.getItems().size(),
+                newLimit);
 
         String outputJson = requestParameters.getRequestParametersAsJson();
-        LOG.debug("TSPointsReadRequestProvider: Json request body: {}", outputJson);
+        LOG.debug(logPrefix + "Request headers: {}", requestBuilder.build().headers().toString());
+        LOG.debug(logPrefix + "Json request body: {}", outputJson);
         requestBuilder.header("Accept", "application/protobuf");
         return requestBuilder.post(RequestBody.Companion.create(outputJson, MediaType.get("application/json"))).build();
     }
@@ -139,7 +142,7 @@ public abstract class TSPointsReadProtoCursorsRequestProvider extends GenericReq
     @Override
     protected okhttp3.Request.Builder buildGenericRequest() throws URISyntaxException {
         okhttp3.Request.Builder reqBuilder = super.buildGenericRequest();
-        reqBuilder.addHeader("version", "alpha");
+        reqBuilder.addHeader("cdf-version", "alpha");
 
         return reqBuilder;
     }
