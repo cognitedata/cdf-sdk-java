@@ -46,7 +46,7 @@ class TimeseriesIntegrationTest {
                 Duration.between(startInstant, Instant.now()));
 
         LOG.info(loggingPrefix + "Start upserting timeseries.");
-        List<TimeseriesMetadata> upsertTimeseriesList = DataGenerator.generateTsHeaderObjects(9800);
+        List<TimeseriesMetadata> upsertTimeseriesList = DataGenerator.generateTsHeaderObjects(7800);
         client.timeseries().upsert(upsertTimeseriesList);
         LOG.info(loggingPrefix + "Finished upserting timeseries. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
