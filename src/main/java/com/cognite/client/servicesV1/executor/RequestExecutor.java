@@ -65,8 +65,6 @@ public abstract class RequestExecutor {
     private static final ThreadPoolExecutor DEFAULT_POOL = new ThreadPoolExecutor(NO_WORKERS, NO_WORKERS,
             1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
 
-    //private static final ForkJoinPool DEFAULT_POOL = new ForkJoinPool();
-
     static {
         DEFAULT_POOL.allowCoreThreadTimeOut(true);
     }

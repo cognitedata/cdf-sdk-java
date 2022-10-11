@@ -43,9 +43,12 @@ public abstract class CogniteClient implements Serializable {
     private final static String DEFAULT_BASE_URL = "https://api.cognitedata.com";
     private final static String API_ENV_VAR = "COGNITE_API_KEY";
 
-    private static int NO_WORKERS = 8;
-    private static ThreadPoolExecutor executorService = new ThreadPoolExecutor(NO_WORKERS, NO_WORKERS,
+    private static int DEFAULT_NO_WORKERS = 8;
+    private static int DEFAULT_NO_TS_WORKERS = 32;
+    private static ThreadPoolExecutor executorService = new ThreadPoolExecutor(DEFAULT_NO_WORKERS, DEFAULT_NO_WORKERS,
             1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+    private static ThreadPoolExecutor tsExecutorService = new ThreadPoolExecutor(DEFAULT_NO_TS_WORKERS, DEFAULT_NO_TS_WORKERS,
+            2000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
 
     // Default http client settings
     private final static List<ConnectionSpec> DEFAULT_CONNECTION_SPECS =
@@ -55,8 +58,9 @@ public abstract class CogniteClient implements Serializable {
 
     static {
         executorService.allowCoreThreadTimeOut(true);
+        tsExecutorService.allowCoreThreadTimeOut(true);
         LOG.info("CogniteClient - setting up default worker pool with {} workers.",
-                NO_WORKERS);
+                DEFAULT_NO_WORKERS);
     }
 
     @Nullable
@@ -241,6 +245,9 @@ public abstract class CogniteClient implements Serializable {
     public ExecutorService getExecutorService() {
         return executorService;
     }
+    public ExecutorService getTsExecutorService() {
+        return tsExecutorService;
+    }
 
     /**
      * Returns a {@link CogniteClient} using the specified Cognite Data Fusion project / tenant.
@@ -364,15 +371,26 @@ public abstract class CogniteClient implements Serializable {
      */
     public CogniteClient withClientConfig(ClientConfig config) {
 
-        if (config.getNoWorkers() != NO_WORKERS) {
+        if (config.getNoWorkers() != DEFAULT_NO_WORKERS) {
             // Modify the no threads in the executor service based on the config
             LOG.info("Setting up client with {} worker threads and {} list partitions",
                     config.getNoWorkers(),
                     config.getNoListPartitions());
-            NO_WORKERS = config.getNoWorkers();
-            executorService = new ThreadPoolExecutor(NO_WORKERS, NO_WORKERS,
+            DEFAULT_NO_WORKERS = config.getNoWorkers();
+            executorService = new ThreadPoolExecutor(DEFAULT_NO_WORKERS, DEFAULT_NO_WORKERS,
                     1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
             executorService.allowCoreThreadTimeOut(true);
+        }
+
+        if (config.getNoTsWorkers() != DEFAULT_NO_TS_WORKERS) {
+            // Modify the no threads in the executor service based on the config
+            LOG.info("Setting up client with {} TS worker threads and {} list partitions",
+                    config.getNoWorkers(),
+                    config.getNoListPartitions());
+            DEFAULT_NO_TS_WORKERS = config.getNoTsWorkers();
+            tsExecutorService = new ThreadPoolExecutor(DEFAULT_NO_TS_WORKERS, DEFAULT_NO_TS_WORKERS,
+                    2000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
+            tsExecutorService.allowCoreThreadTimeOut(true);
         }
 
         CogniteClient.Builder returnValueBuilder = toBuilder();

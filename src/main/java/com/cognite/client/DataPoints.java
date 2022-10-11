@@ -852,52 +852,41 @@ public abstract class DataPoints extends ApiBase implements UpsertTarget<Timeser
      * 1) Time series items.
      * 2) Time window.
      *
-     * First the algorithm looks at the total number of items and splits them based on a target
-     * of 20 items per request. Depending on the effect of this split, the algorithm looks at
-     * further splitting per time window.
+     * The primary mechanism is to split a request by distributing the TS items across the available workers/threads.
+     * Say we have N TS items and T workers/threads:
+     * 1) Distribute the TS items with N/T items per request.
+     *      - Maximum 20 TS items per request.
+     *      - Minimum 1 TS item per request.
+     * 2) If there are remaining TS items left after the initial distribution (ex. when requesting thousands of items),
+     * then queue up the remaining items with 20 TS items per request.
+     * 3) If there is more than 50% unallocated workers (ex. when requesting <10 items), then look at further splitting
+     * by time window.
+     *      - This can only be done if the original request specifies the time window on the root level (i.e. not per item).
+     *      - And the requested time window is >30 days
      *
      * @param requestParameters
      * @return
      * @throws Exception
      */
     private List<Request> splitRetrieveRequest(Request requestParameters) throws Exception {
-        String loggingPrefix = "splitRetrieveRequest - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        String loggingPrefix = "splitRetrieveRequest() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        final Duration MIN_SPLIT_DURATION = Duration.ofDays(30);
         List<Request> splitsByItems = new ArrayList<>();
 
         // First, perform a split by items.
-        if (requestParameters.getItems().size() > MAX_ITEMS_PER_REQUEST) {
-            // Split items into batches.
-            List<List<ImmutableMap<String, Object>>> itemsBatchList =
-                    Partition.ofSize(requestParameters.getItems(), MAX_ITEMS_PER_REQUEST);
-            // Build request object based on the batches (+ the original request)
-            splitsByItems = itemsBatchList.stream()
-                    .map(itemsBatch -> requestParameters.withItems(itemsBatch))
-                            .collect(Collectors.toList());
-            /*
-            List<Map<String, Object>> itemsBatch = new ArrayList();
-            int batchCounter = 0;
-            for (ImmutableMap<String, Object> item : requestParameters.getItems()) {
-                itemsBatch.add(item);
-                batchCounter++;
+        int batchSize = Math.min(MAX_ITEMS_PER_REQUEST,
+                Math.max(1, requestParameters.getItems().size() / getClient().getClientConfig().getNoTsWorkers()));
+        // Split items into batches.
+        List<List<ImmutableMap<String, Object>>> itemsBatchList = Partition.ofSize(requestParameters.getItems(), batchSize);
+        LOG.debug(loggingPrefix + "Split input request with {} TS items into {} sub-requests with item batch size of {}.",
+                requestParameters.getItems().size(),
+                itemsBatchList.size(),
+                batchSize);
+        // Build request object based on the batches (+ the original request)
+        splitsByItems = itemsBatchList.stream()
+                .map(itemsBatch -> requestParameters.withItems(itemsBatch))
+                .collect(Collectors.toList());
 
-                if (batchCounter >= MAX_ITEMS_PER_REQUEST) {
-                    splitsByItems.add(requestParameters.withItems(itemsBatch));
-                    itemsBatch = new ArrayList<>();
-                    batchCounter = 0;
-                }
-            }
-            if (itemsBatch.size() > 0) {
-                splitsByItems.add(requestParameters.withItems(itemsBatch));
-            }
-
-             */
-            LOG.info(loggingPrefix + "Split the original {} time series items across {} requests.",
-                    requestParameters.getItems().size(),
-                    splitsByItems.size());
-        } else {
-            // No need to split by items. Just replicate the original request.
-            splitsByItems.add(requestParameters);
-        }
         /*
         Temporary short circuit. Do not split by time window.
          */

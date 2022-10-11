@@ -623,7 +623,12 @@ public abstract class ConnectorServiceV1 implements Serializable {
         TSPointsProtoCursorsResponseParser responseParser = TSPointsProtoCursorsResponseParser.builder().build()
                 .withRequest(queryParameters);
 
-        return ResultFutureIterator.<DataPointListItem>of(getClient(), requestProvider, responseParser);
+        ResultFutureIterator<DataPointListItem> baselineIterator =
+                ResultFutureIterator.<DataPointListItem>of(getClient(), requestProvider, responseParser);
+
+        // Set the TS ExecutorService which has a higher number of workers
+        return baselineIterator
+                .withRequestExecutor(baselineIterator.getRequestExecutor().withExecutor(getClient().getTsExecutorService()));
     }
 
     /**
@@ -2451,7 +2456,18 @@ public abstract class ConnectorServiceV1 implements Serializable {
                     .build();
         }
 
+        abstract Builder<T> toBuilder();
         abstract ResponseParser<T> getResponseParser();
+
+        /**
+         * Configure a specific {@link RequestExecutor} to handle the HTTP(S) request against the Cognnite API.
+         *
+         * @param requestExecutor The RequestExecutor to use.
+         * @return ResultFutureIterator with the configured RequestExecutor.
+         */
+        public ResultFutureIterator<T> withRequestExecutor(RequestExecutor requestExecutor) {
+            return toBuilder().setRequestExecutor(requestExecutor).build();
+        }
 
         @Override
         public boolean hasNext() {
