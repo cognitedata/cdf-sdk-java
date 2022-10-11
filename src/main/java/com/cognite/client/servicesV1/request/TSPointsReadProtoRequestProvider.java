@@ -18,6 +18,7 @@ package com.cognite.client.servicesV1.request;
 
 import com.cognite.client.servicesV1.ConnectorConstants;
 import com.cognite.client.Request;
+import com.cognite.client.servicesV1.util.JsonUtil;
 import com.cognite.client.servicesV1.util.TSIterationUtilities;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,10 +35,9 @@ import java.util.*;
 
 @AutoValue
 public abstract class TSPointsReadProtoRequestProvider extends GenericRequestProvider {
-    private static final ObjectMapper mapper = new ObjectMapper();
     private static final int MAX_TS_ITEMS = 100;
 
-    private final ObjectReader objectReader = mapper.reader();
+    private final ObjectReader objectReader = JsonUtil.getObjectMapperInstance().reader();
 
     public static Builder builder() {
         return new com.cognite.client.servicesV1.request.AutoValue_TSPointsReadProtoRequestProvider.Builder()
@@ -75,7 +75,7 @@ public abstract class TSPointsReadProtoRequestProvider extends GenericRequestPro
                 requestParameters = requestParameters.withRootParameter("limit",
                         ConnectorConstants.DEFAULT_MAX_BATCH_SIZE_TS_DATAPOINTS_AGG);
                 LOG.info(logPrefix + "Request does not contain a *limit* parameter. Setting default limit: "
-                        + ConnectorConstants.DEFAULT_MAX_BATCH_SIZE_TS_DATAPOINTS);
+                        + ConnectorConstants.DEFAULT_MAX_BATCH_SIZE_TS_DATAPOINTS_AGG);
             } else {
                 requestParameters = requestParameters.withRootParameter("limit",
                         ConnectorConstants.DEFAULT_MAX_BATCH_SIZE_TS_DATAPOINTS);

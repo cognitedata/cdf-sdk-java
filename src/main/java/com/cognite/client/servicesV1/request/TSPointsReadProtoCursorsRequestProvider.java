@@ -73,7 +73,7 @@ public abstract class TSPointsReadProtoCursorsRequestProvider extends GenericReq
                 requestParameters = requestParameters.withRootParameter("limit",
                         ConnectorConstants.DEFAULT_MAX_BATCH_SIZE_TS_DATAPOINTS_AGG);
                 LOG.info(logPrefix + "Request does not contain a *limit* parameter. Setting default limit: "
-                        + ConnectorConstants.DEFAULT_MAX_BATCH_SIZE_TS_DATAPOINTS);
+                        + ConnectorConstants.DEFAULT_MAX_BATCH_SIZE_TS_DATAPOINTS_AGG);
             } else {
                 requestParameters = requestParameters.withRootParameter("limit",
                         ConnectorConstants.DEFAULT_MAX_BATCH_SIZE_TS_DATAPOINTS);
