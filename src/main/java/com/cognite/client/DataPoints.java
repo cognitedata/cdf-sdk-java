@@ -848,7 +848,9 @@ public abstract class DataPoints extends ApiBase implements UpsertTarget<Timeser
     /**
      * Split a retrieve data points request into multiple, smaller request for parallel retrieval.
      *
-     * The splitting performed along two dimensions: 1) the time window and 2) time series items.
+     * The splitting performed along two dimensions:
+     * 1) Time series items.
+     * 2) Time window.
      *
      * First the algorithm looks at the total number of items and splits them based on a target
      * of 20 items per request. Depending on the effect of this split, the algorithm looks at
@@ -864,6 +866,14 @@ public abstract class DataPoints extends ApiBase implements UpsertTarget<Timeser
 
         // First, perform a split by items.
         if (requestParameters.getItems().size() > MAX_ITEMS_PER_REQUEST) {
+            // Split items into batches.
+            List<List<ImmutableMap<String, Object>>> itemsBatchList =
+                    Partition.ofSize(requestParameters.getItems(), MAX_ITEMS_PER_REQUEST);
+            // Build request object based on the batches (+ the original request)
+            splitsByItems = itemsBatchList.stream()
+                    .map(itemsBatch -> requestParameters.withItems(itemsBatch))
+                            .collect(Collectors.toList());
+            /*
             List<Map<String, Object>> itemsBatch = new ArrayList();
             int batchCounter = 0;
             for (ImmutableMap<String, Object> item : requestParameters.getItems()) {
@@ -879,6 +889,8 @@ public abstract class DataPoints extends ApiBase implements UpsertTarget<Timeser
             if (itemsBatch.size() > 0) {
                 splitsByItems.add(requestParameters.withItems(itemsBatch));
             }
+
+             */
             LOG.info(loggingPrefix + "Split the original {} time series items across {} requests.",
                     requestParameters.getItems().size(),
                     splitsByItems.size());
@@ -886,9 +898,14 @@ public abstract class DataPoints extends ApiBase implements UpsertTarget<Timeser
             // No need to split by items. Just replicate the original request.
             splitsByItems.add(requestParameters);
         }
+        /*
+        Temporary short circuit. Do not split by time window.
+         */
+        return splitsByItems;
 
         // If the split by items will utilize min 60% of available resources (read partitions and workers)
         // then we don't need to split further by time window.
+        /*
         int capacity = Math.min(getClient().getClientConfig().getNoWorkers(),
                 getClient().getClientConfig().getNoListPartitions());
         if (splitsByItems.size() / (long) capacity > 0.6) {
@@ -925,11 +942,12 @@ public abstract class DataPoints extends ApiBase implements UpsertTarget<Timeser
             throw new Exception(loggingPrefix + "Request start time >= end time.");
         }
 
-        //
-        int noTsItems = splitsByItems.get(0).getItems().size();  // get the no items after the item split
+        // get the no items after the item split
+        int noTsItems = splitsByItems.get(0).getItems().size();
         Duration duration = Duration.ofMillis(endTimestamp - startTimestamp);
-        // Minimum duration is set based on a TS with 1Hz frequency and 20 iterations.
-        final Duration SPLIT_LOWER_LIMIT = Duration.ofHours(Math.max(12, (240 / noTsItems)));
+        // Minimum duration is set based on a TS with 1Hz frequency and 20 iterations. A single iteration
+        // captures ca. 24 hours (86400 data points at 1Hz) of data points.
+        final Duration SPLIT_LOWER_LIMIT = Duration.ofDays(Math.max(12, (240 / noTsItems)));
 
         LOG.debug(loggingPrefix + "Splitting request with {} items, a duration of {} and a min time window of {}.",
                 noTsItems,
@@ -1034,6 +1052,8 @@ public abstract class DataPoints extends ApiBase implements UpsertTarget<Timeser
         }
 
         return splitByTimeWindow;
+
+         */
     }
 
     /**
