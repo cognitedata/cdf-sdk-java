@@ -123,8 +123,6 @@ class TimeseriesIntegrationTest {
                 Duration.between(startInstant, Instant.now()));
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-        Thread.sleep(10000); // wait for eventual consistency
-
         LOG.info(loggingPrefix + "Start reading timeseries.");
         List<TimeseriesMetadata> listTimeseriesResults = new ArrayList<>();
         client.timeseries()
