@@ -21,7 +21,6 @@ import com.cognite.client.Request;
 import com.cognite.client.servicesV1.util.JsonUtil;
 import com.cognite.client.servicesV1.util.TSIterationUtilities;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;

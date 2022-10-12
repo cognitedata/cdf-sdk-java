@@ -62,7 +62,6 @@ public abstract class TSPointsReadProtoCursorsRequestProvider extends GenericReq
     }
 
     public okhttp3.Request buildRequest(Optional<String> cursor) throws Exception {
-        final String randomString = RandomStringUtils.randomAlphanumeric(5);
         final String logPrefix = "Build read TS datapoints request - ";
         Request requestParameters = getRequest();
         okhttp3.Request.Builder requestBuilder = buildGenericRequest();
@@ -101,7 +100,7 @@ public abstract class TSPointsReadProtoCursorsRequestProvider extends GenericReq
                     cursorItem = getCursorObjectFromId(cursorList, (Long) item.getOrDefault("id", 0l));
                 }
 
-                // Check that the id exits in the cursor map. If yes, add the item and set the new *start* parameter
+                // Check that the id exits in the cursor map. If yes, add the item and set the *cursor* parameter
                 if (cursorItem.isPresent()) {
                     Map<String, Object> newItem = new HashMap<>();
                     newItem.putAll(item);

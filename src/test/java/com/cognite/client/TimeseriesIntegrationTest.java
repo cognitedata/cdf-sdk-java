@@ -82,8 +82,8 @@ class TimeseriesIntegrationTest {
     @Tag("remoteCDP")
     void writeReadAndDeleteTimeseriesDataPoints() throws Exception {
         Instant startInstant = Instant.now();
-        final int noTsHeaders = 35;
-        final int noTsPoints = 517893;
+        final int noTsHeaders = 5;
+        final int noTsPoints = 1517893;
         final double tsPointsFrequency = 1d;
         ClientConfig config = ClientConfig.create()
                 .withNoWorkers(4)
