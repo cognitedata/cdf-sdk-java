@@ -871,9 +871,10 @@ public abstract class DataPoints extends ApiBase implements UpsertTarget<Timeser
     private List<Request> splitRetrieveRequest(Request requestParameters) throws Exception {
         String loggingPrefix = "splitRetrieveRequest() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
         final Duration MIN_SPLIT_DURATION = Duration.ofDays(30);
-        List<Request> splitsByItems = new ArrayList<>();
 
-        // First, perform a split by items.
+        /*
+        Firstly, perform a split by TS items.
+         */
         int batchSize = Math.min(MAX_ITEMS_PER_REQUEST,
                 Math.max(1, requestParameters.getItems().size() / getClient().getClientConfig().getNoTsWorkers()));
         // Split items into batches.
@@ -883,30 +884,37 @@ public abstract class DataPoints extends ApiBase implements UpsertTarget<Timeser
                 itemsBatchList.size(),
                 batchSize);
         // Build request object based on the batches (+ the original request)
-        splitsByItems = itemsBatchList.stream()
+        List<Request> splitsByItems = itemsBatchList.stream()
                 .map(itemsBatch -> requestParameters.withItems(itemsBatch))
                 .collect(Collectors.toList());
 
         /*
-        Temporary short circuit. Do not split by time window.
+        Check if should do split by time. We need to check the following conditions:
+        - Available capacity/workers after the above item split should be >= 50%.
+        - The query/request must specify the time window on the root level--not on the item level.
+        - The query/request must specify a time window > 30 days.
          */
-        return splitsByItems;
-
-        // If the split by items will utilize min 60% of available resources (read partitions and workers)
-        // then we don't need to split further by time window.
-        /*
-        int capacity = Math.min(getClient().getClientConfig().getNoWorkers(),
-                getClient().getClientConfig().getNoListPartitions());
-        if (splitsByItems.size() / (long) capacity > 0.6) {
-            LOG.info(loggingPrefix + "Splitting by time series items into {} requests offers good utilization of the available {} "
-                    + "workers/partitions. Will not split further (by time window).",
+        if (splitsByItems.size() / (long) getClient().getClientConfig().getNoTsWorkers() > 0.5) {
+            LOG.debug(loggingPrefix + "Splitting by time series items into {} requests offers good utilization of the available {} "
+                            + "workers/partitions. Will not split further (by time window).",
                     splitsByItems.size(),
-                    capacity);
+                    getClient().getClientConfig().getNoTsWorkers());
             return splitsByItems;
         }
 
+        for (Map<String, Object> tsItem : requestParameters.getItems()) {
+            if (tsItem.containsKey(START_KEY) || tsItem.containsKey(END_KEY)) {
+                LOG.debug(loggingPrefix + "The request specifies start/end on an item-level. "
+                                + "Will not split further (by time window).");
+                return splitsByItems;
+            }
+        }
+
+        /*
+
+
         // Split further by time windows.
-        // Establish the request time window
+        // Establish the request time window.
         long startTimestamp = 0L;
         long endTimestamp = Instant.now().truncatedTo(ChronoUnit.SECONDS).toEpochMilli();
 

@@ -44,7 +44,7 @@ public abstract class CogniteClient implements Serializable {
     private final static String API_ENV_VAR = "COGNITE_API_KEY";
 
     private static int DEFAULT_NO_WORKERS = 8;
-    private static int DEFAULT_NO_TS_WORKERS = 32;
+    private static int DEFAULT_NO_TS_WORKERS = 16;
     private static ThreadPoolExecutor executorService = new ThreadPoolExecutor(DEFAULT_NO_WORKERS, DEFAULT_NO_WORKERS,
             1000, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
     private static ThreadPoolExecutor tsExecutorService = new ThreadPoolExecutor(DEFAULT_NO_TS_WORKERS, DEFAULT_NO_TS_WORKERS,

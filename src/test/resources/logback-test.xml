@@ -19,9 +19,9 @@
     </appender>
 
     <logger name="com.cognite.client" level="INFO"/>
-    <!--logger name="com.cognite.client.ApiBase" level="DEBUG"/-->
-    <!--logger name="com.cognite.client.servicesV1.executor" level="DEBUG"/-->
-    <!--logger name="com.cognite.client.RawRows" level="INFO"/-->
+    <logger name="com.cognite.client.ApiBase" level="INFO"/>
+    <logger name="com.cognite.client.servicesV1.executor" level="DEBUG"/>
+    <logger name="com.cognite.client.DataPoints" level="DEBUG"/>
 
     <root level="info">
         <appender-ref ref="STDOUT" />

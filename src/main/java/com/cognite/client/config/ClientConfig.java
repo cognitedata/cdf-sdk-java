@@ -28,7 +28,7 @@ public abstract class ClientConfig implements Serializable {
 
     // Thread pool capacity
     private final static int DEFAULT_CPU_THREADS = 8;
-    private final static int DEFAULT_CPU_THREADS_TS = 32;
+    private final static int DEFAULT_CPU_THREADS_TS = 16;
 
     // Connection retries
     private static final int DEFAULT_RETRIES = 5;
@@ -153,7 +153,7 @@ public abstract class ClientConfig implements Serializable {
     /**
      * Specifies the maximum number of workers to use for the Cognite API requests towards the time series service.
      * This is a high-capacity service optimized for a higher number of workers than the other API services. The default
-     * setting is 32 workers.
+     * setting is 16 workers.
      *
      * @param noTsWorkers max number of workers.
      * @return the {@link ClientConfig} with the setting applied.

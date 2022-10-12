@@ -82,7 +82,7 @@ class TimeseriesIntegrationTest {
     @Tag("remoteCDP")
     void writeReadAndDeleteTimeseriesDataPoints() throws Exception {
         Instant startInstant = Instant.now();
-        final int noTsHeaders = 15;
+        final int noTsHeaders = 35;
         final int noTsPoints = 517893;
         final double tsPointsFrequency = 1d;
         ClientConfig config = ClientConfig.create()
@@ -123,14 +123,14 @@ class TimeseriesIntegrationTest {
                 Duration.between(startInstant, Instant.now()));
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-        Thread.sleep(5000); // wait for eventual consistency
+        Thread.sleep(10000); // wait for eventual consistency
 
         LOG.info(loggingPrefix + "Start reading timeseries.");
         List<TimeseriesMetadata> listTimeseriesResults = new ArrayList<>();
         client.timeseries()
                 .list(Request.create()
                         .withFilterMetadataParameter("source", DataGenerator.sourceValue))
-                .forEachRemaining(timeseries -> listTimeseriesResults.addAll(timeseries));
+                .forEachRemaining(listTimeseriesResults::addAll);
         LOG.info(loggingPrefix + "Finished reading timeseries. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
