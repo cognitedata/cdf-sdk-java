@@ -591,8 +591,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ResultFutureIterator<String> readTsDatapoints(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read TS datapoints service.");
-
         TSPointsRequestProvider requestProvider = TSPointsRequestProvider.builder()
                 .setEndpoint("timeseries/data/list")
                 .setRequest(queryParameters)
@@ -613,11 +611,8 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @param queryParameters The parameters for the events query.
      * @return
      */
-    public ResultFutureIterator<DataPointListItem>
-            readTsDatapointsProto(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read TS datapoints service.");
-
-        TSPointsReadProtoRequestProvider requestProvider = TSPointsReadProtoRequestProvider.builder()
+    public ResultFutureIterator<DataPointListItem> readTsDatapointsProto(Request queryParameters) {
+        TSPointsReadProtoCursorsRequestProvider requestProvider = TSPointsReadProtoCursorsRequestProvider.builder()
                 .setEndpoint("timeseries/data/list")
                 .setRequest(queryParameters)
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -625,10 +620,15 @@ public abstract class ConnectorServiceV1 implements Serializable {
                 .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
                 .build();
 
-        TSPointsProtoResponseParser responseParser = TSPointsProtoResponseParser.builder().build()
+        TSPointsProtoCursorsResponseParser responseParser = TSPointsProtoCursorsResponseParser.builder().build()
                 .withRequest(queryParameters);
 
-        return ResultFutureIterator.<DataPointListItem>of(getClient(), requestProvider, responseParser);
+        ResultFutureIterator<DataPointListItem> baselineIterator =
+                ResultFutureIterator.<DataPointListItem>of(getClient(), requestProvider, responseParser);
+
+        // Set the TS ExecutorService which has a higher number of workers
+        return baselineIterator
+                .withRequestExecutor(baselineIterator.getRequestExecutor().withExecutor(getClient().getTsExecutorService()));
     }
 
     /**
@@ -637,8 +637,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> readTsDatapointsLatest() {
-        LOG.debug(loggingPrefix + "Initiating read latest data point service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("timeseries/data/latest")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -656,8 +654,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter writeTsDatapoints() {
-        LOG.debug(loggingPrefix + "Building writer for ts datapoints service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("timeseries/data")
                 .setRequest(Request.create())
@@ -676,8 +672,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter writeTsDatapointsProto() {
-        LOG.debug(loggingPrefix + "Building writer for ts datapoints service.");
-
         TSPointsWriteProtoRequestProvider requestProvider = TSPointsWriteProtoRequestProvider.builder()
                 .setEndpoint("timeseries/data")
                 .setRequest(Request.create())
@@ -686,7 +680,11 @@ public abstract class ConnectorServiceV1 implements Serializable {
                 .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
                 .build();
 
-        return ItemWriter.of(getClient(), requestProvider);
+        ItemWriter baselineWriter = ItemWriter.of(getClient(), requestProvider);
+
+        // Set the TS ExecutorService which has a higher number of workers
+        return baselineWriter
+                .withRequestExecutor(baselineWriter.getRequestExecutor().withExecutor(getClient().getTsExecutorService()));
     }
 
     /**
@@ -2456,7 +2454,18 @@ public abstract class ConnectorServiceV1 implements Serializable {
                     .build();
         }
 
+        abstract Builder<T> toBuilder();
         abstract ResponseParser<T> getResponseParser();
+
+        /**
+         * Configure a specific {@link RequestExecutor} to handle the HTTP(S) request against the Cognnite API.
+         *
+         * @param requestExecutor The RequestExecutor to use.
+         * @return ResultFutureIterator with the configured RequestExecutor.
+         */
+        public ResultFutureIterator<T> withRequestExecutor(RequestExecutor requestExecutor) {
+            return toBuilder().setRequestExecutor(requestExecutor).build();
+        }
 
         @Override
         public boolean hasNext() {
@@ -2989,6 +2998,16 @@ public abstract class ConnectorServiceV1 implements Serializable {
          */
         public ItemWriter withDuplicatesResponseParser(ResponseParser<String> parser) {
             return toBuilder().setDuplicatesResponseParser(parser).build();
+        }
+
+        /**
+         * Configure a specific {@link RequestExecutor} to handle the HTTP(S) request against the Cognnite API.
+         *
+         * @param requestExecutor The RequestExecutor to use.
+         * @return ItemWriter with the configured RequestExecutor.
+         */
+        public ItemWriter withRequestExecutor(RequestExecutor requestExecutor) {
+            return toBuilder().setRequestExecutor(requestExecutor).build();
         }
 
         /**

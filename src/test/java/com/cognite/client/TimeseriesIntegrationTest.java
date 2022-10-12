@@ -46,7 +46,7 @@ class TimeseriesIntegrationTest {
                 Duration.between(startInstant, Instant.now()));
 
         LOG.info(loggingPrefix + "Start upserting timeseries.");
-        List<TimeseriesMetadata> upsertTimeseriesList = DataGenerator.generateTsHeaderObjects(9800);
+        List<TimeseriesMetadata> upsertTimeseriesList = DataGenerator.generateTsHeaderObjects(7800);
         client.timeseries().upsert(upsertTimeseriesList);
         LOG.info(loggingPrefix + "Finished upserting timeseries. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
@@ -82,8 +82,8 @@ class TimeseriesIntegrationTest {
     @Tag("remoteCDP")
     void writeReadAndDeleteTimeseriesDataPoints() throws Exception {
         Instant startInstant = Instant.now();
-        final int noTsHeaders = 15;
-        final int noTsPoints = 517893;
+        final int noTsHeaders = 5;
+        final int noTsPoints = 1517893;
         final double tsPointsFrequency = 1d;
         ClientConfig config = ClientConfig.create()
                 .withNoWorkers(4)
@@ -123,14 +123,12 @@ class TimeseriesIntegrationTest {
                 Duration.between(startInstant, Instant.now()));
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
-        Thread.sleep(5000); // wait for eventual consistency
-
         LOG.info(loggingPrefix + "Start reading timeseries.");
         List<TimeseriesMetadata> listTimeseriesResults = new ArrayList<>();
         client.timeseries()
                 .list(Request.create()
                         .withFilterMetadataParameter("source", DataGenerator.sourceValue))
-                .forEachRemaining(timeseries -> listTimeseriesResults.addAll(timeseries));
+                .forEachRemaining(listTimeseriesResults::addAll);
         LOG.info(loggingPrefix + "Finished reading timeseries. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");

@@ -848,191 +848,184 @@ public abstract class DataPoints extends ApiBase implements UpsertTarget<Timeser
     /**
      * Split a retrieve data points request into multiple, smaller request for parallel retrieval.
      *
-     * The splitting performed along two dimensions: 1) the time window and 2) time series items.
+     * The splitting performed along two dimensions:
+     * 1) Time series items.
+     * 2) Time window.
      *
-     * First the algorithm looks at the total number of items and splits them based on a target
-     * of 20 items per request. Depending on the effect of this split, the algorithm looks at
-     * further splitting per time window.
+     * The primary mechanism is to split a request by distributing the TS items across the available workers/threads.
+     * Say we have N TS items and T workers/threads:
+     * 1) Distribute the TS items with N/T items per request.
+     *      - Maximum 20 TS items per request.
+     *      - Minimum 1 TS item per request.
+     * 2) If there are remaining TS items left after the initial distribution (ex. when requesting thousands of items),
+     * then queue up the remaining items with 20 TS items per request.
+     * 3) If there is more than 50% unallocated workers (ex. when requesting <10 items), then look at further splitting
+     * by time window.
+     *      - This can only be done if the original request specifies the time window on the root level (i.e. not per item).
+     *      - And the requested time window is >30 days
      *
      * @param requestParameters
      * @return
      * @throws Exception
      */
     private List<Request> splitRetrieveRequest(Request requestParameters) throws Exception {
-        String loggingPrefix = "splitRetrieveRequest - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
-        List<Request> splitsByItems = new ArrayList<>();
+        String loggingPrefix = "splitRetrieveRequest() - " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        final Duration MIN_SPLIT_DURATION = Duration.ofDays(30);
 
-        // First, perform a split by items.
-        if (requestParameters.getItems().size() > MAX_ITEMS_PER_REQUEST) {
-            List<Map<String, Object>> itemsBatch = new ArrayList();
-            int batchCounter = 0;
-            for (ImmutableMap<String, Object> item : requestParameters.getItems()) {
-                itemsBatch.add(item);
-                batchCounter++;
+        /*
+        Firstly, perform a split by TS items.
+         */
+        int batchSize = Math.min(MAX_ITEMS_PER_REQUEST,
+                Math.max(1, requestParameters.getItems().size() / getClient().getClientConfig().getNoTsWorkers()));
+        // Split items into batches.
+        List<List<ImmutableMap<String, Object>>> itemsBatchList = Partition.ofSize(requestParameters.getItems(), batchSize);
+        LOG.debug(loggingPrefix + "Split input request with {} TS items into {} sub-requests with item batch size of {}.",
+                requestParameters.getItems().size(),
+                itemsBatchList.size(),
+                batchSize);
+        // Build request object based on the batches (+ the original request)
+        List<Request> splitsByItems = itemsBatchList.stream()
+                .map(itemsBatch -> requestParameters.withItems(itemsBatch))
+                .collect(Collectors.toList());
 
-                if (batchCounter >= MAX_ITEMS_PER_REQUEST) {
-                    splitsByItems.add(requestParameters.withItems(itemsBatch));
-                    itemsBatch = new ArrayList<>();
-                    batchCounter = 0;
-                }
-            }
-            if (itemsBatch.size() > 0) {
-                splitsByItems.add(requestParameters.withItems(itemsBatch));
-            }
-            LOG.info(loggingPrefix + "Split the original {} time series items across {} requests.",
-                    requestParameters.getItems().size(),
-                    splitsByItems.size());
-        } else {
-            // No need to split by items. Just replicate the original request.
-            splitsByItems.add(requestParameters);
-        }
+        /*
+        Check if should do split by time. We need to check the following conditions:
+        - Available capacity/workers after the above item split should be >= 50%.
+        - The request is for raw data points--not aggregates.
+        - The query/request must specify the time window on the root level--not on the item level.
+        - The query/request must specify a time window > 30 days.
 
-        // If the split by items will utilize min 60% of available resources (read partitions and workers)
-        // then we don't need to split further by time window.
-        int capacity = Math.min(getClient().getClientConfig().getNoWorkers(),
-                getClient().getClientConfig().getNoListPartitions());
-        if (splitsByItems.size() / (long) capacity > 0.6) {
-            LOG.info(loggingPrefix + "Splitting by time series items into {} requests offers good utilization of the available {} "
-                    + "workers/partitions. Will not split further (by time window).",
+        If all conditions are satisfied, we start the time window split algorithm:
+        1) Check the first and last available timestamp of the TS items in CDF.
+        2) Re-calculate the query time-window based on 1) and check that it is >30 days
+        3) Calculate the number of time splits (based on available worker capacity).
+        4) Perform the time split.
+         */
+        if (splitsByItems.size() / (long) getClient().getClientConfig().getNoTsWorkers() > 0.5) {
+            LOG.debug(loggingPrefix + "Splitting by time series items into {} requests offers good utilization of the available {} "
+                            + "workers/partitions. Will not split further (by time window).",
                     splitsByItems.size(),
-                    capacity);
+                    getClient().getClientConfig().getNoTsWorkers());
             return splitsByItems;
         }
 
-        // Split further by time windows.
-        // Establish the request time window
-        long startTimestamp = 0L;
-        long endTimestamp = Instant.now().truncatedTo(ChronoUnit.SECONDS).toEpochMilli();
+        // Check if there are any aggregate specifications in the original request.
+        if (requestParameters.getRequestParameters().containsKey(GRANULARITY_KEY)) {
+            LOG.debug(loggingPrefix + "The request specifies aggregates. Will not split further (by time window).");
+            return splitsByItems; // no splits
+        }
+
+        for (Map<String, Object> tsItem : requestParameters.getItems()) {
+            if (tsItem.containsKey(START_KEY) || tsItem.containsKey(END_KEY) || tsItem.containsKey(GRANULARITY_KEY)) {
+                LOG.debug(loggingPrefix + "The request specifies start/end or granularity on an item-level. "
+                                + "Will not split further (by time window).");
+                return splitsByItems;
+            }
+        }
+
+        // Establish the request time window.
+        long requestStartTimestamp = 0L;
+        long requestEndTimestamp = Instant.now().truncatedTo(ChronoUnit.SECONDS).toEpochMilli();
 
         LOG.debug(loggingPrefix + "Get end time from request attribute {}: [{}]",
                 END_KEY,
                 requestParameters.getRequestParameters().get(END_KEY));
         Optional<Long> requestEndTime = TSIterationUtilities.getEndAsMillis(requestParameters);
         if (requestEndTime.isPresent()) {
-            endTimestamp = requestEndTime.get();
+            requestEndTimestamp = requestEndTime.get();
         }
-
         LOG.debug(loggingPrefix + "Get start time from request attribute {}: [{}]",
                 START_KEY,
                 requestParameters.getRequestParameters().get(START_KEY));
         Optional<Long> requestStartTime = TSIterationUtilities.getStartAsMillis(requestParameters);
         if (requestStartTime.isPresent()) {
-            startTimestamp = requestStartTime.get();
+            requestStartTimestamp = requestStartTime.get();
         }
 
-        if (startTimestamp >= endTimestamp) {
+        if (requestStartTimestamp >= requestEndTimestamp) {
             LOG.error(loggingPrefix + "Request start time > end time. Request parameters: {}", requestParameters);
             throw new Exception(loggingPrefix + "Request start time >= end time.");
         }
-
-        //
-        int noTsItems = splitsByItems.get(0).getItems().size();  // get the no items after the item split
-        Duration duration = Duration.ofMillis(endTimestamp - startTimestamp);
-        // Minimum duration is set based on a TS with 1Hz frequency and 20 iterations.
-        final Duration SPLIT_LOWER_LIMIT = Duration.ofHours(Math.max(12, (240 / noTsItems)));
-
-        LOG.debug(loggingPrefix + "Splitting request with {} items, a duration of {} and a min time window of {}.",
-                noTsItems,
-                duration.toString(),
-                SPLIT_LOWER_LIMIT.toString());
-
-        if (duration.compareTo(SPLIT_LOWER_LIMIT) < 0) {
-            // The restriction range is too small to split.
-            LOG.info(loggingPrefix + "The request's time window is too small to split. Will just keep it as it is.");
+        Duration timeWindowDuration = Duration.ofMillis(requestEndTimestamp - requestStartTimestamp);
+        if (timeWindowDuration.compareTo(MIN_SPLIT_DURATION) < 0) {
+            // The time window is too small to split.
+            LOG.debug(loggingPrefix + "The request's time window is too small to split. Will just keep it as it is.");
             return splitsByItems;
         }
 
-        List<Request> splitByTimeWindow = new ArrayList<>();
-
-        if (requestParameters.getRequestParameters().containsKey(GRANULARITY_KEY)) {
-            // Run the aggregate split
-            return splitsByItems; // no splits
-        } else {
-            // We have raw data points and the request is "large" enough that we should get statistics to try and
-            // optimize the read requests.
-            // Get start and end of time window based on first and last available data point.
-            List<Item> tsItems = new ArrayList<>();
-            for (Map<String, Object> itemEntry : requestParameters.getItems()) {
-                if (itemEntry.containsKey("externalId")) {
-                    tsItems.add(Item.newBuilder()
-                            .setExternalId((String) itemEntry.get("externalId"))
-                            .build());
-                } else {
-                    tsItems.add(Item.newBuilder()
-                            .setId((long) itemEntry.get("id"))
-                            .build());
-                }
-            }
-            long estimatedEndTimestamp = this.retrieveLatest(tsItems).stream()
-                    .mapToLong(dataPoint -> dataPoint.getTimestamp())
-                    .max()
-                    .orElse(endTimestamp);
-            estimatedEndTimestamp += 10; // add a bit of buffer.
-            long estimatedStartTimestamp = this.retrieveFirst(tsItems).stream()
-                    .mapToLong(dataPoint -> dataPoint.getTimestamp())
-                    .min()
-                    .orElse(startTimestamp);
-            estimatedStartTimestamp -= 10; // add a bit of buffer.
-            startTimestamp = estimatedStartTimestamp > startTimestamp ? estimatedStartTimestamp : startTimestamp;
-            endTimestamp = estimatedEndTimestamp < endTimestamp ? estimatedEndTimestamp : endTimestamp;
-
-            // Check the max frequency
-            double maxFrequency = getMaxFrequency(requestParameters,
-                    Instant.ofEpochMilli(startTimestamp),
-                    Instant.ofEpochMilli(endTimestamp));
-            if (maxFrequency == 0d) {
-                // no datapoints in the range--don't split it
-                LOG.warn(loggingPrefix + "Unable to build statistics for the restriction / range. No counts. "
-                        + "Will keep the original range/restriction.");
-                return splitsByItems;
-            }
-            LOG.debug(loggingPrefix + "Collected basic statistics. "
-                            + "Capacity: {}, No splits by item: {}, Max frequency: {}, No TS items: {}, Time window seconds: {}",
-                            capacity,
-                            splitsByItems.size(),
-                            maxFrequency,
-                            noTsItems,
-                            Duration.ofMillis(endTimestamp - startTimestamp).getSeconds());
-
-            // Calculate the number of splits by time window.
-            long maxSplitsByCapacity = Math.floorDiv(capacity, splitsByItems.size()); // may result in zero
-            long estimatedNoDataPoints = (long) (maxFrequency * noTsItems * Duration.ofMillis(endTimestamp - startTimestamp).getSeconds());
-            long minDataPointsPerRequest = 100_000 * 10L;
-            long maxSplitsByFrequency = Math.floorDiv(estimatedNoDataPoints, minDataPointsPerRequest); // may result in zero
-            long targetNoSplits = Math.min(maxSplitsByCapacity, maxSplitsByFrequency);
-            LOG.debug(loggingPrefix + "Calculating the number of splits by time window. "
-                    + "Max splits by capacity: {}, estimated no data points: {}, max splits by frequency: {}, "
-                    + "target no splits: {}",
-                    maxSplitsByCapacity,
-                    estimatedNoDataPoints,
-                    maxSplitsByFrequency,
-                    targetNoSplits);
-
-            if (targetNoSplits <= 1) {
-                // no need to split further
-                return splitsByItems;
-            }
-            long splitDelta = Math.floorDiv(endTimestamp - startTimestamp, targetNoSplits);
-            long previousEnd = startTimestamp;
-            for (int i = 0; i < targetNoSplits; i++) {
-                long deltaStart = previousEnd;
-                long deltaEnd = deltaStart + splitDelta;
-                previousEnd = deltaEnd;
-                if (i == targetNoSplits - 1) {
-                    // We are on the final iteration, so make sure we include the rest of the time range.
-                    deltaEnd = endTimestamp;
-                }
-                for (Request request : splitsByItems) {
-                    LOG.debug(loggingPrefix + "Adding time based split with start {} and end {}",
-                            deltaStart,
-                            deltaEnd);
-                    splitByTimeWindow.add(request
-                            .withRootParameter(START_KEY, deltaStart)
-                            .withRootParameter(END_KEY, deltaEnd));
-                }
+        // All conditions for splitting by time window has been satisfied. Let's calculate the split.
+        // Get start and end of time window based on first and last available data point.
+        List<Item> tsItems = new ArrayList<>();
+        for (Map<String, Object> itemEntry : requestParameters.getItems()) {
+            if (itemEntry.containsKey("externalId")) {
+                tsItems.add(Item.newBuilder()
+                        .setExternalId((String) itemEntry.get("externalId"))
+                        .build());
+            } else {
+                tsItems.add(Item.newBuilder()
+                        .setId((long) itemEntry.get("id"))
+                        .build());
             }
         }
+        long estimatedEndTimestamp = this.retrieveLatest(tsItems).stream()
+                .mapToLong(dataPoint -> dataPoint.getTimestamp())
+                .max()
+                .orElse(requestEndTimestamp);
+        estimatedEndTimestamp += 10; // add a bit of buffer.
+        long estimatedStartTimestamp = this.retrieveFirst(tsItems).stream()
+                .mapToLong(dataPoint -> dataPoint.getTimestamp())
+                .min()
+                .orElse(requestStartTimestamp);
+        estimatedStartTimestamp -= 10; // add a bit of buffer.
+        long startTimestamp = estimatedStartTimestamp > requestStartTimestamp ? estimatedStartTimestamp : requestStartTimestamp;
+        long endTimestamp = estimatedEndTimestamp < requestEndTimestamp ? estimatedEndTimestamp : requestEndTimestamp;
 
+        // Check the time window duration again
+        timeWindowDuration = Duration.ofMillis(endTimestamp - startTimestamp);
+        if (timeWindowDuration.compareTo(MIN_SPLIT_DURATION) < 0) {
+            // The time window is too small to split.
+            LOG.debug(loggingPrefix + "The available data points' time window is too small to split. Will just keep it as it is.");
+            return splitsByItems;
+        }
+
+        // Calculate the number of splits by time window.
+        long targetNoSplits = getClient().getClientConfig().getNoTsWorkers() / splitsByItems.size(); // may result in zero
+        LOG.debug(loggingPrefix + "Calculating the number of splits by time window. "
+                        + "Capacity: {}, current partitions by item: {}, target no splits: {}",
+                getClient().getClientConfig().getNoTsWorkers(),
+                splitsByItems.size(),
+                targetNoSplits);
+
+        if (targetNoSplits <= 1) {
+            // no need to split further
+            return splitsByItems;
+        }
+
+        // Calculate the number of splits by time window.
+        List<Request> splitByTimeWindow = new ArrayList<>();
+        long splitDelta = Math.floorDiv(endTimestamp - startTimestamp, targetNoSplits);
+        long previousEnd = startTimestamp;
+        for (int i = 0; i < targetNoSplits; i++) {
+            long deltaStart = previousEnd;
+            long deltaEnd = deltaStart + splitDelta;
+            previousEnd = deltaEnd;
+            if (i == 0) {
+                // We are on the first interval, so make sure we include the original start time stamp.
+                deltaStart = requestStartTimestamp;
+            }
+            if (i == targetNoSplits - 1) {
+                // We are on the final interval, so make sure we include the rest of the time range.
+                deltaEnd = requestEndTimestamp;
+            }
+            for (Request request : splitsByItems) {
+                LOG.debug(loggingPrefix + "Adding time based split with start {} and end {}",
+                        deltaStart,
+                        deltaEnd);
+                splitByTimeWindow.add(request
+                        .withRootParameter(START_KEY, deltaStart)
+                        .withRootParameter(END_KEY, deltaEnd));
+            }
+        }
         return splitByTimeWindow;
     }
 

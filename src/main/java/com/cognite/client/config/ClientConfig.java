@@ -28,6 +28,7 @@ public abstract class ClientConfig implements Serializable {
 
     // Thread pool capacity
     private final static int DEFAULT_CPU_THREADS = 8;
+    private final static int DEFAULT_CPU_THREADS_TS = 16;
 
     // Connection retries
     private static final int DEFAULT_RETRIES = 5;
@@ -55,6 +56,7 @@ public abstract class ClientConfig implements Serializable {
                 .setSessionIdentifier(DEFAULT_SESSION_IDENTIFIER)
                 .setMaxRetries(DEFAULT_RETRIES)
                 .setNoWorkers(DEFAULT_CPU_THREADS)
+                .setNoTsWorkers(DEFAULT_CPU_THREADS_TS)
                 .setNoListPartitions(DEFAULT_LIST_PARTITIONS)
                 .setUpsertMode(DEFAULT_UPSERT_MODE)
                 .setEntityMatchingMaxBatchSize(DEFAULT_ENTITY_MATCHING_MAX_BATCH_SIZE)
@@ -77,6 +79,7 @@ public abstract class ClientConfig implements Serializable {
     public abstract String getSessionIdentifier();
     public abstract int getMaxRetries();
     public abstract int getNoWorkers();
+    public abstract int getNoTsWorkers();
     public abstract int getNoListPartitions();
     public abstract UpsertMode getUpsertMode();
     public abstract int getEntityMatchingMaxBatchSize();
@@ -145,6 +148,18 @@ public abstract class ClientConfig implements Serializable {
      */
     public ClientConfig withNoListPartitions(int noPartitions) {
         return toBuilder().setNoListPartitions(noPartitions).build();
+    }
+
+    /**
+     * Specifies the maximum number of workers to use for the Cognite API requests towards the time series service.
+     * This is a high-capacity service optimized for a higher number of workers than the other API services. The default
+     * setting is 16 workers.
+     *
+     * @param noTsWorkers max number of workers.
+     * @return the {@link ClientConfig} with the setting applied.
+     */
+    public ClientConfig withNoTsWorkers(int noTsWorkers) {
+        return toBuilder().setNoTsWorkers(noTsWorkers).build();
     }
 
     /**
@@ -220,6 +235,7 @@ public abstract class ClientConfig implements Serializable {
         abstract Builder setSessionIdentifier(String value);
         abstract Builder setMaxRetries(int value);
         abstract Builder setNoWorkers(int value);
+        abstract Builder setNoTsWorkers(int value);
         abstract Builder setNoListPartitions(int value);
         abstract Builder setUpsertMode(UpsertMode value);
         abstract Builder setEntityMatchingMaxBatchSize(int value);
