@@ -60,7 +60,8 @@ public abstract class ClientConfig implements Serializable {
                 .setNoListPartitions(DEFAULT_LIST_PARTITIONS)
                 .setUpsertMode(DEFAULT_UPSERT_MODE)
                 .setEntityMatchingMaxBatchSize(DEFAULT_ENTITY_MATCHING_MAX_BATCH_SIZE)
-                .setAsyncApiJobTimeout(DEFAULT_ASYNC_API_JOB_TIMEOUT);
+                .setAsyncApiJobTimeout(DEFAULT_ASYNC_API_JOB_TIMEOUT)
+                .setExperimental(FeatureFlag.create());
     }
 
     /**
@@ -85,6 +86,7 @@ public abstract class ClientConfig implements Serializable {
     public abstract int getEntityMatchingMaxBatchSize();
     public abstract Duration getAsyncApiJobTimeout();
     @Nullable public abstract ProxyConfig getProxyConfig();
+    public abstract FeatureFlag getExperimental();
 
     /**
      * Set the app identifier. The identifier is encoded in the api calls to the Cognite instance and can be
@@ -228,6 +230,46 @@ public abstract class ClientConfig implements Serializable {
         return toBuilder().setProxyConfig(proxyConfig).build();
     }
 
+    /**
+     * Enable/disable experimental features.
+     *
+     * Experimental features are not fully tested and does not offer future compatibility guarantees.
+     *
+     * @param experimentalFeatures the experimental feature flags.
+     * @return the {@link ClientConfig} with the setting applied.
+     */
+    public ClientConfig withExperimental(FeatureFlag experimentalFeatures)  {
+        return toBuilder().setExperimental(experimentalFeatures).build();
+    }
+
+    @AutoValue
+    public static abstract class FeatureFlag {
+        private static final boolean DEFAULT_ENABLE_DATA_POINTS_CURSOR = true;
+        private static Builder builder() {
+            return new AutoValue_ClientConfig_FeatureFlag.Builder()
+                    .setDataPointsCursorEnabled(DEFAULT_ENABLE_DATA_POINTS_CURSOR);
+        }
+
+        public static FeatureFlag create() {
+            return FeatureFlag.builder().build();
+        }
+
+        abstract Builder toBuilder();
+
+        public abstract boolean isDataPointsCursorEnabled();
+
+        public FeatureFlag enableDataPointsCursor(boolean enable) {
+            return toBuilder().setDataPointsCursorEnabled(enable).build();
+        }
+
+        @AutoValue.Builder
+        public static abstract class Builder {
+            abstract Builder setDataPointsCursorEnabled(boolean value);
+
+            abstract FeatureFlag build();
+        }
+    }
+
     @AutoValue.Builder
     static abstract class Builder {
         abstract Builder setSdkIdentifier(String value);
@@ -241,6 +283,7 @@ public abstract class ClientConfig implements Serializable {
         abstract Builder setEntityMatchingMaxBatchSize(int value);
         abstract Builder setAsyncApiJobTimeout(Duration value);
         abstract Builder setProxyConfig(ProxyConfig value);
+        abstract Builder setExperimental(FeatureFlag value);
 
         abstract ClientConfig build();
     }

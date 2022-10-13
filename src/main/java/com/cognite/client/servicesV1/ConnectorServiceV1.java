@@ -475,8 +475,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ResultFutureIterator<String> readTsHeaders(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read TS headers service.");
-
         PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
                 .setEndpoint("timeseries/list")
                 .setRequest(queryParameters)
@@ -494,8 +492,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> readTsAggregates() {
-        LOG.debug(loggingPrefix + "Initiating read timeseries aggregates service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("timeseries/aggregate")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -512,8 +508,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> readTsById() {
-        LOG.debug(loggingPrefix + "Initiating read time series by id service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("timeseries/byids")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -531,8 +525,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter writeTsHeaders() {
-        LOG.debug(loggingPrefix + "Initiating write ts headers service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("timeseries")
                 .setRequest(Request.create())
@@ -551,8 +543,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter updateTsHeaders() {
-        LOG.debug(loggingPrefix + "Initiating update ts headers service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("timeseries/update")
                 .setRequest(Request.create())
@@ -571,8 +561,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter deleteTsHeaders() {
-        LOG.debug(loggingPrefix + "Initiating delete ts service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("timeseries/delete")
                 .setRequest(Request.create())
@@ -612,16 +600,31 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ResultFutureIterator<DataPointListItem> readTsDatapointsProto(Request queryParameters) {
-        TSPointsReadProtoCursorsRequestProvider requestProvider = TSPointsReadProtoCursorsRequestProvider.builder()
-                .setEndpoint("timeseries/data/list")
-                .setRequest(queryParameters)
-                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
-                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
-                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
-                .build();
+        RequestProvider requestProvider;
+        ResponseParser responseParser;
+        if (getClient().getClientConfig().getExperimental().isDataPointsCursorEnabled()) {
+            requestProvider = TSPointsReadProtoCursorsRequestProvider.builder()
+                    .setEndpoint("timeseries/data/list")
+                    .setRequest(queryParameters)
+                    .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                    .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                    .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                    .build();
 
-        TSPointsProtoCursorsResponseParser responseParser = TSPointsProtoCursorsResponseParser.builder().build()
-                .withRequest(queryParameters);
+            responseParser = TSPointsProtoCursorsResponseParser.builder().build()
+                    .withRequest(queryParameters);
+        } else {
+            requestProvider = TSPointsReadProtoRequestProvider.builder()
+                    .setEndpoint("timeseries/data/list")
+                    .setRequest(queryParameters)
+                    .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                    .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                    .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                    .build();
+
+            responseParser = TSPointsProtoResponseParser.builder().build()
+                    .withRequest(queryParameters);
+        }
 
         ResultFutureIterator<DataPointListItem> baselineIterator =
                 ResultFutureIterator.<DataPointListItem>of(getClient(), requestProvider, responseParser);
