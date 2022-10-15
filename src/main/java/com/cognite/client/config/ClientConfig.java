@@ -244,7 +244,7 @@ public abstract class ClientConfig implements Serializable {
 
     @AutoValue
     public static abstract class FeatureFlag implements Serializable {
-        private static final boolean DEFAULT_ENABLE_DATA_POINTS_CURSOR = true;
+        private static final boolean DEFAULT_ENABLE_DATA_POINTS_CURSOR = false;
         private static Builder builder() {
             return new AutoValue_ClientConfig_FeatureFlag.Builder()
                     .setDataPointsCursorEnabled(DEFAULT_ENABLE_DATA_POINTS_CURSOR);
