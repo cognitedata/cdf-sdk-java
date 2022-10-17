@@ -17,13 +17,19 @@ Changes are grouped as follows:
 
 ### Short term
 
-## [1.18.0-SNAPSHOT]
+## [1.18.0] 2022-10-15
 
 ### Added
 
-### Changed
+- Improved performance when reading time series `data point`. When reading 2 - 100 time series in a single request you should see up to 10x improvement in throughput.
+- A new cursor-based iteration of time series `data points`. This is pre-release functionality which can be enabled by setting a feature flag in the `ClientConfig`. 
+```java
+ClientConfig config = ClientConfig.create()
+        .withExperimental(FeatureFlag.create()
+                .enableDataPointsCursor(true));     // Enable the new cursor-based iterator
 
-- `Data points` now uses the new cursor-based iteration offered by the API.
+CogniteClient.withClientConfig(config);             // Pass the config to the client
+```
 
 ### Fixed
 
