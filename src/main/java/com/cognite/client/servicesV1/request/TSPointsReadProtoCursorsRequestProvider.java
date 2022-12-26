@@ -28,9 +28,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
-import org.apache.commons.lang3.RandomStringUtils;
 
-import java.net.URISyntaxException;
 import java.util.*;
 
 @AutoValue
@@ -131,19 +129,6 @@ public abstract class TSPointsReadProtoCursorsRequestProvider extends GenericReq
         LOG.debug(logPrefix + "Json request body: {}", outputJson);
         requestBuilder.header("Accept", "application/protobuf");
         return requestBuilder.post(RequestBody.Companion.create(outputJson, MediaType.get("application/json"))).build();
-    }
-
-    /**
-     * Add the alpha flag to the request.
-     * @return
-     * @throws URISyntaxException
-     */
-    @Override
-    protected okhttp3.Request.Builder buildGenericRequest() throws URISyntaxException {
-        okhttp3.Request.Builder reqBuilder = super.buildGenericRequest();
-        reqBuilder.addHeader("cdf-version", "alpha");
-
-        return reqBuilder;
     }
 
     private Optional<Map<String, Object>> getCursorObjectFromId(List<Map<String, Object>> cursorList, long id) {
