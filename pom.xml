@@ -41,18 +41,18 @@
         <maven.compiler.release>11</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <auto.version>1.10</auto.version>
-        <nimbusds.version>10.1</nimbusds.version>
-        <awss3.version>1.12.338</awss3.version>
+        <auto.version>1.10.1</auto.version>
+        <nimbusds.version>10.4</nimbusds.version>
+        <awss3.version>1.12.368</awss3.version>
         <jgrapht.version>1.5.1</jgrapht.version>
         <okhttp3.version>4.10.0</okhttp3.version>
         <jackson.version>2.14.0</jackson.version>
-        <slf4j.version>2.0.3</slf4j.version>
+        <slf4j.version>2.0.5</slf4j.version>
         <guava.version>31.1-jre</guava.version>
         <commons.lang.version>3.12.0</commons.lang.version>
-        <logback.classic.version>1.4.4</logback.classic.version>
+        <logback.classic.version>1.4.5</logback.classic.version>
         <junit.version>5.9.0</junit.version>
-        <mockito.version>4.8.0</mockito.version>
+        <mockito.version>4.10.0</mockito.version>
 
         <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
         <maven-exec-plugin.version>3.0.0</maven-exec-plugin.version>
@@ -63,7 +63,7 @@
         <!-- protobuf paths -->
         <protobuf.input.directory>${project.basedir}/src/main/proto</protobuf.input.directory>
         <protobuf.output.directory>${project.build.directory}/generated-sources/proto</protobuf.output.directory>
-        <protobuf.version>3.21.9</protobuf.version>
+        <protobuf.version>3.21.12</protobuf.version>
 
         <build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
         <maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
