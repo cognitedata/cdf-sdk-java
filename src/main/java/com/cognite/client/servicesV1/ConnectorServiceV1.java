@@ -602,29 +602,17 @@ public abstract class ConnectorServiceV1 implements Serializable {
     public ResultFutureIterator<DataPointListItem> readTsDatapointsProto(Request queryParameters) {
         RequestProvider requestProvider;
         ResponseParser responseParser;
-        if (getClient().getClientConfig().getExperimental().isDataPointsCursorEnabled()) {
-            requestProvider = TSPointsReadProtoCursorsRequestProvider.builder()
-                    .setEndpoint("timeseries/data/list")
-                    .setRequest(queryParameters)
-                    .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
-                    .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
-                    .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
-                    .build();
 
-            responseParser = TSPointsProtoCursorsResponseParser.builder().build()
-                    .withRequest(queryParameters);
-        } else {
-            requestProvider = TSPointsReadProtoRequestProvider.builder()
-                    .setEndpoint("timeseries/data/list")
-                    .setRequest(queryParameters)
-                    .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
-                    .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
-                    .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
-                    .build();
+        requestProvider = TSPointsReadProtoCursorsRequestProvider.builder()
+                .setEndpoint("timeseries/data/list")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
 
-            responseParser = TSPointsProtoResponseParser.builder().build()
-                    .withRequest(queryParameters);
-        }
+        responseParser = TSPointsProtoCursorsResponseParser.builder().build()
+                .withRequest(queryParameters);
 
         ResultFutureIterator<DataPointListItem> baselineIterator =
                 ResultFutureIterator.<DataPointListItem>of(getClient(), requestProvider, responseParser);

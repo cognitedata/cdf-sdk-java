@@ -17,6 +17,11 @@ Changes are grouped as follows:
 
 ### Short term
 
+## [1.19.0-SNAPSHOT]
+
+### Added
+- The new cursor-based `data-points` iterator is enabled by default.
+
 ## [1.18.0] 2022-10-15
 
 ### Added
