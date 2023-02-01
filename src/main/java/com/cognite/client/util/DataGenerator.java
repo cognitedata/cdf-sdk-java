@@ -11,7 +11,6 @@ import com.google.protobuf.util.Structs;
 import com.google.protobuf.util.Values;
 import org.apache.commons.lang3.RandomStringUtils;
 
-import java.net.URL;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -35,8 +34,7 @@ public class DataGenerator {
                     .setExternalId(RandomStringUtils.randomAlphanumeric(10))
                     .setName("test_file_" + RandomStringUtils.randomAlphanumeric(5) + ".test")
                     .setSource(sourceValue)
-                            .setGeoLocation(generateGeoFeature(1).get(0)
-                            )
+                    .setGeoLocation(generateGeoFeature(1).get(0))
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)
                     .build());
@@ -333,6 +331,7 @@ public class DataGenerator {
                     .setName("generated_asset_" + RandomStringUtils.randomAlphanumeric(5))
                     .setDescription("generated_asset_description_" + RandomStringUtils.randomAlphanumeric(50))
                     .setSource(sourceValue)
+                    .setGeoLocation(generateGeoFeature(1).get(0))
                     .putMetadata("type", DataGenerator.sourceValue)
                     .putMetadata(sourceKey, DataGenerator.sourceValue)
                     .build());
