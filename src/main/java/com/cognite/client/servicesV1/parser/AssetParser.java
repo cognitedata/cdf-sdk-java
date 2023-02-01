@@ -110,6 +110,10 @@ public class AssetParser {
             }
         }
 
+        if (root.path("geoLocation").isObject()) {
+            assetBuilder.setGeoLocation(GeoParser.parseFeature(root.path("geoLocation").toString()));
+        }
+
         // process the aggregates nested object
         if (root.path("aggregates").isObject()) {
             Asset.Aggregates.Builder aggregatesBuilder = Asset.Aggregates.newBuilder();
@@ -177,6 +181,9 @@ public class AssetParser {
             }
             mapBuilder.put("labels", labels);
         }
+        if (element.hasGeoLocation()) {
+            mapBuilder.put("geoLocation", GeoParser.parseFeatureToMap(element.getGeoLocation()));
+        }
 
         return mapBuilder.build();
     }
@@ -230,6 +237,9 @@ public class AssetParser {
                 labels.add(ImmutableMap.of("externalId", label));
             }
             updateNodeBuilder.put("labels", ImmutableMap.of("add", labels));
+        }
+        if (element.hasGeoLocation()) {
+            updateNodeBuilder.put("geoLocation", ImmutableMap.of("set", GeoParser.parseFeatureToMap(element.getGeoLocation())));
         }
         mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();
@@ -294,6 +304,12 @@ public class AssetParser {
             labels.add(ImmutableMap.of("externalId", label));
         }
         updateNodeBuilder.put("labels", ImmutableMap.of("set", labels));
+
+        if (element.hasGeoLocation()) {
+            updateNodeBuilder.put("geoLocation", ImmutableMap.of("set", GeoParser.parseFeatureToMap(element.getGeoLocation())));
+        } else {
+            updateNodeBuilder.put("geoLocation", ImmutableMap.of("setNull", true));
+        }
 
         mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();

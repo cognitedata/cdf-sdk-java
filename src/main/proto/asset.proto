@@ -5,6 +5,8 @@ package com.cognite.client.dto;
 option java_package = "com.cognite.client.dto";
 option java_multiple_files = true;
 
+import "geometry.proto";
+
 message Asset {
     message Aggregates {
         optional int32 child_count = 1;
@@ -25,5 +27,6 @@ message Asset {
     repeated string labels = 11;
     optional string source = 12;
     optional int64 data_set_id = 13;
-    Aggregates aggregates = 14;
+    optional geo.Feature geo_location = 14;
+    Aggregates aggregates = 15;
 }

@@ -21,6 +21,7 @@ Changes are grouped as follows:
 
 ### Added
 - The new cursor-based `data-points` iterator is enabled by default.
+- Support for `geoLocation` on `assets`.
 
 ## [1.18.0] 2022-10-15
 
