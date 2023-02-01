@@ -20,7 +20,7 @@ import com.cognite.client.CogniteClient;
 import com.cognite.client.Request;
 import com.cognite.client.config.AuthConfig;
 import com.cognite.client.dto.*;
-import com.cognite.client.servicesV1.exception.MissingParameterExcetion;
+import com.cognite.client.servicesV1.exception.MissingParameterException;
 import com.cognite.client.servicesV1.executor.FileBinaryRequestExecutor;
 import com.cognite.client.servicesV1.executor.RequestExecutor;
 import com.cognite.client.servicesV1.executor.ThreeDFileBinaryRequestExecutor;
@@ -3318,7 +3318,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
             if (Objects.isNull(threeDFileId)) {
                 String errorMessage = String.format(
                         "%s No 3D file id specified in the request. Will skip the download request.", loggingPrefix);
-                throw new MissingParameterExcetion(errorMessage);
+                throw new MissingParameterException(errorMessage);
             }
 
             // Start download the 3D file binaries
