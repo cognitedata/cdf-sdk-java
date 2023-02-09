@@ -72,7 +72,7 @@
         <protoc-jar-maven-plugin.version>3.11.4</protoc-jar-maven-plugin.version>
         <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M8</maven-surefire-plugin.version>
-        <maven-javadoc-plugin.version>3.2.0</maven-javadoc-plugin.version>
+        <maven-javadoc-plugin.version>3.4.1</maven-javadoc-plugin.version>
         <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
         <maven-site-plugin.version>3.9.1</maven-site-plugin.version>
         <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version> <!-- new version 3.0.1 available-->
