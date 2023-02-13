@@ -1071,9 +1071,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter deleteFiles() {
-        LOG.debug(loggingPrefix + "Initiating delete files service.");
-        
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("files/delete")
                 .setRequest(Request.create())
@@ -1092,8 +1089,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public LoginStatus readLoginStatusByApiKey(String host) throws Exception {
-        LOG.debug(loggingPrefix + "Getting login status for host [{}].", host);
-
+        // TODO: Remove when deprecating api keys
         GetLoginRequestProvider requestProvider = GetLoginRequestProvider.builder()
                 .setEndpoint("status")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())

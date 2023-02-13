@@ -23,8 +23,19 @@ class CogniteClientTest {
     }
 
     @Test
-    void test_ofClientCredentials_config() throws Exception {
+    void test_ofClientCredentials_config_missing_project() throws Exception {
         CogniteClient client = CogniteClient.ofClientCredentials("123", "secret", new URL("https://localhost/cogniteapi")).withBaseUrl("https://localhost");
+        assertNotNull(client.getHttpClient());
+        List<Interceptor> interceptorList = client.getHttpClient().interceptors();
+        assertNotNull(interceptorList);
+        assertEquals(1, interceptorList.size());
+        assertEquals("com.cognite.client.CogniteClient$ClientCredentialsInterceptor", interceptorList.get(0).getClass().getName());
+        assertEquals("https://localhost", client.getBaseUrl());
+    }
+
+    @Test
+    void test_ofClientCredentials_config() throws Exception {
+        CogniteClient client = CogniteClient.ofClientCredentials("myCdfProject", "123", "secret", new URL("https://localhost/cogniteapi")).withBaseUrl("https://localhost");
         assertNotNull(client.getHttpClient());
         List<Interceptor> interceptorList = client.getHttpClient().interceptors();
         assertNotNull(interceptorList);

@@ -17,6 +17,7 @@
 package com.cognite.client.config;
 
 import com.google.auto.value.AutoValue;
+import com.google.common.base.Preconditions;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
@@ -37,10 +38,15 @@ public abstract class AuthConfig implements Serializable {
             .setHost(DEFAULT_HOST);
   }
 
+  // TODO: Remove when deprecating api keys
+  @Deprecated
   public static AuthConfig create() {
     return AuthConfig.builder().build();
   }
   public static AuthConfig of(String cdfProject) {
+    Preconditions.checkArgument(null != cdfProject && !cdfProject.isBlank(),
+            "The CDF Project cannot be null or blank.");
+
     return AuthConfig.builder()
             .setProject(cdfProject)
             .build();
@@ -65,6 +71,7 @@ public abstract class AuthConfig implements Serializable {
   }
 
 
+  // TODO: Remove when deprecating api keys
   /**
    * Set the Cognite Data Fusion project (environment) to connect with.
    *

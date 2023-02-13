@@ -75,10 +75,10 @@ CogniteClient client = CogniteClient.ofKey(<yourApiKey>)
         
 // ... or use client credentials (OpenID Connect)
 CogniteClient client = CogniteClient.ofClientCredentials(
+        <cdfProject>,
         <clientId>,
         <clientSecret>,
         TokenUrl.generateAzureAdURL(<azureAdTenantId>))
-        .withProject("myCdfProject")
         .withBaseUrl("https://yourBaseURL.cognitedata.com"); //optional parameter     
         
 // List all assets

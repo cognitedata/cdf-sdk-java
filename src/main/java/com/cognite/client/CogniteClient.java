@@ -113,6 +113,7 @@ public abstract class CogniteClient implements Serializable {
      * @param apiKey The Cognite Data Fusion API key to use for authentication.
      * @return the client object with default configuration.
      */
+    @Deprecated
     public static CogniteClient ofKey(String apiKey) {
         Preconditions.checkArgument(null != apiKey && !apiKey.isEmpty(),
                 "The api key cannot be empty.");
@@ -143,9 +144,10 @@ public abstract class CogniteClient implements Serializable {
      * @param tokenSupplier A Supplier (functional interface) producing a valid access token when called.
      * @return the client object with default configuration.
      */
+    @Deprecated
     public static CogniteClient ofToken(Supplier<String> tokenSupplier) {
         Preconditions.checkNotNull(tokenSupplier,
-                "The token supplier cannot be empty.");
+                "The token supplier cannot be null.");
         String host = "";
         try {
             host = new URL(DEFAULT_BASE_URL).getHost();
@@ -163,6 +165,89 @@ public abstract class CogniteClient implements Serializable {
     }
 
     /**
+     * Returns a {@link CogniteClient} using the provided supplier (function) to provide
+     * a bearer token for authorization.
+     *
+     * If your application handles the authentication flow itself, you can pass a
+     * {@link Supplier} to this constructor. The supplier will be called for each api request
+     * and the provided token will be added as a bearer token to the request header.
+     *
+     * @param cdfProject The CDF project to connect to.
+     * @param tokenSupplier A Supplier (functional interface) producing a valid access token when called.
+     * @return the client object with default configuration.
+     */
+    @Deprecated
+    public static CogniteClient ofToken(String cdfProject,
+                                        Supplier<String> tokenSupplier) {
+        Preconditions.checkArgument(null != cdfProject && !cdfProject.isBlank(),
+                "The CDF Project cannot be null or blank.");
+        Preconditions.checkNotNull(tokenSupplier,
+                "The token supplier cannot be null.");
+
+        String host = "";
+        try {
+            host = new URL(DEFAULT_BASE_URL).getHost();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return CogniteClient.builder()
+                .setProject(cdfProject)
+                .setTokenSupplier(tokenSupplier)
+                .setAuthType(AuthType.TOKEN_SUPPLIER)
+                .setHttpClient(CogniteClient.getHttpClientBuilder()
+                        .addInterceptor(new TokenInterceptor(host, tokenSupplier))
+                        .build())
+                .build();
+    }
+
+    /**
+     * Returns a {@link CogniteClient} using client credentials for authentication.
+     *
+     * Client credentials is the preferred authentication pattern for services /
+     * machine to machine communication for Openid Connect (and Oauth) compatible identity providers.
+     *
+     * @param cdfProject The CDF project to connect to.
+     * @param clientId The client id to use for authentication.
+     * @param clientSecret The client secret to use for authentication.
+     * @param tokenUrl The URL to call for obtaining the access token.
+     * @param scopes The list of scopes to be used for authentication
+     * @return the client object with default configuration.
+     */
+    public static CogniteClient ofClientCredentials(String cdfProject,
+                                                    String clientId,
+                                                    String clientSecret,
+                                                    URL tokenUrl,
+                                                    Collection<String> scopes) {
+        Preconditions.checkArgument(null != cdfProject && !cdfProject.isBlank(),
+                "The CDF Project cannot be null or blank.");
+        Preconditions.checkArgument(null != clientId && !clientId.isBlank(),
+                "The clientId cannot be empty.");
+        Preconditions.checkArgument(null != clientSecret && !clientSecret.isBlank(),
+                "The secret cannot be empty.");
+
+        String host = "";
+        try {
+            host = new URL(DEFAULT_BASE_URL).getHost();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return CogniteClient.builder()
+                .setProject(cdfProject)
+                .setClientId(clientId)
+                .setClientSecret(clientSecret)
+                .setTokenUrl(tokenUrl)
+                .setAuthType(AuthType.CLIENT_CREDENTIALS)
+                .setAuthScopes(scopes)
+                .setHttpClient(CogniteClient.getHttpClientBuilder()
+                        .addInterceptor(new ClientCredentialsInterceptor(host, clientId,
+                                clientSecret, tokenUrl, scopes))
+                        .build())
+                .build();
+    }
+
+    /**
      * Returns a {@link CogniteClient} using client credentials for authentication.
      *
      * Client credentials is the preferred authentication pattern for services /
@@ -174,6 +259,7 @@ public abstract class CogniteClient implements Serializable {
      * @param scopes The list of scopes to be used for authentication
      * @return the client object with default configuration.
      */
+    @Deprecated
     public static CogniteClient ofClientCredentials(String clientId,
                                                     String clientSecret,
                                                     URL tokenUrl,
@@ -209,16 +295,37 @@ public abstract class CogniteClient implements Serializable {
      * Client credentials is the preferred authentication pattern for services /
      * machine to machine communication for Openid Connect (and Oauth) compatible identity providers.
      *
+     * @param cdfProject The CDF project to connect to.
      * @param clientId The client id to use for authentication.
      * @param clientSecret The client secret to use for authentication.
      * @param tokenUrl The URL to call for obtaining the access token.
      * @return the client object with default configuration.
      */
-    public static CogniteClient ofClientCredentials(String clientId,
+    public static CogniteClient ofClientCredentials(String cdfProject,
+                                                    String clientId,
                                                     String clientSecret,
                                                     URL tokenUrl) {
        return CogniteClient.ofClientCredentials(
-               clientId, clientSecret, tokenUrl, List.of(DEFAULT_BASE_URL + "/.default"));
+               cdfProject, clientId, clientSecret, tokenUrl, List.of(DEFAULT_BASE_URL + "/.default"));
+    }
+
+    /**
+     * Returns a {@link CogniteClient} using client credentials for authentication.
+     *
+     * Client credentials is the preferred authentication pattern for services /
+     * machine to machine communication for Openid Connect (and Oauth) compatible identity providers.
+     *
+     * @param clientId The client id to use for authentication.
+     * @param clientSecret The client secret to use for authentication.
+     * @param tokenUrl The URL to call for obtaining the access token.
+     * @return the client object with default configuration.
+     */
+    @Deprecated
+    public static CogniteClient ofClientCredentials(String clientId,
+                                                    String clientSecret,
+                                                    URL tokenUrl) {
+        return CogniteClient.ofClientCredentials(
+                clientId, clientSecret, tokenUrl, List.of(DEFAULT_BASE_URL + "/.default"));
     }
 
     protected abstract Builder toBuilder();
@@ -607,6 +714,9 @@ public abstract class CogniteClient implements Serializable {
             cdfProject = cdfProjectCache;
         } else {
             // Have to get the project via the auth credentials
+            // TODO: Remove when deprecating api keys
+            LOG.warn("The CDF project is not configured for the CogniteClient. API calls may fail.");
+
             LoginStatus loginStatus = getConnectorService()
                     .readLoginStatusByApiKey(getBaseUrl());
 
