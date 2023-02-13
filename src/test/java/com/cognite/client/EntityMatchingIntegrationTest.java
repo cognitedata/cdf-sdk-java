@@ -33,12 +33,7 @@ class EntityMatchingIntegrationTest {
                 .withNoListPartitions(1);
         String loggingPrefix = "UnitTest - matchEntitiesStruct() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofClientCredentials(
-                    TestConfigProvider.getProject(),
-                    TestConfigProvider.getClientId(),
-                    TestConfigProvider.getClientSecret(),
-                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = TestConfigProvider.getCogniteClient()
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",

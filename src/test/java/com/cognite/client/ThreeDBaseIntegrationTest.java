@@ -81,23 +81,11 @@ public abstract class ThreeDBaseIntegrationTest {
     }
 
     private CogniteClient getClientOpenIndustrialData() throws MalformedURLException {
-        return CogniteClient.ofClientCredentials(
-                TestConfigProvider.getOpenIndustrialDataProject(),
-                TestConfigProvider.getOpenIndustrialDataClientId(),
-                TestConfigProvider.getOpenIndustrialDataClientSecret(),
-                TokenUrl.generateAzureAdURL(TestConfigProvider.getOpenIndustrialDataTenantId())
-        );
+        return TestConfigProvider.getOpenIndustrialDataCogniteClient();
     }
 
     private CogniteClient getClientCredential() throws MalformedURLException {
-        CogniteClient client = CogniteClient.ofClientCredentials(
-                        TestConfigProvider.getProject(),
-                        TestConfigProvider.getClientId(),
-                        TestConfigProvider.getClientSecret(),
-                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                .withBaseUrl(TestConfigProvider.getHost());
-
-        return client;
+        return TestConfigProvider.getCogniteClient();
     }
 
     @NotNull
@@ -160,12 +148,7 @@ public abstract class ThreeDBaseIntegrationTest {
                     .build();
             fileContainerInput.add(fileContainer);
 
-            CogniteClient client = CogniteClient.ofClientCredentials(
-                    TestConfigProvider.getProject(),
-                    TestConfigProvider.getClientId(),
-                    TestConfigProvider.getClientSecret(),
-                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withBaseUrl(TestConfigProvider.getHost());
+            CogniteClient client = TestConfigProvider.getCogniteClient();
 
             try {
                 List<FileMetadata> uploadFileResult = client.files().upload(fileContainerInput);

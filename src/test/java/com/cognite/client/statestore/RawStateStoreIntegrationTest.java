@@ -31,12 +31,7 @@ class RawStateStoreIntegrationTest {
         String loggingPrefix = "UnitTest - createCommitAndLoadStates() -";
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofClientCredentials(
-                        TestConfigProvider.getClientId(),
-                        TestConfigProvider.getClientSecret(),
-                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                .withProject(TestConfigProvider.getProject())
-                .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = TestConfigProvider.getCogniteClient()
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",

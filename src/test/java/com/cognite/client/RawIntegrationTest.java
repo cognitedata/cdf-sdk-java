@@ -38,12 +38,7 @@ class RawIntegrationTest {
                 .withNoListPartitions(1);
         String loggingPrefix = "UnitTest - writeReadAndDeleteRaw() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofClientCredentials(
-                    TestConfigProvider.getProject(),
-                    TestConfigProvider.getClientId(),
-                    TestConfigProvider.getClientSecret(),
-                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = TestConfigProvider.getCogniteClient()
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -175,12 +170,7 @@ class RawIntegrationTest {
 
         String loggingPrefix = "UnitTest - writeStreamAndDeleteRaw() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofClientCredentials(
-                    TestConfigProvider.getProject(),
-                    TestConfigProvider.getClientId(),
-                    TestConfigProvider.getClientSecret(),
-                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withBaseUrl(TestConfigProvider.getHost())
+        CogniteClient client = TestConfigProvider.getCogniteClient()
                 //.withClientConfig(config)
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",

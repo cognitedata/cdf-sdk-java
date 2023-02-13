@@ -27,6 +27,7 @@ class CogniteClientTest {
         CogniteClient client = CogniteClient.ofClientCredentials("123", "secret", new URL("https://localhost/cogniteapi")).withBaseUrl("https://localhost");
         assertNotNull(client.getHttpClient());
         List<Interceptor> interceptorList = client.getHttpClient().interceptors();
+        //client.buildAuthConfig();
         assertNotNull(interceptorList);
         assertEquals(1, interceptorList.size());
         assertEquals("com.cognite.client.CogniteClient$ClientCredentialsInterceptor", interceptorList.get(0).getClass().getName());
@@ -38,6 +39,7 @@ class CogniteClientTest {
         CogniteClient client = CogniteClient.ofClientCredentials("myCdfProject", "123", "secret", new URL("https://localhost/cogniteapi")).withBaseUrl("https://localhost");
         assertNotNull(client.getHttpClient());
         List<Interceptor> interceptorList = client.getHttpClient().interceptors();
+        client.buildAuthConfig();
         assertNotNull(interceptorList);
         assertEquals(1, interceptorList.size());
         assertEquals("com.cognite.client.CogniteClient$ClientCredentialsInterceptor", interceptorList.get(0).getClass().getName());
