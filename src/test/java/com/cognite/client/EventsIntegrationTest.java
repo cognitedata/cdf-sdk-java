@@ -43,10 +43,10 @@ class EventsIntegrationTest {
 
         try {
             CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getProject(),
                     TestConfigProvider.getClientId(),
                     TestConfigProvider.getClientSecret(),
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost());
             //client = client.withScopes(List.of("https://greenfield.cognitedata.com/.default"));
             //client = client.withBaseUrl("https://greenfield.cognitedata.com");
@@ -103,10 +103,10 @@ class EventsIntegrationTest {
         String loggingPrefix = "UnitTest - writeEditAndDeleteEvents() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getProject(),
                     TestConfigProvider.getClientId(),
                     TestConfigProvider.getClientSecret(),
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
@@ -220,10 +220,10 @@ class EventsIntegrationTest {
         String loggingPrefix = "UnitTest - writeReadAndDeleteEvents() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getProject(),
                     TestConfigProvider.getClientId(),
                     TestConfigProvider.getClientSecret(),
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
@@ -288,10 +288,10 @@ class EventsIntegrationTest {
         String loggingPrefix = "UnitTest - writeAggregateAndDeleteEvents() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getProject(),
                     TestConfigProvider.getClientId(),
                     TestConfigProvider.getClientSecret(),
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost())
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",

@@ -35,10 +35,10 @@ class TimeseriesIntegrationTest {
         String loggingPrefix = "UnitTest - writeReadAndDeleteTimeseries() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getProject(),
                     TestConfigProvider.getClientId(),
                     TestConfigProvider.getClientSecret(),
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
@@ -92,10 +92,10 @@ class TimeseriesIntegrationTest {
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getProject(),
                     TestConfigProvider.getClientId(),
                     TestConfigProvider.getClientSecret(),
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
@@ -171,10 +171,10 @@ class TimeseriesIntegrationTest {
         String loggingPrefix = "UnitTest - writeEditAndDeleteTimeseries() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getProject(),
                     TestConfigProvider.getClientId(),
                     TestConfigProvider.getClientSecret(),
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost())
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -273,10 +273,10 @@ class TimeseriesIntegrationTest {
         String loggingPrefix = "UnitTest - writeReadAndDeleteTimeseries() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getProject(),
                     TestConfigProvider.getClientId(),
                     TestConfigProvider.getClientSecret(),
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;
@@ -338,10 +338,10 @@ class TimeseriesIntegrationTest {
         String loggingPrefix = "UnitTest - writeAggregateAndDeleteTimeseries() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getProject(),
                     TestConfigProvider.getClientId(),
                     TestConfigProvider.getClientSecret(),
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost())
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",

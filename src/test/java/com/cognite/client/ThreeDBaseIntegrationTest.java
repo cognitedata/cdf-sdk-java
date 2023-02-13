@@ -21,9 +21,6 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public abstract class ThreeDBaseIntegrationTest {
-
-    private static final String PUBLIC_DATA_API_KEY = "OWIyZWEwNjctMDFmNy00MjI0LWE5NDctYmRjMTcwYTU0Y2Jj";
-
     protected static final Integer COUNT_TO_BE_CREATE = 2;
 
     abstract Logger getLogger();
@@ -74,25 +71,30 @@ public abstract class ThreeDBaseIntegrationTest {
         return client;
     }
 
-    protected CogniteClient getCogniteClientAPIKey() throws MalformedURLException {
+    protected CogniteClient getCogniteClientOpenIndustrialData() throws MalformedURLException {
         Instant startInstant = Instant.now();
-        getLogger().info("------------ Start test. Creating Cognite client - API-KEY------------");
-        CogniteClient client = getClienteOfApiKey();
-        getLogger().info("------------ Finished creating the Cognite client - API-KEY. Duration : {}",
+        getLogger().info("------------ Start test. Creating Cognite client - Open Industrial Data ------------");
+        CogniteClient client = getClientOpenIndustrialData();
+        getLogger().info("------------ Finished creating the Cognite client - Open Industrial Data. Duration : {}",
                 Duration.between(startInstant, Instant.now()) + " ------------");
         return client;
     }
 
-    private CogniteClient getClienteOfApiKey() {
-        return CogniteClient.ofKey(PUBLIC_DATA_API_KEY);
+    private CogniteClient getClientOpenIndustrialData() throws MalformedURLException {
+        return CogniteClient.ofClientCredentials(
+                TestConfigProvider.getOpenIndustrialDataProject(),
+                TestConfigProvider.getOpenIndustrialDataClientId(),
+                TestConfigProvider.getOpenIndustrialDataClientSecret(),
+                TokenUrl.generateAzureAdURL(TestConfigProvider.getOpenIndustrialDataTenantId())
+        );
     }
 
     private CogniteClient getClientCredential() throws MalformedURLException {
         CogniteClient client = CogniteClient.ofClientCredentials(
+                        TestConfigProvider.getProject(),
                         TestConfigProvider.getClientId(),
                         TestConfigProvider.getClientSecret(),
                         TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                .withProject(TestConfigProvider.getProject())
                 .withBaseUrl(TestConfigProvider.getHost());
 
         return client;
@@ -159,10 +161,10 @@ public abstract class ThreeDBaseIntegrationTest {
             fileContainerInput.add(fileContainer);
 
             CogniteClient client = CogniteClient.ofClientCredentials(
-                            TestConfigProvider.getClientId(),
-                            TestConfigProvider.getClientSecret(),
-                            TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
+                    TestConfigProvider.getProject(),
+                    TestConfigProvider.getClientId(),
+                    TestConfigProvider.getClientSecret(),
+                    TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
                     .withBaseUrl(TestConfigProvider.getHost());
 
             try {

@@ -6,6 +6,25 @@ import com.google.common.base.Strings;
  * Utility class for setting the client configuration for test runs.
  */
 public class TestConfigProvider {
+    public static String getOpenIndustrialDataProject() {
+        return "publicdata";
+    }
+
+    public static String getOpenIndustrialDataClientId() {
+        return "1b90ede3-271e-401b-81a0-a4d52bea3273"; // public info
+    }
+
+    public static String getOpenIndustrialDataClientSecret() {
+        String clientSecret = System.getenv("OPEN_IND_DATA_CLIENT_SECRET");
+        if (Strings.isNullOrEmpty(clientSecret)) {
+            clientSecret = "test";
+        }
+        return clientSecret;
+    }
+
+    public static String getOpenIndustrialDataTenantId() {
+        return "48d5043c-cf70-4c49-881c-c638f5796997"; // public info
+    }
 
     public static String getProject() {
         String project = System.getenv("TEST_PROJECT");

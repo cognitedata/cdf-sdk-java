@@ -30,10 +30,10 @@ class DataSetsIntegrationTest {
         String loggingPrefix = "UnitTest - listAndRetrieveDataSets() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getProject(),
                     TestConfigProvider.getClientId(),
                     TestConfigProvider.getClientSecret(),
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost())
                 //.withClientConfig(config)
                 ;

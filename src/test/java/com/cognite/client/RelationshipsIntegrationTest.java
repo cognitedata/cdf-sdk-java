@@ -37,10 +37,10 @@ class RelationshipsIntegrationTest {
         String loggingPrefix = "UnitTest - writeReadAndDeleteRelationships() -";
         LOG.info(loggingPrefix + "------------------- Start test. Creating Cognite client. ----------------------");
         CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getProject(),
                     TestConfigProvider.getClientId(),
                     TestConfigProvider.getClientSecret(),
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost())
                 ;
         LOG.info(loggingPrefix + "------------------- Finished creating the Cognite client. Duration : {} ------------------",
@@ -174,10 +174,10 @@ class RelationshipsIntegrationTest {
         String loggingPrefix = "UnitTest - writeEditAndDeleteRelationships() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getProject(),
                     TestConfigProvider.getClientId(),
                     TestConfigProvider.getClientSecret(),
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost())
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
@@ -250,10 +250,10 @@ class RelationshipsIntegrationTest {
         String loggingPrefix = "UnitTest - writeRetrieveAndDeleteRelationships() -";
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
         CogniteClient client = CogniteClient.ofClientCredentials(
+                    TestConfigProvider.getProject(),
                     TestConfigProvider.getClientId(),
                     TestConfigProvider.getClientSecret(),
                     TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
                     .withBaseUrl(TestConfigProvider.getHost())
                 ;
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
