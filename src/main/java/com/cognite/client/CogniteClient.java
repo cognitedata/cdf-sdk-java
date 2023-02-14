@@ -709,10 +709,17 @@ public abstract class CogniteClient implements Serializable {
         if (null != getProject()) {
             // The project is explicitly defined
             cdfProject = getProject();
+        } else if (getAuthType() != AuthType.API_KEY) {
+            // CDF Project is not specified and the auth type is OIDC. Invalid combination, so we'll
+            // throw an Exception.
+            // This is a workaround until we can remove API key support all in all.
+            String message = "The CDF project is not defined. Please specify the CDF project when creating the CogniteClient.";
+            LOG.error(message);
+            throw new Exception(message);
         } else if (null != cdfProjectCache) {
             // The project info is cached
             cdfProject = cdfProjectCache;
-        } else {
+        }else {
             // Have to get the project via the auth credentials
             // TODO: Remove when deprecating api keys
             LOG.warn("The CDF project is not configured for the CogniteClient. API calls may fail.");
