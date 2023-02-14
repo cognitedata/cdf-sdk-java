@@ -38,7 +38,7 @@ CogniteClient client = CogniteClient.ofClientCredentials(
         cdfProject,
         clientId, 
         clientSecret, 
-        TokenUrl.generateAzureAdURL(azureAdTenantId);
+        TokenUrl.generateAzureAdURL(azureAdTenantId));
 
 // Using custom authentication scopes
 String cdfBaseUrl = "https://api.cognitedata.com"
