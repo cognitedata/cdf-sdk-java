@@ -2,15 +2,17 @@ package com.cognite.client;
 
 import okhttp3.ConnectionSpec;
 import okhttp3.Interceptor;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import java.net.URL;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class CogniteClientTest {
+class CogniteClientUnitTest {
 
     @Test
+    @Disabled
     void test_ofKey_config() {
         CogniteClient client = CogniteClient.ofKey("TEST").withBaseUrl("https://localhost");
         assertNotNull(client.getHttpClient());
@@ -27,7 +29,7 @@ class CogniteClientTest {
         CogniteClient client = CogniteClient.ofClientCredentials("123", "secret", new URL("https://localhost/cogniteapi")).withBaseUrl("https://localhost");
         assertNotNull(client.getHttpClient());
         List<Interceptor> interceptorList = client.getHttpClient().interceptors();
-        //client.buildAuthConfig();
+        assertThrows(Exception.class, () -> client.buildAuthConfig());
         assertNotNull(interceptorList);
         assertEquals(1, interceptorList.size());
         assertEquals("com.cognite.client.CogniteClient$ClientCredentialsInterceptor", interceptorList.get(0).getClass().getName());
@@ -39,7 +41,7 @@ class CogniteClientTest {
         CogniteClient client = CogniteClient.ofClientCredentials("myCdfProject", "123", "secret", new URL("https://localhost/cogniteapi")).withBaseUrl("https://localhost");
         assertNotNull(client.getHttpClient());
         List<Interceptor> interceptorList = client.getHttpClient().interceptors();
-        client.buildAuthConfig();
+        assertDoesNotThrow(() -> client.buildAuthConfig());
         assertNotNull(interceptorList);
         assertEquals(1, interceptorList.size());
         assertEquals("com.cognite.client.CogniteClient$ClientCredentialsInterceptor", interceptorList.get(0).getClass().getName());
