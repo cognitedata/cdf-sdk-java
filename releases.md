@@ -17,7 +17,7 @@ Changes are grouped as follows:
 
 ### Short term
 
-## [1.19.0-SNAPSHOT]
+## [1.19.0] 2023-02-16
 
 ### Added
 
