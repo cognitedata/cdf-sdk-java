@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package com.cognite.client.dto;
+
+option java_package = "com.cognite.client.dto";
+option java_multiple_files = true;
+
+message Annotation {
+    enum AnnotationType {
+        FILE = 0;
+        THREED_MODEL = 1;
+    }
+
+    optional int64 id = 1;
+    AnnotationType annotated_resource_type = 2;
+    int64 annotated_resource_id = 3;
+    optional string creating_app = 4;
+    optional string creating_app_version = 5;
+    optional string creating_user = 6;
+
+    string status = 8;
+
+    optional int64 created_time = 9;
+    optional int64 last_updated_time = 10;
+}
