@@ -19,8 +19,7 @@ Some of the SDK's capabilities:
 Requirements:
 - Java 11
 
-Please refer to [the documentation](./docs/index.md) for more
-information ([./docs/index.md](./docs/index.md)).
+Please refer to [the documentation](./docs/index.md) for more information: [./docs/index.md](./docs/index.md).
 
 ### Installing the sdk
 
@@ -28,7 +27,7 @@ information ([./docs/index.md](./docs/index.md)).
 <dependency>    
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>1.18.0</version>
+    <version>1.19.0</version>
 </dependency>
 ```
     
@@ -67,13 +66,8 @@ information ([./docs/index.md](./docs/index.md)).
 - Transformation Notifications
 
 ## Quickstart
-```java
-// Create the Cognite client using API key as the authentication method
-CogniteClient client = CogniteClient.ofKey(<yourApiKey>)
-        .withProject("myCdfProject")
-        .withBaseUrl("https://yourBaseURL.cognitedata.com");  //optional parameter
-        
-// ... or use client credentials (OpenID Connect)
+```java        
+// Create the Cognite client with client credentials (OpenID Connect)
 CogniteClient client = CogniteClient.ofClientCredentials(
         <cdfProject>,
         <clientId>,
