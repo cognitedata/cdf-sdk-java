@@ -20,8 +20,19 @@ Changes are grouped as follows:
 ## [1.19.0-SNAPSHOT]
 
 ### Added
+
 - The new cursor-based `data-points` iterator is enabled by default.
 - Support for `geoLocation` on `assets`.
+- New versions of `CogniteClient.ofClientCredentials()` and `CogniteClient.ofToken()` which include the `cdfProject` parameter. The `CDF project` must be specified for the client to work correctly.
+
+### Deprecated
+
+- Deprecated `CogniteClient.ofClientCredentials()` and `CogniteClient.ofToken()` which do not include the `cdfProject` parameter. Please migrate to the new versions of these methods which include the `cdfProject` parameter.
+- Deprecate `CogniteClient.ofKey()` as the API key authentication method is soon to be removed from Cognite Data Fusion.
+
+### Fixed
+
+- Issue a warning if the `CDF project` is not configured for the client.
 
 ## [1.18.0] 2022-10-15
 

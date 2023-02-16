@@ -43,12 +43,7 @@ class ThreeDFilesIntegrationTest {
     }
 
     private CogniteClient getTestCogniteClient() throws MalformedURLException {
-        CogniteClient client = CogniteClient.ofClientCredentials(
-                        TestConfigProvider.getClientId(),
-                        TestConfigProvider.getClientSecret(),
-                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                .withProject(TestConfigProvider.getProject())
-                .withBaseUrl(TestConfigProvider.getHost());
+        CogniteClient client = TestConfigProvider.getCogniteClient();
         return client;
     }
 

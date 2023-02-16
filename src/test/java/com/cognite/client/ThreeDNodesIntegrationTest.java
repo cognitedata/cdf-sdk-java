@@ -299,7 +299,7 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
     @Tag("remoteCDP")
     public void testListPublicData() throws Exception {
         try {
-            CogniteClient client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientOpenIndustrialData();
             Iterator<List<ThreeDNode>> it = client.threeD()
                     .models()
                     .revisions()
@@ -318,7 +318,7 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
     @Tag("remoteCDP")
     public void testFilterPublicData() throws Exception {
         try {
-            CogniteClient client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientOpenIndustrialData();
             Request request = Request.create()
                     .withFilterParameter("properties", createFilterPropertiesWithCategories());
 
@@ -341,7 +341,7 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
     @Tag("remoteCDP")
     public void testFilter1CategorieAnd2ItemsPublicData() throws Exception {
         try {
-            CogniteClient client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientOpenIndustrialData();
             Request request = Request.create()
                     .withFilterParameter("properties", createFilterProperties1CategoriesAnd2Items());
 
@@ -364,7 +364,7 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
     @Tag("remoteCDP")
     public void testFilterWith2ICategoriesPublicData() throws Exception {
         try {
-            CogniteClient client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientOpenIndustrialData();
             Request request = Request.create()
                     .withRootParameter("limit", 1)
                     .withFilterParameter("properties", createFilterPropertiesWith2Categories());
@@ -388,7 +388,7 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
     @Tag("remoteCDP")
     public void testFilterWith2ICategoriesAnd2ItemsPublicData() throws Exception {
         try {
-            CogniteClient client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientOpenIndustrialData();
             Request request = Request.create()
                     .withRootParameter("limit", 1)
                     .withFilterParameter("properties", createFilterPropertiesWith2CategoriesANd2Items());
@@ -411,7 +411,7 @@ public class ThreeDNodesIntegrationTest extends ThreeDBaseIntegrationTest {
     @Tag("remoteCDP")
     public void testFilterEmptyPublicData() throws Exception {
         try {
-            CogniteClient client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientOpenIndustrialData();
 
             Iterator<List<ThreeDNode>> itFilter = client.threeD()
                     .models()

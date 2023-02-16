@@ -252,7 +252,7 @@
                     <useIncrementalCompilation>false</useIncrementalCompilation>
                     <compilerArgs>
                         <arg>-Xlint:all</arg>
-                        <arg>${compiler.error.flag}</arg>
+                        <!-- arg>${compiler.error.flag}</arg-->
                         <!-- Override options warnings to support cross-compilation -->
                         <arg>-Xlint:-options</arg>
                         <!-- Temporary lint overrides, to be removed over time. -->

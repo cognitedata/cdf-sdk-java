@@ -360,12 +360,7 @@ public class TransformationJobsIntegrationTest {
     }
 
     private CogniteClient getCogniteClient(Instant startInstant, String loggingPrefix) throws MalformedURLException {
-        CogniteClient client = CogniteClient.ofClientCredentials(
-                        TestConfigProvider.getClientId(),
-                        TestConfigProvider.getClientSecret(),
-                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                .withProject(TestConfigProvider.getProject())
-                .withBaseUrl(TestConfigProvider.getHost());
+        CogniteClient client = TestConfigProvider.getCogniteClient();
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
                 Duration.between(startInstant, Instant.now()));
         return client;

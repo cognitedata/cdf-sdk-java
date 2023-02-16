@@ -35,16 +35,17 @@ String azureAdTenantId = "my-aad-tenant-id";
 String cdfProject = "my-cdf-project";
 
 CogniteClient client = CogniteClient.ofClientCredentials(
+        cdfProject,
         clientId, 
         clientSecret, 
-        TokenUrl.generateAzureAdURL(azureAdTenantId))
-        .withProject(cdfProject);
+        TokenUrl.generateAzureAdURL(azureAdTenantId));
 
 // Using custom authentication scopes
 String cdfBaseUrl = "https://api.cognitedata.com"
 List<String> authScopes = List.of(cdfBaseUrl + "/.default", "my-second-scope");
 
 CogniteClient client = CogniteClient.ofClientCredentials(
+        cdfProject,
         clientId,
         clientSecret,
         TokenUrl.generateAzureAdURL(azureAdTenantId),
@@ -59,8 +60,7 @@ support for these. Instead you can extend the SDK by handling these other flows 
 ```java
 String cdfProject = "my-cdf-project";
 
-CogniteClient client = CogniteClient.ofToken(Supplier<String> tokenSupplier)
-        .withProject(cdfProject);
+CogniteClient client = CogniteClient.ofToken(cdfProject, Supplier<String> tokenSupplier);
 ```
 The `tokenSupplier` is a functional interface, so you can pass in a lambda function. The `tokenSupplier`
 will be called for each api request and expects a valid token in return. The token is added to
@@ -68,7 +68,7 @@ the `Authorization` header in each request. Your supplier needs to produce the e
 the header, including the `Bearer` prefix. That is, your supplier should produce a String
 of the following pattern: `Bearer <your-access-token>`.
 
-#### API keys
+#### API keys (deprecated)
 
 Authentication via API key is the legacy method of authenticating services towards Cognite Data Fusion.
 You simply supply the API key when creating the client:
@@ -102,10 +102,10 @@ ClientConfig clientConfig = ClientConfig.create()
         .withProxyConfig(proxyConfig);
 
 CogniteClient client = CogniteClient.ofClientCredentials(
+        cdfProject,
         clientId,
         clientSecret,
         TokenUrl.generateAzureAdURL(azureAdTenantId))
-        .withProject(cdfProject)
         .withClientConfig(clientConfig);
 
 /*

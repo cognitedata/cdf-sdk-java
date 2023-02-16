@@ -287,12 +287,7 @@ public class ThreeDModelsRevisionsIntegrationTest {
 
     private CogniteClient getCogniteClient(Instant startInstant, String loggingPrefix) throws MalformedURLException {
         LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
-        CogniteClient client = CogniteClient.ofClientCredentials(
-                        TestConfigProvider.getClientId(),
-                        TestConfigProvider.getClientSecret(),
-                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                .withProject(TestConfigProvider.getProject())
-                .withBaseUrl(TestConfigProvider.getHost());
+        CogniteClient client = TestConfigProvider.getCogniteClient();
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
                 Duration.between(startInstant, Instant.now()));
         return client;
@@ -391,12 +386,7 @@ public class ThreeDModelsRevisionsIntegrationTest {
     }
 
     private FileMetadata getExistingFile(FileType type) throws Exception {
-        CogniteClient client = CogniteClient.ofClientCredentials(
-                        TestConfigProvider.getClientId(),
-                        TestConfigProvider.getClientSecret(),
-                        TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                .withProject(TestConfigProvider.getProject())
-                .withBaseUrl(TestConfigProvider.getHost());
+        CogniteClient client = TestConfigProvider.getCogniteClient();
 
         Iterator<List<FileMetadata>> it = client.files()
                 .list(Request.create()

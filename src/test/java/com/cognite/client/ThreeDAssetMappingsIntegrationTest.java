@@ -192,7 +192,7 @@ public class ThreeDAssetMappingsIntegrationTest extends ThreeDBaseIntegrationTes
     @Tag("remoteCDP")
     public void testListPublicData() throws Exception {
         try {
-            CogniteClient client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientOpenIndustrialData();
             Iterator<List<ThreeDAssetMapping>> itFilter = client.threeD()
                     .models()
                     .revisions()
@@ -214,7 +214,7 @@ public class ThreeDAssetMappingsIntegrationTest extends ThreeDBaseIntegrationTes
 
             Request request = Request.create()
                     .withRootParameter("limit", 1);
-            CogniteClient client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientOpenIndustrialData();
             Iterator<List<ThreeDAssetMapping>> itFilter = client.threeD()
                     .models()
                     .revisions()
@@ -253,7 +253,7 @@ public class ThreeDAssetMappingsIntegrationTest extends ThreeDBaseIntegrationTes
 
             Request request = Request.create()
                     .withRootParameter("limit", 1);
-            CogniteClient client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientOpenIndustrialData();
             Iterator<List<ThreeDAssetMapping>> itFilter = client.threeD()
                     .models()
                     .revisions()
@@ -292,7 +292,7 @@ public class ThreeDAssetMappingsIntegrationTest extends ThreeDBaseIntegrationTes
 
             Request request = Request.create()
                     .withRootParameter("limit", 1);
-            CogniteClient client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientOpenIndustrialData();
             Iterator<List<ThreeDAssetMapping>> itFilter = client.threeD()
                     .models()
                     .revisions()
@@ -328,7 +328,7 @@ public class ThreeDAssetMappingsIntegrationTest extends ThreeDBaseIntegrationTes
     public void testFilterPublicData() throws Exception {
         try {
 
-            CogniteClient client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientOpenIndustrialData();
             Iterator<List<ThreeDAssetMapping>> itFilter = client.threeD()
                     .models()
                     .revisions()
@@ -352,7 +352,7 @@ public class ThreeDAssetMappingsIntegrationTest extends ThreeDBaseIntegrationTes
 
             Request request = Request.create()
                     .withRootParameter("limit", 100);
-            CogniteClient client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientOpenIndustrialData();
             Iterator<List<ThreeDAssetMapping>> itFilter = client.threeD()
                     .models()
                     .revisions()
@@ -396,7 +396,7 @@ public class ThreeDAssetMappingsIntegrationTest extends ThreeDBaseIntegrationTes
 
             Request request = Request.create()
                     .withRootParameter("limit", 100);
-            CogniteClient client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientOpenIndustrialData();
             Iterator<List<ThreeDAssetMapping>> itFilter = client.threeD()
                     .models()
                     .revisions()
@@ -438,7 +438,7 @@ public class ThreeDAssetMappingsIntegrationTest extends ThreeDBaseIntegrationTes
 
             Request request = Request.create()
                     .withRootParameter("limit", 100);
-            CogniteClient client = getCogniteClientAPIKey();
+            CogniteClient client = getCogniteClientOpenIndustrialData();
             Iterator<List<ThreeDAssetMapping>> itFilter = client.threeD()
                     .models()
                     .revisions()
