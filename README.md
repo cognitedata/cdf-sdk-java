@@ -21,6 +21,16 @@ Requirements:
 
 Please refer to [the documentation](./docs/index.md) for more information: [./docs/index.md](./docs/index.md).
 
+### Upcoming SDK v2
+
+We have a new major version of the Java SDK in the pipeline. It is based on the v1 code line, but with a few breaking changes, so we bump it to a new major version. The main breaking changes include:
+
+- Move to Java 17
+- Remove deprecated methods from the SDK
+- Refactor the diagram annotation data transfer object to accommodate the new `annotations` api endpoint.
+
+It should not be too hard to move from v1 to v2 and we'll provide a migration guide for you. 
+
 ### Installing the sdk
 
 ```xml
