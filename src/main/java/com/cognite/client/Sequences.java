@@ -454,35 +454,9 @@ public abstract class Sequences extends ApiBase implements UpsertTarget<Sequence
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
     deal very well with exceptions.
      */
-    @Deprecated
-    private Map<String, Object> toRequestUpdateItem(SequenceMetadata item) {
-        try {
-            return SequenceParser.toRequestUpdateItem(item);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /*
-    Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
-    deal very well with exceptions.
-     */
     private Map<String, Object> toRequestUpdateItem(SequenceMetadata existingItem, SequenceMetadata updatedItem) {
         try {
             return SequenceParser.toRequestUpdateItem(existingItem, updatedItem);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /*
-    Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't
-    deal very well with exceptions.
-     */
-    @Deprecated
-    private Map<String, Object> toRequestReplaceItem(SequenceMetadata item) {
-        try {
-            return SequenceParser.toRequestReplaceItem(item);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
