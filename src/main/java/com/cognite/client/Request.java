@@ -309,7 +309,7 @@ public abstract class Request implements Serializable {
     /**
      * Convenience method for setting dataset external ids of a request.
      *
-     * You can use this methods to limit a request to only include the resources within one or several
+     * You can use this method to limit a request to only include the resources within one or several
      * specified data sets.
      *
      * @param externalId
@@ -329,7 +329,7 @@ public abstract class Request implements Serializable {
     /**
      * Convenience method for setting dataset ids of a request.
      *
-     * You can use this methods to limit a request to only include the resources within one or several
+     * You can use this method to limit a request to only include the resources within one or several
      * specified data sets.
      *
      * @param internalId
@@ -344,20 +344,6 @@ public abstract class Request implements Serializable {
         }
 
         return withFilterParameter("dataSetIds", items);
-    }
-
-    /**
-     * Convenience method for setting the external id for requesting an item.
-     *
-     * You can use this method when requesting a data item by id, for example when requesting the data points
-     * from a time series.
-     *
-     * @param externalId
-     * @return The request object with the parameter applied.
-     */
-    @Deprecated
-    public Request withItemExternalId(String externalId) {
-        return withItemExternalIds(externalId);
     }
 
     /**
@@ -387,31 +373,6 @@ public abstract class Request implements Serializable {
         }
 
         return withItems(items);
-    }
-
-    /**
-     * Convenience method for setting the external id for requesting an item.
-     *
-     * You can use this method when requesting a data item by id, for example when requesting the data points
-     * from a time series.
-     *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *      Long internalId = 1L;
-     *      Request parameters = Request.create().withItemInternalId(internalId);
-     * }
-     * </pre>
-     *
-     * @see Request
-     * @see Request#create()
-     *
-     * @param internalId
-     * @return The request object with the parameter applied.
-     */
-    @Deprecated
-    public Request withItemInternalId(long internalId) {
-        return withItemInternalIds(internalId);
     }
 
     /**
