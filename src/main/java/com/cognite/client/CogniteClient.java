@@ -88,6 +88,32 @@ public abstract class CogniteClient implements Serializable {
     }
 
     /**
+     * Returns a {@link CogniteClient} using the provided API key for authentication.
+     *
+     * @param apiKey The Cognite Data Fusion API key to use for authentication.
+     * @return the client object with default configuration.
+     */
+    @Deprecated
+    public static CogniteClient ofKey(String apiKey) {
+        Preconditions.checkArgument(null != apiKey && !apiKey.isEmpty(),
+                "The api key cannot be empty.");
+        String host = "";
+        try {
+            host = new URL(DEFAULT_BASE_URL).getHost();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return CogniteClient.builder()
+                .setApiKey(apiKey)
+                .setAuthType(AuthType.API_KEY)
+                .setHttpClient(CogniteClient.getHttpClientBuilder()
+                        .addInterceptor(new ApiKeyInterceptor(host, apiKey))
+                        .build())
+                .build();
+    }
+
+    /**
      * Returns a {@link CogniteClient} using the provided supplier (function) to provide
      * a bearer token for authorization.
      *
