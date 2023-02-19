@@ -41,8 +41,6 @@ import java.util.stream.Collectors;
 @AutoValue
 public abstract class CogniteClient implements Serializable {
     private final static String DEFAULT_BASE_URL = "https://api.cognitedata.com";
-    private final static String API_ENV_VAR = "COGNITE_API_KEY";
-
     private static int DEFAULT_NO_WORKERS = 8;
     private static int DEFAULT_NO_TS_WORKERS = 16;
     private static ThreadPoolExecutor executorService = new ThreadPoolExecutor(DEFAULT_NO_WORKERS, DEFAULT_NO_WORKERS,
@@ -90,81 +88,6 @@ public abstract class CogniteClient implements Serializable {
     }
 
     /**
-     * Returns a {@link CogniteClient} using an API key from the system's environment
-     * variables (COGNITE_API_KEY) and using default settings.
-     * @return the client object.
-     * @throws Exception if the api key cannot be read from the system environment.
-     */
-    @Deprecated
-    public static CogniteClient create() throws Exception {
-        String apiKey = System.getenv(API_ENV_VAR);
-        if (null == apiKey) {
-            String errorMessage = "The environment variable " + API_ENV_VAR + " is not set. Either provide "
-                    + "an api key directly to the client or set it via " + API_ENV_VAR;
-            throw new Exception(errorMessage);
-        }
-
-        return CogniteClient.ofKey(apiKey);
-    }
-
-    /**
-     * Returns a {@link CogniteClient} using the provided API key for authentication.
-     *
-     * @param apiKey The Cognite Data Fusion API key to use for authentication.
-     * @return the client object with default configuration.
-     */
-    @Deprecated
-    public static CogniteClient ofKey(String apiKey) {
-        Preconditions.checkArgument(null != apiKey && !apiKey.isEmpty(),
-                "The api key cannot be empty.");
-        String host = "";
-        try {
-            host = new URL(DEFAULT_BASE_URL).getHost();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        return CogniteClient.builder()
-                .setApiKey(apiKey)
-                .setAuthType(AuthType.API_KEY)
-                .setHttpClient(CogniteClient.getHttpClientBuilder()
-                        .addInterceptor(new ApiKeyInterceptor(host, apiKey))
-                        .build())
-                .build();
-    }
-
-    /**
-     * Returns a {@link CogniteClient} using the provided supplier (function) to provide
-     * a bearer token for authorization.
-     *
-     * If your application handles the authentication flow itself, you can pass a
-     * {@link Supplier} to this constructor. The supplier will be called for each api request
-     * and the provided token will be added as a bearer token to the request header.
-     *
-     * @param tokenSupplier A Supplier (functional interface) producing a valid access token when called.
-     * @return the client object with default configuration.
-     */
-    @Deprecated
-    public static CogniteClient ofToken(Supplier<String> tokenSupplier) {
-        Preconditions.checkNotNull(tokenSupplier,
-                "The token supplier cannot be null.");
-        String host = "";
-        try {
-            host = new URL(DEFAULT_BASE_URL).getHost();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        return CogniteClient.builder()
-                .setTokenSupplier(tokenSupplier)
-                .setAuthType(AuthType.TOKEN_SUPPLIER)
-                .setHttpClient(CogniteClient.getHttpClientBuilder()
-                        .addInterceptor(new TokenInterceptor(host, tokenSupplier))
-                        .build())
-                .build();
-    }
-
-    /**
      * Returns a {@link CogniteClient} using the provided supplier (function) to provide
      * a bearer token for authorization.
      *
@@ -176,7 +99,6 @@ public abstract class CogniteClient implements Serializable {
      * @param tokenSupplier A Supplier (functional interface) producing a valid access token when called.
      * @return the client object with default configuration.
      */
-    @Deprecated
     public static CogniteClient ofToken(String cdfProject,
                                         Supplier<String> tokenSupplier) {
         Preconditions.checkArgument(null != cdfProject && !cdfProject.isBlank(),
@@ -253,48 +175,6 @@ public abstract class CogniteClient implements Serializable {
      * Client credentials is the preferred authentication pattern for services /
      * machine to machine communication for Openid Connect (and Oauth) compatible identity providers.
      *
-     * @param clientId The client id to use for authentication.
-     * @param clientSecret The client secret to use for authentication.
-     * @param tokenUrl The URL to call for obtaining the access token.
-     * @param scopes The list of scopes to be used for authentication
-     * @return the client object with default configuration.
-     */
-    @Deprecated
-    public static CogniteClient ofClientCredentials(String clientId,
-                                                    String clientSecret,
-                                                    URL tokenUrl,
-                                                    Collection<String> scopes) {
-        Preconditions.checkArgument(null != clientId && !clientId.isEmpty(),
-                "The clientId cannot be empty.");
-        Preconditions.checkArgument(null != clientSecret && !clientSecret.isEmpty(),
-                "The secret cannot be empty.");
-
-        String host = "";
-        try {
-            host = new URL(DEFAULT_BASE_URL).getHost();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        return CogniteClient.builder()
-                .setClientId(clientId)
-                .setClientSecret(clientSecret)
-                .setTokenUrl(tokenUrl)
-                .setAuthType(AuthType.CLIENT_CREDENTIALS)
-                .setAuthScopes(scopes)
-                .setHttpClient(CogniteClient.getHttpClientBuilder()
-                        .addInterceptor(new ClientCredentialsInterceptor(host, clientId,
-                                clientSecret, tokenUrl, scopes))
-                        .build())
-                .build();
-    }
-
-    /**
-     * Returns a {@link CogniteClient} using client credentials for authentication.
-     *
-     * Client credentials is the preferred authentication pattern for services /
-     * machine to machine communication for Openid Connect (and Oauth) compatible identity providers.
-     *
      * @param cdfProject The CDF project to connect to.
      * @param clientId The client id to use for authentication.
      * @param clientSecret The client secret to use for authentication.
@@ -307,25 +187,6 @@ public abstract class CogniteClient implements Serializable {
                                                     URL tokenUrl) {
        return CogniteClient.ofClientCredentials(
                cdfProject, clientId, clientSecret, tokenUrl, List.of(DEFAULT_BASE_URL + "/.default"));
-    }
-
-    /**
-     * Returns a {@link CogniteClient} using client credentials for authentication.
-     *
-     * Client credentials is the preferred authentication pattern for services /
-     * machine to machine communication for Openid Connect (and Oauth) compatible identity providers.
-     *
-     * @param clientId The client id to use for authentication.
-     * @param clientSecret The client secret to use for authentication.
-     * @param tokenUrl The URL to call for obtaining the access token.
-     * @return the client object with default configuration.
-     */
-    @Deprecated
-    public static CogniteClient ofClientCredentials(String clientId,
-                                                    String clientSecret,
-                                                    URL tokenUrl) {
-        return CogniteClient.ofClientCredentials(
-                clientId, clientSecret, tokenUrl, List.of(DEFAULT_BASE_URL + "/.default"));
     }
 
     protected abstract Builder toBuilder();
@@ -477,7 +338,6 @@ public abstract class CogniteClient implements Serializable {
      * @return the client object with the config applied.
      */
     public CogniteClient withClientConfig(ClientConfig config) {
-
         if (config.getNoWorkers() != DEFAULT_NO_WORKERS) {
             // Modify the no threads in the executor service based on the config
             LOG.info("Setting up client with {} worker threads and {} list partitions",
