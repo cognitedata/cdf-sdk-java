@@ -32,7 +32,7 @@ class CogniteClientUnitTest {
         List<Interceptor> interceptorList = client.getHttpClient().interceptors();
         assertNotNull(interceptorList);
         assertEquals(1, interceptorList.size());
-        assertEquals("com.cognite.client.CogniteClient$ApiKeyInterceptor", interceptorList.get(0).getClass().getName());
+        assertEquals("com.cognite.client.CogniteClient$ClientCredentialsInterceptor", interceptorList.get(0).getClass().getName());
         assertEquals("https://localhost", client.getBaseUrl());
         List<ConnectionSpec> connectionSpecs = client.getHttpClient().connectionSpecs();
         assertEquals(3, connectionSpecs.size());
