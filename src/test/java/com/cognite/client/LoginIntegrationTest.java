@@ -1,6 +1,7 @@
 package com.cognite.client;
 
 import com.cognite.client.dto.LoginStatus;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -16,8 +17,10 @@ public class LoginIntegrationTest {
 
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
+    /*
     @Test
     @Tag("remoteCDP")
+    @Disabled
     void readLoginStatusByApiKey() throws Exception {
         Instant startInstant = Instant.now();
         String loggingPrefix = "UnitTest - readLoginStatusByApiKey() -";
@@ -40,4 +43,6 @@ public class LoginIntegrationTest {
         assertNotNull(loginStatus.getLoggedIn());
         assertNotNull(loginStatus.getUser());
     }
+
+     */
 }

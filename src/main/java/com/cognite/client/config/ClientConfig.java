@@ -244,10 +244,11 @@ public abstract class ClientConfig implements Serializable {
 
     @AutoValue
     public static abstract class FeatureFlag implements Serializable {
-        private static final boolean DEFAULT_ENABLE_DATA_POINTS_CURSOR = true;
+        //private static final boolean DEFAULT_ENABLE_DATA_POINTS_CURSOR = true;
         private static Builder builder() {
             return new AutoValue_ClientConfig_FeatureFlag.Builder()
-                    .setDataPointsCursorEnabled(DEFAULT_ENABLE_DATA_POINTS_CURSOR);
+                    //.setDataPointsCursorEnabled(DEFAULT_ENABLE_DATA_POINTS_CURSOR)
+            ;
         }
 
         public static FeatureFlag create() {
@@ -256,19 +257,19 @@ public abstract class ClientConfig implements Serializable {
 
         abstract Builder toBuilder();
 
-        //TODO: Data points cursors feature flag can be removed after v1.19.0
-        @Deprecated
+        /*
+        Example of feature flag config
+
         public abstract boolean isDataPointsCursorEnabled();
 
-        //TODO: Data points cursors feature flag can be removed after v1.19.0
-        @Deprecated
         public FeatureFlag enableDataPointsCursor(boolean enable) {
             return toBuilder().setDataPointsCursorEnabled(enable).build();
         }
+         */
 
         @AutoValue.Builder
         public static abstract class Builder {
-            abstract Builder setDataPointsCursorEnabled(boolean value);
+            //abstract Builder setDataPointsCursorEnabled(boolean value);
 
             abstract FeatureFlag build();
         }

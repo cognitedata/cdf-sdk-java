@@ -46,27 +46,6 @@ public abstract class Experimental extends ApiBase {
                 .build();
     }
 
-    /**
-     * Returns {@link EngineeringDiagrams} representing the engineering diagrams api services.
-     *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *     client.experimental().engineeringDiagrams();
-     * }
-     * </pre>
-     *
-     * @see CogniteClient
-     * @see CogniteClient#experimental()
-     *
-     * @return The engineering diagrams api object.
-     *
-     * @return The engineering diagrams api object.
-     */
-    @Deprecated
-    public EngineeringDiagrams engineeringDiagrams() {
-        return EngineeringDiagrams.of(getClient());
-    }
 
     @AutoValue.Builder
     abstract static class Builder extends ApiBase.Builder<Builder> {
