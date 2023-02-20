@@ -365,12 +365,7 @@ public class ThreeDModelsRevisionsIntegrationTest {
                     .withNoWorkers(1)
                     .withNoListPartitions(1);
 
-            CogniteClient client = CogniteClient.ofClientCredentials(
-                            TestConfigProvider.getClientId(),
-                            TestConfigProvider.getClientSecret(),
-                            TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                    .withProject(TestConfigProvider.getProject())
-                    .withBaseUrl(TestConfigProvider.getHost());
+            CogniteClient client = TestConfigProvider.getCogniteClient();
 
             try {
                 List<FileMetadata> uploadFileResult = client.files().upload(fileContainerInput);
