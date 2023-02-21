@@ -1,8 +1,9 @@
 name: java-release-v1
 on:
+  workflow_dispatch:
   push:
     branches:
-      - release-v1.x
+      - release-1.x
     paths:
       - pom.xml
       - .github/workflows/release-v1.yml
