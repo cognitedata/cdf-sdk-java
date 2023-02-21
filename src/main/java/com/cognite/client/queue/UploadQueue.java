@@ -52,7 +52,7 @@ public abstract class UploadQueue<T, R> implements AutoCloseable {
     {
         // Make sure the thread pool puts its threads to sleep to allow the JVM to exit without manual
         // clean-up from the client.
-        executor.setKeepAliveTime(2000, TimeUnit.SECONDS);
+        executor.setKeepAliveTime(2, TimeUnit.SECONDS);
         executor.allowCoreThreadTimeOut(true);
         executor.setRemoveOnCancelPolicy(true);
     }
