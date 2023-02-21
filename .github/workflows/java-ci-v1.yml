@@ -1,4 +1,4 @@
-name: java-main
+name: java-ci-release-v1
 on:
   pull_request:
     branches:

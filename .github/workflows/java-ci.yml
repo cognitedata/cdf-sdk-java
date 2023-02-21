@@ -1,4 +1,4 @@
-name: java-main
+name: java-ci-main
 on:
   pull_request:
     branches:
