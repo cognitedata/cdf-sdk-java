@@ -17,6 +17,12 @@ Changes are grouped as follows:
 
 ### Short term
 
+## [1.19.1]
+
+### Fixed
+
+- Thread timeout for `upload queue`. The threads in the upload queue may prevent a client from shutting down properly.
+
 ## [1.19.0] 2023-02-16
 
 ### Added
