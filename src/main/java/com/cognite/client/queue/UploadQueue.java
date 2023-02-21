@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -232,7 +233,7 @@ public abstract class UploadQueue<T, R> implements AutoCloseable {
             return false;
         }
 
-        recurringTask = executor.scheduleAtFixedRate(this::asyncUploadWrapper,
+        recurringTask = executor.scheduleWithFixedDelay(this::asyncUploadWrapper,
                 1, getMaxUploadInterval().getSeconds(), TimeUnit.SECONDS);
         LOG.info(logPrefix + "Starting background upload thread to upload at interval {}", getMaxUploadInterval());
         return true;
@@ -244,23 +245,26 @@ public abstract class UploadQueue<T, R> implements AutoCloseable {
      * @see #stop()
      */
     @Override
-    public void close() {
+    public void close() throws Exception {
         this.stop();
     }
 
     /**
-     * Stops the upload thread if it is running and ensures the upload queue is empty by calling {@code upload()} one
+     * Stops the upload thread if it is running, waits for all current uploads to finish
+     * and ensures the upload queue is empty by calling {@code upload()} one
      * last time after shutting down the thread.
      *
      * @return {@code true} if the upload thread stopped successfully, {@code false} if the upload thread was not started
      * in the first place.
+     * @throws InterruptedException if interrupted before while processing.
      */
-    public boolean stop() {
+    public boolean stop() throws InterruptedException {
         String logPrefix = "stop() -";
         if (null == recurringTask) {
             // The upload task has not been started.
-            LOG.warn(logPrefix + "The upload thread has not been started. Stop() has no effect.");
-            this.asyncUploadWrapper();
+            LOG.info(logPrefix + "The upload thread has not been started. Stop() has no effect.");
+            LOG.info(logPrefix + "Waiting for currently running upload tasks to finish.");
+            this.awaitUploads(1, TimeUnit.HOURS);
             return false;
         }
 
@@ -269,8 +273,9 @@ public abstract class UploadQueue<T, R> implements AutoCloseable {
         if (recurringTask.isDone()) {
             // cancellation of task was successful
             recurringTask = null;
-            this.asyncUploadWrapper();
             LOG.info(logPrefix + "Successfully stopped the background upload thread.");
+            LOG.info(logPrefix + "Waiting for currently running upload tasks to finish.");
+            this.awaitUploads(1, TimeUnit.HOURS);
         } else {
             LOG.warn(logPrefix + "Something went wrong when trying to stop the upload thread. Status isDone: {}, "
                     + "isCanceled: {}",
@@ -278,6 +283,42 @@ public abstract class UploadQueue<T, R> implements AutoCloseable {
                     recurringTask.isCancelled());
         }
         return returnValue;
+    }
+
+    /**
+     * Blocks until all tasks have completed execution after a shutdown request, or the timeout occurs,
+     * or the current thread is interrupted, whichever happens first.
+     *
+     * @param timeout the maximum timeout to wait.
+     * @param unit the unit of the timout argument.
+     * @return {@code true} if all uploads have completed and {@code false} if the timeout elapsed before termination.
+     * @throws InterruptedException if interrupted while waiting
+     */
+    public boolean awaitUploads(long timeout, TimeUnit unit) throws InterruptedException {
+        String loggingPrefix = "awaitUploads() - ";
+        Instant methodCallInstant = Instant.now();
+        boolean finishedUploads = false;
+
+        // Submit an upload task if there are data items in the queue and no upload tasks are waiting to start.
+        if (getQueue().size() > 0 && executor.getQueue().isEmpty()) {
+            executor.submit(this::asyncUploadWrapper);
+        }
+
+        // Check the status of all upload tasks and wait for them to finish--or abort when the timeout strikes.
+        do {
+            Thread.sleep(500);
+            if (executor.getQueue().isEmpty() && executor.getActiveCount() == 0) {
+                finishedUploads = true;
+            } else {
+                LOG.debug(loggingPrefix + "Uploads not finished. Upload tasks running: {}. Upload tasks queued: {}.",
+                        executor.getActiveCount(),
+                        executor.getQueue().size());
+            }
+        } while (!finishedUploads
+                && Duration.between(methodCallInstant, Instant.now())
+                        .compareTo(Duration.of(timeout, unit.toChronoUnit())) < 0);
+
+        return finishedUploads;
     }
 
     /*
