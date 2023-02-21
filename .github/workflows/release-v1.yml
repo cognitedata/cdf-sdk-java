@@ -1,0 +1,51 @@
+name: java-release-v1
+on:
+  push:
+    branches:
+      - release-v1.x
+    paths:
+      - pom.xml
+      - .github/workflows/release-v1.yml
+jobs:
+  publish-v1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Apache Maven Central
+        uses: actions/setup-java@v3
+        with: # running setup-java again overwrites the settings.xml
+          distribution: "temurin"
+          java-version: "11"
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_CENTRAL_TOKEN
+          gpg-private-key: ${{ secrets.SONATYPE_OSSRH_GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+
+      - name: Install jq
+        run: |
+          curl http://stedolan.github.io/jq/download/linux64/jq -o ./jq
+          chmod a+x ./jq
+
+      - name: Detect version change
+        id: detect
+        run: |
+          CENTRAL_VERSION=$(curl -H "Accept: application/json" -L "http://repository.sonatype.org/service/local/artifact/maven/resolve?r=central-proxy&g=com.cognite&a=cdf-sdk-java&v=LATEST" | ./jq -r .data.version)
+          MVN_VERSION=$(mvn -q \
+              -Dexec.executable=echo \
+              -Dexec.args='${project.version}' \
+              --non-recursive \
+              exec:exec)
+          echo "CENTRAL_VERSION=$CENTRAL_VERSION"
+          echo "MVN_VERSION=$MVN_VERSION"
+          echo "central_version=$CENTRAL_VERSION" >> $GITHUB_OUTPUT
+          echo "maven_version=$MVN_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Publish to Apache Maven Central
+        if: ${{ !endsWith(steps.detect.outputs.maven_version, 'SNAPSHOT') && steps.detect.outputs.maven_version != steps.detect.outputs.central_version }}
+        run: |
+          mvn -B clean verify deploy -Prelease
+        env:
+          MAVEN_USERNAME: ${{ secrets.SONATYPE_OSSRH_USER }}
+          MAVEN_CENTRAL_TOKEN: ${{ secrets.SONATYPE_OSSRH_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.SONATYPE_OSSRH_GPG_KEY_PASSPHRASE }}
