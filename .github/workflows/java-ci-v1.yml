@@ -1,8 +1,9 @@
 name: java-ci-release-v1
 on:
+  workflow_dispatch:
   pull_request:
     branches:
-      - release-v1.x
+      - release-1.x
 jobs:
   build-v1:
     runs-on: ubuntu-latest
