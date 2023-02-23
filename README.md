@@ -16,7 +16,10 @@ Some of the SDK's capabilities:
 - _Retries with backoff_. Transient failures will automatically be retried.
 - _Performance optimization_. The SDK will handle batching and parallelization of requests.
 
-Requirements:
+Requirements SDK v2:
+- Java 17
+
+Requirements SDK v1:
 - Java 11
 
 Please refer to [the documentation](./docs/index.md) for more information: [./docs/index.md](./docs/index.md).
@@ -32,7 +35,16 @@ We have a new major version of the Java SDK in the pipeline. It is based on the 
 It should not be too hard to move from v1 to v2 and we'll provide a migration guide for you. 
 
 ### Installing the sdk
+SDK v2
+```xml
+<dependency>    
+    <groupId>com.cognite</groupId>
+    <artifactId>cdf-sdk-java</artifactId>
+    <version>2.0.0</version>
+</dependency>
+```
 
+SDK v1
 ```xml
 <dependency>    
     <groupId>com.cognite</groupId>
