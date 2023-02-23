@@ -1083,51 +1083,12 @@ public abstract class ConnectorServiceV1 implements Serializable {
     }
 
     /**
-     * Get the login status from Cognite.
-     *
-     * @param host
-     * @return
-     */
-    public LoginStatus readLoginStatusByApiKey(String host) throws Exception {
-        // TODO: Remove when deprecating api keys
-        GetLoginRequestProvider requestProvider = GetLoginRequestProvider.builder()
-                .setEndpoint("status")
-                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
-                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
-                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
-                .build();
-
-        JsonResponseParser responseParser = JsonResponseParser.create();
-
-        SingleRequestItemReader<String> itemReader =
-                SingleRequestItemReader.of(getClient(), requestProvider, responseParser);
-
-        // Send the request to the Cognite api
-        ResponseItems<String> responseItems = itemReader.getItems(Request.create()
-                .withAuthConfig(AuthConfig.create()
-                        .withHost(host)));
-
-        // Check the response
-        if (!responseItems.getResponseBinary().getResponse().isSuccessful()
-                || responseItems.getResultsItems().size() != 1) {
-            String message = loggingPrefix + "Cannot get login status from Cognite. Could not get a valid response.";
-            LOG.error(message);
-            throw new Exception(message);
-        }
-
-        // parser the response
-        return LoginStatusParser.parseLoginStatus(responseItems.getResultsItems().get(0));
-    }
-
-    /**
      * Fetch relationships from Cognite.
      *
      * @param queryParameters The parameters for the data sets query.
      * @return
      */
     public ResultFutureIterator<String> readRelationships(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read relationships service.");
-
         PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
                 .setEndpoint("relationships/list")
                 .setRequest(queryParameters)
@@ -1146,8 +1107,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> readRelationshipsById() {
-        LOG.debug(loggingPrefix + "Initiating read relationships by id service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("relationships/byids")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -1165,8 +1124,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter writeRelationships() {
-        LOG.debug(loggingPrefix + "Initiating write relationships service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("relationships")
                 .setRequest(Request.create())
@@ -1185,8 +1142,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter updateRelationships() {
-        LOG.debug(loggingPrefix + "Initiating update relationships service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("relationships/update")
                 .setRequest(Request.create())
@@ -1205,8 +1160,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter deleteRelationships() {
-        LOG.debug(loggingPrefix + "Initiating delete relationships service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("relationships/delete")
                 .setRequest(Request.create())
@@ -1225,8 +1178,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter updateDataSets() {
-        LOG.debug(loggingPrefix + "Initiating update data sets service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("datasets/update")
                 .setRequest(Request.create())
@@ -1245,8 +1196,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ResultFutureIterator<String> readDataSets(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read data sets service.");
-
         PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
                 .setEndpoint("datasets/list")
                 .setRequest(queryParameters)
@@ -1264,8 +1213,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> readDataSetsAggregates() {
-        LOG.debug(loggingPrefix + "Initiating read data set aggregates service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("datasets/aggregate")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -1282,8 +1229,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> readDataSetsById() {
-        LOG.debug(loggingPrefix + "Initiating read data sets by id service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("datasets/byids")
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
@@ -1301,8 +1246,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter writeDataSets() {
-        LOG.debug(loggingPrefix + "Initiating write data sets service.");
-
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("datasets")
                 .setRequest(Request.create())

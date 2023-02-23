@@ -48,7 +48,7 @@ public class DiagramResponseParser {
 
         if (root.path("annotations").isArray()) {
             for (JsonNode node : root.path("annotations")) {
-                Annotation.Builder annotationBuilder = Annotation.newBuilder();
+                DiagramResponse.Annotation.Builder annotationBuilder = DiagramResponse.Annotation.newBuilder();
                 if (node.path("text").isTextual()) {
                     annotationBuilder.setText(node.get("text").textValue());
                 }
@@ -57,13 +57,13 @@ public class DiagramResponseParser {
                 }
                 if (node.path("region").isObject()) {
                     JsonNode regionNode = node.get("region");
-                    Annotation.Region.Builder regionBuilder = Annotation.Region.newBuilder();
+                    DiagramResponse.Annotation.Region.Builder regionBuilder = DiagramResponse.Annotation.Region.newBuilder();
                     if (regionNode.path("shape").isTextual()) {
                         regionBuilder.setShape(regionNode.path("shape").textValue());
                     }
                     if (regionNode.path("vertices").isArray()) {
                         for (JsonNode vertexNode : regionNode.path("vertices")) {
-                            Annotation.Vertex.Builder vertexBuilder = Annotation.Vertex.newBuilder();
+                            DiagramResponse.Annotation.Vertex.Builder vertexBuilder = DiagramResponse.Annotation.Vertex.newBuilder();
                             if (vertexNode.path("x").isFloatingPointNumber()) {
                                 vertexBuilder.setX(vertexNode.path("x").doubleValue());
                             }
