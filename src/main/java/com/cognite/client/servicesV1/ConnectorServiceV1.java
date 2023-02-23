@@ -26,7 +26,6 @@ import com.cognite.client.servicesV1.executor.RequestExecutor;
 import com.cognite.client.servicesV1.executor.ThreeDFileBinaryRequestExecutor;
 import com.cognite.client.servicesV1.parser.FileParser;
 import com.cognite.client.servicesV1.parser.ItemParser;
-import com.cognite.client.servicesV1.parser.LoginStatusParser;
 import com.cognite.client.servicesV1.request.*;
 import com.cognite.client.servicesV1.response.*;
 import com.cognite.client.servicesV1.util.ApiHttpUrlBuilderUtils;
