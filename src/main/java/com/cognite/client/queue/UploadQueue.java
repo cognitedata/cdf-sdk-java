@@ -286,7 +286,7 @@ public abstract class UploadQueue<T, R> implements AutoCloseable {
     }
 
     /**
-     * Blocks until all tasks have completed execution after a shutdown request, or the timeout occurs,
+     * Blocks until all current data in the queue has been uploaded, or the timeout occurs,
      * or the current thread is interrupted, whichever happens first.
      *
      * @param timeout the maximum timeout to wait.

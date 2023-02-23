@@ -13,9 +13,36 @@ Changes are grouped as follows:
 
 ### Medium term
 
-- To be added.
-
 ### Short term
+
+- Annotations
+- Extraction pipelines configuration
+- Data models
+
+## [2.0.0-SNAPSHOT]
+
+### Added
+
+- Java 17
+- `UploadQueue.awaitUploads()` waits for all data in the queue to be uploaded before returning.
+
+### Changed
+
+- `Engineering diagrams`: `Annotation` collected from a `DiagramResponse` has been refactored to `DiagramResponse.Annotation`. This is to prepare for the release of the stand-alone `Annotation` resource type.
+
+### Removed
+
+- `Login`. This is an API key specific functionality. Has been removed as API keys will be fully removed from Cognite Data Fusion in the near future.
+
+### Fixed
+
+- `UploadQueue.stop()` now waits until all uploads have finished before returning.
+
+## [1.19.1] 2023-02-21
+
+### Fixed
+
+- Thread timeout for `upload queue`. The threads in the upload queue may prevent a client from shutting down properly.
 
 ## [1.19.0] 2023-02-16
 

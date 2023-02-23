@@ -37,7 +37,7 @@ It should not be too hard to move from v1 to v2 and we'll provide a migration gu
 <dependency>    
     <groupId>com.cognite</groupId>
     <artifactId>cdf-sdk-java</artifactId>
-    <version>1.19.0</version>
+    <version>1.19.1</version>
 </dependency>
 ```
     
