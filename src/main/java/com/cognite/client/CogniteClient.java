@@ -552,15 +552,6 @@ public abstract class CogniteClient implements Serializable {
     }
 
     /**
-     * Returns {@link Login} representing login status api endpoints.
-     *
-     * @return The LoginStatus api endpoints.
-     */
-    public Login login() throws Exception {
-        return Login.of(this);
-    }
-
-    /**
      * Returns {@link ThreeD} representing 3D api endpoints.
      *
      * @return The ThreeD api endpoints.
