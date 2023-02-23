@@ -61,9 +61,6 @@ public abstract class CogniteClient implements Serializable {
                 DEFAULT_NO_WORKERS);
     }
 
-    @Nullable
-    private String cdfProjectCache = null; // Cache attribute for the CDF project
-
     private static Builder builder() {
         return new AutoValue_CogniteClient.Builder()
                 .setClientConfig(ClientConfig.create())
@@ -90,12 +87,16 @@ public abstract class CogniteClient implements Serializable {
     /**
      * Returns a {@link CogniteClient} using the provided API key for authentication.
      *
+     * @param cdfProject The CDF project to connect to.
      * @param apiKey The Cognite Data Fusion API key to use for authentication.
      * @return the client object with default configuration.
      */
     @Deprecated
-    public static CogniteClient ofKey(String apiKey) {
-        Preconditions.checkArgument(null != apiKey && !apiKey.isEmpty(),
+    public static CogniteClient ofKey(String cdfProject,
+                                      String apiKey) {
+        Preconditions.checkArgument(null != cdfProject && !cdfProject.isBlank(),
+                "The CDF Project cannot be null or blank.");
+        Preconditions.checkArgument(null != apiKey && !apiKey.isBlank(),
                 "The api key cannot be empty.");
         String host = "";
         try {
@@ -105,6 +106,7 @@ public abstract class CogniteClient implements Serializable {
         }
 
         return CogniteClient.builder()
+                .setProject(cdfProject)
                 .setApiKey(apiKey)
                 .setAuthType(AuthType.API_KEY)
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
@@ -216,7 +218,6 @@ public abstract class CogniteClient implements Serializable {
     }
 
     protected abstract Builder toBuilder();
-    @Nullable
     protected abstract String getProject();
     @Nullable
     protected abstract String getClientId();
@@ -591,37 +592,7 @@ public abstract class CogniteClient implements Serializable {
      * @throws Exception
      */
     protected AuthConfig buildAuthConfig() throws Exception {
-        String cdfProject = null;
-        if (null != getProject()) {
-            // The project is explicitly defined
-            cdfProject = getProject();
-        } else if (getAuthType() != AuthType.API_KEY) {
-            // CDF Project is not specified and the auth type is OIDC. Invalid combination, so we'll
-            // throw an Exception.
-            // This is a workaround until we can remove API key support all in all.
-            String message = "The CDF project is not defined. Please specify the CDF project when creating the CogniteClient.";
-            LOG.error(message);
-            throw new Exception(message);
-        } else if (null != cdfProjectCache) {
-            // The project info is cached
-            cdfProject = cdfProjectCache;
-        }else {
-            // Have to get the project via the auth credentials
-            // TODO: Remove when deprecating api keys
-            LOG.warn("The CDF project is not configured for the CogniteClient. API calls may fail.");
-
-            LoginStatus loginStatus = getConnectorService()
-                    .readLoginStatusByApiKey(getBaseUrl());
-
-            if (loginStatus.getProject().isEmpty()) {
-                throw new Exception("Could not find the CDF project for the user principal.");
-            }
-            LOG.debug("CDF project identified for the api key. Project: {}", loginStatus.getProject());
-            cdfProjectCache = loginStatus.getProject(); // Cache the result
-            cdfProject = loginStatus.getProject();
-        }
-
-        return AuthConfig.of(cdfProject)
+        return AuthConfig.of(getProject())
                 .withHost(getBaseUrl());
     }
 

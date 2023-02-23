@@ -33,10 +33,11 @@ public class LoginUnitTest {
         AutoValue_CogniteClient.Builder builder = new AutoValue_CogniteClient.Builder();
 
         cogniteClient = builder.setHttpClient(httpClient)
-                                .setClientConfig(ClientConfig.create())
-                                .setAuthType(CogniteClient.AuthType.CLIENT_CREDENTIALS)
-                                .setBaseUrl(TestConfigProvider.getHost())
-                                .build();
+                .setClientConfig(ClientConfig.create())
+                .setAuthType(CogniteClient.AuthType.CLIENT_CREDENTIALS)
+                .setBaseUrl(TestConfigProvider.getHost())
+                .setProject(TestConfigProvider.getProject())
+                .build();
 
         Mockito.when(httpClient.newCall(ArgumentMatchers.any()))
                 .thenReturn(call);
