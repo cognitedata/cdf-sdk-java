@@ -46,6 +46,14 @@ public abstract class Experimental extends ApiBase {
                 .build();
     }
 
+    /**
+     * Returns {@link DataModeling} representing the Cognite data modeling api endpoints.
+     *
+     * @return The data modeling api endpoint.
+     */
+    public DataModeling dataModeling()  {
+        return DataModeling.of(getClient());
+    }
 
     @AutoValue.Builder
     abstract static class Builder extends ApiBase.Builder<Builder> {

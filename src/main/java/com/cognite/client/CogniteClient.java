@@ -1,7 +1,6 @@
 package com.cognite.client;
 
 import com.cognite.client.config.AuthConfig;
-import com.cognite.client.dto.LoginStatus;
 import com.cognite.client.config.ClientConfig;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.google.auto.value.AutoValue;
@@ -464,7 +463,7 @@ public abstract class CogniteClient implements Serializable {
     /**
      * Returns {@link Files} representing the Cognite files api endpoints.
      *
-     * @return The labels api endpoint.
+     * @return The files api endpoint.
      */
     public Files files() {
         return Files.of(this);
