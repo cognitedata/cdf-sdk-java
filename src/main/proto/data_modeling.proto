@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package com.cognite.client.dto;
+
+import "google/protobuf/struct.proto";
+
+option java_package = "com.cognite.client.dto";
+option java_multiple_files = true;
+
+message DataModel {
+    enum AnnotationType {
+        FILE = 0;
+        THREED_MODEL = 1;
+    }
+
+    string space = 1;
+    string external_id = 2;
+    optional string name = 3;
+    optional string description = 4;
+    string version = 5;
+
+    optional int64 created_time = 9;
+    optional int64 last_updated_time = 10;
+}
