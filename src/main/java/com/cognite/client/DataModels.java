@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Cognite AS
+ * Copyright (c) 2023 Cognite AS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,6 @@ package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
-import com.cognite.client.dto.Aggregate;
-import com.cognite.client.dto.DataSet;
-import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.DataSetParser;
 import com.cognite.client.util.Items;
@@ -42,7 +39,7 @@ public abstract class DataModels extends ApiBase {
     protected static final Logger LOG = LoggerFactory.getLogger(DataModels.class);
 
     private static Builder builder() {
-        return new AutoValue_Datasets.Builder();
+        return new AutoValue_DataModels.Builder();
     }
 
     /**

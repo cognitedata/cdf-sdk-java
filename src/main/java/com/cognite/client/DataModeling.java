@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Cognite AS
+ * Copyright (c) 2023 Cognite AS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,9 @@
 
 package com.cognite.client;
 
-import com.cognite.client.config.ResourceType;
-import com.cognite.client.config.UpsertMode;
-import com.cognite.client.servicesV1.ConnectorServiceV1;
-import com.cognite.client.servicesV1.parser.DataSetParser;
-import com.cognite.client.util.Items;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * This class represents the Cognite data modeling api endpoint.
