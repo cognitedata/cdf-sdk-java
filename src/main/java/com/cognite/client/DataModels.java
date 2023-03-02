@@ -18,6 +18,7 @@ package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
+import com.cognite.client.dto.datamodel.DataModel;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.DataSetParser;
 import com.cognite.client.util.Items;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 /**
  * This class represents the Cognite data model api endpoint
  *
- * It provides methods for reading and writing {@link DataSet}
+ * It provides methods for reading and writing {@link DataModel}
  */
 @AutoValue
 public abstract class DataModels extends ApiBase {
@@ -58,7 +59,7 @@ public abstract class DataModels extends ApiBase {
     }
 
     /**
-     * Returns all {@link DataSet} objects.
+     * Returns all {@link DataModel} objects.
      *
      * <h2>Example:</h2>
      * <pre>
@@ -76,12 +77,12 @@ public abstract class DataModels extends ApiBase {
      * @see CogniteClient
      * @see CogniteClient#datasets()
      */
-    public Iterator<List<DataSet>> list() throws Exception {
+    public Iterator<List<DataModel>> list() throws Exception {
         return this.list(Request.create());
     }
 
     /**
-     * Return all {@link DataSet} object that matches the filters set in the {@link Request}.
+     * Return all {@link DataModel} object that matches the filters set in the {@link Request}.
      *
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer entire results set, then you have to
@@ -111,14 +112,14 @@ public abstract class DataModels extends ApiBase {
      * @return An {@link Iterator} to page through the results set.
      * @throws Exception
      */
-    public Iterator<List<DataSet>> list(Request requestParameters) throws Exception {
+    public Iterator<List<DataModel>> list(Request requestParameters) throws Exception {
         List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
 
         return this.list(requestParameters, partitions.toArray(new String[partitions.size()]));
     }
 
     /**
-     * Return all {@link DataSet} objects that matches the filters set in the {@link Request} for the specific
+     * Return all {@link DataModel} objects that matches the filters set in the {@link Request} for the specific
      * partitions. This method is intended for advanced use cases where you need direct control over the individual
      * partitions. For example, when using the SDK in a distributed computing environment.
      *
@@ -149,7 +150,7 @@ public abstract class DataModels extends ApiBase {
      * @return An {@link Iterator} to page through the results set
      * @throws Exception
      */
-    public Iterator<List<DataSet>> list(Request requestParameters, String... partitions) throws Exception {
+    public Iterator<List<DataModel>> list(Request requestParameters, String... partitions) throws Exception {
         return AdapterIterator.of(listJson(ResourceType.DATA_SET, requestParameters, partitions), this::parseDatasets);
     }
 
@@ -226,37 +227,6 @@ public abstract class DataModels extends ApiBase {
         return retrieveJson(ResourceType.DATA_SET, items).stream()
                 .map(this::parseDatasets)
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * Performs an item aggregation to Cognite Data Fusion.
-     *
-     * The default aggregation is a total item count based on the (optional) filters in the request. Multiple
-     * aggregation types are supported. Please refer to the Cognite API specification for more information on the
-     * possible settings.
-     *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *      Aggregate aggregateResult = client.datasets()
-     *                  .aggregate(Request.create()
-     *                  .withFilterParameter("writeProtected", true));
-     * }
-     * </pre>
-     *
-     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/aggregateDataSets">API Reference - Aggregate data sets</a>
-     *
-     * @see #aggregate(ResourceType,Request)
-     * @see CogniteClient
-     * @see CogniteClient#datasets()
-     *
-     * @param requestParameters The filtering and aggregates specification.
-     * @return The aggregation results.
-     * @throws Exception
-     * @see <a href="https://docs.cognite.com/api/v1/">Cognite API v1 specification</a>
-     */
-    public Aggregate aggregate(Request requestParameters) throws Exception {
-        return aggregate(ResourceType.DATA_SET, requestParameters);
     }
 
     /**

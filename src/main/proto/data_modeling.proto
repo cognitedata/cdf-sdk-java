@@ -1,24 +1,47 @@
 syntax = "proto3";
 
-package com.cognite.client.dto;
+package com.cognite.client.dto.datamodel;
 
 import "google/protobuf/struct.proto";
 
-option java_package = "com.cognite.client.dto";
+option java_package = "com.cognite.client.dto.datamodel";
 option java_multiple_files = true;
 
 message DataModel {
-    enum AnnotationType {
-        FILE = 0;
-        THREED_MODEL = 1;
-    }
-
     string space = 1;
     string external_id = 2;
     optional string name = 3;
     optional string description = 4;
     string version = 5;
 
-    optional int64 created_time = 9;
-    optional int64 last_updated_time = 10;
+    optional int64 created_time = 7;
+    optional int64 last_updated_time = 8;
+}
+
+message View {
+    enum ViewType {
+        NODE = 0;
+        EDGE = 1;
+        BOTH = 2;
+    }
+
+    string space = 1;
+    string external_id = 2;
+    string version = 3;
+    optional string name = 4;
+    optional string description = 5;
+    google.protobuf.Struct filter = 6;
+    repeated ViewReference implements = 7;
+
+    optional int64 created_time = 8;
+    optional int64 last_updated_time = 9;
+    optional bool writeable = 10;
+    ViewType used_for = 11;
+
+}
+
+message ViewReference {
+    string space = 1;
+    string external_id = 2;
+    string version = 3;
 }
