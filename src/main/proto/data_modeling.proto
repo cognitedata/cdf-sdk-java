@@ -45,3 +45,57 @@ message ViewReference {
     string external_id = 2;
     string version = 3;
 }
+
+message ContainerReference {
+    string space = 1;
+    string external_id = 2;
+}
+
+message PropertyDefinition {
+
+}
+
+message NodeWrite {
+    message Data {
+        oneof source {
+            ViewReference view_reference = 1;
+            ContainerReference container_reference = 2;
+        }
+        google.protobuf.Struct properties = 3;
+    }
+
+    string space = 1;
+    string external_id = 2;
+    optional int32 existingVersion = 3;
+    repeated Data sources = 4;
+}
+
+message NodeRead {
+    string space = 1;
+    string external_id = 2;
+    int32 version = 3;
+
+    google.protobuf.Struct properties = 4;
+    int64 created_time = 5;
+    int64 last_updated_time = 6;
+    optional int64 deleted_time = 7;
+}
+
+message EdgeWrite {
+    message Data {
+        oneof source {
+            ViewReference view_reference = 1;
+            ContainerReference container_reference = 2;
+        }
+        google.protobuf.Struct properties = 3;
+    }
+    message NodeReference {
+
+    }
+
+    string space = 1;
+    string external_id = 2;
+    optional int32 existingVersion = 3;
+    repeated Data sources = 4;
+
+}
