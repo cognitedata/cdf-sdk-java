@@ -55,6 +55,21 @@ message PropertyDefinition {
 
 }
 
+message NodeReference {
+    string space = 1;
+    string external_id = 2;
+}
+
+message EdgeReference {
+    string space = 1;
+    string external_id = 2;
+}
+
+message EdgeType {
+    string space = 1;
+    string external_id = 2;
+}
+
 message NodeWrite {
     message Data {
         oneof source {
@@ -89,13 +104,27 @@ message EdgeWrite {
         }
         google.protobuf.Struct properties = 3;
     }
-    message NodeReference {
-
-    }
 
     string space = 1;
     string external_id = 2;
     optional int32 existingVersion = 3;
-    repeated Data sources = 4;
+    EdgeType type = 4;
 
+    NodeReference start_node = 5;
+    NodeReference end_node = 6;
+    repeated Data sources = 7;
+}
+
+message EdgeRead {
+    string space = 1;
+    string external_id = 2;
+    int32 version = 3;
+    EdgeType type = 4;
+    NodeReference start_node = 5;
+    NodeReference end_node = 6;
+
+    google.protobuf.Struct properties = 7;
+    int64 created_time = 8;
+    int64 last_updated_time = 9;
+    optional int64 deleted_time = 10;
 }
