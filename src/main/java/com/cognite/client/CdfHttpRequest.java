@@ -18,9 +18,7 @@ package com.cognite.client;
 
 import com.cognite.client.servicesV1.ResponseBinary;
 import com.cognite.client.servicesV1.executor.RequestExecutor;
-import com.google.api.Http;
 import com.google.auto.value.AutoValue;
-import com.google.common.base.Preconditions;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -28,9 +26,7 @@ import okhttp3.RequestBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,13 +56,13 @@ public abstract class CdfHttpRequest extends ApiBase {
      * For example, if you want to send a request to {@code https://<cdfHost>/api/v1/projects/{project}/}
      *
      * @param client The {@link CogniteClient} to use for configuration settings.
-     * @param requestUrl The (CDF) URL to send the request to.
+     * @param requestUri The (CDF) URI to send the request to.
      * @return The datasets api object.
      */
-    public static CdfHttpRequest of(CogniteClient client, URL requestUrl) {
+    public static CdfHttpRequest of(CogniteClient client, URI requestUri) {
         return CdfHttpRequest.builder()
                 .setClient(client)
-                .setUrl(requestUrl)
+                .setUri(requestUri)
                 .setRequestBody("")
                 .setRequestExecutor(RequestExecutor.of(client.getHttpClient())
                         .withExecutor(client.getExecutorService())
@@ -76,7 +72,7 @@ public abstract class CdfHttpRequest extends ApiBase {
     }
 
     abstract CdfHttpRequest.Builder toBuilder();
-    abstract URL getUrl();
+    abstract URI getUri();
     abstract String getRequestBody();
     abstract RequestExecutor getRequestExecutor();
 
@@ -109,14 +105,14 @@ public abstract class CdfHttpRequest extends ApiBase {
     private okhttp3.Request.Builder buildGenericRequest() {
         okhttp3.Request.Builder reqBuilder = new okhttp3.Request.Builder()
                 .headers(Headers.of(headers))
-                .url(HttpUrl.parse(getUrl().toString()));
+                .url(HttpUrl.parse(getUri().toString()));
 
         return reqBuilder;
     }
 
     @AutoValue.Builder
     abstract static class Builder extends ApiBase.Builder<Builder> {
-        abstract Builder setUrl(URL value);
+        abstract Builder setUri(URI value);
         abstract Builder setRequestBody(String value);
         abstract Builder setRequestExecutor(RequestExecutor value);
 
