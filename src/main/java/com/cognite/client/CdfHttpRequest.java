@@ -16,23 +16,17 @@
 
 package com.cognite.client;
 
-import com.cognite.client.config.ResourceType;
-import com.cognite.client.config.UpsertMode;
-import com.cognite.client.dto.Aggregate;
-import com.cognite.client.dto.DataSet;
-import com.cognite.client.dto.Item;
-import com.cognite.client.servicesV1.ConnectorServiceV1;
-import com.cognite.client.servicesV1.parser.DataSetParser;
-import com.cognite.client.util.Items;
+import com.google.api.Http;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * This class allows you to make a HTTP(S) request to an arbitrary path.
+ * This class allows you to make a HTTP(S) request to an arbitrary Cognite Data Fusion API endpoint.
  *
  *
  */
@@ -40,6 +34,8 @@ import java.util.stream.Collectors;
 public abstract class CdfHttpRequest extends ApiBase {
 
     protected static final Logger LOG = LoggerFactory.getLogger(CdfHttpRequest.class);
+
+    protected final Map<String, String> headers = new HashMap<>();
 
     private static Builder builder() {
         return new AutoValue_CdfHttpRequest.Builder();
@@ -54,15 +50,29 @@ public abstract class CdfHttpRequest extends ApiBase {
      * @param client The {@link CogniteClient} to use for configuration settings.
      * @return The datasets api object.
      */
-    public static CdfHttpRequest of(CogniteClient client) {
+    public static CdfHttpRequest of(CogniteClient client, String apiPath) {
         return CdfHttpRequest.builder()
                 .setClient(client)
+                .setApiPath(apiPath)
                 .build();
+    }
+
+    abstract CdfHttpRequest.Builder toBuilder();
+    abstract String getApiPath();
+    @Nullable
+    abstract Request getRequestBody();
+
+    public CdfHttpRequest withHeader(String key, String value) {
+        headers.put(key, value);
+        return this;
     }
 
 
     @AutoValue.Builder
     abstract static class Builder extends ApiBase.Builder<Builder> {
+        abstract Builder setApiPath(String value);
+        abstract Builder setRequestBody(Request value);
+
         abstract CdfHttpRequest build();
     }
 }
