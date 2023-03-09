@@ -166,7 +166,7 @@ class CdfHttpRequestIntegrationTest {
                 .withRequestParameters(requestBodyObject);
 
         ResponseBinary responseBinary = client.experimental().cdfHttpRequest(requestURI)
-                .withRequestBody(postBody)
+                .withRequestBody(postEventsRequest)
                 .post();
 
         assertTrue(responseBinary.getResponse().isSuccessful(), "post request failed");
