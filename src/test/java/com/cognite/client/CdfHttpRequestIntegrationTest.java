@@ -143,40 +143,27 @@ class CdfHttpRequestIntegrationTest {
         // Add event Json objects (represented by Java Map) to the list
         Map<String, Object> eventA = new HashMap<>();
         eventA.put("externalId", "id-number-one");
+        eventA.put("startTime", 1000000);
+        eventA.put("endTime", 1000345);
+        eventA.put("description", "test event");
+        eventA.put("type", "generated_event");
+        eventA.put("source", "test-event");
+        eventA.put("metadata", Map.of("type", "test-event"));
+        itemsList.add(eventA);
 
+        Map<String, Object> eventB = new HashMap<>();
+        eventB.put("externalId", "id-number-two");
+        eventB.put("startTime", 1000000);
+        eventB.put("endTime", 1000345);
+        eventB.put("description", "test event-2");
+        eventB.put("type", "generated_event");
+        eventB.put("source", "test-event");
+        eventB.put("metadata", Map.of("type", "test-event"));
+        itemsList.add(eventB);
 
-
+        // Add the request body to the request object
         Request postEventsRequest = Request.create()
-                .
-
-        String postBody = """
-                {
-                    "items": [
-                        {
-                            "externalId": "id-number-one",
-                            "startTime": 1000000,
-                            "endTime": 1000345,
-                            "description": "test event",
-                            "type": "generated_event",
-                            "source": "test-event",
-                            "metadata": {
-                                "type": "test-event"
-                            }
-                        },
-                        {
-                            "externalId": "id-number-two",
-                            "startTime": 1000000,
-                            "endTime": 1000345,
-                            "description": "test event-2",
-                            "type": "generated_event",
-                            "source": "test-event",
-                            "metadata": {
-                                "type": "test-event"
-                            }
-                        }
-                    ]
-                }
-                """;
+                .withRequestParameters(requestBodyObject);
 
         ResponseBinary responseBinary = client.experimental().cdfHttpRequest(requestURI)
                 .withRequestBody(postBody)
