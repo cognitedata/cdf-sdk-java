@@ -224,12 +224,8 @@ These operations allow complex filter expressions (please refer to
 [the API documentation](https://docs.cognite.com/api/v1/) for reference). 
 
 You have several options for how to configure a `Request`:
-- Use the convenience methods `withRootParameter(String, Object)`, `withFilterParameter(String, Object)`, 
-  `withFilterMetadataParameter(String, String)`, etc. This is the most common pattern as it allows you to easily 
-  specify individual request parameters without having to know the internal structure of the request body.
-- Use `withRequestParameters(Map<String, Object>)` to specify the entire request body using Java objects. In this case you use Java objects 
-to represent a Json request body. The mapping is fairly straight forward with `Map<String, Object>` -> `Json object`, 
-  `List<T>` -> `Json array`, and `Java literals` -> `Json literals`.
+- Use the convenience methods `withRootParameter(String, Object)`, `withFilterParameter(String, Object)`, `withFilterMetadataParameter(String, String)`, etc. This is the most common pattern as it allows you to easily specify individual request parameters without having to know the internal structure of the request body.
+- Use `withRequestParameters(Map<String, Object>)` to specify the entire request body using Java objects. In this case you use Java objects to represent a Json request body. The mapping is fairly straight forward with `Map<String, Object>` -> `Json object`, `List<T>` -> `Json array`, and `Java literals` -> `Json literals`.
 - Use `withRequestJson(String)` to specify the entire request body using a valid Json string.
 
 ```java

@@ -36,14 +36,17 @@ import java.util.Map;
 /**
  * This class allows you to make a HTTP(S) request to an arbitrary Cognite Data Fusion API endpoint.
  *
+ * Authentication and retries will be automatically handled for you, but you need to supply the request URI,
+ * the request body (if a post request) and optionally request headers.
  *
+ * The response is returned in its raw form for you to interpret in your client code.
  */
 @AutoValue
 public abstract class CdfHttpRequest extends ApiBase {
 
     protected static final Logger LOG = LoggerFactory.getLogger(CdfHttpRequest.class);
 
-    protected final Map<String, String> headers = new HashMap<>();
+    private final Map<String, String> headers = new HashMap<>();
 
     private static Builder builder() {
         return new AutoValue_CdfHttpRequest.Builder();
@@ -55,8 +58,9 @@ public abstract class CdfHttpRequest extends ApiBase {
      * This method is intended for internal use--SDK clients should always use {@link CogniteClient}
      * as the entry point to this class.
      *
-     * The apiPath parameter should represent the path segments following {@code https://<cdfHost>/api/v1/projects/{project}/}.
-     * For example, if you want to send a request to {@code https://<cdfHost>/api/v1/projects/{project}/}
+     * The requestUri parameter should follow the Cognite Data Fusion api URI pattern:
+     * {@code https://<cdfHost>/api/v1/projects/{project}/{apiPathSegment}}. For example, if you want to send a request
+     * to create {@code events}, the URI would be similar to {@code https://api.cognitedata.com/api/v1/projects/{project}/events}
      *
      * @param client The {@link CogniteClient} to use for configuration settings.
      * @param requestUri The (CDF) URI to send the request to.
@@ -79,28 +83,72 @@ public abstract class CdfHttpRequest extends ApiBase {
     abstract String getRequestBody();
     abstract RequestExecutor getRequestExecutor();
 
+    /**
+     * Add a header to the request. Repeat the calls to this method to add multiple headers.
+     *
+     * @param key the header key
+     * @param value the header value.
+     * @return the {@code CdfHttpRequest} object with the header set.
+     */
     public CdfHttpRequest withHeader(String key, String value) {
         headers.put(key, value);
         return this;
     }
 
-    public CdfHttpRequest withRequestBody(String requestBody)  {
-        return toBuilder().setRequestBody(requestBody).build();
+    /**
+     * Set the request body represented by a Json string.
+     *
+     * @param jsonRequestBody the request body in Json string representation
+     * @return the {@code CdfHttpRequest} object with the request body set.
+     */
+    public CdfHttpRequest withRequestBody(String jsonRequestBody)  {
+        return toBuilder().setRequestBody(jsonRequestBody).build();
     }
 
+    /**
+     * Sets the request body via a {@link Request} object. The {@link Request} object is a Java object representation of
+     * a Json structure.
+     *
+     * Use {@code Request.withRequestParameters(Map<String, Object>)} to specify the entire request body using Java objects.
+     * In this case you use Java objects to represent a Json request body. The mapping is fairly straight forward with
+     * {@code Map<String, Object> -> Json object}, {@code List<T> -> Json array}, and {@code Java literals -> Json literals}.
+     *
+     * @param request the request object representing the Json request body.
+     * @return the {@code CdfHttpRequest} object with the request body set.
+     * @throws Exception
+     */
     public CdfHttpRequest withRequestBody(Request request) throws Exception {
         return withRequestBody(request.getRequestParametersAsJson());
     }
 
+    /**
+     * Sets the request body via a {@link Struct} object. {@link Struct} is the Protobuf equivalent of a Json object.
+     *
+     * @param requestBody the {@link Struct} object representing the request body.
+     * @return the {@code CdfHttpRequest} object with the request body set.
+     * @throws InvalidProtocolBufferException
+     */
     public CdfHttpRequest withRequestBody(Struct requestBody) throws InvalidProtocolBufferException {
         return withRequestBody(JsonFormat.printer().print(requestBody));
     }
 
+    /**
+     * Executes a {@code GET} request.
+     *
+     * @return The response of the request.
+     * @throws Exception
+     */
     public ResponseBinary get() throws Exception {
         okhttp3.Request request = buildGenericRequest().get().build();
         return getRequestExecutor().executeRequest(request);
     }
 
+    /**
+     * Executes a {@code POST} request.
+     *
+     * @return the response of the request.
+     * @throws Exception
+     */
     public ResponseBinary post() throws Exception {
         okhttp3.Request request = buildGenericRequest()
                 .post(RequestBody.Companion.create(getRequestBody(), MediaType.get("application/json")))
