@@ -19,6 +19,9 @@ package com.cognite.client;
 import com.cognite.client.servicesV1.ResponseBinary;
 import com.cognite.client.servicesV1.executor.RequestExecutor;
 import com.google.auto.value.AutoValue;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.Struct;
+import com.google.protobuf.util.JsonFormat;
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -87,6 +90,10 @@ public abstract class CdfHttpRequest extends ApiBase {
 
     public CdfHttpRequest withRequestBody(Request request) throws Exception {
         return withRequestBody(request.getRequestParametersAsJson());
+    }
+
+    public CdfHttpRequest withRequestBody(Struct requestBody) throws InvalidProtocolBufferException {
+        return withRequestBody(JsonFormat.printer().print(requestBody));
     }
 
     public ResponseBinary get() throws Exception {
