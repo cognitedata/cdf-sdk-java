@@ -43,7 +43,7 @@
 
         <auto.version>1.10.1</auto.version>
         <nimbusds.version>10.7</nimbusds.version>
-        <awss3.version>1.12.414</awss3.version>
+        <awss3.version>1.12.423</awss3.version>
         <jgrapht.version>1.5.1</jgrapht.version>
         <okhttp3.version>4.10.0</okhttp3.version>
         <jackson.version>2.14.2</jackson.version>
@@ -63,7 +63,7 @@
         <!-- protobuf paths -->
         <protobuf.input.directory>${project.basedir}/src/main/proto</protobuf.input.directory>
         <protobuf.output.directory>${project.build.directory}/generated-sources/proto</protobuf.output.directory>
-        <protobuf.version>3.22.0</protobuf.version>
+        <protobuf.version>3.22.1</protobuf.version>
 
         <build-helper-maven-plugin.version>3.3.0</build-helper-maven-plugin.version>
         <maven-antrun-plugin.version>3.0.0</maven-antrun-plugin.version>
@@ -84,7 +84,7 @@
             <dependency>
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
-                <version>26.9.0</version>
+                <version>26.10.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
