@@ -19,6 +19,7 @@ package com.cognite.client.servicesV1.executor;
 import com.cognite.client.servicesV1.ConnectorConstants;
 import com.cognite.client.servicesV1.ResponseBinary;
 
+import com.cognite.client.servicesV1.exception.InvalidResponseException;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -214,7 +215,7 @@ public abstract class RequestExecutor {
 
                 // if the call was not successful, throw an error
                 if (!response.isSuccessful() && !getValidResponseCodes().contains(responseCode)) {
-                    throw new IOException(
+                    throw new InvalidResponseException(
                             "Response from Fusion: Unexpected response code: " + responseCode + ". "
                                     + response.toString() + System.lineSeparator()
                                     + "Response body: " + response.body().string() + System.lineSeparator()
@@ -236,7 +237,7 @@ public abstract class RequestExecutor {
                             + "Response headers: %s",
                             response.body().contentLength(),
                             response.headers().toString());
-                    throw new IOException(message);
+                    throw new InvalidResponseException(message);
                 }
 
                 return ResponseBinary.of(response, ByteString.readFrom(response.body().byteStream()))
