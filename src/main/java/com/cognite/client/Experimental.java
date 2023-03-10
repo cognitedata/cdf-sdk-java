@@ -18,6 +18,9 @@ package com.cognite.client;
 
 import com.google.auto.value.AutoValue;
 
+import java.net.URI;
+import java.net.URL;
+
 /**
  * This class represents api services in "playground". That is, api services
  * that are in an early development phase. The signature and behavior
@@ -44,6 +47,10 @@ public abstract class Experimental extends ApiBase {
         return Experimental.builder()
                 .setClient(client)
                 .build();
+    }
+
+    public CdfHttpRequest cdfHttpRequest(URI requestUri) {
+        return CdfHttpRequest.of(getClient(), requestUri);
     }
 
     /**

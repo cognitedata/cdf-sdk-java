@@ -37,7 +37,7 @@ import static com.google.common.base.Preconditions.*;
 /**
  * This class represents the Cognite Data Fusion API request parameters.
  *
- * The available parameters depend on which API endpoint you are working towards. The parameters mirrors
+ * The available parameters depend on which API endpoint you are working towards. The parameters mirror
  * what is available in the api. For example, which filters you can use. Please refer to the Cognite API documentation
  * {@code https://docs.cognite.com/api/v1/} for reference.
  *

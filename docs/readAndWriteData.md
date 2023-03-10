@@ -224,12 +224,8 @@ These operations allow complex filter expressions (please refer to
 [the API documentation](https://docs.cognite.com/api/v1/) for reference). 
 
 You have several options for how to configure a `Request`:
-- Use the convenience methods `withRootParameter(String, Object)`, `withFilterParameter(String, Object)`, 
-  `withFilterMetadataParameter(String, String)`, etc. This is the most common pattern as it allows you to easily 
-  specify individual request parameters without having to know the internal structure of the request body.
-- Use `withRequestParameters(Map<String, Object>)` to specify the entire request body using Java objects. In this case you use Java objects 
-to represent a Json request body. The mapping is fairly straight forward with `Map<String, Object>` -> `Json object`, 
-  `List<T>` -> `Json array`, and `Java literals` -> `Json literals`.
+- Use the convenience methods `withRootParameter(String, Object)`, `withFilterParameter(String, Object)`, `withFilterMetadataParameter(String, String)`, etc. This is the most common pattern as it allows you to easily specify individual request parameters without having to know the internal structure of the request body.
+- Use `withRequestParameters(Map<String, Object>)` to specify the entire request body using Java objects. In this case you use Java objects to represent a Json request body. The mapping is fairly straight forward with `Map<String, Object>` -> `Json object`, `List<T>` -> `Json array`, and `Java literals` -> `Json literals`.
 - Use `withRequestJson(String)` to specify the entire request body using a valid Json string.
 
 ```java
@@ -321,38 +317,3 @@ if (modifiedEvent.getMetadataCount() > 0) {
     LOG.info("Metadata sourceId: {}", modifiedEvent.getMetadataOrDefault("sourceId", "myDefault")); // ... or get an item from the map directly    
 }
 ```
-
-### Migrating from SDK <0.9.9
-
-Previous to version 0.9.9 the protobuf objects used a workaround to represent _optional_ attributes. Due to protobuf not 
-supporting `optional` as a native feature (in proto3), we employed a workaround where we used wrapper objects for all 
-literal values. `String` literals were wrapped in a `StringValue` object, `long` were wrapped in a `Int64Value` object 
-and so on. 
-
-The reason for this was that we needed the `hasValue()` methods in order to let the client check if an attribute value 
-was actually set--the wrapper objects gave us just that. The disadvantage was that the wrapper objects made the client 
-code more verbose, both when setting and getting attribute values:
-```java
-// Old style, with the wrapper objects
-Event oldEvent = Event.newBuilder()
-    .setExternalId(StringValue.of("myExternalId"))                  // The String must be wrapped by StringValue
-    .build();
-
-if (oldEvent.hasExternalId()) {
-    LOG.info("External id: {}", oldEvent.getExternalId.getValue());  // An additional "getValue()" must be used to unpack the String
-}
-
-// New pattern, using protobuf's native optional feature
-Event newEvent = Event.newBuilder()
-    .setExternalId("myExternalId")                          // No wrapper object--just set the String directly
-    .build();
-
-if (oldEvent.hasExternalId()) {
-    LOG.info("External id: {}", newEvent.getExternalId()) ; // No "getValue()"--just get the String directly
-}
-```
-
-Starting with version 0.9.9, we have switched to using protobuf's very recent introduction of native support for 
-`optional`. This allows us to enjoy the benefits of `hasValue()` but without the drawback of the verbosity of the 
-wrapper object. We realize that this is a breaking change for your client code--but we believe that the overall 
-benefit is worth making this change before locking down the SDK for the v1 release.
