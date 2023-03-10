@@ -19,7 +19,7 @@ Changes are grouped as follows:
 - Extraction pipelines configuration
 - Data models
 
-## [2.1.0-SNAPSHOT] 2023-03-10
+## [2.1.0] 2023-03-10
 
 ### Added
 
