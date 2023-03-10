@@ -3,6 +3,11 @@ package com.cognite.client;
 import com.cognite.client.dto.Event;
 import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ResponseBinary;
+import com.google.protobuf.ListValue;
+import com.google.protobuf.Struct;
+import com.google.protobuf.Value;
+import com.google.protobuf.util.Structs;
+import com.google.protobuf.util.Values;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -78,7 +83,7 @@ class CdfHttpRequestIntegrationTest {
 
         assertTrue(responseBinary.getResponse().isSuccessful(), "post request failed");
 
-        LOG.info(loggingPrefix + "Finished upserting events. Duration: {}",
+        LOG.info(loggingPrefix + "Finished upserting events via http request. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
@@ -171,7 +176,100 @@ class CdfHttpRequestIntegrationTest {
 
         assertTrue(responseBinary.getResponse().isSuccessful(), "post request failed");
 
-        LOG.info(loggingPrefix + "Finished upserting events. Duration: {}",
+        LOG.info(loggingPrefix + "Finished upserting events via http request. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        Thread.sleep(2000); // wait for eventual consistency
+
+        LOG.info(loggingPrefix + "Start reading events.");
+        List<Event> listEventsResults = new ArrayList<>();
+        client.events()
+                .list(Request.create()
+                        .withFilterParameter("source", "test-event"))
+                .forEachRemaining(events -> listEventsResults.addAll(events));
+        LOG.info(loggingPrefix + "Finished reading events. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        LOG.info(loggingPrefix + "Start deleting events.");
+        List<Item> deleteItemsInput = listEventsResults.stream()
+                .map(event -> Item.newBuilder()
+                        .setExternalId(event.getExternalId())
+                        .build())
+                .collect(Collectors.toList());
+
+        List<Item> deleteItemsResults = client.events().delete(deleteItemsInput);
+        LOG.info(loggingPrefix + "Finished deleting events. Duration: {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        assertEquals(2, listEventsResults.size());
+        assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void writeReadAndDeleteEventsViaStructRequests() throws Exception {
+        Instant startInstant = Instant.now();
+        String loggingPrefix = "UnitTest - writeReadAndDeleteEventsViaStructRequests() -";
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+
+        CogniteClient client = TestConfigProvider.getCogniteClient();
+        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+                Duration.between(startInstant, Instant.now()));
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+        LOG.info(loggingPrefix + "Start upserting events via http request.");
+
+        String cdfHost = TestConfigProvider.getHost();
+        String cdfProject = TestConfigProvider.getProject();
+        String cdfApiEndpoint = "events";
+        URI requestURI = URI.create(String.format("%s/api/v1/projects/%s/%s",
+                cdfHost,
+                cdfProject,
+                cdfApiEndpoint));
+        LOG.info("Sending request to URI: {}", requestURI.toString());
+
+        // Build the request Json object body as a Protobuf Struct
+        Struct.Builder requestBodyObjectBuilder = Struct.newBuilder();
+
+        // Our items array is represented by a list of Values
+        List<Value> itemsList = new ArrayList<>();
+
+        // Add event Json objects (represented by Struct) to the list
+        Struct eventA = Struct.newBuilder()
+                .putFields("externalId", Values.of("id-number-one"))
+                .putFields("startTime", Values.of(1000000))
+                .putFields("endTime", Values.of(1000345))
+                .putFields("description", Values.of("test event"))
+                .putFields("source", Values.of("generated_event"))
+                .putFields("type", Values.of("test-event"))
+                .putFields("metadata", Values.of(Structs.of("type", Values.of("test-event"))))
+                .build();
+        itemsList.add(Values.of(eventA));
+
+        Struct eventB = Struct.newBuilder()
+                .putFields("externalId", Values.of("id-number-two"))
+                .putFields("startTime", Values.of(1000000))
+                .putFields("endTime", Values.of(1000345))
+                .putFields("description", Values.of("test event-2"))
+                .putFields("source", Values.of("generated_event"))
+                .putFields("type", Values.of("test-event"))
+                .putFields("metadata", Values.of(Structs.of("type", Values.of("test-event"))))
+                .build();
+        itemsList.add(Values.of(eventB));
+
+        // Stitch all the objects together
+        requestBodyObjectBuilder.putFields("items", Values.of(itemsList));
+
+        ResponseBinary responseBinary = client.experimental().cdfHttpRequest(requestURI)
+                .withRequestBody(requestBodyObjectBuilder.build())
+                .post();
+
+        assertTrue(responseBinary.getResponse().isSuccessful(), "post request failed");
+
+        LOG.info(loggingPrefix + "Finished upserting events via http request. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
         LOG.info(loggingPrefix + "----------------------------------------------------------------------");
 
