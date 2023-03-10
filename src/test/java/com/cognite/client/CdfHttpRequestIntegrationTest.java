@@ -239,23 +239,23 @@ class CdfHttpRequestIntegrationTest {
 
         // Add event Json objects (represented by Struct) to the list
         Struct eventA = Struct.newBuilder()
-                .putFields("externalId", Values.of("id-number-one"))
+                .putFields("externalId", Values.of("id-number-tt"))
                 .putFields("startTime", Values.of(1000000))
                 .putFields("endTime", Values.of(1000345))
                 .putFields("description", Values.of("test event"))
-                .putFields("source", Values.of("generated_event"))
-                .putFields("type", Values.of("test-event"))
+                .putFields("type", Values.of("generated_event"))
+                .putFields("source", Values.of("test-event"))
                 .putFields("metadata", Values.of(Structs.of("type", Values.of("test-event"))))
                 .build();
         itemsList.add(Values.of(eventA));
 
         Struct eventB = Struct.newBuilder()
-                .putFields("externalId", Values.of("id-number-two"))
+                .putFields("externalId", Values.of("id-number-yy"))
                 .putFields("startTime", Values.of(1000000))
                 .putFields("endTime", Values.of(1000345))
                 .putFields("description", Values.of("test event-2"))
-                .putFields("source", Values.of("generated_event"))
-                .putFields("type", Values.of("test-event"))
+                .putFields("type", Values.of("generated_event"))
+                .putFields("source", Values.of("test-event"))
                 .putFields("metadata", Values.of(Structs.of("type", Values.of("test-event"))))
                 .build();
         itemsList.add(Values.of(eventB));

@@ -1,7 +1,5 @@
 package com.cognite.client.servicesV1.exception;
 
-import java.io.IOException;
-
 /**
  * Indicates an invalid response from Cognite Data Fusion.
  *
@@ -9,7 +7,7 @@ import java.io.IOException;
  * how the request was processed. If the response code is not within the defined range of valid codes, this exception
  * is thrown.
  */
-public class InvalidResponseException extends IOException {
+public class InvalidResponseException extends CdfIOException {
     public InvalidResponseException(String errorMessage) {
         super(errorMessage);
     }
