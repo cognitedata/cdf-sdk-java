@@ -82,6 +82,7 @@ class CdfHttpRequestIntegrationTest {
                 .post();
 
         assertTrue(responseBinary.getResponse().isSuccessful(), "post request failed");
+        LOG.debug(loggingPrefix + "Response body: {}", responseBinary.getResponseBodyBytes().toStringUtf8());
 
         LOG.info(loggingPrefix + "Finished upserting events via http request. Duration: {}",
                 Duration.between(startInstant, Instant.now()));

@@ -34,3 +34,4 @@ map directly to the API's definitions.
 - [Data sets, organising your data products](dataSets.md)
 - [Labels, making your data easier to find](labels.md)
 - [Geolocation](geoLocation.md)
+- [Custom HTTP requests](cdfHttpRequests.md)
