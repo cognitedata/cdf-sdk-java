@@ -19,6 +19,12 @@ Changes are grouped as follows:
 - Extraction pipelines configuration
 - Data models
 
+## [2.1.0-SNAPSHOT] 2023-03-10
+
+### Added
+
+- Custom HTTP requests via `client.experimental().cdfHttpRequest(requestURI)`. See [Documentation](../docs/cdfHttpRequests.md) for more information.
+
 ## [2.0.0] 2023-02-23
 
 ### Added
