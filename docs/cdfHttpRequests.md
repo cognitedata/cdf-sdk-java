@@ -1,5 +1,8 @@
 ## Custom HTTP requests
 
+**SDK:** Requires `<cdf-sdk-java.version>2.1.0</cdf-sdk-java.version>` or higher.
+
+
 You can define custom HTTP requests to be issued to Cognite Data Fusion. The SDK will handle authentication, re-tries and throttling for you, while the `URI`, `headers` (optional) and `request body` are controlled by the client. The `response` is returned unprocessed and must be parsed/interpreted by the client.
 
 This allows you both to 1) test early access API endpoint before the explicit SDK support and 2) use API endpoints that are not covered by the SDK. 
