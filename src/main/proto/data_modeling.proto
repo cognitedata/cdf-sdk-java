@@ -16,6 +16,10 @@ message Space {
     optional int64 last_updated_time = 5;
 }
 
+message SpaceReference {
+    string space = 1;
+}
+
 message DataModel {
     string space = 1;
     string external_id = 2;

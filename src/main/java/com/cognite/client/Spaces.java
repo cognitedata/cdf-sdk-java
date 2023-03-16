@@ -154,7 +154,7 @@ public abstract class Spaces extends ApiBase {
      * @throws Exception
      */
     public Iterator<List<Space>> list(Request requestParameters, String... partitions) throws Exception {
-        return AdapterIterator.of(listJson(ResourceType.DATA_SET, requestParameters, partitions), this::parseDatasets);
+        return AdapterIterator.of(listJson(ResourceType.SPACE, requestParameters, partitions), this::parseSpace);
     }
 
     /**
@@ -309,7 +309,7 @@ public abstract class Spaces extends ApiBase {
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't deal very well
     with exceptions.
      */
-    private Space parseSpaces(String json) {
+    private Space parseSpace(String json) {
         try {
             return SpacesParser.parseSpace(json);
         } catch (Exception e) {

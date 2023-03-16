@@ -518,6 +518,8 @@ abstract class ApiBase {
             case TRANSFORMATIONS_NOTIFICATIONS:
                 results = connector.readTransformationNotifications(requestParameters);
                 break;
+            case SPACE:
+                results = connector.readSpaces(requestParameters);
             default:
                 throw new Exception("Not a supported resource type: " + resourceType);
         }
@@ -888,6 +890,8 @@ abstract class ApiBase {
         private static final int DEFAULT_MAX_BATCH_SIZE = 1000;
         private static final int maxUpsertLoopIterations = 4;
 
+        private boolean isDefaultBatchingFunction = true;
+
         private static <T extends Message> Builder<T> builder() {
             return new AutoValue_ApiBase_UpsertItems.Builder<T>()
                     .setMaxBatchSize(DEFAULT_MAX_BATCH_SIZE)
@@ -931,7 +935,10 @@ abstract class ApiBase {
 
             java.util.Map<Descriptors.FieldDescriptor, java.lang.Object> fieldMap = item.getAllFields();
             for (Descriptors.FieldDescriptor field : fieldMap.keySet()) {
-                if (field.getName().equalsIgnoreCase("external_id")
+                if (field.getName().equalsIgnoreCase("space")
+                        && field.getType() == Descriptors.FieldDescriptor.Type.STRING) {
+                    returnObject = Optional.of((String) fieldMap.get(field));
+                } else if (field.getName().equalsIgnoreCase("external_id")
                         && field.getType() == Descriptors.FieldDescriptor.Type.STRING) {
                     returnObject = Optional.of((String) fieldMap.get(field));
                 } else if (field.getName().equalsIgnoreCase("id")
@@ -983,6 +990,7 @@ abstract class ApiBase {
         abstract BiFunction<T, T, Boolean> getEqualFunction();
         @Nullable
         abstract Function<T, Item> getItemMappingFunction();
+
         abstract ConnectorServiceV1.ItemWriter getCreateItemWriter();
 
         @Nullable
@@ -1110,10 +1118,13 @@ abstract class ApiBase {
          * @return The {@link UpsertItems} object with the configuration applied.
          */
         public UpsertItems<T> withMaxBatchSize(int maxBatchSize) {
-            return toBuilder()
-                    .setMaxBatchSize(maxBatchSize)
-                    .setBatchingFunction((List<T> items) -> Partition.ofSize(items, maxBatchSize))
-                    .build();
+            UpsertItems.Builder<T> builder = toBuilder().setMaxBatchSize(maxBatchSize);
+
+            if (isDefaultBatchingFunction) {
+                builder = builder.setBatchingFunction((List<T> items) -> Partition.ofSize(items, maxBatchSize));
+            }
+
+            return builder.build();
         }
 
         /**
@@ -1126,6 +1137,7 @@ abstract class ApiBase {
          * @return The {@link UpsertItems} object with the configuration applied.
          */
         public UpsertItems<T> withBatchingFunction(Function<List<T>, List<List<T>>> function) {
+            isDefaultBatchingFunction = false;
             return toBuilder().setBatchingFunction(function).build();
         }
 
@@ -2272,7 +2284,7 @@ abstract class ApiBase {
         private CompletableFuture<ResponseItems<String>> createItems(List<T> items) {
             Preconditions.checkState(null != getCreateItemWriter() && null != getCreateMappingFunction(),
                     "Unable to send item update request. CreateItemWriter and CreateMappingFunction must be specified.");
-            return requestsBuilder(items, getCreateMappingFunction(), getCreateItemWriter());
+            return submitRequestAsync(items, getCreateMappingFunction(), getCreateItemWriter());
         }
 
         /**
@@ -2285,27 +2297,27 @@ abstract class ApiBase {
         private CompletableFuture<ResponseItems<String>> updateItems(List<T> items) {
             Preconditions.checkState(null != getUpdateItemWriter() && null != getUpdateMappingFunction(),
                     "Unable to send item update request. UpdateItemWriter and UpdateMappingFunction must be specified.");
-            return requestsBuilder(items, getUpdateMappingFunction(), getUpdateItemWriter());
+            return submitRequestAsync(items, getUpdateMappingFunction(), getUpdateItemWriter());
         }
 
         /**
          * Submits a set of items as a writer request with mapping function to the Cognite API.
          *
          * @param items  the objects to update.
-         * @param mapper JSON deserializer function
+         * @param itemMapper JSON deserializer function
          * @param writer the {@link com.cognite.client.servicesV1.ConnectorServiceV1.ItemWriter} to use to post the items.
          * @return a {@link CompletableFuture} representing the response from the update request.
          * @throws Exception
          */
-        private CompletableFuture<ResponseItems<String>> requestsBuilder(
+        private CompletableFuture<ResponseItems<String>> submitRequestAsync(
                 List<T> items,
-                @NotNull Function<T, Map<String, Object>> mapper,
+                @NotNull Function<T, Map<String, Object>> itemMapper,
                 @NotNull ConnectorServiceV1.ItemWriter writer) {
             try {
                 ImmutableList.Builder<Map<String, Object>> itemsBuilder = ImmutableList.builder();
 
                 for (T item : items) {
-                    itemsBuilder.add(mapper.apply(item));
+                    itemsBuilder.add(itemMapper.apply(item));
                 }
                 Request writeItemsRequest = Request.create()
                         .withItems(itemsBuilder.build())
