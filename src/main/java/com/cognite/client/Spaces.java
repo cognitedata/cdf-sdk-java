@@ -23,6 +23,7 @@ import com.cognite.client.dto.datamodel.DataModel;
 import com.cognite.client.dto.datamodel.Space;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.DataSetParser;
+import com.cognite.client.servicesV1.parser.datamodel.SpacesParser;
 import com.cognite.client.util.Items;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
@@ -285,9 +286,12 @@ public abstract class Spaces extends ApiBase {
     Returns an Item reflecting the input dataset. This will extract the dataset externalId
     and populate the Item with it.
      */
+    /*
     private Item toItem(DataSet dataSet) {
         return Item.newBuilder().setExternalId(dataSet.getExternalId()).build();
     }
+
+     */
 
     /*
     Wrapping the retrieve function because we need to handle the exception--an ugly workaround since lambdas don't deal very well
@@ -305,9 +309,9 @@ public abstract class Spaces extends ApiBase {
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't deal very well
     with exceptions.
      */
-    private DataSet parseDatasets(String json) {
+    private Space parseSpaces(String json) {
         try {
-            return DataSetParser.parseDataSet(json);
+            return SpacesParser.parseSpace(json);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -317,50 +321,11 @@ public abstract class Spaces extends ApiBase {
     Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't deal very well
     with exceptions.
      */
-    private Map<String, Object> toRequestInsertItem(DataSet item) {
+    private Map<String, Object> toRequestUpsertItem(Space item) {
         try {
-            return DataSetParser.toRequestInsertItem(item);
+            return SpacesParser.toRequestUpsertItem(item);
         } catch (Exception e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    /*
-    Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't deal very well
-    with exceptions.
-     */
-    private Map<String, Object> toRequestUpdateItem(DataSet item) {
-        try {
-            return DataSetParser.toRequestUpdateItem(item);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /*
-    Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't deal very well
-    with exceptions.
-     */
-    private Map<String, Object> toRequestReplaceItem(DataSet item) {
-        try {
-            return DataSetParser.toRequestReplaceItem(item);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /*
-    Returns the id of a dataset. It will first check for an externalId, second it will check for id.
-
-    If no id is found, it returns an empty Optional.
-     */
-    private Optional<String> getDatasetId(DataSet item) {
-        if (item.hasExternalId()) {
-            return Optional.of(item.getExternalId());
-        } else if (item.hasId()) {
-            return Optional.of(String.valueOf(item.getId()));
-        } else {
-            return Optional.<String>empty();
         }
     }
 
