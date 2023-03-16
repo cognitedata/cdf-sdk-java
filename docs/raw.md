@@ -73,7 +73,7 @@ client
     .raw()
     .tables()
     .list("databaseName")
-    .forEachRemaining(databases -> tablesResults.addAll(databases));
+    .forEachRemaining(tableNames -> tablesResults.addAll(tableNames));
 
 ```
 
