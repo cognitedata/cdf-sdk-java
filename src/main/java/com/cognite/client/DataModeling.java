@@ -48,12 +48,12 @@ public abstract class DataModeling extends ApiBase {
     }
 
     /**
-     * Returns {@link DataModels} representing the Cognite data models api endpoints.
+     * Returns {@link Spaces} representing the Cognite data model spaces api endpoints.
      *
      * @return The data models api endpoint.
      */
-    public DataModels dataModels()  {
-        return DataModels.of(getClient());
+    public Spaces spaces()  {
+        return Spaces.of(getClient());
     }
 
     @AutoValue.Builder

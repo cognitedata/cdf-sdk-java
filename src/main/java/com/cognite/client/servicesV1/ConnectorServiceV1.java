@@ -684,7 +684,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter deleteDatapoints() {
-        LOG.debug(loggingPrefix + "Initiating delete data points service.");
 
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("timeseries/data/delete")
@@ -705,7 +704,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ResultFutureIterator<String> readRawRows(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read raw rows service.");
 
         RawReadRowsRequestProvider requestProvider = RawReadRowsRequestProvider.builder()
                 .setEndpoint("raw/dbs")
@@ -724,7 +722,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> readRawRow() {
-        LOG.debug(loggingPrefix + "Initiating read single row service.");
 
         RawReadRowsRequestProvider requestProvider = RawReadRowsRequestProvider.builder()
                 .setEndpoint("raw/dbs")
@@ -744,7 +741,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemReader<String> readCursorsRawRows() {
-        LOG.debug(loggingPrefix + "Initiating read raw cursors service.");
 
         RawReadRowsCursorsRequestProvider requestProvider = RawReadRowsCursorsRequestProvider.builder()
                 .setEndpoint("raw/dbs")
@@ -762,7 +758,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * Calling this method will return an <code>ItemWriter</code>
      */
     public ItemWriter writeRawRows() {
-        LOG.debug(loggingPrefix + "Initiating write raw rows service.");
 
         RawWriteRowsRequestProvider requestProvider = RawWriteRowsRequestProvider.builder()
                 .setEndpoint("raw/dbs")
@@ -782,7 +777,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter deleteRawRows() {
-        LOG.debug(loggingPrefix + "Initiating delete raw rows service.");
 
         RawDeleteRowsRequestProvider requestProvider = RawDeleteRowsRequestProvider.builder()
                 .setEndpoint("raw/dbs")
@@ -801,7 +795,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ResultFutureIterator<String> readRawDbNames(AuthConfig config) {
-        LOG.debug(loggingPrefix + "Initiating read raw database names service.");
 
         GetSimpleListRequestProvider requestProvider = GetSimpleListRequestProvider.builder()
                 .setEndpoint("raw/dbs")
@@ -822,7 +815,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter writeRawDbNames() {
-        LOG.debug(loggingPrefix + "Creating databases");
 
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("raw/dbs")
@@ -1094,7 +1086,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
                 .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
-                .setBetaEnabled(true)
                 .build();
 
         return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
@@ -1387,7 +1378,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ResultFutureIterator<String> readLabels(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read labels service.");
 
         PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
                 .setEndpoint("labels/list")
@@ -1407,7 +1397,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter writeLabels() {
-        LOG.debug(loggingPrefix + "Initiating write labels service.");
 
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("labels")
@@ -1427,7 +1416,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter deleteLabels() {
-        LOG.debug(loggingPrefix + "Initiating delete labels service.");
 
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("labels/delete")
@@ -1447,7 +1435,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ResultFutureIterator<String> readSecurityCategories(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read security categories service.");
 
         GetSimpleListRequestProvider requestProvider = GetSimpleListRequestProvider.builder()
                 .setEndpoint("securitycategories")
@@ -1467,7 +1454,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter writeSecurityCategories() {
-        LOG.debug(loggingPrefix + "Initiating write security categories service.");
 
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("securitycategories")
@@ -1487,7 +1473,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter deleteSecurityCategories() {
-        LOG.debug(loggingPrefix + "Initiating delete security categories service.");
 
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("securitycategories/delete")
@@ -1565,7 +1550,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return An {@link ItemReader<String>} for reading the models.
      */
     public ItemReader<String> readEntityMatcherModels() {
-        LOG.debug(loggingPrefix + "Initiating read entity matcher models service.");
 
         // todo Implement new list entity matcher models
         GetPlaygroundRequestProvider requestProvider = GetPlaygroundRequestProvider.builder()
@@ -1584,7 +1568,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return An {@link ItemWriter} for deleting the models
      */
     public ItemWriter deleteEntityMatcherModels() {
-        LOG.debug(loggingPrefix + "Initiating delete entity matcher models service.");
 
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("context/entitymatching/delete")
@@ -1715,7 +1698,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return An {@link ItemWriter} for deleting the models
      */
     public ItemWriter deleteThreeDModels() {
-        LOG.debug(loggingPrefix + "Initiating delete 3D Models service.");
 
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("3d/models/delete")
@@ -1771,7 +1753,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public Iterator<CompletableFuture<ResponseItems<String>>> readThreeDModelsRevisions(Request queryParameters) {
-        LOG.debug(loggingPrefix + "Initiating read 3d models revisions service.");
 
         Long modelId = (Long) queryParameters.getRequestParameters().get("modelId");
 
@@ -1794,7 +1775,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
      * @return
      */
     public ItemWriter writeThreeDModelsRevisions(Long modelId) {
-        LOG.debug(loggingPrefix + "Initiating write 3d models revisions service.");
 
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("3d/models/" + modelId + "/revisions")
@@ -1988,7 +1968,6 @@ public abstract class ConnectorServiceV1 implements Serializable {
     }
 
     public ItemWriter writeThreeDAssetMappings(Long modelId, Long revisionId) {
-        LOG.debug(loggingPrefix + "Initiating write 3d asset mappings service.");
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("3d/models/" + modelId + "/revisions/" + revisionId + "/mappings")
                 .setRequest(Request.create())
@@ -2306,6 +2285,76 @@ public abstract class ConnectorServiceV1 implements Serializable {
     public ItemWriter deleteTransformationNotifications() {
         PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
                 .setEndpoint("transformations/notifications/delete")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Fetch data model spaces from Cognite.
+     *
+     * @param queryParameters The parameters for the spaces query.
+     * @return
+     */
+    public ResultFutureIterator<String> readSpaces(Request queryParameters) {
+        GetSimpleListRequestProvider requestProvider = GetSimpleListRequestProvider.builder()
+                .setEndpoint("models/spaces")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    /**
+     * Read relationships by id from Cognite.
+     *
+     * @return
+     */
+    public ItemReader<String> readSpacesById() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("models/spaces/byids")
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    /**
+     * Update relationships to Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @return
+     */
+    public ItemWriter upsertSpaces() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("models/spaces")
+                .setRequest(Request.create())
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ItemWriter.of(getClient(), requestProvider);
+    }
+
+    /**
+     * Delete relationships in Cognite.
+     *
+     * Calling this method will return an <code>ItemWriter</code>
+     * @return
+     */
+    public ItemWriter deleteSpaces() {
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint("models/spaces/delete")
                 .setRequest(Request.create())
                 .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
                 .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())

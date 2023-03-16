@@ -18,7 +18,9 @@ package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
+import com.cognite.client.dto.Item;
 import com.cognite.client.dto.datamodel.DataModel;
+import com.cognite.client.dto.datamodel.Space;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.DataSetParser;
 import com.cognite.client.util.Items;
@@ -30,21 +32,21 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * This class represents the Cognite data model api endpoint
+ * This class represents the Cognite data model spaces api endpoint
  *
- * It provides methods for reading and writing {@link DataModel}
+ * It provides methods for reading and writing {@link Space}
  */
 @AutoValue
-public abstract class DataModels extends ApiBase {
+public abstract class Spaces extends ApiBase {
 
-    protected static final Logger LOG = LoggerFactory.getLogger(DataModels.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(Spaces.class);
 
     private static Builder builder() {
-        return new AutoValue_DataModels.Builder();
+        return new AutoValue_Spaces.Builder();
     }
 
     /**
-     * Construct a new {@link DataModels} object using the provided configuration.
+     * Construct a new {@link Spaces} object using the provided configuration.
      *
      * This method is intended for internal use--SDK clients should always use {@link CogniteClient}
      * as the entry point to this class.
@@ -52,14 +54,14 @@ public abstract class DataModels extends ApiBase {
      * @param client The {@link CogniteClient} to use for configuration settings.
      * @return The datasets api object.
      */
-    public static DataModels of(CogniteClient client) {
-        return DataModels.builder()
+    public static Spaces of(CogniteClient client) {
+        return Spaces.builder()
                 .setClient(client)
                 .build();
     }
 
     /**
-     * Returns all {@link DataModel} objects.
+     * Returns all {@link Space} objects.
      *
      * <h2>Example:</h2>
      * <pre>
@@ -77,12 +79,12 @@ public abstract class DataModels extends ApiBase {
      * @see CogniteClient
      * @see CogniteClient#datasets()
      */
-    public Iterator<List<DataModel>> list() throws Exception {
+    public Iterator<List<Space>> list() throws Exception {
         return this.list(Request.create());
     }
 
     /**
-     * Return all {@link DataModel} object that matches the filters set in the {@link Request}.
+     * Return all {@link Space} object that matches the filters set in the {@link Request}.
      *
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer entire results set, then you have to
@@ -112,14 +114,14 @@ public abstract class DataModels extends ApiBase {
      * @return An {@link Iterator} to page through the results set.
      * @throws Exception
      */
-    public Iterator<List<DataModel>> list(Request requestParameters) throws Exception {
+    public Iterator<List<Space>> list(Request requestParameters) throws Exception {
         List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
 
         return this.list(requestParameters, partitions.toArray(new String[partitions.size()]));
     }
 
     /**
-     * Return all {@link DataModel} objects that matches the filters set in the {@link Request} for the specific
+     * Return all {@link Space} objects that matches the filters set in the {@link Request} for the specific
      * partitions. This method is intended for advanced use cases where you need direct control over the individual
      * partitions. For example, when using the SDK in a distributed computing environment.
      *
@@ -150,7 +152,7 @@ public abstract class DataModels extends ApiBase {
      * @return An {@link Iterator} to page through the results set
      * @throws Exception
      */
-    public Iterator<List<DataModel>> list(Request requestParameters, String... partitions) throws Exception {
+    public Iterator<List<Space>> list(Request requestParameters, String... partitions) throws Exception {
         return AdapterIterator.of(listJson(ResourceType.DATA_SET, requestParameters, partitions), this::parseDatasets);
     }
 
@@ -174,7 +176,7 @@ public abstract class DataModels extends ApiBase {
      * @return The retrieved datasets.
      * @throws Exception
      */
-    public List<DataSet> retrieve(String... externalId) throws Exception {
+    public List<Space> retrieve(String... externalId) throws Exception {
         return retrieve(Items.parseItems(externalId));
     }
 
@@ -198,7 +200,7 @@ public abstract class DataModels extends ApiBase {
      * @return The retrieved datasets.
      * @throws Exception
      */
-    public List<DataSet> retrieve(long... id) throws Exception {
+    public List<Space> retrieve(long... id) throws Exception {
         return retrieve(Items.parseItems(id));
     }
 
@@ -223,16 +225,16 @@ public abstract class DataModels extends ApiBase {
      * @return The retrieved datasets.
      * @throws Exception
      */
-    public List<DataSet> retrieve(List<Item> items) throws Exception {
+    public List<Space> retrieve(List<Item> items) throws Exception {
         return retrieveJson(ResourceType.DATA_SET, items).stream()
                 .map(this::parseDatasets)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Creates or update a set of {@link DataSet} objects.
+     * Creates or update a set of {@link Space} objects.
      *
-     * If it si a new {@link DataSet} object (based on the {@code id / externalId}, thenit will be created.
+     * If it is a new {@link Space} object (based on the {@code id / externalId}, thenit will be created.
      *
      * If an {@link Iterator} object already exists in Cognite Data Fusion, it will be updated. The update behaviour is
      * specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
@@ -255,12 +257,12 @@ public abstract class DataModels extends ApiBase {
      * @return The upserted datasets
      * @throws Exception
      */
-    public List<DataSet> upsert(List<DataSet> datasets) throws Exception {
+    public List<Space> upsert(List<Space> datasets) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter createItemWriter = connector.writeDataSets();
         ConnectorServiceV1.ItemWriter updateItemWriter = connector.updateDataSets();
 
-        UpsertItems<DataSet> upsertItems = UpsertItems.of(createItemWriter, this::toRequestInsertItem, getClient().buildAuthConfig())
+        UpsertItems<Space> upsertItems = UpsertItems.of(createItemWriter, this::toRequestInsertItem, getClient().buildAuthConfig())
                 .withUpdateItemWriter(updateItemWriter)
                 .withUpdateMappingFunction(this::toRequestUpdateItem)
                 .withIdFunction(this::getDatasetId);
@@ -291,7 +293,7 @@ public abstract class DataModels extends ApiBase {
     Wrapping the retrieve function because we need to handle the exception--an ugly workaround since lambdas don't deal very well
     with exceptions.
      */
-    private List<DataSet> retrieveWrapper(List<Item> items) {
+    private List<Space> retrieveWrapper(List<Item> items) {
         try {
             return retrieve(items);
         } catch (Exception e) {
@@ -364,6 +366,6 @@ public abstract class DataModels extends ApiBase {
 
     @AutoValue.Builder
     abstract static class Builder extends ApiBase.Builder<Builder> {
-        abstract DataModels build();
+        abstract Spaces build();
     }
 }
