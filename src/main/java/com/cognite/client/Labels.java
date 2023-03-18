@@ -17,7 +17,6 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
-import com.cognite.client.dto.Event;
 import com.cognite.client.dto.Label;
 import com.cognite.client.dto.Item;
 import com.cognite.client.servicesV1.ConnectorServiceV1;

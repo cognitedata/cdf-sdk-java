@@ -258,7 +258,7 @@ public abstract class Request implements Serializable {
         }
         HashMap<String, Object> tempMapFilter = new HashMap<>((Map)tempMapRoot.get("filter"));
 
-        // Check the existence of the the filter.metadata node.
+        // Check the existence of the filter.metadata node.
         if (!tempMapFilter.containsKey("metadata") || !(tempMapFilter.get("metadata") instanceof Map)) {
             tempMapFilter.put("metadata", ImmutableMap.<String, Object>of());
         }

@@ -233,9 +233,6 @@ abstract class ApiBase {
                                         Map<String, Object> parameters) throws Exception {
         String batchLogPrefix =
                 "retrieveJson() - batch " + RandomStringUtils.randomAlphanumeric(5) + " - ";
-        Instant startInstant = Instant.now();
-        ConnectorServiceV1 connector = getClient().getConnectorService();
-        ItemReader<String> itemReader;
 
         // Check that ids are provided + remove duplicate ids
         Map<Long, Item> internalIdMap = new HashMap<>(items.size());
@@ -251,8 +248,47 @@ abstract class ApiBase {
                 throw new Exception(message);
             }
         }
-        LOG.debug(batchLogPrefix + "Received {} items to read.", internalIdMap.size() + externalIdMap.size());
-        if (internalIdMap.isEmpty() && externalIdMap.isEmpty()) {
+
+        List<Item> deduplicatedItems = new ArrayList<>();
+        deduplicatedItems.addAll(externalIdMap.values());
+        deduplicatedItems.addAll(internalIdMap.values());
+
+        return retrieveJson(resourceType, toRequestItems(deduplicatedItems), parameters);
+    }
+
+    /**
+     * Retrieve items by id.
+     *
+     * This version allows you to explicitly set additional parameters for the retrieve request. For example:
+     * {@code <"ignoreUnknownIds", true>} and {@code <"fetchResources", true>}.
+     *
+     * <h2>Example:</h2>
+     * <pre>
+     * {@code
+     *      Collection<Item> items = //Collection of items with ids;
+     *      Map<String, Object> parameters = //Parameters;
+     *      List<String> result = retrieveJson(resourceType, items, parameters);
+     * }
+     * </pre>
+     *
+     * @param resourceType The item resource type ({@link com.cognite.client.dto.Event},
+     *                     {@link com.cognite.client.dto.Asset}, etc.) to retrieve.
+     * @param items        The item(s) to retrieve, represented by a collection of {@code Map<String, Object>}.
+     * @param parameters   Additional parameters for the request. For example <"ignoreUnknownIds", true>
+     * @return The items in Json representation.
+     * @throws Exception
+     */
+    protected List<String> retrieveJson(ResourceType resourceType,
+                                        List<? extends Map<String, Object>> items,
+                                        Map<String, Object> parameters) throws Exception {
+        String batchLogPrefix =
+                "retrieveJson() - batch " + RandomStringUtils.randomAlphanumeric(5) + " - ";
+        Instant startInstant = Instant.now();
+        ConnectorServiceV1 connector = getClient().getConnectorService();
+        ItemReader<String> itemReader;
+
+        LOG.debug(batchLogPrefix + "Received {} items to read.", items.size());
+        if (items.isEmpty()) {
             // Should not happen, but need to safeguard against it
             LOG.info(batchLogPrefix + "Empty input. Will skip the read process.");
             return Collections.emptyList();
@@ -293,15 +329,15 @@ abstract class ApiBase {
             case TRANSFORMATIONS_SCHEDULES:
                 itemReader = connector.readTransformationSchedulesById();
                 break;
+            case SPACE:
+                itemReader = connector.readSpacesById();
+                break;
             default:
                 LOG.error(batchLogPrefix + "Not a supported resource type: " + resourceType);
                 throw new Exception(batchLogPrefix + "Not a supported resource type: " + resourceType);
         }
 
-        List<Item> deduplicatedItems = new ArrayList<>(items.size());
-        deduplicatedItems.addAll(externalIdMap.values());
-        deduplicatedItems.addAll(internalIdMap.values());
-        List<List<Item>> itemBatches = Partition.ofSize(deduplicatedItems, 1000);
+        Partition<? extends Map<String, Object>> itemBatches = Partition.ofSize(items, 1000);
 
         // Build the request template
         Request requestTemplate = addAuthInfo(Request.create());
@@ -311,10 +347,10 @@ abstract class ApiBase {
 
         // Submit all batches
         List<CompletableFuture<ResponseItems<String>>> futureList = new ArrayList<>();
-        for (List<Item> batch : itemBatches) {
+        for (List<? extends Map<String, Object>> batch : itemBatches) {
             // build initial request object
             Request request = requestTemplate
-                    .withItems(toRequestItems(batch));
+                    .withItems(batch);
 
             futureList.add(itemReader.getItemsAsync(request));
         }
@@ -325,7 +361,7 @@ abstract class ApiBase {
         allFutures.join(); // Wait for all futures to complete
 
         // Collect the response items
-        List<String> responseItems = new ArrayList<>(deduplicatedItems.size());
+        List<String> responseItems = new ArrayList<>();
         for (CompletableFuture<ResponseItems<String>> responseItemsFuture : futureList) {
             if (!responseItemsFuture.join().isSuccessful()) {
                 // something went wrong with the request
@@ -1205,7 +1241,7 @@ abstract class ApiBase {
                 //Insert / create items
                 elementListCompleted.addAll(
                         createItemsWithConflictDetection(elementListCreate, elementListUpdate, batchLogPrefix,
-                                startInstant, exceptionMessage, logToError)
+                                exceptionMessage, logToError)
                 );
 
                 //Update items
@@ -1296,7 +1332,7 @@ abstract class ApiBase {
                 //Insert / create items
                 elementListCompleted.addAll(
                         createItemsWithConflictDetection(elementListCreate, elementListUpdate, batchLogPrefix,
-                                startInstant, exceptionMessage, logToError)
+                                exceptionMessage, logToError)
                 );
             }
 
@@ -1399,7 +1435,7 @@ abstract class ApiBase {
                 //Insert / create items
                 elementListCompleted.addAll(
                         createItemsWithConflictDetection(elementListCreate, elementListDelete, batchLogPrefix,
-                                startInstant, exceptionMessage, logToError)
+                                exceptionMessage, logToError)
                 );
             }
 
@@ -1499,7 +1535,7 @@ abstract class ApiBase {
                 //Insert / create items
                 elementListCompleted.addAll(
                         createItemsWithConflictDetection(elementListCreate, elementListUpdate, batchLogPrefix,
-                                startInstant, exceptionMessage, logToError)
+                                exceptionMessage, logToError)
                 );
 
                 //Update items
@@ -1610,7 +1646,7 @@ abstract class ApiBase {
                 //Insert / create items
                 elementListCompleted.addAll(
                         createItemsWithConflictDetection(elementListCreate, elementListUpdate, batchLogPrefix,
-                                startInstant, exceptionMessage, logToError)
+                                exceptionMessage, logToError)
                 );
 
                 //Update items
@@ -1678,7 +1714,7 @@ abstract class ApiBase {
             //Insert / create items
             elementListCompleted.addAll(
                     createItemsWithConflictDetection(elementListCreate, new ArrayList<T>(), batchLogPrefix,
-                            startInstant, exceptionMessage, true)
+                            exceptionMessage, true)
             );
 
             // Check if all elements completed the upsert requests
@@ -1765,7 +1801,7 @@ abstract class ApiBase {
                 //Insert / create items
                 elementListCompleted.addAll(
                         createItemsWithConflictDetection(elementListCreate, elementListDelete, batchLogPrefix,
-                                startInstant, exceptionMessage, logToError)
+                                exceptionMessage, logToError)
                 );
 
                 /*
@@ -1803,8 +1839,8 @@ abstract class ApiBase {
          * Because CDF will treat an entire request batch atomically, all items in the batch will be
          * rejected even if just a single item represents a conflict. This leads to a rather complex result being returned
          * from this method:
-         * - Items that have been successfully created/inserted to CDF are returned in a {@code List<String>} as the
-         * {@code return object}.
+         * - Items that have been successfully created/inserted to CDF are returned in a {@code List<String>, json string}
+         * as the {@code return object}.
          * - Items that have an insert conflict will be added to the {@code conflictItems} list. These items should be
          * re-tried as an {@code update} request.
          * - Items that does not have an insert conflict, but have not been committed to created/inserted (because they were in a
@@ -1829,7 +1865,6 @@ abstract class ApiBase {
          * @param createItems The items to create/insert.
          * @param conflictItems The items that caused a conflict when inserting/creating.
          * @param loggingPrefix A prefix prepended to the logs.
-         * @param startInstant The Instant when the upsert operation started. Used to calculate operation duration.
          * @param exceptionMessage The exception message from the create/insert operation (if a conflict is detected) will be added here.
          * @param logExceptionAsError If set to {@code true}, any error message from the create/insert operation will be logged
          *                       as {@code error}. If set to {@code false}, any error will be logged as {@code debug}.
@@ -1839,7 +1874,6 @@ abstract class ApiBase {
         private List<String> createItemsWithConflictDetection(List<T> createItems,
                                                               List<T> conflictItems,
                                                               String loggingPrefix,
-                                                              Instant startInstant,
                                                               String exceptionMessage,
                                                               boolean logExceptionAsError) throws Exception {
             List<String> completedItems = new ArrayList<>();

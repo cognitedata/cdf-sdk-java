@@ -18,13 +18,11 @@ package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
-import com.cognite.client.dto.Item;
-import com.cognite.client.dto.datamodel.DataModel;
+import com.cognite.client.dto.DataSet;
 import com.cognite.client.dto.datamodel.Space;
+import com.cognite.client.dto.datamodel.SpaceReference;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
-import com.cognite.client.servicesV1.parser.DataSetParser;
 import com.cognite.client.servicesV1.parser.datamodel.SpacesParser;
-import com.cognite.client.util.Items;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,7 +83,7 @@ public abstract class Spaces extends ApiBase {
     }
 
     /**
-     * Return all {@link Space} object that matches the filters set in the {@link Request}.
+     * Return all {@link Space} objects.
      *
      * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer entire results set, then you have to
@@ -116,49 +114,11 @@ public abstract class Spaces extends ApiBase {
      * @throws Exception
      */
     public Iterator<List<Space>> list(Request requestParameters) throws Exception {
-        List<String> partitions = buildPartitionsList(getClient().getClientConfig().getNoListPartitions());
-
-        return this.list(requestParameters, partitions.toArray(new String[partitions.size()]));
+        return AdapterIterator.of(listJson(ResourceType.SPACE, requestParameters), this::parseSpace);
     }
 
     /**
-     * Return all {@link Space} objects that matches the filters set in the {@link Request} for the specific
-     * partitions. This method is intended for advanced use cases where you need direct control over the individual
-     * partitions. For example, when using the SDK in a distributed computing environment.
-     *
-     * The results are paged through / iterated over via an {@link Iterator}--the entire results set is now buffered in
-     * memory, but streamed in "pages" from the Cognite api. If you need to buffer the entire results set, then you have
-     * to stream these results into your own data strcture.
-     *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *     List<DataSet> listDataSetsResults = new ArrayList<>();
-     *     client.datasets()
-     *           .list(Request.create()
-     *                            .withFilterParameter("writeProtected", true),
-     *                                 "1/8","2/8","3/8","4/8","5/8","6/8","7/8","8/8")
-     *           .forEachRemaining(batch -> listDataSetsResults.addAll(batch));
-     * }
-     * </pre>
-     *
-     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/listDataSets">API Reference - Filter data sets</a>
-     *
-     * @see #listJson(ResourceType,Request,String...)
-     * @see CogniteClient
-     * @see CogniteClient#datasets()
-     *
-     * @param requestParameters The filters to use for retrieving the datasets
-     * @param partitions        The partitions to include
-     * @return An {@link Iterator} to page through the results set
-     * @throws Exception
-     */
-    public Iterator<List<Space>> list(Request requestParameters, String... partitions) throws Exception {
-        return AdapterIterator.of(listJson(ResourceType.SPACE, requestParameters, partitions), this::parseSpace);
-    }
-
-    /**
-     * Retrieve datasets by {@code externalId}.
+     * Retrieve spaces by {@code spaceIds}.
      *
      * <h2>Example:</h2>
      * <pre>
@@ -173,36 +133,18 @@ public abstract class Spaces extends ApiBase {
      * @see CogniteClient
      * @see CogniteClient#datasets()
      *
-     * @param externalId The {@code externalIds} to retrieve
+     * @param spaceIds The {@code spaceIds} to retrieve
      * @return The retrieved datasets.
      * @throws Exception
      */
-    public List<Space> retrieve(String... externalId) throws Exception {
-        return retrieve(Items.parseItems(externalId));
-    }
+    public List<Space> retrieve(String... spaceIds) throws Exception {
+        // Parse ids to SpaceReference objects
+        List<SpaceReference> spaceReferences = new ArrayList<>();
+        for (String spaceId : spaceIds) {
+            spaceReferences.add(SpaceReference.newBuilder().setSpace(spaceId).build());
+        }
 
-    /**
-     * Retrieve datasets by {@code internal id}.
-     *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *      List<DataSet> retrievedDataSets = client.datasets().retrieve(1,2);
-     * }
-     * </pre>
-     *
-     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/getDataSets">API Reference - Retrieve data sets</a>
-     *
-     * @see #retrieve(List)
-     * @see CogniteClient
-     * @see CogniteClient#datasets()
-     *
-     * @param id The {@code ids} to retrieve
-     * @return The retrieved datasets.
-     * @throws Exception
-     */
-    public List<Space> retrieve(long... id) throws Exception {
-        return retrieve(Items.parseItems(id));
+        return retrieve(spaceReferences);
     }
 
     /**
@@ -222,13 +164,18 @@ public abstract class Spaces extends ApiBase {
      * @see CogniteClient
      * @see CogniteClient#datasets()
      *
-     * @param items The item(s) {@code externalId / id} to retrieve.
+     * @param spaces The item(s) {@code externalId / id} to retrieve.
      * @return The retrieved datasets.
      * @throws Exception
      */
-    public List<Space> retrieve(List<Item> items) throws Exception {
-        return retrieveJson(ResourceType.DATA_SET, items).stream()
-                .map(this::parseDatasets)
+    public List<Space> retrieve(List<SpaceReference> spaces) throws Exception {
+        // Parse SpaceReference to Map<String, Object> Json-like item objects
+        List<Map<String, Object>> spaceItemList = spaces.stream()
+                .map(spaceReference -> Map.of("space", (Object) spaceReference.getSpace()))
+                .toList();
+
+        return retrieveJson(ResourceType.SPACE, spaceItemList, Map.of()).stream()
+                .map(this::parseSpace)
                 .collect(Collectors.toList());
     }
 
@@ -254,55 +201,28 @@ public abstract class Spaces extends ApiBase {
      * @see CogniteClient
      * @see CogniteClient#datasets()
      *
-     * @param datasets The datasets to upsert
+     * @param spaces The spaces to upsert
      * @return The upserted datasets
      * @throws Exception
      */
-    public List<Space> upsert(List<Space> datasets) throws Exception {
+    public List<Space> upsert(List<Space> spaces) throws Exception {
         ConnectorServiceV1 connector = getClient().getConnectorService();
-        ConnectorServiceV1.ItemWriter createItemWriter = connector.writeDataSets();
-        ConnectorServiceV1.ItemWriter updateItemWriter = connector.updateDataSets();
+        ConnectorServiceV1.ItemWriter createItemWriter = connector.upsertSpaces();
 
-        UpsertItems<Space> upsertItems = UpsertItems.of(createItemWriter, this::toRequestInsertItem, getClient().buildAuthConfig())
-                .withUpdateItemWriter(updateItemWriter)
-                .withUpdateMappingFunction(this::toRequestUpdateItem)
-                .withIdFunction(this::getDatasetId);
-
-        if (getClient().getClientConfig().getUpsertMode() == UpsertMode.REPLACE) {
-            upsertItems = upsertItems.withUpdateMappingFunction(this::toRequestReplaceItem);
-        }
+        UpsertItems<Space> upsertItems = UpsertItems.of(createItemWriter, this::toRequestUpsertItem, getClient().buildAuthConfig())
+                .withIdFunction(this::getSpaceId);  // Must have an id-function when using create as the upsert function
 
         return upsertItems
-                .withRetrieveFunction(this::retrieveWrapper)
-                .withItemMappingFunction(this::toItem)  // used by upsertViaGetCreateAndUpdate
-                .withEqualFunction((DataSet a, DataSet b) ->
-                        a.getId() == b.getId() || (a.hasExternalId() && b.hasExternalId() && a.getExternalId().equals(b.getExternalId())))
-                .upsertViaGetCreateAndUpdate(datasets).stream()
-                .map(this::parseDatasets)
+                .create(spaces).stream()
+                .map(this::parseSpace)
                 .collect(Collectors.toList());
     }
 
     /*
-    Returns an Item reflecting the input dataset. This will extract the dataset externalId
-    and populate the Item with it.
+    Returns the id of a space.
      */
-    /*
-    private Item toItem(DataSet dataSet) {
-        return Item.newBuilder().setExternalId(dataSet.getExternalId()).build();
-    }
-
-     */
-
-    /*
-    Wrapping the retrieve function because we need to handle the exception--an ugly workaround since lambdas don't deal very well
-    with exceptions.
-     */
-    private List<Space> retrieveWrapper(List<Item> items) {
-        try {
-            return retrieve(items);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    private Optional<String> getSpaceId(Space item) {
+        return Optional.of(item.getSpace());
     }
 
     /*
