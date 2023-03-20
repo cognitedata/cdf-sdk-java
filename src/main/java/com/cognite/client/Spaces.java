@@ -17,8 +17,6 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ResourceType;
-import com.cognite.client.config.UpsertMode;
-import com.cognite.client.dto.DataSet;
 import com.cognite.client.dto.datamodel.Space;
 import com.cognite.client.dto.datamodel.SpaceReference;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
@@ -62,18 +60,6 @@ public abstract class Spaces extends ApiBase {
     /**
      * Returns all {@link Space} objects.
      *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *     List<DataSet> listDataSetsResults = new ArrayList<>();
-     *     client.datasets()
-     *           .list()
-     *           .forEachRemaining(batch -> listDataSetsResults.addAll(batch));
-     * }
-     * </pre>
-     *
-     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/listDataSets">API Reference - Filter data sets</a>
-     *
      * @see #list(Request)
      * @see CogniteClient
      * @see CogniteClient#datasets()
@@ -89,26 +75,6 @@ public abstract class Spaces extends ApiBase {
      * memory, but streamed in "pages" from the Cognite api. If you need to buffer entire results set, then you have to
      * stream these results into your own data structure.
      *
-     * The datasets are retrieved using multiple, parallel request streams towards the Cognite api. The number of
-     * parallel streams are set in the {@link com.cognite.client.config.ClientConfig}.
-     *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *     List<DataSet> listDataSetsResults = new ArrayList<>();
-     *     client.datasets()
-     *           .list(Request.create()
-     *                            .withFilterParameter("writeProtected", true))
-     *           .forEachRemaining(batch -> listDataSetsResults.addAll(batch));
-     * }
-     * </pre>
-     *
-     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/listDataSets">API Reference - Filter data sets</a>
-     *
-     * @see #list(Request,String...)
-     * @see CogniteClient
-     * @see CogniteClient#datasets()
-     *
      * @param requestParameters The filters to use for retrieving datasets.
      * @return An {@link Iterator} to page through the results set.
      * @throws Exception
@@ -118,20 +84,7 @@ public abstract class Spaces extends ApiBase {
     }
 
     /**
-     * Retrieve spaces by {@code spaceIds}.
-     *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *      List<DataSet> retrievedDataSets = client.datasets().retrieve("1","2");
-     * }
-     * </pre>
-     *
-     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/getDataSets">API Reference - Retrieve data sets</a>
-     *
-     * @see #retrieve(List)
-     * @see CogniteClient
-     * @see CogniteClient#datasets()
+     * Retrieve spaces by {@code spaceIds / SpaceReferences}.
      *
      * @param spaceIds The {@code spaceIds} to retrieve
      * @return The retrieved datasets.
@@ -148,23 +101,9 @@ public abstract class Spaces extends ApiBase {
     }
 
     /**
-     * Retrieves datasets by {@code externalId / id}.
+     * Retrieve spaces by {@code spaceIds / SpaceReferences}.
      *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *      List<Item> items = List.of(Item.newBuilder().setExternalId("1").build());
-     *      List<DataSet> retrievedDataSets = client.datasets().retrieve(items);
-     * }
-     * </pre>
-     *
-     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/getDataSets">API Reference - Retrieve data sets</a>
-     *
-     * @see #retrieveJson(ResourceType, Collection)
-     * @see CogniteClient
-     * @see CogniteClient#datasets()
-     *
-     * @param spaces The item(s) {@code externalId / id} to retrieve.
+     * @param spaces The item(s) {@link SpaceReference} to retrieve.
      * @return The retrieved datasets.
      * @throws Exception
      */
@@ -182,24 +121,6 @@ public abstract class Spaces extends ApiBase {
     /**
      * Creates or update a set of {@link Space} objects.
      *
-     * If it is a new {@link Space} object (based on the {@code id / externalId}, thenit will be created.
-     *
-     * If an {@link Iterator} object already exists in Cognite Data Fusion, it will be updated. The update behaviour is
-     * specified via the update mode in the {@link com.cognite.client.config.ClientConfig} settings.
-     *
-     * <h2>Example:</h2>
-     * <pre>
-     * {@code
-     *      List<DataSet> upsertDataSetsList = // List of DataSet;
-     *      client.datasets().upsert(upsertDataSetsList);
-     * }
-     * </pre>
-     *
-     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/createDataSets">API Reference - Create data sets</a><br/>
-     * <a href="https://docs.cognite.com/api/v1/#tag/Data-sets/operation/updateDataSets">API Reference - Update the attributes of data sets.</a>
-     *
-     * @see CogniteClient
-     * @see CogniteClient#datasets()
      *
      * @param spaces The spaces to upsert
      * @return The upserted datasets
