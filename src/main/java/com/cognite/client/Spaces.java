@@ -130,13 +130,34 @@ public abstract class Spaces extends ApiBase {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter createItemWriter = connector.upsertSpaces();
 
-        UpsertItems<Space> upsertItems = UpsertItems.of(createItemWriter, this::toRequestUpsertItem, getClient().buildAuthConfig())
+        UpsertItems<Space> upsertItems = UpsertItems.of(createItemWriter,
+                                                        this::toRequestUpsertItem,
+                                                        getClient().buildAuthConfig())
+                .withMaxBatchSize(100)
                 .withIdFunction(this::getSpaceId);  // Must have an id-function when using create as the upsert function
 
         return upsertItems
                 .create(spaces).stream()
                 .map(this::parseSpace)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Deletes a set of Spaces.
+     *
+     * @param spaces a list of {@link SpaceReference} representing the Space to be deleted
+     * @return The deleted spaces
+     * @throws Exception
+     */
+    public List<SpaceReference> delete(List<SpaceReference> spaces) throws Exception {
+        ConnectorServiceV1 connector = getClient().getConnectorService();
+        ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteSpaces();
+
+        DeleteItems deleteItems = DeleteItems.ofItem(deleteItemWriter, getClient().buildAuthConfig())
+                .addParameter("ignoreUnknownIds", true)//
+                ;
+
+        return deleteItems.deleteItems(spaces);
     }
 
     /*

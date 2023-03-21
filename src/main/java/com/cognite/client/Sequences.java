@@ -19,7 +19,6 @@ package com.cognite.client;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Aggregate;
-import com.cognite.client.dto.DataSet;
 import com.cognite.client.dto.SequenceMetadata;
 import com.cognite.client.dto.Item;
 import com.cognite.client.queue.UploadQueue;
@@ -371,7 +370,7 @@ public abstract class Sequences extends ApiBase implements UpsertTarget<Sequence
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteSequencesHeaders();
 
-        DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig());
+        DeleteItems deleteItems = DeleteItems.ofItem(deleteItemWriter, getClient().buildAuthConfig());
 
         return deleteItems.deleteItems(sequences);
     }

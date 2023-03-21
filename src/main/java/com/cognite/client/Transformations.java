@@ -4,18 +4,11 @@ import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.*;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
-import com.cognite.client.servicesV1.ItemReader;
-import com.cognite.client.servicesV1.ResponseItems;
-import com.cognite.client.servicesV1.parser.ThreeDModelParser;
-import com.cognite.client.servicesV1.parser.ThreeDModelRevisionParser;
-import com.cognite.client.servicesV1.parser.TimeseriesParser;
 import com.cognite.client.servicesV1.parser.TransformationParser;
 import com.google.auto.value.AutoValue;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @AutoValue
@@ -298,7 +291,7 @@ public abstract class Transformations extends ApiBase {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteTransformations();
 
-        DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig())
+        DeleteItems deleteItems = DeleteItems.ofItem(deleteItemWriter, getClient().buildAuthConfig())
                 .addParameter("ignoreUnknownIds", true);
 
         return deleteItems.deleteItems(deleteItemsInput);

@@ -16,7 +16,6 @@
 
 package com.cognite.client;
 
-import com.amazonaws.services.s3.transfer.Upload;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.config.UpsertMode;
 import com.cognite.client.dto.Item;
@@ -360,7 +359,7 @@ public abstract class Relationships extends ApiBase implements UpsertTarget<Rela
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteRelationships();
 
-        DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig())
+        DeleteItems deleteItems = DeleteItems.ofItem(deleteItemWriter, getClient().buildAuthConfig())
                 .addParameter("ignoreUnknownIds", true);
 
         return deleteItems.deleteItems(relationships);

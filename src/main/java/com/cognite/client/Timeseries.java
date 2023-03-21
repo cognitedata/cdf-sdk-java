@@ -371,7 +371,7 @@ public abstract class Timeseries extends ApiBase implements UpsertTarget<Timeser
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteTsHeaders();
 
-        DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig())
+        DeleteItems deleteItems = DeleteItems.ofItem(deleteItemWriter, getClient().buildAuthConfig())
                 .addParameter("ignoreUnknownIds", true);
 
         return deleteItems.deleteItems(timeseries);

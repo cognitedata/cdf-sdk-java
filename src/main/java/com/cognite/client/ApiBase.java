@@ -556,6 +556,7 @@ abstract class ApiBase {
                 break;
             case SPACE:
                 results = connector.readSpaces(requestParameters);
+                break;
             default:
                 throw new Exception("Not a supported resource type: " + resourceType);
         }
@@ -978,7 +979,7 @@ abstract class ApiBase {
                         && field.getType() == Descriptors.FieldDescriptor.Type.STRING) {
                     returnObject = Optional.of((String) fieldMap.get(field));
                 } else if (field.getName().equalsIgnoreCase("id")
-                        && field.getType() == Descriptors.FieldDescriptor.Type.DOUBLE) {
+                        && field.getType() == Descriptors.FieldDescriptor.Type.INT64) {
                     returnObject = Optional.of(String.valueOf(fieldMap.get(field)));
                 }
             }
@@ -1377,7 +1378,7 @@ abstract class ApiBase {
             }
 
             // Configure the delete handler
-            DeleteItems deleteItemsHandler = DeleteItems.of(getDeleteItemWriter(), getAuthConfig())
+            DeleteItems deleteItemsHandler = DeleteItems.ofItem(getDeleteItemWriter(), getAuthConfig())
                     .setParameters(getDeleteParameters());
 
             // Delete, create, completed lists
@@ -1759,7 +1760,7 @@ abstract class ApiBase {
             }
 
             // Configure the delete handler
-            DeleteItems deleteItemsHandler = DeleteItems.of(getDeleteItemWriter(), getAuthConfig())
+            DeleteItems deleteItemsHandler = DeleteItems.ofItem(getDeleteItemWriter(), getAuthConfig())
                     .setParameters(getDeleteParameters());
 
             // Insert, update, completed lists
@@ -2497,16 +2498,63 @@ abstract class ApiBase {
      * requests.
      */
     @AutoValue
-    public abstract static class DeleteItems {
+    public abstract static class DeleteItems<T extends Message> {
         private static final int DEFAULT_MAX_BATCH_SIZE = 1000;
         private static final int maxDeleteLoopIterations = 4;
 
         protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
-        private static Builder builder() {
-            return new AutoValue_ApiBase_DeleteItems.Builder()
+        private static <T extends Message> Builder<T> builder() {
+            return new AutoValue_ApiBase_DeleteItems.Builder<T>()
                     .setMaxBatchSize(DEFAULT_MAX_BATCH_SIZE)
-                    .setDeleteItemMappingFunction(DeleteItems::toDeleteItem);
+                    .setIdFunction(DeleteItems::defaultGetId);
+        }
+
+        /**
+         * Get id via the common dto methods {@code getExternalId} and {@code getId}.
+         *
+         * This is the default implementation which uses {@code Message} reflection to find the {@code externalId} or
+         * {@code id} fields.
+         *
+         * @param item The item to interrogate for id
+         * @param <T>  The object type of the item. Must be a protobuf object.
+         * @return The (external)Id if found. An empty {@link Optional} if no id is found.
+         */
+        private static <T extends Message> Optional<String> defaultGetId(T item) {
+            Optional<String> returnObject = Optional.empty();
+
+            java.util.Map<Descriptors.FieldDescriptor, java.lang.Object> fieldMap = item.getAllFields();
+            for (Descriptors.FieldDescriptor field : fieldMap.keySet()) {
+                if (field.getName().equalsIgnoreCase("space")
+                        && field.getType() == Descriptors.FieldDescriptor.Type.STRING) {
+                    returnObject = Optional.of((String) fieldMap.get(field));
+                } else if (field.getName().equalsIgnoreCase("external_id")
+                        && field.getType() == Descriptors.FieldDescriptor.Type.STRING) {
+                    returnObject = Optional.of((String) fieldMap.get(field));
+                } else if (field.getName().equalsIgnoreCase("id")
+                        && field.getType() == Descriptors.FieldDescriptor.Type.INT64) {
+                    returnObject = Optional.of(String.valueOf(fieldMap.get(field)));
+                }
+            }
+
+            return returnObject;
+        }
+
+        /**
+         * Get id via for an {@link Item}
+         *
+         * @param item The item to interrogate for id
+         * @return The (external)Id if found. An empty {@link Optional} if no id is found.
+         */
+        private static Optional<String> defaultItemGetId(Item item) {
+            Optional<String> returnObject = Optional.empty();
+
+            if (item.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
+                returnObject = Optional.of(item.getExternalId());
+            } else if (item.getIdTypeCase() == Item.IdTypeCase.ID) {
+                returnObject = Optional.of(String.valueOf(item.getId()));
+            }
+            return returnObject;
         }
 
         /**
@@ -2515,7 +2563,30 @@ abstract class ApiBase {
          * @param item
          * @return
          */
-        private static Map<String, Object> toDeleteItem(Item item) {
+        private static <T extends Message> Map<String, Object> defaultToDeleteItem(T item) {
+            java.util.Map<Descriptors.FieldDescriptor, java.lang.Object> fieldMap = item.getAllFields();
+            for (Descriptors.FieldDescriptor field : fieldMap.keySet()) {
+                if (field.getName().equalsIgnoreCase("space")
+                        && field.getType() == Descriptors.FieldDescriptor.Type.STRING) {
+                    return Map.of("space", (String) fieldMap.get(field));
+                } else if (field.getName().equalsIgnoreCase("external_id")
+                        && field.getType() == Descriptors.FieldDescriptor.Type.STRING) {
+                    return Map.of("externalId", (String) fieldMap.get(field));
+                } else if (field.getName().equalsIgnoreCase("id")
+                        && field.getType() == Descriptors.FieldDescriptor.Type.INT64) {
+                    return Map.of("id", String.valueOf(fieldMap.get(field)));
+                }
+            }
+            return Collections.emptyMap();
+        }
+
+        /**
+         * The default function for translating an Item to a delete items object.
+         *
+         * @param item
+         * @return
+         */
+        private static Map<String, Object> defaultItemToDeleteItem(Item item) {
             if (item.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
                 return ImmutableMap.of("externalId", item.getExternalId());
             } else if (item.getIdTypeCase() == Item.IdTypeCase.ID) {
@@ -2532,21 +2603,42 @@ abstract class ApiBase {
          * @param authConfig   The authorization info for api requests.
          * @return the {@link DeleteItems} for delete requests.
          */
-        public static DeleteItems of(ConnectorServiceV1.ItemWriter deleteWriter,
-                                     AuthConfig authConfig) {
-            return DeleteItems.builder()
+        public static DeleteItems<Item> ofItem(ConnectorServiceV1.ItemWriter deleteWriter,
+                                                AuthConfig authConfig) {
+            return DeleteItems.<Item>builder()
                     .setDeleteItemWriter(deleteWriter)
                     .setAuthConfig(authConfig)
+                    .setItemMappingFunction(DeleteItems::defaultItemToDeleteItem)
+                    .setIdFunction(DeleteItems::defaultItemGetId)
                     .build();
         }
 
-        abstract Builder toBuilder();
+        /**
+         * Creates a new {@link DeleteItems} that will perform upsert actions.
+         *
+         * @param deleteWriter The item writer for delete requests.
+         * @param mappingFunction The mapping function for translating input items to object Json.
+         * @param authConfig   The authorization info for api requests.
+         * @return the {@link DeleteItems} for delete requests.
+         */
+        public static <T extends Message> DeleteItems<T> of(ConnectorServiceV1.ItemWriter deleteWriter,
+                                                            Function<T, Map<String, Object>> mappingFunction,
+                                                            AuthConfig authConfig) {
+            return DeleteItems.<T>builder()
+                    .setDeleteItemWriter(deleteWriter)
+                    .setAuthConfig(authConfig)
+                    .setItemMappingFunction(mappingFunction)
+                    .build();
+        }
+
+        abstract Builder<T> toBuilder();
 
         abstract int getMaxBatchSize();
 
         abstract AuthConfig getAuthConfig();
 
-        abstract Function<Item, Map<String, Object>> getDeleteItemMappingFunction();
+        abstract Function<T, Map<String, Object>> getItemMappingFunction();
+        abstract Function<T, Optional<String>> getIdFunction();
 
         abstract ConnectorServiceV1.ItemWriter getDeleteItemWriter();
 
@@ -2588,16 +2680,16 @@ abstract class ApiBase {
         }
 
         /**
-         * Sets the delete item mapping function.
+         * Sets the delete items mapping function.
          *
-         * This function builds the delete item object based on the input {@link Item}. The default function
+         * This function builds the delete item object based on the input {@code elements}. The default function
          * builds delete items based on {@code externalId / id}.
          *
          * @param mappingFunction The mapping function
          * @return The {@link DeleteItems} object with the configuration applied.
          */
-        public DeleteItems withDeleteItemMappingFunction(Function<Item, Map<String, Object>> mappingFunction) {
-            return toBuilder().setDeleteItemMappingFunction(mappingFunction).build();
+        public DeleteItems withItemMappingFunction(Function<T, Map<String, Object>> mappingFunction) {
+            return toBuilder().setItemMappingFunction(mappingFunction).build();
         }
 
         /**
@@ -2607,24 +2699,24 @@ abstract class ApiBase {
          * @return The deleted items.
          * @throws Exception
          */
-        public List<Item> deleteItems(List<Item> items) throws Exception {
+        public List<T> deleteItems(List<T> items) throws Exception {
             Instant startInstant = Instant.now();
             String batchLogPrefix =
                     "deleteItems() - batch " + RandomStringUtils.randomAlphanumeric(5) + " - ";
             Preconditions.checkArgument(itemsHaveId(items),
-                    batchLogPrefix + "All items must have externalId or id.");
+                    batchLogPrefix + "All items must have an identity.");
             LOG.debug(String.format(batchLogPrefix + "Received %d items to delete",
                     items.size()));
 
             // Should not happen--but need to guard against empty input
             if (items.isEmpty()) {
                 LOG.debug(batchLogPrefix + "Received an empty input list. Will just output an empty list.");
-                return Collections.<Item>emptyList();
+                return Collections.<T>emptyList();
             }
 
             // Delete and completed lists
-            List<Item> elementListDelete = deduplicate(items);
-            List<Item> elementListCompleted = new ArrayList<>(elementListDelete.size());
+            List<T> elementListDelete = deduplicate(items);
+            List<T> elementListCompleted = new ArrayList<>(elementListDelete.size());
 
             if (elementListDelete.size() != items.size()) {
                 LOG.debug(batchLogPrefix + "Identified {} duplicate items in the input.",
@@ -2650,7 +2742,7 @@ abstract class ApiBase {
                 /*
                 Delete items
                  */
-                Map<ResponseItems<String>, List<Item>> deleteResponseMap = splitAndDeleteItems(elementListDelete);
+                Map<ResponseItems<String>, List<T>> deleteResponseMap = splitAndDeleteItems(elementListDelete);
                 LOG.debug(batchLogPrefix + "Completed delete items requests for {} items across {} batches at duration {}",
                         elementListDelete.size(),
                         deleteResponseMap.size(),
@@ -2677,7 +2769,7 @@ abstract class ApiBase {
                         LOG.debug(batchLogPrefix + "No of missing items reported by CDF: {}", missing.size());
 
                         // Remove missing items from the delete request
-                        Map<String, Item> itemsMap = mapToId(deleteResponseMap.get(response));
+                        Map<String, T> itemsMap = mapToId(deleteResponseMap.get(response));
                         for (Item value : missing) {
                             if (value.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
                                 itemsMap.remove(value.getExternalId());
@@ -2730,12 +2822,12 @@ abstract class ApiBase {
          * @return a {@link Map} with the responses and request inputs.
          * @throws Exception
          */
-        private Map<ResponseItems<String>, List<Item>> splitAndDeleteItems(List<Item> items) throws Exception {
-            Map<CompletableFuture<ResponseItems<String>>, List<Item>> responseMap = new HashMap<>();
-            List<List<Item>> itemBatches = Partition.ofSize(items, getMaxBatchSize());
+        private Map<ResponseItems<String>, List<T>> splitAndDeleteItems(List<T> items) throws Exception {
+            Map<CompletableFuture<ResponseItems<String>>, List<T>> responseMap = new HashMap<>();
+            List<List<T>> itemBatches = Partition.ofSize(items, getMaxBatchSize());
 
             // Submit all batches
-            for (List<Item> batch : itemBatches) {
+            for (List<T> batch : itemBatches) {
                 responseMap.put(deleteBatch(batch), batch);
             }
 
@@ -2747,8 +2839,8 @@ abstract class ApiBase {
             allFutures.join(); // Wait for all futures to complete
 
             // Collect the responses from the futures
-            Map<ResponseItems<String>, List<Item>> resultsMap = new HashMap<>(responseMap.size());
-            for (Map.Entry<CompletableFuture<ResponseItems<String>>, List<Item>> entry : responseMap.entrySet()) {
+            Map<ResponseItems<String>, List<T>> resultsMap = new HashMap<>(responseMap.size());
+            for (Map.Entry<CompletableFuture<ResponseItems<String>>, List<T>> entry : responseMap.entrySet()) {
                 resultsMap.put(entry.getKey().join(), entry.getValue());
             }
 
@@ -2762,10 +2854,10 @@ abstract class ApiBase {
          * @return a {@link CompletableFuture} representing the response from the create request.
          * @throws Exception
          */
-        private CompletableFuture<ResponseItems<String>> deleteBatch(List<Item> items) throws Exception {
+        private CompletableFuture<ResponseItems<String>> deleteBatch(List<T> items) throws Exception {
             ImmutableList.Builder<Map<String, Object>> insertItemsBuilder = ImmutableList.builder();
-            for (Item item : items) {
-                insertItemsBuilder.add(getDeleteItemMappingFunction().apply(item));
+            for (T item : items) {
+                insertItemsBuilder.add(getItemMappingFunction().apply(item));
             }
             Request writeItemsRequest = Request.create()
                     .withItems(insertItemsBuilder.build())
@@ -2786,10 +2878,9 @@ abstract class ApiBase {
          * @param items the items to check for id / externalId
          * @return {@code true} if all items have an id, {@code false} if one (or more) items are missing id / externalId
          */
-        private boolean itemsHaveId(List<Item> items) {
-            for (Item item : items) {
-                if (!(item.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID
-                        || item.getIdTypeCase() == Item.IdTypeCase.ID)) {
+        private boolean itemsHaveId(List<T> items) {
+            for (T item : items) {
+                if (!getIdFunction().apply(item).isPresent()) {
                     return false;
                 }
             }
@@ -2806,16 +2897,10 @@ abstract class ApiBase {
          * @param items the items to map to externalId / id.
          * @return the {@link Map} with all items mapped to externalId / id.
          */
-        private Map<String, Item> mapToId(List<Item> items) {
-            Map<String, Item> resultMap = new HashMap<>((int) (items.size() * 1.35));
-            for (Item item : items) {
-                if (item.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
-                    resultMap.put(item.getExternalId(), item);
-                } else if (item.getIdTypeCase() == Item.IdTypeCase.ID) {
-                    resultMap.put(String.valueOf(item.getId()), item);
-                } else {
-                    resultMap.put("", item);
-                }
+        private Map<String, T> mapToId(List<T> items) {
+            Map<String, T> resultMap = new HashMap<>((int) (items.size() * 1.35));
+            for (T item : items) {
+                resultMap.put(getIdFunction().apply(item).orElse(""), item);
             }
             return resultMap;
         }
@@ -2826,21 +2911,22 @@ abstract class ApiBase {
          * @param items The items to be de-duplicated
          * @return a {@link List} with no duplicate items.
          */
-        private List<Item> deduplicate(List<Item> items) {
+        private List<T> deduplicate(List<T> items) {
             return new ArrayList<>(mapToId(items).values());
         }
 
         @AutoValue.Builder
-        abstract static class Builder {
-            abstract Builder setMaxBatchSize(int value);
+        abstract static class Builder<T extends Message> {
+            abstract Builder<T> setMaxBatchSize(int value);
 
-            abstract Builder setAuthConfig(AuthConfig value);
+            abstract Builder<T> setAuthConfig(AuthConfig value);
 
-            abstract Builder setDeleteItemMappingFunction(Function<Item, Map<String, Object>> value);
+            abstract Builder<T> setItemMappingFunction(Function<T, Map<String, Object>> value);
+            abstract Builder<T> setIdFunction(Function<T, Optional<String>> value);
 
-            abstract Builder setDeleteItemWriter(ConnectorServiceV1.ItemWriter value);
+            abstract Builder<T> setDeleteItemWriter(ConnectorServiceV1.ItemWriter value);
 
-            abstract Builder setParameters(Map<String, Object> value);
+            abstract Builder<T> setParameters(Map<String, Object> value);
 
             abstract ImmutableMap.Builder<String, Object> parametersBuilder();
 
@@ -2849,7 +2935,7 @@ abstract class ApiBase {
                 return this;
             }
 
-            abstract DeleteItems build();
+            abstract DeleteItems<T> build();
         }
     }
 

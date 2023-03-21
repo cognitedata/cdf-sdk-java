@@ -331,7 +331,7 @@ public abstract class ExtractionPipelines extends ApiBase {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteExtractionPipelines();
 
-        DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig())
+        DeleteItems deleteItems = DeleteItems.ofItem(deleteItemWriter, getClient().buildAuthConfig())
                 //.addParameter("ignoreUnknownIds", true)
                 ;
 

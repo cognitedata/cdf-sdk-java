@@ -217,7 +217,7 @@ public abstract class TransformationNotifications extends ApiBase {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteTransformationNotifications();
 
-        DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig());
+        DeleteItems deleteItems = DeleteItems.ofItem(deleteItemWriter, getClient().buildAuthConfig());
 
         return deleteItems.deleteItems(items);
     }

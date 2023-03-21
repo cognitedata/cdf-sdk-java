@@ -21,8 +21,6 @@ import com.cognite.client.dto.Aggregate;
 import com.cognite.client.dto.Asset;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.dto.Item;
-import com.cognite.client.queue.UploadQueue;
-import com.cognite.client.queue.UpsertTarget;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.parser.AssetParser;
 import com.cognite.client.stream.ListSource;
@@ -700,7 +698,7 @@ public abstract class Assets extends ApiBase implements ListSource<Asset> {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteAssets();
 
-        DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig())
+        DeleteItems deleteItems = DeleteItems.ofItem(deleteItemWriter, getClient().buildAuthConfig())
                 .addParameter("ignoreUnknownIds", true)
                 .addParameter("recursive", recursive);
 

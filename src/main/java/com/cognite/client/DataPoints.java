@@ -839,8 +839,8 @@ public abstract class DataPoints extends ApiBase implements UpsertTarget<Timeser
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteDatapoints();
 
-        DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig())
-                .withDeleteItemMappingFunction(this::toRequestDeleteItem);
+        DeleteItems deleteItems = DeleteItems.ofItem(deleteItemWriter, getClient().buildAuthConfig())
+                .withItemMappingFunction(this::toRequestDeleteItem);
 
         return deleteItems.deleteItems(dataPoints);
     }

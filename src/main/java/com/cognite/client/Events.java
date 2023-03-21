@@ -386,7 +386,7 @@ public abstract class Events extends ApiBase implements ListSource<Event>, Upser
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteEvents();
 
-        DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, getClient().buildAuthConfig())
+        DeleteItems deleteItems = DeleteItems.ofItem(deleteItemWriter, getClient().buildAuthConfig())
                 .addParameter("ignoreUnknownIds", true);
 
         return deleteItems.deleteItems(events);

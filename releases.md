@@ -19,6 +19,15 @@ Changes are grouped as follows:
 - Extraction pipelines configuration
 - Data models
 
+## [2.2.0-SNAPSHOT]
+
+### Added
+
+
+### Fixed
+
+- In some cases an `upsert` operation may fail to identify internal `id` conflicts.
+
 ## [2.1.0] 2023-03-10
 
 ### Added

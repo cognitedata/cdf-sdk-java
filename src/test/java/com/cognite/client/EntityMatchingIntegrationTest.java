@@ -1,12 +1,10 @@
 package com.cognite.client;
 
 import com.cognite.client.config.ClientConfig;
-import com.cognite.client.config.TokenUrl;
 import com.cognite.client.dto.EntityMatchModel;
 import com.cognite.client.dto.EntityMatchResult;
 import com.cognite.client.dto.Item;
 import com.google.protobuf.Struct;
-import com.google.protobuf.Value;
 import com.google.protobuf.util.Values;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
