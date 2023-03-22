@@ -23,6 +23,8 @@ Changes are grouped as follows:
 
 ### Added
 
+- Experimental support for `datamodeling spaces`.
+
 
 ### Fixed
 
