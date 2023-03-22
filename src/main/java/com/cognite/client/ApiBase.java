@@ -2783,7 +2783,7 @@ abstract class ApiBase {
 
             // Check if all elements completed the upsert requests
             if (elementListDelete.isEmpty()) {
-                LOG.info(batchLogPrefix + "Successfully deleted {} items within a duration of {}.",
+                LOG.debug(batchLogPrefix + "Successfully deleted {} items within a duration of {}.",
                         elementListCompleted.size(),
                         Duration.between(startInstant, Instant.now()).toString());
             } else {

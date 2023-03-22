@@ -145,6 +145,23 @@ public abstract class Spaces extends ApiBase {
     /**
      * Deletes a set of Spaces.
      *
+     * @param spaceIds a list of spaces (the space id) to be deleted
+     * @return The deleted spaces
+     * @throws Exception
+     */
+    public List<SpaceReference> delete(String... spaceIds) throws Exception {
+        // Parse ids to SpaceReference objects
+        List<SpaceReference> spaceReferences = new ArrayList<>();
+        for (String spaceId : spaceIds) {
+            spaceReferences.add(SpaceReference.newBuilder().setSpace(spaceId).build());
+        }
+
+        return delete(spaceReferences);
+    }
+
+    /**
+     * Deletes a set of Spaces.
+     *
      * @param spaces a list of {@link SpaceReference} representing the Space to be deleted
      * @return The deleted spaces
      * @throws Exception

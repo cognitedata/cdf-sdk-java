@@ -1,6 +1,7 @@
 package com.cognite.client;
 
 import com.cognite.client.dto.datamodel.Space;
+import com.cognite.client.dto.datamodel.SpaceReference;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -39,7 +40,8 @@ class SpacesIntegrationTest {
                         .build()
         );
         List<Space> upsertedSpaces = client.experimental().dataModeling().spaces().upsert(upsertSpacesList);
-        LOG.info(loggingPrefix + "Finished spaces upsert. Duration: {}",
+        LOG.info(loggingPrefix + "Finished upserting {} spaces. Duration: {}",
+                upsertSpacesList.size(),
                 Duration.between(startInstant, Instant.now()));
 
         Thread.sleep(1000); // wait for eventual consistency
@@ -62,7 +64,8 @@ class SpacesIntegrationTest {
         client.experimental().dataModeling().spaces()
                 .list()
                 .forEachRemaining(labels -> listSpacesResults.addAll(labels));
-        LOG.info(loggingPrefix + "Finished reading spaces. Duration: {}",
+        LOG.info(loggingPrefix + "Finished reading {} spaces. Duration: {}",
+                listSpacesResults.size(),
                 Duration.between(startInstant, Instant.now()));
 
         LOG.info(loggingPrefix + "Start deleting spaces.");
@@ -71,12 +74,16 @@ class SpacesIntegrationTest {
                 .filter(space -> space.getSpace().startsWith("unit-test"))
                 .map(Space::getSpace)
                 .forEach(item -> deleteSpacesInput.add(item));
-/*
-        List<Item> deleteSpacesResults = client.experimental().dataModeling().spaces();
-        LOG.info(loggingPrefix + "Finished deleting labels. Duration: {}",
+
+        List<SpaceReference> deleteSpacesResults = client.experimental()
+                .dataModeling()
+                .spaces()
+                .delete(deleteSpacesInput.toArray(new String[0]));
+        LOG.info(loggingPrefix + "Finished deleting {} spaces. Duration: {}",
+                deleteSpacesResults.size(),
                 Duration.between(startInstant, Instant.now()));
 
- */
+
 
         BooleanSupplier updateCondition = () -> {
             for (Space space : spacesUpdateResults)  {
@@ -89,11 +96,10 @@ class SpacesIntegrationTest {
             return true;
         };
 
-
         assertTrue(updateCondition, "Labels update not correct");
 
         assertEquals(upsertSpacesList.size(), listSpacesResults.size());
-        //assertEquals(deleteSpacesInput.size(), deleteSpacesResults.size());
+        assertEquals(deleteSpacesInput.size(), deleteSpacesResults.size());
     }
 
 }
