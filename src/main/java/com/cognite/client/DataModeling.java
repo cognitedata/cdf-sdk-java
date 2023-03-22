@@ -16,6 +16,7 @@
 
 package com.cognite.client;
 
+import com.cognite.client.datamodel.Spaces;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

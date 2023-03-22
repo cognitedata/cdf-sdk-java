@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-package com.cognite.client;
+package com.cognite.client.datamodel;
 
+import com.cognite.client.ApiBase;
+import com.cognite.client.CogniteClient;
+import com.cognite.client.Request;
 import com.cognite.client.config.ResourceType;
 import com.cognite.client.dto.datamodel.Space;
 import com.cognite.client.dto.datamodel.SpaceReference;

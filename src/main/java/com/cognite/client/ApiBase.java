@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
  *
  * @see <a href="https://docs.cognite.com/api/v1/">Cognite API v1 specification</a>
  */
-abstract class ApiBase {
+public abstract class ApiBase {
     protected static final Logger LOG = LoggerFactory.getLogger(ApiBase.class);
     private static final ImmutableList<ResourceType> resourcesSupportingPartitions =
             ImmutableList.of(ResourceType.ASSET, ResourceType.EVENT, ResourceType.FILE_HEADER, ResourceType.TIMESERIES_HEADER,
@@ -2928,7 +2928,7 @@ abstract class ApiBase {
         }
     }
 
-    static abstract class Builder<B extends Builder<B>> {
-        abstract B setClient(CogniteClient value);
+    protected static abstract class Builder<B extends Builder<B>> {
+        public abstract B setClient(CogniteClient value);
     }
 }

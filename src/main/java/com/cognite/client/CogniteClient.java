@@ -572,7 +572,7 @@ public abstract class CogniteClient implements Serializable {
      * Returns the services layer mirroring the Cognite Data Fusion API.
      * @return
      */
-    protected ConnectorServiceV1 getConnectorService() {
+    public ConnectorServiceV1 getConnectorService() {
         return ConnectorServiceV1.of(this);
     }
 
@@ -581,7 +581,7 @@ public abstract class CogniteClient implements Serializable {
      * @return project config with auth info populated
      * @throws Exception
      */
-    protected AuthConfig buildAuthConfig() throws Exception {
+    public AuthConfig buildAuthConfig() throws Exception {
         return AuthConfig.of(getProject())
                 .withHost(getBaseUrl());
     }
