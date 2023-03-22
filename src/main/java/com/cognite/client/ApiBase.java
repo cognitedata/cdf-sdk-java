@@ -2563,29 +2563,6 @@ abstract class ApiBase {
          * @param item
          * @return
          */
-        private static <T extends Message> Map<String, Object> defaultToDeleteItem(T item) {
-            java.util.Map<Descriptors.FieldDescriptor, java.lang.Object> fieldMap = item.getAllFields();
-            for (Descriptors.FieldDescriptor field : fieldMap.keySet()) {
-                if (field.getName().equalsIgnoreCase("space")
-                        && field.getType() == Descriptors.FieldDescriptor.Type.STRING) {
-                    return Map.of("space", (String) fieldMap.get(field));
-                } else if (field.getName().equalsIgnoreCase("external_id")
-                        && field.getType() == Descriptors.FieldDescriptor.Type.STRING) {
-                    return Map.of("externalId", (String) fieldMap.get(field));
-                } else if (field.getName().equalsIgnoreCase("id")
-                        && field.getType() == Descriptors.FieldDescriptor.Type.INT64) {
-                    return Map.of("id", String.valueOf(fieldMap.get(field)));
-                }
-            }
-            return Collections.emptyMap();
-        }
-
-        /**
-         * The default function for translating an Item to a delete items object.
-         *
-         * @param item
-         * @return
-         */
         private static Map<String, Object> defaultItemToDeleteItem(Item item) {
             if (item.getIdTypeCase() == Item.IdTypeCase.EXTERNAL_ID) {
                 return ImmutableMap.of("externalId", item.getExternalId());
@@ -2690,6 +2667,18 @@ abstract class ApiBase {
          */
         public DeleteItems withItemMappingFunction(Function<T, Map<String, Object>> mappingFunction) {
             return toBuilder().setItemMappingFunction(mappingFunction).build();
+        }
+
+        /**
+         * Sets id mapping function.
+         *
+         * This function produces the id of an item.
+         *
+         * @param mappingFunction The mapping function
+         * @return The {@link DeleteItems} object with the configuration applied.
+         */
+        public DeleteItems withIdMappingFunction(Function<T, Optional<String>> mappingFunction) {
+            return toBuilder().setIdFunction(mappingFunction).build();
         }
 
         /**

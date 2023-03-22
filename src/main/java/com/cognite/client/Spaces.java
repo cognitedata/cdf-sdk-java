@@ -153,8 +153,9 @@ public abstract class Spaces extends ApiBase {
         ConnectorServiceV1 connector = getClient().getConnectorService();
         ConnectorServiceV1.ItemWriter deleteItemWriter = connector.deleteSpaces();
 
-        DeleteItems deleteItems = DeleteItems.ofItem(deleteItemWriter, getClient().buildAuthConfig())
-                .addParameter("ignoreUnknownIds", true)//
+        DeleteItems deleteItems = DeleteItems.of(deleteItemWriter, this::toDeleteItem, getClient().buildAuthConfig())
+                .withIdMappingFunction(this::getId)
+                //.addParameter("ignoreUnknownIds", true)
                 ;
 
         return deleteItems.deleteItems(spaces);
@@ -189,6 +190,20 @@ public abstract class Spaces extends ApiBase {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /*
+    Parse a space reference to a delete item.
+     */
+    private Map<String, Object> toDeleteItem(SpaceReference item) {
+        return Map.of("space", item.getSpace());
+    }
+
+    /*
+    Get the id from a SpaceReference
+     */
+    private Optional<String> getId(SpaceReference item) {
+        return Optional.of(item.getSpace());
     }
 
     @AutoValue.Builder
