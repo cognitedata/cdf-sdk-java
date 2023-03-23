@@ -1,5 +1,7 @@
-package com.cognite.client;
+package com.cognite.client.datamodel;
 
+import com.cognite.client.CogniteClient;
+import com.cognite.client.TestConfigProvider;
 import com.cognite.client.dto.datamodel.Space;
 import com.cognite.client.dto.datamodel.SpaceReference;
 import org.junit.jupiter.api.Tag;
