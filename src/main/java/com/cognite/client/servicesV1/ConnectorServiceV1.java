@@ -3013,9 +3013,10 @@ public abstract class ConnectorServiceV1 implements Serializable {
         public CompletableFuture<ResponseItems<String>> writeItemsAsync(Request items) throws Exception {
             Preconditions.checkNotNull(items, "Input cannot be null.");
 
-            return getRequestExecutor().executeRequestAsync(getRequestProvider()
-                    .withRequest(items)
-                    .buildRequest(Optional.empty()))
+            return getRequestExecutor()
+                    .executeRequestAsync(getRequestProvider()
+                            .withRequest(items)
+                            .buildRequest(Optional.empty()))
                     .thenApply(responseBinary -> ResponseItems.of(DEFAULT_RESPONSE_PARSER, responseBinary)
                             .withDuplicateResponseParser(getDuplicatesResponseParser()));
         }

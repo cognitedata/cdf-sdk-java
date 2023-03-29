@@ -24,6 +24,7 @@ import com.cognite.client.dto.datamodel.DataModel;
 import com.cognite.client.dto.datamodel.Space;
 import com.cognite.client.dto.datamodel.SpaceReference;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
+import com.cognite.client.servicesV1.ResponseBinary;
 import com.cognite.client.servicesV1.parser.datamodel.SpacesParser;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
@@ -52,6 +53,7 @@ public abstract class GraphQL extends ApiBase {
      * as the entry point to this class.
      *
      * @param client The {@link CogniteClient} to use for configuration settings.
+     * @param dataModel The {@link DataModel} to run the GraphQL queries towards.
      * @return The datasets api object.
      */
     public static GraphQL of(CogniteClient client, DataModel dataModel) {
@@ -110,30 +112,14 @@ public abstract class GraphQL extends ApiBase {
         }
     }
 
-    /*
-    Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't deal very well
-    with exceptions.
+    /**
+     * Executes a {@code POST} request with the supplied request body.
+     *
+     * @return the response of the request.
+     * @throws Exception
      */
-    private Map<String, Object> toRequestUpsertItem(Space item) {
-        try {
-            return SpacesParser.toRequestUpsertItem(item);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+    public ResponseBinary post(Request requestBody) throws Exception {
 
-    /*
-    Parse a space reference to a delete item.
-     */
-    private Map<String, Object> toDeleteItem(SpaceReference item) {
-        return Map.of("space", item.getSpace());
-    }
-
-    /*
-    Get the id from a SpaceReference
-     */
-    private Optional<String> getId(SpaceReference item) {
-        return Optional.of(item.getSpace());
     }
 
     @AutoValue.Builder
