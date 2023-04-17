@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * This class allows you to make a HTTP(S) request to an arbitrary Cognite Data Fusion API endpoint.
@@ -158,11 +159,9 @@ public abstract class CdfHttpRequest extends ApiBase {
     }
 
     private okhttp3.Request.Builder buildGenericRequest() {
-        okhttp3.Request.Builder reqBuilder = new okhttp3.Request.Builder()
+        return new okhttp3.Request.Builder()
                 .headers(Headers.of(headers))
-                .url(HttpUrl.parse(getUri().toString()));
-
-        return reqBuilder;
+                .url(Objects.requireNonNull(HttpUrl.parse(getUri().toString())));
     }
 
     @AutoValue.Builder

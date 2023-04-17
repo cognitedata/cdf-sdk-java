@@ -65,34 +65,6 @@ public abstract class GraphQL extends ApiBase {
 
     public abstract DataModel getDataModel();
 
-    /**
-     * Returns all {@link Space} objects.
-     *
-     * @see #list(Request)
-     * @see CogniteClient
-     * @see CogniteClient#datasets()
-     */
-    public Iterator<List<Space>> list() throws Exception {
-        return this.list(Request.create());
-    }
-
-    /**
-     * Return all {@link Space} objects.
-     *
-     * The results are paged through / iterated over via an {@link Iterator}--the entire results set is not buffered in
-     * memory, but streamed in "pages" from the Cognite api. If you need to buffer entire results set, then you have to
-     * stream these results into your own data structure.
-     *
-     * @param requestParameters The filters to use for retrieving datasets.
-     * @return An {@link Iterator} to page through the results set.
-     * @throws Exception
-     */
-    public Iterator<List<Space>> list(Request requestParameters) throws Exception {
-        return AdapterIterator.of(listJson(ResourceType.SPACE, requestParameters), this::parseSpace);
-    }
-
-
-
     /*
     Returns the id of a space.
      */
@@ -113,13 +85,18 @@ public abstract class GraphQL extends ApiBase {
     }
 
     /**
-     * Executes a {@code POST} request with the supplied request body.
+     * Executes a {@code POST} request to the graphql endpoint with the supplied request body.
+     *
+     * The request is posted "as-is" with the raw response returned. The SDK will handle throttling and retries
+     * for you--but you need to interpret the response.
      *
      * @return the response of the request.
      * @throws Exception
      */
     public ResponseBinary post(Request requestBody) throws Exception {
 
+
+        return null;
     }
 
     @AutoValue.Builder

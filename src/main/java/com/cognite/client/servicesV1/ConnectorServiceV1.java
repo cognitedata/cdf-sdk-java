@@ -2364,6 +2364,31 @@ public abstract class ConnectorServiceV1 implements Serializable {
         return ItemWriter.of(getClient(), requestProvider);
     }
 
+    /**
+     * Post a request to the GraphQl endpoint of a data model.
+     *
+     * @param space The space (id) of the data model.
+     * @param dataModelExtId The externalId of the data model.
+     * @param version The data model version to access.
+     * @return an ItemReader for posting requests to the data model.
+     */
+    public ItemReader<String> postGraphQL(String space, String dataModelExtId, String version) {
+        /*
+        https://greenfield.cognitedata.com/api/v1/projects/akerbp-pre-ops-twin/userapis/spaces/lci-data-model/datamodels/lci_data_model/versions/4/graphql
+
+        https://greenfield.cognitedata.com/api/v1/projects/akerbp-pre-ops-twin/userapis/spaces/lci-data-model-2/datamodels/lci_data_model_2/versions/2/graphql
+         */
+
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint(String.format("userapis/spaces/%s/datamodels/%s/versions/%s/graphql", space, dataModelExtId, version))
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return SingleRequestItemReader.of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
     @AutoValue.Builder
     public abstract static class Builder {
         public abstract Builder setClient(CogniteClient value);
