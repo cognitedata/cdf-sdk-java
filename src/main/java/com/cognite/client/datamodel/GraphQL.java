@@ -17,6 +17,7 @@
 package com.cognite.client.datamodel;
 
 import com.cognite.client.ApiBase;
+import com.cognite.client.CdfHttpRequest;
 import com.cognite.client.CogniteClient;
 import com.cognite.client.Request;
 import com.cognite.client.config.ResourceType;
@@ -25,6 +26,7 @@ import com.cognite.client.dto.datamodel.Space;
 import com.cognite.client.dto.datamodel.SpaceReference;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ResponseBinary;
+import com.cognite.client.servicesV1.executor.RequestExecutor;
 import com.cognite.client.servicesV1.parser.datamodel.SpacesParser;
 import com.google.auto.value.AutoValue;
 import org.slf4j.Logger;
@@ -60,10 +62,15 @@ public abstract class GraphQL extends ApiBase {
         return GraphQL.builder()
                 .setClient(client)
                 .setDataModel(dataModel)
+                .setRequestExecutor(RequestExecutor.of(client.getHttpClient())
+                        .withExecutor(client.getExecutorService())
+                        .withMaxRetries(client.getClientConfig().getMaxRetries()))
                 .build();
     }
 
     public abstract DataModel getDataModel();
+
+    abstract RequestExecutor getRequestExecutor();
 
     /*
     Returns the id of a space.
@@ -102,6 +109,7 @@ public abstract class GraphQL extends ApiBase {
     @AutoValue.Builder
     abstract static class Builder extends ApiBase.Builder<Builder> {
         abstract Builder setDataModel(DataModel value);
+        abstract Builder setRequestExecutor(RequestExecutor value);
         abstract GraphQL build();
     }
 }
