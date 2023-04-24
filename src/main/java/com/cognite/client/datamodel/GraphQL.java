@@ -23,13 +23,8 @@ import com.cognite.client.dto.datamodel.DataModel;
 import com.cognite.client.dto.datamodel.Space;
 import com.cognite.client.servicesV1.ResponseBinary;
 import com.cognite.client.servicesV1.executor.RequestExecutor;
-import com.cognite.client.servicesV1.parser.datamodel.SpacesParser;
 import com.cognite.client.servicesV1.request.PostJsonRequestProvider;
 import com.google.auto.value.AutoValue;
-import okhttp3.Headers;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.RequestBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
