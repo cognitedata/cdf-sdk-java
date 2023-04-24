@@ -17,18 +17,19 @@
 package com.cognite.client.datamodel;
 
 import com.cognite.client.ApiBase;
-import com.cognite.client.CdfHttpRequest;
 import com.cognite.client.CogniteClient;
 import com.cognite.client.Request;
-import com.cognite.client.config.ResourceType;
 import com.cognite.client.dto.datamodel.DataModel;
 import com.cognite.client.dto.datamodel.Space;
-import com.cognite.client.dto.datamodel.SpaceReference;
-import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ResponseBinary;
 import com.cognite.client.servicesV1.executor.RequestExecutor;
 import com.cognite.client.servicesV1.parser.datamodel.SpacesParser;
+import com.cognite.client.servicesV1.request.PostJsonRequestProvider;
 import com.google.auto.value.AutoValue;
+import okhttp3.Headers;
+import okhttp3.HttpUrl;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,25 +73,6 @@ public abstract class GraphQL extends ApiBase {
 
     abstract RequestExecutor getRequestExecutor();
 
-    /*
-    Returns the id of a space.
-     */
-    private Optional<String> getSpaceId(Space item) {
-        return Optional.of(item.getSpace());
-    }
-
-    /*
-    Wrapping the parser because we need to handle the exception--an ugly workaround since lambdas don't deal very well
-    with exceptions.
-     */
-    private Space parseSpace(String json) {
-        try {
-            return SpacesParser.parseSpace(json);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     /**
      * Executes a {@code POST} request to the graphql endpoint with the supplied request body.
      *
@@ -101,9 +83,19 @@ public abstract class GraphQL extends ApiBase {
      * @throws Exception
      */
     public ResponseBinary post(Request requestBody) throws Exception {
+        Request request = requestBody
+                .withAuthConfig(getClient().buildAuthConfig());
 
+        PostJsonRequestProvider requestProvider = PostJsonRequestProvider.builder()
+                .setEndpoint(String.format("userapis/spaces/%s/datamodels/%s/versions/%s/graphql",
+                        getDataModel().getSpace(), getDataModel().getExternalId(), getDataModel().getVersion()))
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .setRequest(request)
+                .build();
 
-        return null;
+        return getRequestExecutor().executeRequest(requestProvider.buildRequest(Optional.empty()));
     }
 
     @AutoValue.Builder
