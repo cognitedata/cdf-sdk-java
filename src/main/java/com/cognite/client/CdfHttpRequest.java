@@ -76,7 +76,10 @@ public abstract class CdfHttpRequest extends ApiBase {
                         .withExecutor(client.getExecutorService())
                         .withMaxRetries(client.getClientConfig().getMaxRetries()))
                 .build()
-                .withHeader("Accept", "application/json");
+                .withHeader("Accept", "application/json")
+                .withHeader("x-cdp-sdk", client.getClientConfig().getSdkIdentifier())
+                .withHeader("x-cdp-app", client.getClientConfig().getAppIdentifier())
+                .withHeader("x-cdp-clienttag", client.getClientConfig().getSessionIdentifier());
     }
 
     abstract CdfHttpRequest.Builder toBuilder();
