@@ -1,7 +1,6 @@
 package com.cognite.client;
 
 import com.cognite.client.config.AuthConfig;
-import com.cognite.client.dto.LoginStatus;
 import com.cognite.client.config.ClientConfig;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.google.auto.value.AutoValue;
@@ -82,37 +81,6 @@ public abstract class CogniteClient implements Serializable {
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(90, TimeUnit.SECONDS) // CDF has 90 seconds timeout
                 .writeTimeout(90, TimeUnit.SECONDS); // CDF has 90 seconds timeout
-    }
-
-    /**
-     * Returns a {@link CogniteClient} using the provided API key for authentication.
-     *
-     * @param cdfProject The CDF project to connect to.
-     * @param apiKey The Cognite Data Fusion API key to use for authentication.
-     * @return the client object with default configuration.
-     */
-    @Deprecated
-    public static CogniteClient ofKey(String cdfProject,
-                                      String apiKey) {
-        Preconditions.checkArgument(null != cdfProject && !cdfProject.isBlank(),
-                "The CDF Project cannot be null or blank.");
-        Preconditions.checkArgument(null != apiKey && !apiKey.isBlank(),
-                "The api key cannot be empty.");
-        String host = "";
-        try {
-            host = new URL(DEFAULT_BASE_URL).getHost();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        return CogniteClient.builder()
-                .setProject(cdfProject)
-                .setApiKey(apiKey)
-                .setAuthType(AuthType.API_KEY)
-                .setHttpClient(CogniteClient.getHttpClientBuilder()
-                        .addInterceptor(new ApiKeyInterceptor(host, apiKey))
-                        .build())
-                .build();
     }
 
     /**
@@ -228,8 +196,6 @@ public abstract class CogniteClient implements Serializable {
     @Nullable
     protected abstract Collection<String> getAuthScopes();
     @Nullable
-    protected abstract String getApiKey();
-    @Nullable
     protected abstract Supplier<String> getTokenSupplier();
 
     protected abstract AuthType getAuthType();
@@ -283,10 +249,6 @@ public abstract class CogniteClient implements Serializable {
 
         // Add the auth specific config
         switch (getAuthType()) {
-            case API_KEY:
-                removed = interceptors.removeIf(interceptor -> interceptor instanceof ApiKeyInterceptor);
-                interceptors.add(new ApiKeyInterceptor(host, getApiKey()));
-                break;
             case TOKEN_SUPPLIER:
                 removed = interceptors.removeIf(interceptor -> interceptor instanceof TokenInterceptor);
                 interceptors.add(new TokenInterceptor(host, getTokenSupplier()));
@@ -588,36 +550,6 @@ public abstract class CogniteClient implements Serializable {
     }
 
     /*
-    Interceptor that will add the api key to each request.
-     */
-    private static class ApiKeyInterceptor implements Interceptor {
-        private final String apiKey;
-        private final String apiHost;
-
-        public ApiKeyInterceptor(String host, String apiKey) {
-            Preconditions.checkArgument(null != apiKey && !apiKey.isEmpty(),
-                    "The api key cannot be empty.");
-            this.apiHost = host;
-            this.apiKey = apiKey;
-        }
-
-        @Override
-        public okhttp3.Response intercept(Chain chain) throws IOException {
-            if (chain.request().url().host().equalsIgnoreCase(apiHost)) {
-                // Only add auth info to requests towards the cognite api host.
-
-                okhttp3.Request authRequest = chain.request().newBuilder()
-                        .header("api-key", apiKey)
-                        .build();
-
-                return chain.proceed(authRequest);
-            } else {
-                return chain.proceed(chain.request());
-            }
-        }
-    }
-
-    /*
     Interceptor that will add a bearer token to each request. The token is produced by a supplier
     function (functional interface / lambda)
      */
@@ -775,7 +707,6 @@ public abstract class CogniteClient implements Serializable {
     The set of valid authentication types supported by the client.
      */
     protected enum AuthType {
-        API_KEY,
         CLIENT_CREDENTIALS,
         TOKEN_SUPPLIER
     }
@@ -790,7 +721,6 @@ public abstract class CogniteClient implements Serializable {
         abstract Builder setClientSecret(String value);
         abstract Builder setTokenUrl(URL value);
         abstract Builder setAuthScopes(Collection<String> value);
-        abstract Builder setApiKey(String value);
         abstract Builder setTokenSupplier(Supplier<String> supplier);
         abstract Builder setAuthType(AuthType value);
 

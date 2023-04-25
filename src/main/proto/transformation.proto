@@ -6,6 +6,8 @@ option java_package = "com.cognite.client.dto";
 option java_multiple_files = true;
 
 message Transformation {
+  reserved 7, 8;
+  reserved "source_api_key", "destination_api_key";
 
   message Destination {
 
@@ -49,7 +51,6 @@ message Transformation {
   }
 
   message Job {
-
     message Metric {
       optional int64 timestamp = 1;
       optional string name = 2;
@@ -105,8 +106,6 @@ message Transformation {
   optional Destination destination = 4;
   optional string conflict_mode = 5;
   optional bool is_public = 6;
-  optional string source_api_key = 7;
-  optional string destination_api_key = 8;
   optional FlatOidcCredentials source_oidc_credentials = 9;
   optional FlatOidcCredentials destination_oidc_credentials = 10;
   string external_id = 11;

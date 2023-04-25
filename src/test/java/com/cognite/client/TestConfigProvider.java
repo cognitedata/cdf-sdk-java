@@ -57,16 +57,6 @@ public class TestConfigProvider {
         return project;
     }
 
-    public static String getApiKey() {
-        String apiKey = System.getenv("TEST_KEY");
-
-        if (Strings.isNullOrEmpty(apiKey)) {
-            apiKey = "test";
-        }
-
-        return apiKey;
-    }
-
     public static String getClientId() {
         String clientId = System.getenv("TEST_CLIENT_ID");
 
