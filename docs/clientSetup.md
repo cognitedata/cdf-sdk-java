@@ -10,9 +10,8 @@ Configuration:
 
 ### Authentication
 
-There are two authentication options:
+There is one authentication option:
 - OpenID Connect.
-- API keys.
 
 #### OpenID Connect
 
@@ -67,18 +66,6 @@ will be called for each api request and expects a valid token in return. The tok
 the `Authorization` header in each request. Your supplier needs to produce the entire value for 
 the header, including the `Bearer` prefix. That is, your supplier should produce a String
 of the following pattern: `Bearer <your-access-token>`.
-
-#### API keys (deprecated)
-
-Authentication via API key is the legacy method of authenticating services towards Cognite Data Fusion.
-You simply supply the API key when creating the client:
-```java
-String cdfProject = "my-cdf-project";
-String apiKey = "my-api-key";       // Remember to source this value from a secure transfer mechanism.
-                                    // For example, via secret mapped to an environment variable.
-CogniteClient client = CogniteClient.ofKey(apiKey)
-        .withProject(cdfProject);
-```
 
 ### Proxy server
 

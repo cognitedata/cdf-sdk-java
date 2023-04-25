@@ -18,6 +18,8 @@ Changes are grouped as follows:
 - Annotations
 - Extraction pipelines configuration
 - Data models
+- Removal of api-key support
+- Removal of login endpoint support
 
 ## [2.2.0-SNAPSHOT]
 

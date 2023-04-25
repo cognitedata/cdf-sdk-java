@@ -56,16 +56,6 @@ public class TestCdfMock {
 
     @Test
     public void testCdfConnect(WireMockRuntimeInfo wireMockRuntimeInfo) throws Exception {
-        stubFor(get("/login/status").willReturn(ok().withBody("{\n" +
-                "    \"data\": {\n" +
-                "        \"user\": \"some.user@cognite.com\",\n" +
-                "        \"loggedIn\": true,\n" +
-                "        \"project\": \"dev\",\n" +
-                "        \"projectId\": 123456789,\n" +
-                "        \"apiKeyId\": 987654321\n" +
-                "    }\n" +
-                "}")));
-
         stubFor(get(urlPathEqualTo("/api/v1/projects/dev/raw/dbs")).willReturn(ok().withBody("{\n" +
                 "    \"items\": [\n" +
                 "        {\n" +

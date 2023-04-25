@@ -57,7 +57,7 @@ public static List<DataSet> generateDataSets(int noObjects) {
  * @param noObjects
  * @param dataSetId
  * @param destinationType 1 = DataSource1, 2 = RawDataSource and 3 = SequenceRowDataSource
- * @param typeOfCredentials 1 = ApiKey and 2 = OidcCredentials
+ * @param typeOfCredentials 2 = OidcCredentials
  * @param clientId
  * @param clientSecret
  * @param tokenUri
@@ -93,10 +93,7 @@ public static List<Transformation> generateTransformations(Integer noObjects, lo
             .build());
         }
         
-        if (typeOfCredentials == 1) {
-            builder.setSourceApiKey("TesteApiKey");
-            builder.setDestinationApiKey("TesteApiKey");
-        } else if(typeOfCredentials == 2) {
+        if (typeOfCredentials == 2) {
             builder.setSourceOidcCredentials(Transformation.FlatOidcCredentials.newBuilder()
                 .setClientId(clientId)
                 .setClientSecret(clientSecret)
