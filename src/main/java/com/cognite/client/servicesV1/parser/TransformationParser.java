@@ -71,14 +71,6 @@ public class TransformationParser {
             mapBuilder.put("isPublic", element.getIsPublic());
         }
 
-        if (element.hasSourceApiKey() && StringUtils.isNotBlank(element.getSourceApiKey())) {
-            mapBuilder.put("sourceApiKey", element.getSourceApiKey());
-        }
-
-        if (element.hasDestinationApiKey() && StringUtils.isNotBlank(element.getDestinationApiKey())) {
-            mapBuilder.put("destinationApiKey", element.getDestinationApiKey());
-        }
-
         if (element.hasSourceOidcCredentials() && isValidOidcCredentials(element.getSourceOidcCredentials())) {
             mapBuilder.put("sourceOidcCredentials", element.getSourceOidcCredentials());
         }
@@ -126,14 +118,6 @@ public class TransformationParser {
 
         if (element.hasIsPublic()) {
             updateNodeBuilder.put("isPublic", ImmutableMap.of("set", element.getIsPublic()));
-        }
-
-        if (element.hasSourceApiKey() && StringUtils.isNotBlank(element.getSourceApiKey())) {
-            updateNodeBuilder.put("sourceApiKey", ImmutableMap.of("set", element.getSourceApiKey()));
-        }
-
-        if (element.hasDestinationApiKey() && StringUtils.isNotBlank(element.getDestinationApiKey())) {
-            updateNodeBuilder.put("destinationApiKey", ImmutableMap.of("set", element.getDestinationApiKey()));
         }
 
         if (element.hasSourceOidcCredentials() && isValidOidcCredentials(element.getSourceOidcCredentials())) {
@@ -193,22 +177,6 @@ public class TransformationParser {
             updateNodeBuilder.put("isPublic", ImmutableMap.of("set", element.getIsPublic()));
         } else {
             updateNodeBuilder.put("isPublic", ImmutableMap.of("setNull", true));
-        }
-
-        if (element.hasSourceApiKey()) {
-            if (StringUtils.isNotBlank(element.getSourceApiKey())) {
-                updateNodeBuilder.put("sourceApiKey", ImmutableMap.of("set", element.getSourceApiKey()));
-            }
-        } else {
-            updateNodeBuilder.put("sourceApiKey", ImmutableMap.of("setNull", true));
-        }
-
-        if (element.hasDestinationApiKey()) {
-            if (StringUtils.isNotBlank(element.getDestinationApiKey())) {
-                updateNodeBuilder.put("destinationApiKey", ImmutableMap.of("set", element.getDestinationApiKey()));
-            }
-        } else {
-            updateNodeBuilder.put("destinationApiKey", ImmutableMap.of("setNull", true));
         }
 
         if (element.hasSourceOidcCredentials()) {
@@ -302,12 +270,6 @@ public class TransformationParser {
         if (node.path("isPublic").isBoolean()) {
             tmBuilder.setIsPublic(node.get("isPublic").booleanValue());
         }
-        if (node.path("sourceApiKey").isTextual()) {
-            tmBuilder.setSourceApiKey(node.get("sourceApiKey").textValue());
-        }
-        if (node.path("destinationApiKey").isTextual()) {
-            tmBuilder.setDestinationApiKey(node.get("destinationApiKey").textValue());
-        }
         if (node.path("externalId").isTextual()) {
             tmBuilder.setExternalId(node.get("externalId").textValue());
         }
@@ -322,12 +284,6 @@ public class TransformationParser {
         }
         if (node.path("lastUpdatedTime").isNumber()) {
             tmBuilder.setLastUpdatedTime(node.get("lastUpdatedTime").longValue());
-        }
-        if (node.path("hasSourceApiKey").isBoolean()) {
-            tmBuilder.setSourceApiKey("");
-        }
-        if (node.path("hasDestinationApiKey").isBoolean()) {
-            tmBuilder.setDestinationApiKey("");
         }
         if (node.path("hasSourceOidcCredentials").isBoolean()) {
             tmBuilder.setSourceOidcCredentials(Transformation.FlatOidcCredentials.newBuilder()

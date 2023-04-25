@@ -72,9 +72,6 @@ SDK v1
 - Entity matching
 - Interactive P&ID
 
-#### Login
-- Login status by api-key
-
 #### 3D
 - 3D Models
 - 3D Model Revisions

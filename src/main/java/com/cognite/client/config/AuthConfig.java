@@ -38,11 +38,6 @@ public abstract class AuthConfig implements Serializable {
             .setHost(DEFAULT_HOST);
   }
 
-  // TODO: Remove when deprecating api keys
-  @Deprecated
-  public static AuthConfig create() {
-    return AuthConfig.builder().build();
-  }
   public static AuthConfig of(String cdfProject) {
     Preconditions.checkArgument(null != cdfProject && !cdfProject.isBlank(),
             "The CDF Project cannot be null or blank.");
@@ -70,16 +65,6 @@ public abstract class AuthConfig implements Serializable {
     return toBuilder().setHost(host).build();
   }
 
-
-  // TODO: Remove when deprecating api keys
-  /**
-   * Set the Cognite Data Fusion project (environment) to connect with.
-   *
-   * @param project The project id to interact with.
-   */
-  public AuthConfig withProject(String project) {
-    return toBuilder().setProject(project).build();
-  }
 
   @Override
   public final String toString() {

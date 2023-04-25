@@ -34,7 +34,7 @@ one batch at a time. A single batch usually contains 1k - 8k objects. The client
 how to page through the entire results set. 
 
 ```java
-// Build the client using OpenID Connect client credentials (or API key)
+// Build the client using OpenID Connect client credentials
 CogniteClient client = CogniteClient.ofClientCredentials(
         <clientId>,
         <clientSecret>,
@@ -64,7 +64,7 @@ The `retrieve` operation returns objects based on `externalId` and/or `id`. You 
 the request up into multiple, parallel operations for improved performance. 
 
 ```java
-// Build the client using OpenID Connect client credentials (or API key)
+// Build the client using OpenID Connect client credentials
 CogniteClient client = CogniteClient.ofClientCredentials(
         <clientId>,
         <clientSecret>,
@@ -100,7 +100,7 @@ type (i.e. it cannot aggregate across resource types). The operation returns an 
 the various results records. 
 
 ```java
-// Build the client using OpenID Connect client credentials (or API key)
+// Build the client using OpenID Connect client credentials
 CogniteClient client = CogniteClient.ofClientCredentials(
         <clientId>,
         <clientSecret>,
@@ -136,7 +136,7 @@ recommend that you make it a practice to always populate the `externalId` attrib
 The SDK will automatically batch and parallelize the upsert operation for maximum performance.
 
 ```java
-// Build the client using OpenID Connect client credentials (or API key)
+// Build the client using OpenID Connect client credentials
 CogniteClient client = CogniteClient.ofClientCredentials(
         <clientId>,
         <clientSecret>,
@@ -195,7 +195,7 @@ The `delete` operation will remove data objects from CDF based on their `externa
 objects to remove via the generic `Item` object (which encapsulates `externalId`/`id`).
 
 ```java
-// Build the client using OpenID Connect client credentials (or API key)
+// Build the client using OpenID Connect client credentials
 CogniteClient client = CogniteClient.ofClientCredentials(
         <clientId>,
         <clientSecret>,

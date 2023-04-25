@@ -28,7 +28,7 @@ message queue.
 A table in `Raw` is strongly consistent so using it as the basis for streaming data can work well and with low latency.
 
 ```java
-// Build the client using OpenID Connect client credentials (or API key)
+// Build the client using OpenID Connect client credentials
 CogniteClient client = CogniteClient.ofClientCredentials(
         <clientId>,
         <clientSecret>,
@@ -79,7 +79,7 @@ hand, if you set a conservative latency (example, 2 minutes `polling offset`) th
 not all) updates.
 
 ```java
-// Build the client using OpenID Connect client credentials (or API key)
+// Build the client using OpenID Connect client credentials
 CogniteClient client = CogniteClient.ofClientCredentials(
         <clientId>,
         <clientSecret>,
