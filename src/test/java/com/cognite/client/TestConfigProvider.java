@@ -10,12 +10,16 @@ import java.net.MalformedURLException;
  */
 public class TestConfigProvider {
     public static CogniteClient getCogniteClient() throws MalformedURLException {
+        return getCogniteClient(false);
+    }
+
+    public static CogniteClient getCogniteClient(boolean addTrailingSlashToBaseUrl) throws MalformedURLException {
         return CogniteClient.ofClientCredentials(
                         TestConfigProvider.getProject(),
                         TestConfigProvider.getClientId(),
                         TestConfigProvider.getClientSecret(),
                         TokenUrl.generateAzureAdURL(TestConfigProvider.getTenantId()))
-                .withBaseUrl(TestConfigProvider.getHost());
+                .withBaseUrl(TestConfigProvider.getHost() + (addTrailingSlashToBaseUrl ? "/" : ""));
     }
 
     public static CogniteClient getOpenIndustrialDataCogniteClient() throws MalformedURLException {
