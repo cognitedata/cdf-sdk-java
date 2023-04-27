@@ -454,4 +454,25 @@ class TimeseriesIntegrationTest {
         assertEquals(upsertTimeseriesList.size(), listTimeseriesResults.size());
         assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
     }
+
+    // This test is for the client in general, but we had to pick some resource type to test it with
+    @Test
+    @Tag("remoteCDP")
+    void trailingSlashInBaseUrl() throws Exception {
+        Instant startInstant = Instant.now();
+        String loggingPrefix = "UnitTest - trailingSlashInBaseUrl() -";
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+        CogniteClient client = TestConfigProvider.getCogniteClient(true);
+        LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration : {}",
+            Duration.between(startInstant, Instant.now()));
+
+        // We don't expect to get any timeseries here; the API call just needs to not fail
+        LOG.info(loggingPrefix + "Start listing timeseries.");
+        client.timeseries()
+            .list(Request.create()
+                .withFilterMetadataParameter("source", DataGenerator.sourceValue))
+            .forEachRemaining(timeseries -> {});
+        LOG.info(loggingPrefix + "Finished listing timeseries. Duration: {}",
+            Duration.between(startInstant, Instant.now()));
+    }
 }
