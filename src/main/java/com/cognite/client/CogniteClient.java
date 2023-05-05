@@ -182,7 +182,8 @@ public abstract class CogniteClient implements Serializable {
                                                     String clientSecret,
                                                     URL tokenUrl) {
        return CogniteClient.ofClientCredentials(
-               cdfProject, clientId, clientSecret, tokenUrl, List.of(DEFAULT_BASE_URL + "/.default"));
+               cdfProject, clientId, clientSecret, tokenUrl,
+               List.of(createScope(DEFAULT_BASE_URL)));
     }
 
     protected abstract Builder toBuilder();
@@ -223,8 +224,8 @@ public abstract class CogniteClient implements Serializable {
     /**
      * Returns a {@link CogniteClient} using the specified base URL for issuing API requests.
      *
-     * The base URL must follow the format {@code https://<my-host>.cognitedata.com}. The default
-     * base URL is {@code https://api.cognitedata.com}
+     * The base URL must follow the format {@code https://<my-host>.cognitedata.com}, with an
+     * optional trailing slash. The default base URL is {@code https://api.cognitedata.com}
      *
      * @param baseUrl The CDF api base URL
      * @return the client object with the base URL set.
@@ -254,8 +255,8 @@ public abstract class CogniteClient implements Serializable {
                 interceptors.add(new TokenInterceptor(host, getTokenSupplier()));
                 break;
             case CLIENT_CREDENTIALS:
-                String currentDefaultScope = getBaseUrl() + "/.default";
-                String newDefaultScope = baseUrl + "/.default";
+                String currentDefaultScope = createScope(getBaseUrl());
+                String newDefaultScope = createScope(baseUrl);
                 Collection<String> scopes = List.of(newDefaultScope); // Fallback scopes
                 if (null != getAuthScopes()) {
                     // Iterate the current scopes. If any of them match the "default scope", replace with
@@ -547,6 +548,11 @@ public abstract class CogniteClient implements Serializable {
     public AuthConfig buildAuthConfig() throws Exception {
         return AuthConfig.of(getProject())
                 .withHost(getBaseUrl());
+    }
+
+    private static String createScope(String baseUrl) {
+        final String separator = baseUrl.endsWith("/") ? "" : "/";
+        return baseUrl + separator + ".default";
     }
 
     /*
