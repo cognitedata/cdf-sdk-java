@@ -45,7 +45,7 @@
         <nimbusds.version>10.9.1</nimbusds.version>
         <awss3.version>1.12.472</awss3.version>
         <jgrapht.version>1.5.2</jgrapht.version>
-        <okhttp3.version>4.10.0</okhttp3.version>
+        <okhttp3.version>4.11.0</okhttp3.version>
         <jackson.version>2.15.1</jackson.version>
         <slf4j.version>2.0.7</slf4j.version>
         <guava.version>31.1-jre</guava.version>
