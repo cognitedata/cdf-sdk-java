@@ -4,7 +4,6 @@ import com.cognite.client.Request;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -142,7 +141,7 @@ class RequestParametersTest {
     }
 
     private String generateJsonString() throws Exception {
-        ObjectNode root = JsonNodeFactory.instance.objectNode();
+        ObjectNode root = mapper.createObjectNode();
         ObjectNode filter = root.putObject("filter");
         ObjectNode filterMeta = filter.putObject("metaData");
         ArrayNode assetIds = filter.putArray("assetIds");
