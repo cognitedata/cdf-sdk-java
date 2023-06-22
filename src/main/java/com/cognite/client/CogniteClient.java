@@ -85,7 +85,8 @@ public abstract class CogniteClient implements Serializable {
 
     /**
      * Returns a {@link CogniteClient} using the provided supplier (function) to provide
-     * a bearer token for authorization.
+     * a bearer token for authorization. The token will be placed into the request header:
+     * {@code Authorization: <theTicket>}
      *
      * If your application handles the authentication flow itself, you can pass a
      * {@link Supplier} to this constructor. The supplier will be called for each api request
@@ -115,6 +116,43 @@ public abstract class CogniteClient implements Serializable {
                 .setAuthType(AuthType.TOKEN_SUPPLIER)
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
                         .addInterceptor(new TokenInterceptor(host, tokenSupplier))
+                        .build())
+                .build();
+    }
+
+    /**
+     * Returns a {@link CogniteClient} using the provided supplier (function) to provide
+     * an auth ticket for authorization. The ticket will be placed into the request header:
+     * {@code auth-ticket: <theTicket>}
+     *
+     * If your application handles the authentication flow itself, you can pass a
+     * {@link Supplier} to this constructor. The supplier will be called for each api request
+     * and the provided token will be added as a bearer token to the request header.
+     *
+     * @param cdfProject The CDF project to connect to.
+     * @param ticketSupplier A Supplier (functional interface) producing a valid access ticket when called.
+     * @return the client object with default configuration.
+     */
+    public static CogniteClient ofAuthTicket(String cdfProject,
+                                            Supplier<String> ticketSupplier) {
+        Preconditions.checkArgument(null != cdfProject && !cdfProject.isBlank(),
+                "The CDF Project cannot be null or blank.");
+        Preconditions.checkNotNull(ticketSupplier,
+                "The ticket supplier cannot be null.");
+
+        String host = "";
+        try {
+            host = new URL(DEFAULT_BASE_URL).getHost();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return CogniteClient.builder()
+                .setProject(cdfProject)
+                .setAuthTicketSupplier(ticketSupplier)
+                .setAuthType(AuthType.AUTH_TICKET)
+                .setHttpClient(CogniteClient.getHttpClientBuilder()
+                        .addInterceptor(new AuthTicketInterceptor(host, ticketSupplier))
                         .build())
                 .build();
     }
@@ -198,6 +236,8 @@ public abstract class CogniteClient implements Serializable {
     protected abstract Collection<String> getAuthScopes();
     @Nullable
     protected abstract Supplier<String> getTokenSupplier();
+    @Nullable
+    protected abstract Supplier<String> getAuthTicketSupplier();
 
     protected abstract AuthType getAuthType();
     protected abstract String getBaseUrl();
@@ -250,11 +290,15 @@ public abstract class CogniteClient implements Serializable {
 
         // Add the auth specific config
         switch (getAuthType()) {
-            case TOKEN_SUPPLIER:
+            case TOKEN_SUPPLIER -> {
                 removed = interceptors.removeIf(interceptor -> interceptor instanceof TokenInterceptor);
                 interceptors.add(new TokenInterceptor(host, getTokenSupplier()));
-                break;
-            case CLIENT_CREDENTIALS:
+            }
+            case AUTH_TICKET -> {
+                removed = interceptors.removeIf(interceptor -> interceptor instanceof AuthTicketInterceptor);
+                interceptors.add(new AuthTicketInterceptor(host, getAuthTicketSupplier()));
+            }
+            case CLIENT_CREDENTIALS -> {
                 String currentDefaultScope = createScope(getBaseUrl());
                 String newDefaultScope = createScope(baseUrl);
                 Collection<String> scopes = List.of(newDefaultScope); // Fallback scopes
@@ -275,10 +319,10 @@ public abstract class CogniteClient implements Serializable {
                 removed = interceptors.removeIf(interceptor -> interceptor instanceof ClientCredentialsInterceptor);
                 interceptors.add(new ClientCredentialsInterceptor(host, getClientId(),
                         getClientSecret(), getTokenUrl(), scopes));
-                break;
-            default:
+            }
+            default ->
                 // This should never execute...
-                throw new RuntimeException("Unknown authentication type. Cannot configure the client.");
+                    throw new RuntimeException("Unknown authentication type. Cannot configure the client.");
         }
         if (!removed) {
             LOG.warn("Unable to delete the old authentication config. New auth config may not work as expected.");
@@ -297,7 +341,7 @@ public abstract class CogniteClient implements Serializable {
      */
     public CogniteClient withScopes(Collection<String> scopes) {
         Preconditions.checkArgument(getAuthType() == AuthType.CLIENT_CREDENTIALS,
-                "Scopes supported for client credentials mode only.");
+                "Scopes is supported for client credentials mode only.");
         String host;
 
         try {
@@ -565,7 +609,7 @@ public abstract class CogniteClient implements Serializable {
 
         public TokenInterceptor(String host, Supplier<String> tokenSupplier) {
             Preconditions.checkNotNull(tokenSupplier,
-                    "The token supplier cannot be empty.");
+                    "The token supplier cannot be null.");
             this.apiHost = host;
             this.tokenSupplier = tokenSupplier;
         }
@@ -578,6 +622,38 @@ public abstract class CogniteClient implements Serializable {
 
                 okhttp3.Request authRequest = chain.request().newBuilder()
                         .header("Authorization", token)
+                        .build();
+
+                return chain.proceed(authRequest);
+            } else {
+                return chain.proceed(chain.request());
+            }
+        }
+    }
+
+    /*
+    Interceptor that will add an auth ticket to each request. The ticket is produced by a supplier
+    function (functional interface / lambda)
+     */
+    private static class AuthTicketInterceptor implements Interceptor {
+        private final Supplier<String> ticketSupplier;
+        private final String apiHost;
+
+        public AuthTicketInterceptor(String host, Supplier<String> ticketSupplier) {
+            Preconditions.checkNotNull(ticketSupplier,
+                    "The ticket supplier cannot be null.");
+            this.apiHost = host;
+            this.ticketSupplier = ticketSupplier;
+        }
+
+        @Override
+        public okhttp3.Response intercept(Chain chain) throws IOException {
+            if (chain.request().url().host().equalsIgnoreCase(apiHost)) {
+                // Only add auth info to requests towards the cognite api host.
+                String ticket = ticketSupplier.get();
+
+                okhttp3.Request authRequest = chain.request().newBuilder()
+                        .header("auth-ticket", ticket)
                         .build();
 
                 return chain.proceed(authRequest);
@@ -714,7 +790,8 @@ public abstract class CogniteClient implements Serializable {
      */
     protected enum AuthType {
         CLIENT_CREDENTIALS,
-        TOKEN_SUPPLIER
+        TOKEN_SUPPLIER,
+        AUTH_TICKET
     }
 
     @AutoValue.Builder
@@ -728,6 +805,7 @@ public abstract class CogniteClient implements Serializable {
         abstract Builder setTokenUrl(URL value);
         abstract Builder setAuthScopes(Collection<String> value);
         abstract Builder setTokenSupplier(Supplier<String> supplier);
+        abstract Builder setAuthTicketSupplier(Supplier<String> supplier);
         abstract Builder setAuthType(AuthType value);
 
         abstract CogniteClient build();
