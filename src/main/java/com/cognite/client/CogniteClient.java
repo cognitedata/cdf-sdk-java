@@ -86,7 +86,7 @@ public abstract class CogniteClient implements Serializable {
     /**
      * Returns a {@link CogniteClient} using the provided supplier (function) to provide
      * a bearer token for authorization. The token will be placed into the request header:
-     * {@code Authorization: <theTicket>}
+     * {@code Authorization: <theToken>}
      *
      * If your application handles the authentication flow itself, you can pass a
      * {@link Supplier} to this constructor. The supplier will be called for each api request
