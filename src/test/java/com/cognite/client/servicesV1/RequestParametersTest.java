@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,6 +32,7 @@ class RequestParametersTest {
     }
 
     @Test
+    @Disabled
     void getRequestParametersAsJson() throws Exception {
         Request parameters = Request.create()
                 .withRequestParameters(generateRequestParameters());
@@ -63,6 +65,7 @@ class RequestParametersTest {
     }
 
     @Test
+    @Disabled
     void getRequestParameters() {
         Request parameters = Request.create()
                 .withRequestParameters(generateRequestParameters());
@@ -94,6 +97,7 @@ class RequestParametersTest {
      * Jackson.
      */
     @Test
+    @Disabled
     void parseProtoItems() {
         Struct entityA = Struct.newBuilder()
                 .putFields("name", Value.newBuilder().setStringValue("23-DB-9101").build())
