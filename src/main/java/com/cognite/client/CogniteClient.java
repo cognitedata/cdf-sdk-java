@@ -611,39 +611,7 @@ public abstract class CogniteClient implements Serializable {
                 String token = tokenSupplier.get();
 
                 okhttp3.Request authRequest = chain.request().newBuilder()
-                        .header("Authorization", token)
-                        .build();
-
-                return chain.proceed(authRequest);
-            } else {
-                return chain.proceed(chain.request());
-            }
-        }
-    }
-
-    /*
-    Interceptor that will add an auth ticket to each request. The ticket is produced by a supplier
-    function (functional interface / lambda)
-     */
-    private static class AuthTicketInterceptor implements Interceptor {
-        private final Supplier<String> ticketSupplier;
-        private final String apiHost;
-
-        public AuthTicketInterceptor(String host, Supplier<String> ticketSupplier) {
-            Preconditions.checkNotNull(ticketSupplier,
-                    "The ticket supplier cannot be null.");
-            this.apiHost = host;
-            this.ticketSupplier = ticketSupplier;
-        }
-
-        @Override
-        public okhttp3.Response intercept(Chain chain) throws IOException {
-            if (chain.request().url().host().equalsIgnoreCase(apiHost)) {
-                // Only add auth info to requests towards the cognite api host.
-                String ticket = ticketSupplier.get();
-
-                okhttp3.Request authRequest = chain.request().newBuilder()
-                        .header("auth-ticket", ticket)
+                        .header(requestHeaderKey, token)
                         .build();
 
                 return chain.proceed(authRequest);
