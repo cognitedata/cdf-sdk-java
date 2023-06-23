@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 @AutoValue
 public abstract class CogniteClient implements Serializable {
     private final static String DEFAULT_BASE_URL = "https://api.cognitedata.com";
+    private final static String DEFAULT_AUTH_HEADER_KEY = "Authorization";
     private static int DEFAULT_NO_WORKERS = 8;
     private static int DEFAULT_NO_TS_WORKERS = 16;
     private static ThreadPoolExecutor executorService = new ThreadPoolExecutor(DEFAULT_NO_WORKERS, DEFAULT_NO_WORKERS,
@@ -98,46 +99,35 @@ public abstract class CogniteClient implements Serializable {
      */
     public static CogniteClient ofToken(String cdfProject,
                                         Supplier<String> tokenSupplier) {
-        Preconditions.checkArgument(null != cdfProject && !cdfProject.isBlank(),
-                "The CDF Project cannot be null or blank.");
-        Preconditions.checkNotNull(tokenSupplier,
-                "The token supplier cannot be null.");
-
-        String host = "";
-        try {
-            host = new URL(DEFAULT_BASE_URL).getHost();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        return CogniteClient.builder()
-                .setProject(cdfProject)
-                .setTokenSupplier(tokenSupplier)
-                .setAuthType(AuthType.TOKEN_SUPPLIER)
-                .setHttpClient(CogniteClient.getHttpClientBuilder()
-                        .addInterceptor(new TokenInterceptor(host, tokenSupplier))
-                        .build())
-                .build();
+        return CogniteClient.ofAuthHeader(cdfProject, DEFAULT_AUTH_HEADER_KEY, tokenSupplier);
     }
 
     /**
      * Returns a {@link CogniteClient} using the provided supplier (function) to provide
-     * an auth ticket for authorization. The ticket will be placed into the request header:
-     * {@code auth-ticket: <theTicket>}
+     * an auth token for authorization. The token will be placed into the request header at the specified
+     * {@code authHeaderKey}
      *
-     * If your application handles the authentication flow itself, you can pass a
+     * If your application handles the authentication flow itself, you can pass a header key and a
      * {@link Supplier} to this constructor. The supplier will be called for each api request
-     * and the provided token will be added as a bearer token to the request header.
+     * and the provided token will be added to the request header at the specified header key.
+     * <p>
+     * This is a CogniteClient builder for advanced use cases where you need fine-grained control over authorization.
+     * Most users should use the {@link #ofClientCredentials(String, String, String, URL)} or {@link #ofToken(String, Supplier)}
+     * builders instead.
      *
      * @param cdfProject The CDF project to connect to.
-     * @param ticketSupplier A Supplier (functional interface) producing a valid access ticket when called.
+     * @param authHeaderKey The header (key) to add the access token to.
+     * @param tokenSupplier A Supplier (functional interface) producing a valid access token when called.
      * @return the client object with default configuration.
      */
-    public static CogniteClient ofAuthTicket(String cdfProject,
-                                            Supplier<String> ticketSupplier) {
-        Preconditions.checkArgument(null != cdfProject && !cdfProject.isBlank(),
-                "The CDF Project cannot be null or blank.");
-        Preconditions.checkNotNull(ticketSupplier,
+    public static CogniteClient ofAuthHeader(String cdfProject,
+                                             String authHeaderKey,
+                                             Supplier<String> tokenSupplier) {
+        Preconditions.checkArgument(null != cdfProject && !cdfProject.isEmpty(),
+                "The CDF Project cannot be null or empty.");
+        Preconditions.checkArgument(null != authHeaderKey && !authHeaderKey.isEmpty(),
+                "The header key cannot be null or empty.");
+        Preconditions.checkNotNull(tokenSupplier,
                 "The ticket supplier cannot be null.");
 
         String host = "";
@@ -149,10 +139,11 @@ public abstract class CogniteClient implements Serializable {
 
         return CogniteClient.builder()
                 .setProject(cdfProject)
-                .setAuthTicketSupplier(ticketSupplier)
-                .setAuthType(AuthType.AUTH_TICKET)
+                .setAuthHeaderKey(authHeaderKey)
+                .setAuthTokenSupplier(tokenSupplier)
+                .setAuthType(AuthType.TOKEN_SUPPLIER)
                 .setHttpClient(CogniteClient.getHttpClientBuilder()
-                        .addInterceptor(new AuthTicketInterceptor(host, ticketSupplier))
+                        .addInterceptor(new TokenInterceptor(host, authHeaderKey, tokenSupplier))
                         .build())
                 .build();
     }
@@ -235,9 +226,9 @@ public abstract class CogniteClient implements Serializable {
     @Nullable
     protected abstract Collection<String> getAuthScopes();
     @Nullable
-    protected abstract Supplier<String> getTokenSupplier();
+    protected abstract Supplier<String> getAuthTokenSupplier();
     @Nullable
-    protected abstract Supplier<String> getAuthTicketSupplier();
+    protected abstract String getAuthHeaderKey();
 
     protected abstract AuthType getAuthType();
     protected abstract String getBaseUrl();
@@ -292,11 +283,7 @@ public abstract class CogniteClient implements Serializable {
         switch (getAuthType()) {
             case TOKEN_SUPPLIER -> {
                 removed = interceptors.removeIf(interceptor -> interceptor instanceof TokenInterceptor);
-                interceptors.add(new TokenInterceptor(host, getTokenSupplier()));
-            }
-            case AUTH_TICKET -> {
-                removed = interceptors.removeIf(interceptor -> interceptor instanceof AuthTicketInterceptor);
-                interceptors.add(new AuthTicketInterceptor(host, getAuthTicketSupplier()));
+                interceptors.add(new TokenInterceptor(host, getAuthHeaderKey(), getAuthTokenSupplier()));
             }
             case CLIENT_CREDENTIALS -> {
                 String currentDefaultScope = createScope(getBaseUrl());
@@ -600,18 +587,21 @@ public abstract class CogniteClient implements Serializable {
     }
 
     /*
-    Interceptor that will add a bearer token to each request. The token is produced by a supplier
+    Interceptor that will add a (bearer) auth token to each request. The token is produced by a supplier
     function (functional interface / lambda)
      */
     private static class TokenInterceptor implements Interceptor {
         private final Supplier<String> tokenSupplier;
         private final String apiHost;
+        private final String requestHeaderKey;
 
-        public TokenInterceptor(String host, Supplier<String> tokenSupplier) {
+        public TokenInterceptor(String host, String requestHeaderKey, Supplier<String> tokenSupplier) {
             Preconditions.checkNotNull(tokenSupplier,
                     "The token supplier cannot be null.");
+
             this.apiHost = host;
             this.tokenSupplier = tokenSupplier;
+            this.requestHeaderKey = requestHeaderKey;
         }
 
         @Override
@@ -790,8 +780,7 @@ public abstract class CogniteClient implements Serializable {
      */
     protected enum AuthType {
         CLIENT_CREDENTIALS,
-        TOKEN_SUPPLIER,
-        AUTH_TICKET
+        TOKEN_SUPPLIER
     }
 
     @AutoValue.Builder
@@ -804,8 +793,8 @@ public abstract class CogniteClient implements Serializable {
         abstract Builder setClientSecret(String value);
         abstract Builder setTokenUrl(URL value);
         abstract Builder setAuthScopes(Collection<String> value);
-        abstract Builder setTokenSupplier(Supplier<String> supplier);
-        abstract Builder setAuthTicketSupplier(Supplier<String> supplier);
+        abstract Builder setAuthTokenSupplier(Supplier<String> supplier);
+        abstract Builder setAuthHeaderKey(String value);
         abstract Builder setAuthType(AuthType value);
 
         abstract CogniteClient build();
