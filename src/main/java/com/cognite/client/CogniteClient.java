@@ -128,7 +128,7 @@ public abstract class CogniteClient implements Serializable {
         Preconditions.checkArgument(null != authHeaderKey && !authHeaderKey.isEmpty(),
                 "The header key cannot be null or empty.");
         Preconditions.checkNotNull(tokenSupplier,
-                "The ticket supplier cannot be null.");
+                "The token supplier cannot be null.");
 
         String host = "";
         try {
