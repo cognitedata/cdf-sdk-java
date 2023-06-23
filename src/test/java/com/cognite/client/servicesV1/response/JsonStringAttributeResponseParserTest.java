@@ -1,7 +1,5 @@
 package com.cognite.client.servicesV1.response;
 
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +12,6 @@ class JsonStringAttributeResponseParserTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Test
-    @Disabled
     void parseNestedPath() throws Exception {
         String jsonObject = """
                 {
