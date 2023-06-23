@@ -32,7 +32,6 @@ class RequestParametersTest {
     }
 
     @Test
-    @Disabled
     void getRequestParametersAsJson() throws Exception {
         Request parameters = Request.create()
                 .withRequestParameters(generateRequestParameters());
@@ -65,7 +64,6 @@ class RequestParametersTest {
     }
 
     @Test
-    @Disabled
     void getRequestParameters() {
         Request parameters = Request.create()
                 .withRequestParameters(generateRequestParameters());
@@ -97,7 +95,6 @@ class RequestParametersTest {
      * Jackson.
      */
     @Test
-    @Disabled
     void parseProtoItems() {
         Struct entityA = Struct.newBuilder()
                 .putFields("name", Value.newBuilder().setStringValue("23-DB-9101").build())
