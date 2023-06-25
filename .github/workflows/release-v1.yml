@@ -31,7 +31,7 @@ jobs:
       - name: Detect version change
         id: detect
         run: |
-          CENTRAL_VERSION=$(curl -H "Accept: application/json" -L "http://repository.sonatype.org/service/local/artifact/maven/resolve?r=central-proxy&g=com.cognite&a=cdf-sdk-java&v=LATEST" | ./jq -r .data.version)
+          CENTRAL_VERSION=$(curl -H "Accept: application/json" -L ""https://search.maven.org/solrsearch/select?q=g:com.cognite+a:cdf-sdk-java&rows=1&wt=json" | .response.docs[0].latestVersion)
           MVN_VERSION=$(mvn -q \
               -Dexec.executable=echo \
               -Dexec.args='${project.version}' \
