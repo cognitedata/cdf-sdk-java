@@ -18,8 +18,12 @@ Changes are grouped as follows:
 - Annotations
 - Extraction pipelines configuration
 - Data models
-- Removal of api-key support
-- Removal of login endpoint support
+
+## [2.2.0] 2023-06-25
+
+### Added 
+
+- Fine grained control over authentication and headers via `CogniteClient.ofAuthHeader()`. This is method is intended for advanced use cases--most usage scenarios should use `.ofClientCredentials()` or `ofTokenSupplier()`.
 
 ## [2.1.0] 2023-03-10
 
