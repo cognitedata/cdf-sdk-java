@@ -30,8 +30,7 @@ jobs:
 
       - name: Detect version change
         id: detect
-        run: |
-          CENTRAL_VERSION=$(curl -H "Accept: application/json" -L "http://repository.sonatype.org/service/local/artifact/maven/resolve?r=central-proxy&g=com.cognite&a=cdf-sdk-java&v=LATEST" | ./jq -r .data.version)
+        run: | 
           MVN_VERSION=$(mvn -q \
               -Dexec.executable=echo \
               -Dexec.args='${project.version}' \
@@ -43,7 +42,7 @@ jobs:
           echo "maven_version=$MVN_VERSION" >> $GITHUB_OUTPUT
 
       - name: Publish to Apache Maven Central
-        if: ${{ !endsWith(steps.detect.outputs.maven_version, 'SNAPSHOT') && steps.detect.outputs.maven_version != steps.detect.outputs.central_version }}
+        if: ${{ !endsWith(steps.detect.outputs.maven_version, 'SNAPSHOT') && startsWith(steps.detect.outputs.maven_version, '1.') }}
         run: |
           mvn -B clean verify deploy -Prelease
         env:
