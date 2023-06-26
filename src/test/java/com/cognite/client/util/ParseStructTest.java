@@ -2,7 +2,6 @@ package com.cognite.client.util;
 import com.google.protobuf.Struct;
 import com.google.protobuf.util.Structs;
 import com.google.protobuf.util.Values;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +16,6 @@ class ParseStructTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Test
-    @Tag("remoteCDP")
     void parseStruct() {
         Instant startInstant = Instant.now();
 

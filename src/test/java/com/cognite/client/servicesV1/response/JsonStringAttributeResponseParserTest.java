@@ -1,6 +1,5 @@
 package com.cognite.client.servicesV1.response;
 
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,14 +12,14 @@ class JsonStringAttributeResponseParserTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     @Test
-    @Tag("remoteCDP")
     void parseNestedPath() throws Exception {
-        String jsonObject = new StringBuilder()
-                .append("{\n")
-                .append("\"error\": {\n")
-                .append("\"message\": \"Files not uploaded:\"\n")
-                .append("}}")
-                .toString();
+        String jsonObject = """
+                {
+                    "error" : {
+                        "message" : "Files not uploaded:"
+                    }
+                }
+                """;
 
         LOG.info("Json object: {}", jsonObject);
 
