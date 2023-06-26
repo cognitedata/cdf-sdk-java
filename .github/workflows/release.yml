@@ -44,7 +44,7 @@ jobs:
       - name: Publish to Apache Maven Central
         if: ${{ !endsWith(steps.detect.outputs.maven_version, 'SNAPSHOT') && steps.detect.outputs.maven_version != steps.detect.outputs.central_version }}
         run: |
-          mvn -B clean verify deploy -Prelease
+          mvn -B clean deploy -Prelease
         env:
           MAVEN_USERNAME: ${{ secrets.SONATYPE_OSSRH_USER }}
           MAVEN_CENTRAL_TOKEN: ${{ secrets.SONATYPE_OSSRH_PASSWORD }}
