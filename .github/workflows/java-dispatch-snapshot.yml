@@ -33,4 +33,4 @@ jobs:
 
       - name: Verify with Maven
         run: |
-          mvn --update-snapshots -B clean verify deploy -Prelease-internal
+          mvn --update-snapshots -B clean deploy -Prelease-internal
