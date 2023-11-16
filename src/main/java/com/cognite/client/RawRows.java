@@ -25,6 +25,7 @@ import com.cognite.client.servicesV1.ConnectorConstants;
 import com.cognite.client.servicesV1.ConnectorServiceV1;
 import com.cognite.client.servicesV1.ItemReader;
 import com.cognite.client.servicesV1.ResponseItems;
+import com.cognite.client.servicesV1.exception.CdfRawNotFoundException;
 import com.cognite.client.servicesV1.parser.RawParser;
 import com.cognite.client.stream.RawPublisher;
 import com.google.auto.value.AutoValue;
@@ -425,7 +426,11 @@ public abstract class RawRows extends ApiBase implements UpsertTarget<RawRow, Ra
                 completedBatches.addAll(response.getResultsItems());
                 LOG.debug(loggingPrefix + "Retrieve row request success. Adding row to result collection.");
             } else {
-                LOG.error(loggingPrefix + "Retrieve row request failed: {}", response.getResponseBodyAsString());
+                if (!response.getStatus().isEmpty() && response.getStatus().get(0) == "404") {
+                    LOG.error(loggingPrefix + "Retrieve row request failed: {}", response.getResponseBodyAsString());
+                    throw new CdfRawNotFoundException(String.format(loggingPrefix + "Retrieve row request failed: %s",
+                            response.getResponseBodyAsString()));
+                }
                 throw new Exception(String.format(loggingPrefix + "Retrieve row request failed: %s",
                         response.getResponseBodyAsString()));
             }
