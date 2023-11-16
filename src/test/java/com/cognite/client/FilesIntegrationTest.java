@@ -8,6 +8,8 @@ import com.cognite.client.util.DataGenerator;
 import com.google.common.collect.ImmutableMap;
 import com.cognite.client.util.Items;
 import com.google.protobuf.ByteString;
+
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -378,5 +380,84 @@ class FilesIntegrationTest {
 
         assertEquals(fileContainerInput.size(), listFilesResults.size());
         assertEquals(deleteItemsInput.size(), deleteItemsResults.size());
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void retrieveOneFile() throws Exception {
+        Path fileAOriginal = Paths.get("./src/test/resources/csv-data.txt");
+        Path fileATemp = Paths.get("./tempA.tmp");
+        byte[] fileByteA = new byte[0];
+        byte[] fileByteB = new byte[0];
+        try {
+            // copy into temp path
+            java.nio.file.Files.copy(fileAOriginal, fileATemp, StandardCopyOption.REPLACE_EXISTING);
+            //
+            fileByteA = java.nio.file.Files.readAllBytes(fileAOriginal);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        FileMetadata fileMetadata = DataGenerator.generateFileHeaderObjects(1).get(0);
+        FileContainer fileContainer = FileContainer.newBuilder()
+            .setFileMetadata(fileMetadata)
+            .setFileBinary(FileBinary.newBuilder()
+                    .setBinary(ByteString.copyFrom(fileByteA)))
+            .build();
+
+        String loggingPrefix = "UnitTest - retrieveOneFile() -";
+        LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+        LOG.info(loggingPrefix + "Start test. Creating Cognite client.");
+        CogniteClient client = TestConfigProvider.getCogniteClient();
+
+        try {
+            LOG.info(loggingPrefix + "Start uploading file binaries.");
+            List<FileMetadata> uploadFileResult = client.files().upload(List.of(fileContainer));
+            LOG.info(loggingPrefix + "----------------------------------------------------------------------");
+
+            Thread.sleep(5000); // wait for eventual consistency
+
+            List<FileMetadata> result = client.files().retrieve(uploadFileResult.get(0).getExternalId());
+
+            assertEquals(uploadFileResult.get(0).getExternalId(), result.get(0).getExternalId());
+
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        } finally {
+            cleanUpFiles(client, fileMetadata.getExternalId());
+        }
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void retrieveOneFileNotPresent() throws Exception {
+        Path fileAOriginal = Paths.get("./src/test/resources/csv-data.txt");
+        Path fileATemp = Paths.get("./tempA.tmp");
+        byte[] fileByteA = new byte[0];
+        byte[] fileByteB = new byte[0];
+        try {
+            // copy into temp path
+            java.nio.file.Files.copy(fileAOriginal, fileATemp, StandardCopyOption.REPLACE_EXISTING);
+            //
+            fileByteA = java.nio.file.Files.readAllBytes(fileAOriginal);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        CogniteClient client = TestConfigProvider.getCogniteClient();
+
+        try {
+            List<FileMetadata> results = client.files().retrieve("EXTERNAL_ID_SHOULD_NOT_BE_FOUND_" + RandomStringUtils.randomAlphabetic(5));
+
+            assertTrue(results.isEmpty());
+
+        } catch (Exception e) {
+            LOG.error(e.toString());
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void cleanUpFiles(CogniteClient client, String... filesExternalIds) throws Exception {
+        client.files().delete(Items.parseItems(filesExternalIds));
+        LOG.info("Deleted files: {}", List.of(filesExternalIds));
     }
 }

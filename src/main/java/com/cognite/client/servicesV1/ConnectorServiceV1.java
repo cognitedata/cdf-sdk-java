@@ -2498,7 +2498,7 @@ public abstract class ConnectorServiceV1 implements Serializable {
                     .setRequestExecutor(RequestExecutor.of(client.getHttpClient())
                             .withExecutor(client.getExecutorService())
                             .withMaxRetries(client.getClientConfig().getMaxRetries())
-                            .withValidResponseCodes(ImmutableList.of(400, 401, 409, 422)))
+                            .withValidResponseCodes(ImmutableList.of(400, 401, 404, 409, 422)))
                     .setRequestProvider(requestProvider)
                     .setResponseParser(responseParser)
                     .build();
