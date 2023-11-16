@@ -6,6 +6,7 @@ import com.cognite.client.dto.RawRow;
 import com.cognite.client.stream.RawPublisher;
 import com.cognite.client.util.DataGenerator;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -25,6 +26,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RawIntegrationTest {
     final Logger LOG = LoggerFactory.getLogger(this.getClass());
@@ -243,5 +246,71 @@ class RawIntegrationTest {
             LOG.error(e.toString());
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void retrieveOneRow() throws Exception {
+        CogniteClient client = TestConfigProvider.getCogniteClient();
+        List<String> createDatabasesList = DataGenerator.generateListString(1);
+        client.raw().databases().create(createDatabasesList);
+        String rowDbName = createDatabasesList.get(0);
+        LOG.info("Created database {}", rowDbName);
+
+        String rowTableName = "test-retrieve-row";
+        try {
+            List<RawRow> createRowsList = DataGenerator.generateRawRows(rowDbName, rowTableName, 1);
+            LOG.info("Generated {} rows in {}:{}", createRowsList.size(), rowDbName, rowTableName);
+
+            LOG.info("Generated row: {}", createRowsList.get(0).getKey());
+
+            List<RawRow> createRowsResults = client.raw().rows().upsert(createRowsList, true);
+            LOG.info("Upserted {} rows in {}:{}", createRowsList.size(), rowDbName, rowTableName);
+
+            LOG.info("Retrieving {} row(s) from {}:{}", createRowsList.size(), rowDbName, rowTableName);
+            List<RawRow> rowsRetrieved = client.raw().rows().retrieve(rowDbName, rowTableName, List.of(createRowsList.get(0).getKey()));
+            LOG.info("Retrieved row with key {}", rowsRetrieved.get(0).getKey());
+
+            assertEquals(createRowsList.get(0).getKey(), rowsRetrieved.get(0).getKey(), "Retrieved row is not same as inserted row!");
+
+        } catch (Exception e) {
+            LOG.info("Failed to retrieve one raw row: {}", e.getMessage());
+            e.printStackTrace();
+        } finally {
+            //clean up
+            cleanUp(client, rowDbName, List.of(rowTableName));
+        }
+    }
+
+    @Test
+    @Tag("remoteCDP")
+    void retrieveOneRowNotFound() throws Exception {
+        CogniteClient client = TestConfigProvider.getCogniteClient();
+        List<String> createDatabasesList = DataGenerator.generateListString(1);
+        client.raw().databases().create(createDatabasesList);
+        String rowDbName = createDatabasesList.get(0);
+        LOG.info("Created database {}", rowDbName);
+        String rowTableName = "test-retrieve-row";
+        client.raw().tables().create(rowDbName, List.of(rowTableName), false);
+        LOG.info("Created table {}", rowTableName);
+
+        try {
+            LOG.info("Retrieving 1 row from {}:{} that does not exist", rowDbName, rowTableName);
+            Assertions.assertThrows(Exception.class, () -> {
+                client.raw().rows().retrieve(rowDbName, rowTableName, List.of("SHOULD_NOT_EXIST_123"));
+            });
+        } catch (Exception e) {
+            assertTrue(e.getMessage().contains("404"));
+            assertTrue(e.getMessage().contains("Did not find any rows with that key"));
+        } finally {
+            //clean up
+            cleanUp(client, rowDbName, List.of(rowTableName));
+        }
+    }
+
+    private void cleanUp(CogniteClient client, String rowDbName, List<String> tableNames) throws Exception {
+        LOG.info("Cleaning up database and tables: {}:{}", rowDbName, tableNames);
+        client.raw().tables().delete(rowDbName, tableNames);
+        client.raw().databases().delete(List.of(rowDbName));
     }
 }
