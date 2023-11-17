@@ -19,6 +19,12 @@ Changes are grouped as follows:
 - Extraction pipelines configuration
 - Data models
 
+## [2.2.1] 2023-11-16
+
+### Added
+
+- When trying to retrieve rows from CDF RAW it will no longer retry the request indefinitely. Instead it will throw an Exception.
+
 ## [2.2.0] 2023-06-25
 
 ### Added 
