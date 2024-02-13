@@ -11,6 +11,14 @@ message Transformation {
 
   message Destination {
 
+    message Datamodel {
+      string space = 1;
+      string external_id = 2;
+      string version = 3;
+      string destination_type = 4;
+      string destination_relationship_from_type = 5;
+    }
+
     enum DataSourceType {
       ASSETS = 0;
       TIMESERIES = 1;
@@ -24,12 +32,15 @@ message Transformation {
       LABELS = 9;
       RELATIONSHIPS = 10;
       DATA_SETS = 11;
+      INSTANCES = 12;
     }
 
     optional string type = 2;
     optional string database = 3;
     optional string table = 4;
     string external_id = 5;
+    optional Datamodel data_model = 6;
+    optional string instance_space = 7;
   }
 
   message FlatOidcCredentials {
