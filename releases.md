@@ -19,6 +19,12 @@ Changes are grouped as follows:
 - Extraction pipelines configuration
 - Data models
 
+## [2.3.0] 2024-02-13
+
+### Added
+
+- Added support for returning data model destination type when retrieving transformation jobs.
+
 ## [2.2.1] 2023-11-16
 
 ### Added

@@ -74,6 +74,35 @@ public class TransformationJobsParser {
                         builderDest.setExternalId(sequenceRowDataSourceNode.path("externalId").textValue());
                     }
                     tmBuilder.setDestination(builderDest.build());
+                } else if (root.path("destination").path("type").textValue().equals("instances")) {
+                    JsonNode instanceDataSourceNode = root.path("destination");
+                    Transformation.Destination.Builder builderDest = Transformation.Destination.newBuilder();
+
+                    builderDest.setType(instanceDataSourceNode.path("type").textValue());
+
+                    if (instanceDataSourceNode.path("dataModel").isObject()) {
+                        JsonNode dataModelSourceNode = instanceDataSourceNode.path("dataModel");
+                        Transformation.Destination.Datamodel.Builder dataModelBuilderDest = Transformation.Destination.Datamodel.newBuilder();
+                        JsonNode space = dataModelSourceNode.path("space");
+                        JsonNode externalId = dataModelSourceNode.path("externalId");
+                        JsonNode version = dataModelSourceNode.path("version");
+                        JsonNode destinationType = dataModelSourceNode.path("destinationType");
+                        if (space.isTextual())
+                            dataModelBuilderDest.setSpace(space.textValue());
+                        if (externalId.isTextual())
+                            dataModelBuilderDest.setExternalId(externalId.textValue());
+                        if (version.isTextual())
+                            dataModelBuilderDest.setVersion(version.textValue());
+                        if (destinationType.isTextual())
+                            dataModelBuilderDest.setDestinationType(destinationType.textValue());
+
+                        builderDest.setDataModel(dataModelBuilderDest.build());
+                    }
+                    JsonNode instanceSpace = instanceDataSourceNode.path("instanceSpace");
+                    if (instanceSpace.isTextual())
+                        builderDest.setInstanceSpace(instanceSpace.textValue());
+
+                    tmBuilder.setDestination(builderDest.build());
                 }
             }
         }
