@@ -9,6 +9,7 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: CD
     steps:
       - uses: actions/checkout@v3
       - name: Set up Apache Maven Central
@@ -19,7 +20,7 @@ jobs:
           server-id: ossrh
           server-username: MAVEN_USERNAME
           server-password: MAVEN_CENTRAL_TOKEN
-          gpg-private-key: ${{ secrets.SONATYPE_OSSRH_GPG_PRIVATE_KEY }}
+          gpg-private-key: ${{ vars.SONATYPE_OSSRH_GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
       - name: Install jq
@@ -46,6 +47,6 @@ jobs:
         run: |
           mvn -B clean deploy -Prelease
         env:
-          MAVEN_USERNAME: ${{ secrets.SONATYPE_OSSRH_USER }}
-          MAVEN_CENTRAL_TOKEN: ${{ secrets.SONATYPE_OSSRH_PASSWORD }}
-          MAVEN_GPG_PASSPHRASE: ${{ secrets.SONATYPE_OSSRH_GPG_KEY_PASSPHRASE }}
+          MAVEN_USERNAME: ${{ vars.SONATYPE_OSSRH_USER }}
+          MAVEN_CENTRAL_TOKEN: ${{ vars.SONATYPE_OSSRH_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ vars.SONATYPE_OSSRH_GPG_KEY_PASSPHRASE }}
