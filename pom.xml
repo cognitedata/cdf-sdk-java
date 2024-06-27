@@ -108,6 +108,18 @@
             <groupId>com.nimbusds</groupId>
             <artifactId>oauth2-oidc-sdk</artifactId>
             <version>${nimbusds.version}</version>
+            <!--
+                https://cognitedata.atlassian.net/browse/CDFBUG-654
+                com.lowagie:itext has IP rights issues. It is a dependency
+                of a dependency of an optional dependency and should not
+                normally be pulled in, but just to be clear: Exclude.
+            -->
+            <exclusions>
+                <exclusion>
+                    <groupId>com.lowagie</groupId>
+                    <artifactId>itext</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
