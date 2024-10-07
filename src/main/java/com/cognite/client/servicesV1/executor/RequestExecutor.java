@@ -245,7 +245,6 @@ public abstract class RequestExecutor {
                         .withApiRetryCounter(apiRetryCounter);
             } catch (Exception e) {
                 catchedExceptions.add(e);
-
                 // if we get a transient error, retry the call
                 if (RETRYABLE_EXCEPTIONS.stream().anyMatch(known -> known.isInstance(e))
                         || RETRYABLE_RESPONSE_CODES.contains(responseCode)) {
