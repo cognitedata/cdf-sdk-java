@@ -22,6 +22,7 @@ message TimeseriesMetadata {
     optional int64 last_updated_time = 11;
     map<string, string> metadata = 12;
     optional int64 data_set_id = 13;
+    optional string unit_external_id = 14;
 }
 
 /*

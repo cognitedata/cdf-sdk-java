@@ -31,7 +31,8 @@ List<TimeseriesMetadata> upsertTimeseriesList = List.of(TimeseriesMetadata.newBu
    .setIsString(false) 
    .setIsStep(false) 
    .setDescription("Description") 
-   .setUnit("TestUnits") 
+   .setUnit("TestUnits")
+   .setUnitExternalId("testUnitExternalId")
    .putMetadata("type", "sdk-data-generator") 
    .putMetadata("sdk-data-generator", "sdk-data-generator") 
  .build()); 
