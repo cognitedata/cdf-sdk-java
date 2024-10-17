@@ -41,7 +41,7 @@
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <auto.version>1.10.4</auto.version>
+        <auto.version>1.11.0</auto.version>
         <nimbusds.version>11.10.1</nimbusds.version>
         <awss3.version>1.12.774</awss3.version>
         <jgrapht.version>1.5.2</jgrapht.version>
