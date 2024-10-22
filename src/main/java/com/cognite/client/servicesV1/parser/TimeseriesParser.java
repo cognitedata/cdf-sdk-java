@@ -263,10 +263,6 @@ public class TimeseriesParser {
         if (root.path("externalId").isTextual()) {
             builder.setExternalId(root.get("externalId").textValue());
         }
-        if (root.path("unitExternalId").isTextual()) {
-            builder.setUnitExternalId(root.get("unitExternalId").textValue());
-        }
-
         if (root.path("name").isTextual()) {
             builder.setName(root.get("name").textValue());
         }
@@ -305,6 +301,10 @@ public class TimeseriesParser {
                     builder.putMetadata(entry.getKey(), entry.getValue().textValue());
                 }
             }
+        }
+
+        if (root.path("unitExternalId").isTextual()) {
+            builder.setUnitExternalId(root.get("unitExternalId").textValue());
         }
 
         return builder.build();
@@ -397,7 +397,6 @@ public class TimeseriesParser {
         } else {
             updateNodeBuilder.put("unit", ImmutableMap.of("setNull", true));
         }
-
         if (element.hasAssetId()) {
             updateNodeBuilder.put("assetId", ImmutableMap.of("set", element.getAssetId()));
         }
@@ -489,7 +488,6 @@ public class TimeseriesParser {
         } else {
             updateNodeBuilder.put("unitExternalId", ImmutableMap.of("setNull", true));
         }
-
 
         mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();
