@@ -340,7 +340,7 @@ public class TimeseriesParser {
         if (element.hasDescription()) {
             mapBuilder.put("description", element.getDescription());
         }
-        if (element.hasUnit()) {
+        if (element.hasUnit() && !element.getUnit().trim().isEmpty()) {
             mapBuilder.put("unit", element.getUnit());
         }
         if (element.hasAssetId()) {
@@ -356,7 +356,7 @@ public class TimeseriesParser {
             mapBuilder.put("dataSetId", element.getDataSetId());
         }
 
-        if (element.hasUnitExternalId()) {
+        if (element.hasUnitExternalId() && !element.getUnitExternalId().trim().isEmpty()) {
             mapBuilder.put("unitExternalId", element.getUnitExternalId());
         }
 
@@ -392,9 +392,12 @@ public class TimeseriesParser {
         if (element.hasDescription()) {
             updateNodeBuilder.put("description", ImmutableMap.of("set", element.getDescription()));
         }
-        if (element.hasUnit()) {
+        if (element.hasUnit() && !element.getUnit().trim().isEmpty()) {
             updateNodeBuilder.put("unit", ImmutableMap.of("set", element.getUnit()));
+        } else {
+            updateNodeBuilder.put("unit", ImmutableMap.of("setNull", true));
         }
+
         if (element.hasAssetId()) {
             updateNodeBuilder.put("assetId", ImmutableMap.of("set", element.getAssetId()));
         }
@@ -408,7 +411,11 @@ public class TimeseriesParser {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
         if (element.hasUnitExternalId()) {
-            updateNodeBuilder.put("unitExternalId", ImmutableMap.of("set", element.getUnitExternalId()));
+            if (element.getUnitExternalId().trim().isEmpty()) {
+                updateNodeBuilder.put("unitExternalId", ImmutableMap.of("setNull", true));
+            } else {
+                updateNodeBuilder.put("unitExternalId", ImmutableMap.of("set", element.getUnitExternalId()));
+            }
         }
         mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();
