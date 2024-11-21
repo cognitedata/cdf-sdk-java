@@ -40,8 +40,25 @@ List<TimeseriesMetadata> upsertTimeseriesList = List.of(TimeseriesMetadata.newBu
 client.timeseries().upsert(upsertTimeseriesList); 
 
 
-```
+``` 
+To reset the unit and unitExternalId field, set `unit` and `unitExternalId` field with empty string- 
 
+```java
+List<TimeseriesMetadata> upsertTimeseriesList = List.of(TimeseriesMetadata.newBuilder()
+.setExternalId("10")
+.setName("test_ts")
+.setIsString(false)
+.setIsStep(false)
+.setDescription("Description")
+.setUnit("")
+.setUnitExternalId("")
+.putMetadata("type", "sdk-data-generator")
+.putMetadata("sdk-data-generator", "sdk-data-generator")
+.build());
+
+client.timeseries().upsert(upsertTimeseriesList);
+```
+This will reset the both(unit & unitExternalId field)
 ### Retrieve time series
 
 Retrieve one or more time series by ID or external ID. The time series are returned in the same order as in the request.
