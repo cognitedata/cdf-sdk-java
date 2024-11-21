@@ -356,7 +356,8 @@ public class TimeseriesParser {
             mapBuilder.put("dataSetId", element.getDataSetId());
         }
 
-        if (element.hasUnitExternalId()) {
+        // The CDF API does not allow empty strings for unitExternalId so don't set it if input empty.
+        if (element.hasUnitExternalId() && !element.getUnitExternalId().trim().isEmpty()) {
             mapBuilder.put("unitExternalId", element.getUnitExternalId());
         }
 
@@ -407,9 +408,13 @@ public class TimeseriesParser {
         if (element.hasDataSetId()) {
             updateNodeBuilder.put("dataSetId", ImmutableMap.of("set", element.getDataSetId()));
         }
-        if (element.hasUnitExternalId()) {
+        // The CDF API does not allow empty strings for unitExternalId.
+        if (element.hasUnitExternalId() && !element.getUnitExternalId().trim().isEmpty()) {
             updateNodeBuilder.put("unitExternalId", ImmutableMap.of("set", element.getUnitExternalId()));
+        } else {
+            updateNodeBuilder.put("unitExternalId", ImmutableMap.of("setNull", true));
         }
+
         mapBuilder.put("update", updateNodeBuilder.build());
         return mapBuilder.build();
     }
