@@ -27,9 +27,21 @@ Changes are grouped as follows:
 
 ## [2.3.3] 2024-10-22
 
+### Changes
+
+- Added code to reset the unit and unitExternalId field in TimeseriesMetadata object
+
 ## [2.3.2] 2024-10-07
 
+### Added
+
+- Added provision to set unitExternalId to the timeseries
+
 ## [2.3.1] 2024-04-11
+
+### Changed
+
+- Several dependency updates
 
 ## [2.3.0] 2024-02-13
 
