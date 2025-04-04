@@ -1,0 +1,22 @@
+name: Dependency Submission
+on:
+  # TODO: remove before merge
+  pull_request:
+    branches: [ 'main' ]
+  push:
+    branches: [ 'main' ]
+permissions:
+  contents: write
+jobs:
+  dependency-submission:
+    runs-on: ubuntu-24.04 # noble
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.2
+      - name: Setup Java
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          distribution: 'temurin'
+          java-version: 17
+      - name: Generate and submit dependency graph
+        uses: advanced-security/maven-dependency-submission-action@4f64ddab9d742a4806eeb588d238e4c311a8397d # v4.1.1
