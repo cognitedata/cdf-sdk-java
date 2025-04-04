@@ -19,6 +19,30 @@ Changes are grouped as follows:
 - Extraction pipelines configuration
 - Data models
 
+## [2.3.4] 2025-04-04
+
+### Security
+
+- Update dependency com.nimbusds:oauth2-oidc-sdk to v11.23.1, fixes CVE-2024-57699
+
+## [2.3.3] 2024-10-22
+
+### Changes
+
+- Added code to reset the unit and unitExternalId field in TimeseriesMetadata object
+
+## [2.3.2] 2024-10-07
+
+### Added
+
+- Added provision to set unitExternalId to the timeseries
+
+## [2.3.1] 2024-04-11
+
+### Changed
+
+- Several dependency updates
+
 ## [2.3.0] 2024-02-13
 
 ### Added
