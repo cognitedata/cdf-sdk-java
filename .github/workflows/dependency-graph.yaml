@@ -1,8 +1,5 @@
 name: Dependency Submission
 on:
-  # TODO: remove before merge
-  pull_request:
-    branches: [ 'main' ]
   push:
     branches: [ 'main' ]
 permissions:
