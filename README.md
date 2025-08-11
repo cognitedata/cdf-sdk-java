@@ -1,10 +1,11 @@
-[![java-main Actions Status](https://github.com/cognitedata/cdf-sdk-java/workflows/java-main/badge.svg)](https://github.com/cognitedata/cdf-sdk-java/actions)
-
 <a href="https://cognite.com/">
     <img src="https://raw.githubusercontent.com/cognitedata/cognite-python-docs/master/img/cognite_logo.png" alt="Cognite logo" title="Cognite" align="right" height="80" />
 </a>
 
-# Java sdk for CDF
+# Java SDK for CDF
+
+> **Note: Community-Supported SDK**
+> This SDK is **community-supported** and is provided **as-is**, without any support or warranties from Cognite. While it may include contributions from Cognite engineers, it is not officially supported by Cognite. For more information about official and community-maintained SDKs, visit [developer.cognite.com/sdks](https://developer.cognite.com/sdks/).
 
 The Java SDK provides convenient access to Cognite Data Fusion's capabilities. It covers a large part of CDF's
 capability surface, including experimental features. In addition, it is designed to handle a lot of the client "chores"
