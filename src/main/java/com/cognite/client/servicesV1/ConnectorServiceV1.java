@@ -1441,6 +1441,29 @@ public abstract class ConnectorServiceV1 implements Serializable {
     }
 
     /**
+     * Read limit values from Cognite.
+     *
+     * Note: This API requires a custom header (cdf-version). For alpha APIs,
+     * consider using CdfHttpRequest directly which supports custom headers.
+     *
+     * @param queryParameters The parameters for the limit values query.
+     * @return
+     */
+    public ResultFutureIterator<String> readLimitValues(Request queryParameters) {
+        LOG.debug(loggingPrefix + "Initiating read limit values service.");
+
+        PostJsonListRequestProvider requestProvider = PostJsonListRequestProvider.builder()
+                .setEndpoint("limits/values/list")
+                .setRequest(queryParameters)
+                .setSdkIdentifier(getClient().getClientConfig().getSdkIdentifier())
+                .setAppIdentifier(getClient().getClientConfig().getAppIdentifier())
+                .setSessionIdentifier(getClient().getClientConfig().getSessionIdentifier())
+                .build();
+
+        return ResultFutureIterator.<String>of(getClient(), requestProvider, JsonItemResponseParser.create());
+    }
+
+    /**
      * Read security categories from Cognite.
      *
      * @param queryParameters The parameters for the security categories query.

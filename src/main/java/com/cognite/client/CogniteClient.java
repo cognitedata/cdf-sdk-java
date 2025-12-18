@@ -564,6 +564,17 @@ public abstract class CogniteClient implements Serializable {
     }
 
     /**
+     * Returns {@link LimitValues} representing the Cognite Limit Values API endpoints.
+     *
+     * Note: This API is currently in alpha and requires the cdf-version header.
+     *
+     * @return The limit values api object.
+     */
+    public LimitValues limitValues() {
+        return LimitValues.of(this);
+    }
+
+    /**
      * Returns the services layer mirroring the Cognite Data Fusion API.
      * @return
      */
