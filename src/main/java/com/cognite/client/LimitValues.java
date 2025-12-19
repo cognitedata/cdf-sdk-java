@@ -121,7 +121,7 @@ public abstract class LimitValues extends ApiBase {
      *
      * @return An {@link Iterator} to page through the results.
      */
-    public Iterator<List<LimitValue>> list() {
+    public Iterator<List<LimitValue>> list() throws Exception {
         return list(Request.create());
     }
 
