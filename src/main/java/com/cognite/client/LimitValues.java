@@ -237,7 +237,7 @@ public abstract class LimitValues extends ApiBase {
             JsonNode itemsNode = root.path("items");
             if (itemsNode.isArray()) {
                 for (JsonNode itemNode : itemsNode) {
-                    results.add(LimitValueParser.parseLimitValue(itemNode.toString()));
+                    results.add(LimitValueParser.parseLimitValue(itemNode));
                 }
             }
 

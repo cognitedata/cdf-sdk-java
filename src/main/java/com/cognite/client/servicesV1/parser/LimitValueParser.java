@@ -42,6 +42,20 @@ public class LimitValueParser {
      */
     public static LimitValue parseLimitValue(String json) throws Exception {
         JsonNode root = objectMapper.readTree(json);
+        return parseLimitValue(root);
+    }
+
+    /**
+     * Parses a limit value JsonNode to {@code LimitValue} proto object.
+     *
+     * This overload allows callers that already have a JsonNode to avoid
+     * the overhead of converting the node to a string and re-parsing.
+     *
+     * @param root The JSON node to parse
+     * @return The parsed LimitValue object
+     * @throws Exception if parsing fails
+     */
+    public static LimitValue parseLimitValue(JsonNode root) throws Exception {
         LimitValue.Builder builder = LimitValue.newBuilder();
 
         // limitId is required
@@ -49,7 +63,7 @@ public class LimitValueParser {
             builder.setLimitId(root.get("limitId").textValue());
         } else {
             throw new Exception(logPrefix + "Unable to parse attribute: limitId. Item excerpt: "
-                    + json.substring(0, Math.min(json.length() - 1, MAX_LOG_ELEMENT_LENGTH)));
+                    + root.toString().substring(0, Math.min(root.toString().length(), MAX_LOG_ELEMENT_LENGTH)));
         }
 
         // value is required
@@ -57,7 +71,7 @@ public class LimitValueParser {
             builder.setValue(root.get("value").longValue());
         } else {
             throw new Exception(logPrefix + "Unable to parse attribute: value. Item excerpt: "
-                    + json.substring(0, Math.min(json.length() - 1, MAX_LOG_ELEMENT_LENGTH)));
+                    + root.toString().substring(0, Math.min(root.toString().length(), MAX_LOG_ELEMENT_LENGTH)));
         }
 
         return builder.build();
