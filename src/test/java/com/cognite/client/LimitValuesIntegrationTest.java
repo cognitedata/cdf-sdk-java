@@ -78,24 +78,46 @@ class LimitValuesIntegrationTest {
         LOG.info(loggingPrefix + "Finished creating the Cognite client. Duration: {}",
                 Duration.between(startInstant, Instant.now()));
 
+        LOG.info(loggingPrefix + "First, listing limit values to derive a prefix for filtering.");
+        List<LimitValue> initialResults = new ArrayList<>();
+        client.limitValues()
+                .list(Request.create().withRootParameter("limit", 10))
+                .forEachRemaining(initialResults::addAll);
+
+        if (initialResults.isEmpty()) {
+            LOG.warn(loggingPrefix + "No limit values found in project. Skipping filter test.");
+            return;
+        }
+
+        String sampleLimitId = initialResults.get(0).getLimitId();
+        String prefix = sampleLimitId.contains(".")
+                ? sampleLimitId.substring(0, sampleLimitId.indexOf('.') + 1)
+                : sampleLimitId.substring(0, Math.min(5, sampleLimitId.length()));
+        LOG.info(loggingPrefix + "Using derived prefix: '{}'", prefix);
+
         LOG.info(loggingPrefix + "Start listing limit values with prefix filter.");
-        List<LimitValue> listResults = new ArrayList<>();
+        List<LimitValue> filteredResults = new ArrayList<>();
 
         try {
-            // Filter by prefix on limitId
             Request filterRequest = Request.create()
                     .withFilterParameter("prefix", Map.of(
                             "property", List.of("limitId"),
-                            "value", "atlas."  // Adjust this prefix based on your data
+                            "value", prefix
                     ));
 
             client.limitValues()
                     .list(filterRequest)
-                    .forEachRemaining(listResults::addAll);
+                    .forEachRemaining(filteredResults::addAll);
 
             LOG.info(loggingPrefix + "Finished listing filtered limit values. Found {} items. Duration: {}",
-                    listResults.size(),
+                    filteredResults.size(),
                     Duration.between(startInstant, Instant.now()));
+
+            // Check all results match the prefix
+            for (LimitValue lv : filteredResults) {
+                assertTrue(lv.getLimitId().startsWith(prefix),
+                        "LimitId should start with prefix: " + prefix);
+            }
 
         } catch (Exception e) {
             LOG.error(loggingPrefix + "Error listing limit values with filter: {}", e.getMessage());
