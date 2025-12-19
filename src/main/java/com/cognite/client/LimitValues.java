@@ -20,6 +20,7 @@ import com.cognite.client.dto.LimitValue;
 import com.cognite.client.servicesV1.ConnectorConstants;
 import com.cognite.client.servicesV1.ResponseBinary;
 import com.cognite.client.servicesV1.parser.LimitValueParser;
+import com.cognite.client.servicesV1.util.JsonUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auto.value.AutoValue;
@@ -45,7 +46,7 @@ public abstract class LimitValues extends ApiBase {
 
     private static final String CDF_VERSION_HEADER = "cdf-version";
     private static final String CDF_VERSION_VALUE = "20230101-alpha";
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = JsonUtil.getObjectMapperInstance();
 
     private static Builder builder() {
         return new AutoValue_LimitValues.Builder();

@@ -17,6 +17,7 @@
 package com.cognite.client.servicesV1.parser;
 
 import com.cognite.client.dto.LimitValue;
+import com.cognite.client.servicesV1.util.JsonUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
@@ -31,7 +32,7 @@ import static com.cognite.client.servicesV1.ConnectorConstants.MAX_LOG_ELEMENT_L
  */
 public class LimitValueParser {
     static final String logPrefix = "LimitValueParser - ";
-    static final ObjectMapper objectMapper = new ObjectMapper();
+    static final ObjectMapper objectMapper = JsonUtil.getObjectMapperInstance();
 
     /**
      * Parses a limit value json string to {@code LimitValue} proto object.
