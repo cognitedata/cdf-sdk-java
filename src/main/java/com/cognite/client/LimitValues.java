@@ -17,6 +17,7 @@
 package com.cognite.client;
 
 import com.cognite.client.dto.LimitValue;
+import com.cognite.client.servicesV1.ConnectorConstants;
 import com.cognite.client.servicesV1.ResponseBinary;
 import com.cognite.client.servicesV1.parser.LimitValueParser;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -118,9 +119,8 @@ public abstract class LimitValues extends ApiBase {
      * </pre>
      *
      * @return An {@link Iterator} to page through the results.
-     * @throws Exception if the list operation fails.
      */
-    public Iterator<List<LimitValue>> list() throws Exception {
+    public Iterator<List<LimitValue>> list() {
         return list(Request.create());
     }
 
@@ -145,9 +145,8 @@ public abstract class LimitValues extends ApiBase {
      *
      * @param requestParameters The filters to use for retrieving limit values.
      * @return An {@link Iterator} to page through the results.
-     * @throws Exception if the list operation fails.
      */
-    public Iterator<List<LimitValue>> list(Request requestParameters) throws Exception {
+    public Iterator<List<LimitValue>> list(Request requestParameters) {
         return new LimitValuesIterator(requestParameters);
     }
 
@@ -182,7 +181,6 @@ public abstract class LimitValues extends ApiBase {
         private final Request requestParameters;
         private String cursor = null;
         private boolean hasMore = true;
-        private boolean firstRequest = true;
 
         public LimitValuesIterator(Request requestParameters) {
             this.requestParameters = requestParameters;
@@ -209,7 +207,7 @@ public abstract class LimitValues extends ApiBase {
             Map<String, Object> requestBody = new java.util.HashMap<>(requestParameters.getRequestParameters());
 
             if (!requestBody.containsKey("limit")) {
-                requestBody.put("limit", 1000);
+                requestBody.put("limit", ConnectorConstants.DEFAULT_MAX_BATCH_SIZE);
             }
 
             if (cursor != null) {
@@ -250,7 +248,6 @@ public abstract class LimitValues extends ApiBase {
                 hasMore = false;
             }
 
-            firstRequest = false;
             return results;
         }
     }
