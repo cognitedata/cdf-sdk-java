@@ -218,8 +218,8 @@ public abstract class LimitValues extends ApiBase {
             Request request = Request.create().withRequestParameters(requestBody);
 
             ResponseBinary response = getClient().experimental().cdfHttpRequest(requestUri)
-                    .withHeader(CDF_VERSION_HEADER, CDF_VERSION_VALUE)
                     .withRequestBody(request)
+                    .withHeader(CDF_VERSION_HEADER, CDF_VERSION_VALUE)
                     .post();
 
             if (!response.getResponse().isSuccessful()) {
