@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package com.cognite.client.dto;
+
+option java_package = "com.cognite.client.dto";
+option java_multiple_files = true;
+
+// LimitValue represents a limit value from the Cognite Limits API.
+message LimitValue {
+    // The unique identifier for this limit (e.g., "functions.running_calls")
+    string limit_id = 1;
+    
+    // The current value of the limit
+    int64 value = 2;
+}
+
